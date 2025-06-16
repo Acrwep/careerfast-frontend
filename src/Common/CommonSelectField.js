@@ -9,9 +9,10 @@ export default function CommonSelectField({
   onChange,
   options = [],
   value,
+  error,
   errorMessage,
-  disabled = false,
-  showSearch = false,
+  disabled,
+  showSearch,
   optionFilterProp = "children",
   className = "premium-input",
   ...rest
@@ -31,6 +32,13 @@ export default function CommonSelectField({
         ]}
       >
         <Select
+          styles={{
+            popup: {
+              root: {
+                zIndex: 9999,
+              },
+            },
+          }}
           showSearch={showSearch}
           placeholder={placeholder}
           optionFilterProp={optionFilterProp}
@@ -45,6 +53,13 @@ export default function CommonSelectField({
           {...rest}
         />
       </Form.Item>
+      <div
+        className={
+          error ? "show-premium-input-error" : "hide-premium-input-error"
+        }
+      >
+        <p style={{ color: "red" }}>{label + error}</p>
+      </div>
     </div>
   );
 }

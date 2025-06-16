@@ -33,6 +33,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { IoIosMale } from "react-icons/io";
+import { IoMdAdd } from "react-icons/io";
 import { IoFemaleOutline } from "react-icons/io5";
 import { MdOutlineNotInterested } from "react-icons/md";
 import { LuGraduationCap } from "react-icons/lu";
@@ -49,6 +50,7 @@ import { FaDribbble } from "react-icons/fa";
 import { FaFigma } from "react-icons/fa6";
 import { IoMdLink } from "react-icons/io";
 import { LiaSchoolSolid } from "react-icons/lia";
+import { MdFileDownloadDone } from "react-icons/md";
 import profile1 from "../images/profile1.webp";
 import profile2 from "../images/profile2.webp";
 import profile3 from "../images/profile3.webp";
@@ -58,13 +60,22 @@ import profile7 from "../images/profile7.webp";
 
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
-import { addDays, subDays, format, parseISO } from "date-fns";
+import { addDays, subDays, format, parseISO, setDate } from "date-fns";
 import { motion } from "framer-motion";
 import TextArea from "antd/es/input/TextArea";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
 import { label } from "framer-motion/client";
 import CommonTextArea from "../Common/CommonTextArea";
+import {
+  emailValidator,
+  genderValidator,
+  nameValidator,
+  phoneValidation,
+  selectValidator,
+  userTypeValidator,
+} from "../Common/Validation";
+import CommonDatePicker from "../Common/CommonDatePicker";
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
 
@@ -128,6 +139,505 @@ export default function MainProfile() {
   const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
   const [lateral, setLateral] = useState(null);
 
+  //
+  const [form] = Form.useForm();
+  const [fname, setFname] = useState("");
+  const [fnameError, setFnameError] = useState("");
+  const [lname, setLname] = useState("");
+  const [lnameError, setLnameError] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userNameError, setUserNameError] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumberError, setPhoneNumberError] = useState("");
+  const [gender, setGender] = useState("");
+  const [genderError, setGenderError] = useState("");
+  const [userType, setUserType] = useState("");
+  const [userTypeError, setUserTypeError] = useState("");
+  const [course, setCourse] = useState(null);
+  const [courseError, setCourseError] = useState("");
+  const [location, setLocation] = useState("");
+  const [locationError, setLocationError] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [startDateError, setStartDateError] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [endDateError, setEndDateError] = useState("");
+  const [fresherCourse, setFresherCourse] = useState("");
+  const [fresherCourseError, setFresherCourseError] = useState("");
+  const [fresherStartDate, setFresherStartDate] = useState("");
+  const [fresherStartDateError, setFresherStartDateError] = useState("");
+  const [fresherEndtDate, setFresherEndDate] = useState("");
+  const [fresherEndDateError, setFresherEndDateError] = useState("");
+
+  //
+
+  const [qualificaton, setQualification] = useState("");
+  const [qualificatonError, setQualificationError] = useState("");
+  const [educationCourse, setEducationCourse] = useState("");
+  const [educationCourseError, setEducationCourseError] = useState("");
+  const [specialization, setSpecialization] = useState("");
+  const [specializationError, setSpecializationError] = useState("");
+  const [collage, setCollage] = useState("");
+  const [collageError, setCollageError] = useState("");
+  const [courseType, setCourseType] = useState("");
+  const [courseTypeError, setCourseTypeError] = useState("");
+  const [percentage, setPercentage] = useState("");
+  const [percentageError, setPercentageError] = useState("");
+  const [cgpa, setCgpa] = useState("");
+  const [cgpaError, setCgpaError] = useState("");
+  const [educationStartDate, setEducationStartDate] = useState("");
+  const [educationStartDateError, setEducationStartDateError] = useState("");
+  const [educationEndDate, setEducationEndDate] = useState("");
+  const [educationEndDateError, setEducationEndDateError] = useState("");
+  const [aboutTextNew, setAboutTextNew] = useState("");
+  const [aboutTextError, setAboutTextError] = useState("");
+  //
+  const [designation, setDesignation] = useState("");
+  const [designationError, setDesignationError] = useState("");
+  const [organisation, setOrganisation] = useState("");
+  const [organisationError, setOrganisationError] = useState("");
+  const [employmentType, setEmploymentType] = useState("");
+  const [employmentTypeError, setEmploymentTypeError] = useState("");
+  const [workExpStartDate, setWorkExpStartDate] = useState("");
+  const [workExpStartDateError, setWorkExpStartDateError] = useState("");
+  const [workExpEndDate, setWorkExpEndDate] = useState("");
+  const [workExpEndDateError, setWorkExpEndDateError] = useState("");
+  const [workExpLocation, setWorkExpLocation] = useState("");
+  const [workExpLocationError, setWorkExpLocationError] = useState("");
+  const [resumeFile, setResumeFile] = useState(null);
+  //
+  const [project, setProject] = useState("");
+  const [projectError, setProjectError] = useState("");
+  const [projectType, setProjectType] = useState("");
+  const [projectTypeError, setProjectTypeError] = useState("");
+  const [projectStartDate, setProjectStartDate] = useState("");
+  const [projectStartDateError, setProjectStartDateError] = useState("");
+  const [projectEndDate, setProjectEndDate] = useState("");
+  const [projectEndDateError, setProjectEndDateError] = useState("");
+  const [projectDescription, setProjectDescription] = useState("");
+  const [projectDescriptionError, setProjectDescriptionError] = useState("");
+  //
+
+  const [customSkills, setCustomSkills] = useState("");
+  const [customSkillError, setCustomSkillError] = useState("");
+
+  const handleSave = (e) => {
+    e.preventDefault();
+
+    const fnameValidate = nameValidator(fname);
+    const lnameValidate = nameValidator(lname);
+    const userNameValidate = nameValidator(userName);
+    const emailValidate = emailValidator(email);
+    const phoneValidate = phoneValidation(phoneNumber);
+    const genderValidate = genderValidator(gender);
+    const userTypeValidate = userTypeValidator(userType);
+    const locationValidate = nameValidator(location);
+    const courseValidate =
+      userType === "Collage Student" ? selectValidator(course) : "";
+    const startDateValidate =
+      userType === "Collage Student" ? selectValidator(startDate) : "";
+    const endDateValidate =
+      userType === "Collage Student" ? selectValidator(endDate) : "";
+
+    const fresherCourseValidate =
+      userType === "Fresher" ? selectValidator(fresherCourse) : "";
+    const fresherStartDateValidate =
+      userType === "Fresher" ? selectValidator(fresherStartDate) : "";
+    const fresherEndtDateValidate =
+      userType === "Fresher" ? selectValidator(fresherEndtDate) : "";
+
+    setFnameError(fnameValidate);
+    setLnameError(lnameValidate);
+    setUserNameError(userNameValidate);
+    setEmailError(emailValidate);
+    setPhoneNumberError(phoneValidate);
+    setGenderError(genderValidate);
+    setUserTypeError(userTypeValidate);
+    setLocationError(locationValidate);
+    setCourseError(courseValidate);
+    setStartDateError(startDateValidate);
+    setEndDateError(endDateValidate);
+    setFresherCourseError(fresherCourseValidate);
+    setFresherStartDateError(fresherStartDateValidate);
+    setFresherEndDateError(fresherEndtDateValidate);
+
+    const hasErrors = [
+      fnameValidate,
+      lnameValidate,
+      userNameValidate,
+      emailValidate,
+      phoneValidate,
+      genderValidate,
+      userTypeValidate,
+      locationValidate,
+      ...(userType === "Collage Student"
+        ? [courseValidate, startDateValidate, endDateValidate]
+        : []),
+      ...(userType === "Fresher"
+        ? [
+            fresherCourseValidate,
+            fresherStartDateValidate,
+            fresherEndtDateValidate,
+          ]
+        : []),
+    ].some((val) => val !== "");
+
+    if (hasErrors) {
+      console.log("Validation errors found");
+      message.error("Please fill all fields correctly before proceeding.");
+      return;
+    }
+
+    console.log("All validations passed");
+
+    const userData = {
+      firstName: fname,
+      lastName: lname,
+      userName: userName,
+      email: email,
+      phoneNumber: phoneNumber,
+      gender: gender,
+      userType: userType,
+      location: location,
+      ...(userType === "Collage Student" && {
+        course: course,
+        startDate: startDate,
+        endDate: endDate,
+      }),
+    };
+    console.log("Saving user data:", userData);
+    message.success("Profile details saved successfully.");
+    onCloseDrawer();
+  };
+
+  //
+
+  const handleEducationSave = (e) => {
+    e.preventDefault();
+
+    const qualificatonValidate = selectValidator(qualificaton);
+    const educationCourseValidate = selectValidator(educationCourse);
+    const specializationValidate = selectValidator(specialization);
+    const collageValidate = nameValidator(collage);
+    const courseTypeValidate = selectValidator(courseType);
+    const educationStartDateValidate = selectValidator(educationStartDate);
+    const educationEndDateValidate = selectValidator(educationEndDate);
+
+    setQualificationError(qualificatonValidate);
+    setEducationCourseError(educationCourseValidate);
+    setSpecializationError(specializationValidate);
+    setCollageError(collageValidate);
+    setCourseTypeError(courseTypeValidate);
+    setEducationStartDateError(educationStartDateValidate);
+    setEducationEndDateError(educationEndDateValidate);
+
+    const hasEducationErrors = [
+      qualificatonValidate,
+      educationCourseValidate,
+      specializationValidate,
+      collageValidate,
+      courseTypeValidate,
+      educationStartDateValidate,
+      educationEndDateValidate,
+    ].some((val) => val !== "");
+
+    if (hasEducationErrors) {
+      console.log("Validation errors found");
+      message.error("Please fill all fields correctly before proceeding.");
+      return;
+    }
+
+    const educationUserData = {
+      qualificaton: qualificaton,
+      educationcourse: educationCourse,
+      specialization: specialization,
+      collage: collage,
+      courseType: courseType,
+      percentage: percentage,
+      educationStartDate: educationStartDate,
+      educationEndDate: educationEndDate,
+      cgpa: cgpa,
+    };
+    console.log("Saving user data:", educationUserData);
+    message.success("Education details saved successfully.");
+    onCloseDrawer();
+  };
+
+  const handleWorkExpSave = (e) => {
+    e.preventDefault();
+
+    const designationValidate = selectValidator(designation);
+    const organisationValidate = selectValidator(organisation);
+    const employmentTypeValidate = selectValidator(employmentType);
+    const workExpStartDateValidate = selectValidator(workExpStartDate);
+    const workExpEndDateValidate = selectValidator(workExpEndDate);
+    const workExpLocationValidate = nameValidator(workExpLocation);
+
+    setDesignationError(designationValidate);
+    setOrganisationError(organisationValidate);
+    setEmploymentTypeError(employmentTypeValidate);
+    setWorkExpStartDateError(workExpStartDateValidate);
+    setWorkExpEndDateError(workExpEndDateValidate);
+    setWorkExpLocationError(workExpLocationValidate);
+
+    const hasWorkExpError = [
+      designationValidate,
+      organisationValidate,
+      employmentTypeValidate,
+      workExpStartDateValidate,
+      workExpEndDateValidate,
+      workExpLocationValidate,
+    ].some((val) => val !== "");
+
+    if (hasWorkExpError) {
+      console.log("Validation errors found");
+      message.error("Please fill all fields correctly before proceeding.");
+      return;
+    }
+
+    const workExpUserData = {
+      designation: designation,
+      organisation: organisation,
+      employmentType: employmentType,
+      workExpStartDate: workExpStartDate,
+      workExpEndDate: workExpEndDate,
+      workExpLocation: workExpLocation,
+      cgpa: cgpa,
+    };
+    console.log("Saving user data:", workExpUserData);
+    message.success("Education details saved successfully.");
+    onCloseDrawer();
+  };
+
+  const handleProjectSave = (e) => {
+    e.preventDefault();
+
+    const projectValidate = nameValidator(project);
+    const projectTypeValidate = selectValidator(projectType);
+    const projectStartDateValidate = selectValidator(projectStartDate);
+    const projectEndDateValidate = selectValidator(projectEndDate);
+    const projectDescriptionValidate = nameValidator(projectDescription);
+
+    setProjectError(projectValidate);
+    setProjectTypeError(projectTypeValidate);
+    setProjectStartDateError(projectStartDateValidate);
+    setProjectEndDateError(projectEndDateValidate);
+    setProjectDescriptionError(projectDescriptionValidate);
+
+    const hasProjectError = [
+      projectValidate,
+      projectTypeValidate,
+      projectStartDateValidate,
+      projectEndDateValidate,
+      projectDescriptionValidate,
+    ].some((val) => val !== "");
+
+    let valid = true;
+
+    if (!projectType) {
+      setProjectTypeError("Project Type is required   ");
+      valid = false;
+    }
+
+    if (hasProjectError) {
+      console.log("Validation errors found");
+      message.error("Please fill all fields correctly before proceeding.");
+      return;
+    }
+
+    const projectUserData = {
+      project: project,
+      projectType: projectType,
+      projectStartDate: projectStartDate,
+      projectEndDate: projectEndDate,
+      projectDescription: projectDescription,
+    };
+    console.log("Saving user data:", projectUserData);
+    message.success("Education details saved successfully.");
+    onCloseDrawer();
+  };
+
+  const handleAboutSave = (e) => {
+    e.preventDefault();
+
+    const aboutTextValidate = nameValidator(aboutTextNew);
+
+    setAboutTextError(aboutTextValidate);
+
+    const hasAboutError = [aboutTextValidate].some((val) => val !== "");
+
+    if (hasAboutError) {
+      console.log("Validation errors found");
+      message.error("Please fill all fields correctly before proceeding.");
+      return;
+    }
+
+    const aboutUserData = {
+      aboutTextNew: aboutTextNew,
+    };
+    console.log("Saving user data:", aboutUserData);
+    message.success("About details saved successfully.");
+    onCloseDrawer();
+  };
+
+  const handleBeforeUpload = (file) => {
+    const isValidType = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ].includes(file.type);
+    const isLt10MB = file.size / 1024 / 1024 < 10;
+
+    if (!isValidType) {
+      message.error("Only DOC, DOCX, or PDF files are allowed!");
+      return Upload.LIST_IGNORE;
+    }
+
+    if (!isLt10MB) {
+      message.error("File must be smaller than 10MB!");
+      return Upload.LIST_IGNORE;
+    }
+
+    setResumeFile(file); // Store the file in state
+    return false; // Prevent auto-upload
+  };
+
+  const handleSkillsSave = (e) => {
+    e.preventDefault();
+
+    const customskillValidate = nameValidator(customSkill);
+
+    if (selectedSkills.length === 0 && customSkill.trim() === "") {
+      setCustomSkillError(customskillValidate);
+      message.warning("Please add at least one skill.");
+      return;
+    }
+
+    if (customSkill.trim() !== "") {
+      setSelectedSkills((prev) => [...prev, customSkill.trim()]);
+    }
+
+    const customSkillUserData = {
+      skills: [
+        ...selectedSkills,
+        ...(customSkill.trim() ? [customSkill.trim()] : []),
+      ],
+    };
+
+    console.log("Saving skills data:", customSkillUserData);
+    message.success("Skills saved successfully.");
+    onCloseDrawer();
+
+    // Reset states
+    setCustomSkill("");
+    setSelectedSkills([]);
+    setCustomSkillError("");
+  };
+
+  const handleFileSave = () => {
+    if (!resumeFile) {
+      message.error("Please upload a valid resume before saving.");
+      return;
+    }
+
+    onCloseDrawer();
+    console.log("Saving file:", resumeFile);
+    message.success("Resume saved successfully!");
+  };
+
+  const [socialLinks, setSocialLinks] = useState({
+    Linkedin: "",
+    Facebook: "",
+    Instagram: "",
+    Twitter: "",
+    Dribbble: "",
+    Behance: "",
+  });
+
+  const [socialLinkErrors, setSocialLinkErrors] = useState({
+    Linkedin: "",
+    Facebook: "",
+    Instagram: "",
+    Twitter: "",
+    Dribbble: "",
+    Behance: "",
+  });
+
+  const [savedLinks, setSavedLinks] = useState([]);
+  const urlPattern = /^(https?:\/\/)?([\w\d-]+\.)+[\w-]{2,}(\/.*)?$/;
+  const handleSocialLinksSave = (name, value) => {
+    setSocialLinks((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Validation on change
+    setSocialLinkErrors((prev) => ({
+      ...prev,
+      [name]:
+        value.trim() === ""
+          ? " field is required"
+          : !urlPattern.test(value)
+          ? " Invalid URL"
+          : "",
+    }));
+  };
+
+  const handleAddSocialLinks = () => {
+    let hasErrors = false;
+    const newErrors = {};
+
+    Object.entries(socialLinks).forEach(([platform, link]) => {
+      if (link.trim() !== "") {
+        if (!urlPattern.test(link)) {
+          newErrors[platform] = "Invalid URL";
+          hasErrors = true;
+        }
+      }
+    });
+
+    setSocialLinkErrors((prev) => ({ ...prev, ...newErrors }));
+
+    if (hasErrors) {
+      message.error("Please correct the errors before saving.");
+      return;
+    }
+
+    const linksArray = Object.entries(socialLinks)
+      .filter(([_, value]) => value.trim() !== "")
+      .map(([platform, link]) => ({ platform, link }));
+
+    if (linksArray.length === 0) {
+      message.warning("Please enter at least one social link.");
+      return;
+    }
+
+    setSavedLinks((prev) => [...prev, linksArray]);
+    console.log("Saved Social Links:", linksArray);
+    onCloseDrawer();
+    message.success("Social links saved successfully!");
+
+    // Reset inputs and errors
+    setSocialLinks({
+      Linkedin: "",
+      Facebook: "",
+      Instagram: "",
+      Twitter: "",
+      Dribbble: "",
+      Behance: "",
+    });
+
+    setSocialLinkErrors({
+      Linkedin: "",
+      Facebook: "",
+      Instagram: "",
+      Twitter: "",
+      Dribbble: "",
+      Behance: "",
+    });
+  };
+
   const handleLateralTypeChange = (value) => {
     setLateral(value);
     console.log("Selected Lateral Entry Option:", value);
@@ -175,6 +685,7 @@ export default function MainProfile() {
   const handleAddSkill = (skill) => {
     if (!selectedSkills.includes(skill)) {
       setSelectedSkills([...selectedSkills, skill]);
+      setCustomSkillError("");
     }
   };
 
@@ -186,14 +697,32 @@ export default function MainProfile() {
 
   const handleCustomSkillAdd = () => {
     const trimmed = customSkill.trim();
-    if (trimmed && !selectedSkills.includes(trimmed)) {
-      setSelectedSkills([...selectedSkills, trimmed]);
-      setCustomSkill("");
+
+    if (!trimmed) {
+      setCustomSkillError("Please enter a skill before adding.");
+      return;
     }
+
+    if (selectedSkills.includes(trimmed)) {
+      setCustomSkillError("Skill already added.");
+      return;
+    }
+
+    setSelectedSkills((prev) => [...prev, trimmed]);
+    setCustomSkill("");
+    setCustomSkillError("");
   };
 
   const handleButtonClick = (buttonId) => {
-    setActiveButton((prev) => buttonId);
+    setActiveButton(buttonId);
+    setGender(buttonId);
+    setGenderError("");
+  };
+
+  const handleProjectTypeClick = (type) => {
+    setActiveButton(type);
+    setProjectType(type);
+    setProjectTypeError("");
   };
 
   const handleUserTypeClick = (buttonId) => {
@@ -214,15 +743,6 @@ export default function MainProfile() {
     console.log("fileee", file);
 
     setCertification([file]);
-  };
-
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setFileName(file.name);
-    } else {
-      setFileName("");
-    }
   };
 
   const handleUpload = (info) => {
@@ -249,429 +769,564 @@ export default function MainProfile() {
   // --- Tab Content Components ---
   const TabContent = {
     basic: () => (
-      <div>
-        <div className="form-row">
-          <div className="form-group">
-            <CommonInputField
-              name="fname"
-              label="First Name"
-              mandotary={true}
-              placeholder="Enter your first name"
-              type="text"
-              // error={"Please enter your first name"}
-            />
+      <Form
+        layout="vertical"
+        name="multi-step-form"
+        className="multi-step-form"
+        form={form}
+      >
+        <div>
+          <div className="form-row">
+            <div className="form-group">
+              <CommonInputField
+                name="fname"
+                label="First Name"
+                mandotary={true}
+                value={fname}
+                placeholder="Enter your first name"
+                type="text"
+                onChange={(e) => {
+                  setFname(e.target.value);
+                  setFnameError(nameValidator(e.target.value));
+                }}
+                error={fnameError}
+              />
+            </div>
+            <div className="form-group">
+              <CommonInputField
+                name="lname"
+                label="Last Name"
+                mandotary={true}
+                value={lname}
+                placeholder="Enter your Last Name"
+                type="text"
+                onChange={(e) => {
+                  setLname(e.target.value);
+                  setLnameError(nameValidator(e.target.value));
+                }}
+                error={lnameError}
+              />
+            </div>
           </div>
-          <div className="form-group">
-            <CommonInputField
-              name="lname"
-              label="Last Name"
-              mandotary={true}
-              placeholder="Enter your Last Name"
-              type="text"
-              // error={"Please enter your Last Name"}
-            />
-          </div>
-        </div>
 
-        <div className="form-group">
-          <CommonInputField
-            name="Username"
-            label="Username"
-            mandotary={true}
-            placeholder="Enter your Username"
-            type="text"
-            // error={"Please enter your Username"}
-          />
-        </div>
-
-        <div className="form-row">
           <div className="form-group">
             <CommonInputField
-              name="email"
-              label="Email"
+              name="Username"
+              label="Username"
               mandotary={true}
-              placeholder="Enter your Email"
-              type="email"
-              // error={"Please enter your Email"}
+              value={userName}
+              placeholder="Enter your Username"
+              onChange={(e) => {
+                setUserName(e.target.value);
+                setUserNameError(nameValidator(e.target.value));
+              }}
+              error={userNameError}
             />
           </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <CommonInputField
+                name="email"
+                label="Email"
+                mandotary={true}
+                value={email}
+                placeholder="Enter your Email"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError(emailValidator(e.target.value));
+                }}
+                error={emailError}
+              />
+            </div>
+            <div className="form-group">
+              <CommonInputField
+                name="Mobile"
+                label="Mobile"
+                mandotary={true}
+                value={phoneNumber}
+                placeholder="Enter your mobile"
+                onChange={(e) => {
+                  setPhoneNumber(e.target.value);
+                  setPhoneNumberError(phoneValidation(e.target.value));
+                }}
+                error={phoneNumberError}
+              />
+            </div>
+          </div>
+
           <div className="form-group">
-            {/* <Form.Item
+            <Form.Item
               layout="vertical"
-              label={<span style={{ fontWeight: 500 }}>Mobile</span>}
-              name="Mobile"
+              label={<span style={{ fontWeight: 500 }}>Gender</span>}
+              required
+            >
+              <div className="job_nature">
+                <button
+                  type="button"
+                  className={
+                    activeButton === "Male"
+                      ? "job_nature_button_active"
+                      : "job_nature_button"
+                  }
+                  onClick={() => {
+                    handleButtonClick("Male");
+                    setGender("Male");
+                    setGenderError("");
+                  }}
+                >
+                  <IoIosMale /> Male
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    activeButton === "Female"
+                      ? "job_nature_button_active"
+                      : "job_nature_button"
+                  }
+                  onClick={() => {
+                    handleButtonClick("Female");
+                    setGender("Female");
+                    setGenderError("");
+                  }}
+                >
+                  <IoFemaleOutline /> Female
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    activeButton === "Others"
+                      ? "job_nature_button_active"
+                      : "job_nature_button"
+                  }
+                  onClick={() => {
+                    handleButtonClick("Others");
+                    setGender("Others");
+                    setGenderError("");
+                  }}
+                >
+                  <MdOutlineNotInterested /> Others
+                </button>
+              </div>
+
+              {genderError && (
+                <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+                  {genderError}
+                </div>
+              )}
+            </Form.Item>
+          </div>
+
+          <div style={{ marginTop: 15 }} className="form-group">
+            <Form.Item
+              layout="vertical"
+              label={<span style={{ fontWeight: 500 }}>User Type </span>}
+              name="usertype"
               rules={[
                 {
                   required: true,
-                  message: "Please enter your Mobile",
+                  message: "Please Select your User Type ",
                 },
               ]}
             >
-              <Input placeholder="Enter your lname" className="premium-input" />
-            </Form.Item> */}
+              <div className="job_nature">
+                <button
+                  type="button"
+                  className={
+                    userTypeactiveButton === "Collage Student"
+                      ? "job_nature_button_active"
+                      : "job_nature_button"
+                  }
+                  onClick={() => {
+                    handleUserTypeClick("Collage Student");
+                    setUserType("Collage Student");
+                    setUserTypeError("");
+                  }}
+                >
+                  <LuGraduationCap /> Collage Student
+                </button>
 
+                <button
+                  type="button"
+                  className={
+                    userTypeactiveButton === "Professional"
+                      ? "job_nature_button_active"
+                      : "job_nature_button"
+                  }
+                  onClick={() => {
+                    handleUserTypeClick("Professional");
+                    setUserType("Professional");
+                    setUserTypeError("");
+                  }}
+                >
+                  <GiOfficeChair /> Professional
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    userTypeactiveButton === "School Student"
+                      ? "job_nature_button_active"
+                      : "job_nature_button"
+                  }
+                  onClick={() => {
+                    handleUserTypeClick("School Student");
+                    setUserType("School Student");
+                    setUserTypeError("");
+                  }}
+                >
+                  <PiStudent /> School Student
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    userTypeactiveButton === "Fresher"
+                      ? "job_nature_button_active"
+                      : "job_nature_button"
+                  }
+                  onClick={() => {
+                    handleUserTypeClick("Fresher");
+                    setUserType("Fresher");
+                    setUserTypeError("");
+                  }}
+                >
+                  <GiNewShoot /> Fresher
+                </button>
+              </div>
+              {userTypeError && (
+                <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+                  {userTypeError}
+                </div>
+              )}
+            </Form.Item>
+          </div>
+
+          <div className="">
+            {userTypeactiveButton === "Collage Student" && (
+              <>
+                <div style={{ marginTop: 15 }} className="form-group">
+                  <CommonSelectField
+                    label="Course"
+                    disabled={false}
+                    name="course"
+                    mandatory={true}
+                    placeholder="Select Course"
+                    showSearch={true}
+                    options={[
+                      { value: "MBA", label: "MBA" },
+                      { value: "BSC", label: "BSC" },
+                    ]}
+                    onChange={(value) => {
+                      setCourse(value);
+                      setCourseError(selectValidator(value));
+                    }}
+                    error={courseError}
+                  />
+                </div>
+
+                <div style={{ alignItems: "center" }} className="form-row">
+                  <div className="form-group">
+                    <CommonDatePicker
+                      value={startDate}
+                      label="Start Year"
+                      name="startyear"
+                      placeholder="Start Year"
+                      onChange={(value) => {
+                        setStartDate(value);
+
+                        if (!value || value.trim() === "") {
+                          setStartDateError(" is required");
+                        } else {
+                          setStartDateError("");
+                        }
+                      }}
+                      error={startDateError}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <CommonDatePicker
+                      value={endDate}
+                      label="End Year"
+                      name="endyear"
+                      placeholder="End Year"
+                      onChange={(value) => {
+                        setEndDate(value);
+
+                        if (!value || value.trim() === "") {
+                          setEndDateError(" is required");
+                        } else {
+                          setEndDateError("");
+                        }
+                      }}
+                      error={endDateError}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {userTypeactiveButton === "Fresher" && (
+              <>
+                <div style={{ marginTop: 15 }} className="form-group">
+                  <CommonSelectField
+                    label="Course"
+                    disabled={false}
+                    name="course1"
+                    mandatory={true}
+                    placeholder="Select Course"
+                    showSearch={true}
+                    options={[
+                      { value: "MBA", label: "MBA" },
+                      { value: "BSC", label: "BSC" },
+                    ]}
+                    onChange={(value) => {
+                      setFresherCourse(value);
+                      setFresherCourseError(selectValidator(value));
+                    }}
+                    error={fresherCourseError}
+                  />
+                </div>
+
+                <div style={{ alignItems: "center" }} className="form-row">
+                  <div className="form-group">
+                    <CommonDatePicker
+                      value={fresherStartDate}
+                      label="Start Year"
+                      name="startyear"
+                      placeholder="Start Year"
+                      onChange={(value) => {
+                        setFresherStartDate(value);
+
+                        if (!value || value.trim() === "") {
+                          setFresherStartDateError(" is required");
+                        } else {
+                          setFresherStartDateError("");
+                        }
+                      }}
+                      error={fresherStartDateError}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <CommonDatePicker
+                      value={fresherEndtDate}
+                      label="End Year"
+                      name="endyear"
+                      placeholder="End Year"
+                      onChange={(value) => {
+                        setFresherEndDate(value);
+
+                        if (!value || value.trim() === "") {
+                          setFresherEndDateError(" is required");
+                        } else {
+                          setFresherEndDateError("");
+                        }
+                      }}
+                      error={fresherEndDateError}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {userTypeactiveButton === "School Student" && (
+              <>
+                <Form.Item
+                  style={{ marginTop: 15 }}
+                  layout="vertical"
+                  label={<span style={{ fontWeight: 500 }}>Class</span>}
+                  name="usertype"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please Select your Class",
+                    },
+                  ]}
+                >
+                  <div className="job_nature">
+                    <button
+                      type="button"
+                      className={
+                        Class === "1"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("1")}
+                    >
+                      <LiaSchoolSolid /> 1
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "2"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("2")}
+                    >
+                      <LiaSchoolSolid /> 2
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "3"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("3")}
+                    >
+                      <LiaSchoolSolid /> 3
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "4"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("4")}
+                    >
+                      <LiaSchoolSolid /> 4
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "5"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("5")}
+                    >
+                      <LiaSchoolSolid /> 5
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "6"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("6")}
+                    >
+                      <LiaSchoolSolid /> 6
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "7"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("7")}
+                    >
+                      <LiaSchoolSolid /> 7
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "8"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("8")}
+                    >
+                      <LiaSchoolSolid /> 8
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "9"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("9")}
+                    >
+                      <LiaSchoolSolid /> 9
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "10"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("10")}
+                    >
+                      <LiaSchoolSolid /> 10
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "11"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("11")}
+                    >
+                      <LiaSchoolSolid /> 11
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        Class === "12"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => handleClassClick("12")}
+                    >
+                      <LiaSchoolSolid /> 12
+                    </button>
+                  </div>
+                </Form.Item>
+              </>
+            )}
+          </div>
+
+          <div style={{ marginTop: 20 }} className="form-group">
             <CommonInputField
-              name="Mobile"
-              label="Mobile"
+              name="location"
+              label="Location"
               mandotary={true}
-              placeholder="Enter your mobile"
-              type="tel"
-              pattern={/^[6-9]\d{9}$/}
-              // error={"Please enter your mobile"}
+              value={location}
+              placeholder="Enter your Location"
+              type="text"
+              onChange={(e) => {
+                setLocation(e.target.value);
+                setLocationError(nameValidator(e.target.value));
+              }}
+              error={locationError}
             />
           </div>
-        </div>
-
-        <div className="form-group">
-          <Form.Item
-            layout="vertical"
-            label={<span style={{ fontWeight: 500 }}>Gender</span>}
-            name="gender"
-            rules={[
-              {
-                required: true,
-                message: "Please Select your Gender",
-              },
-            ]}
-          >
-            <div className="job_nature">
-              <button
-                type="button"
-                className={
-                  activeButton === "Male"
-                    ? "job_nature_button_active"
-                    : "job_nature_button"
-                }
-                onClick={() => handleButtonClick("Male")}
-              >
-                <IoIosMale /> Male
-              </button>
-
-              <button
-                type="button"
-                className={
-                  activeButton === "Female"
-                    ? "job_nature_button_active"
-                    : "job_nature_button"
-                }
-                onClick={() => handleButtonClick("Female")}
-              >
-                <IoFemaleOutline /> Female
-              </button>
-
-              <button
-                type="button"
-                className={
-                  activeButton === "Others"
-                    ? "job_nature_button_active"
-                    : "job_nature_button"
-                }
-                onClick={() => handleButtonClick("Others")}
-              >
-                <MdOutlineNotInterested /> Others
-              </button>
-            </div>
-          </Form.Item>
-        </div>
-
-        <div className="form-group">
-          <Form.Item
-            layout="vertical"
-            label={<span style={{ fontWeight: 500 }}>User Type </span>}
-            name="usertype"
-            rules={[
-              {
-                required: true,
-                message: "Please Select your User Type ",
-              },
-            ]}
-          >
-            <div className="job_nature">
-              <button
-                type="button"
-                className={
-                  userTypeactiveButton === "Collage Student"
-                    ? "job_nature_button_active"
-                    : "job_nature_button"
-                }
-                onClick={() => handleUserTypeClick("Collage Student")}
-              >
-                <LuGraduationCap /> Collage Student
-              </button>
-
-              <button
-                type="button"
-                className={
-                  userTypeactiveButton === "Professional"
-                    ? "job_nature_button_active"
-                    : "job_nature_button"
-                }
-                onClick={() => handleUserTypeClick("Professional")}
-              >
-                <GiOfficeChair /> Professional
-              </button>
-
-              <button
-                type="button"
-                className={
-                  userTypeactiveButton === "School Student"
-                    ? "job_nature_button_active"
-                    : "job_nature_button"
-                }
-                onClick={() => handleUserTypeClick("School Student")}
-              >
-                <PiStudent /> School Student
-              </button>
-
-              <button
-                type="button"
-                className={
-                  userTypeactiveButton === "Fresher"
-                    ? "job_nature_button_active"
-                    : "job_nature_button"
-                }
-                onClick={() => handleUserTypeClick("Fresher")}
-              >
-                <GiNewShoot /> Fresher
-              </button>
-            </div>
-          </Form.Item>
-        </div>
-
-        <div className="">
-          {(userTypeactiveButton === "Collage Student" ||
-            userTypeactiveButton === "Fresher") && (
-            <>
-              <div className="form-group">
-                <CommonSelectField
-                  label="Course"
-                  name="course"
-                  mandatory={true}
-                  placeholder="Select Course"
-                  showSearch={true}
-                />
-              </div>
-
-              <div style={{ alignItems: "center" }} className="form-row">
-                <div className="form-group">
-                  <CommonInputField
-                    name="startyear"
-                    label="Start Year"
-                    mandotary={true}
-                    placeholder="Enter your Start Year"
-                    type="date"
-                    // error={"Please enter your Start Year"}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <CommonInputField
-                    name="endyear"
-                    label="End Year"
-                    mandotary={true}
-                    placeholder="Enter your End Year"
-                    type="date"
-                    // error={"Please enter your End Year"}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          {userTypeactiveButton === "School Student" && (
-            <>
-              <Form.Item
-                layout="vertical"
-                label={<span style={{ fontWeight: 500 }}>Class</span>}
-                name="usertype"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please Select your Class",
-                  },
-                ]}
-              >
-                <div className="job_nature">
-                  <button
-                    type="button"
-                    className={
-                      Class === "1"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("1")}
-                  >
-                    <LiaSchoolSolid /> 1
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "2"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("2")}
-                  >
-                    <LiaSchoolSolid /> 2
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "3"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("3")}
-                  >
-                    <LiaSchoolSolid /> 3
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "4"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("4")}
-                  >
-                    <LiaSchoolSolid /> 4
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "5"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("5")}
-                  >
-                    <LiaSchoolSolid /> 5
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "6"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("6")}
-                  >
-                    <LiaSchoolSolid /> 6
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "7"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("7")}
-                  >
-                    <LiaSchoolSolid /> 7
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "8"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("8")}
-                  >
-                    <LiaSchoolSolid /> 8
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "9"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("9")}
-                  >
-                    <LiaSchoolSolid /> 9
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "10"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("10")}
-                  >
-                    <LiaSchoolSolid /> 10
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "11"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("11")}
-                  >
-                    <LiaSchoolSolid /> 11
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      Class === "12"
-                        ? "job_nature_button_active"
-                        : "job_nature_button"
-                    }
-                    onClick={() => handleClassClick("12")}
-                  >
-                    <LiaSchoolSolid /> 12
-                  </button>
-                </div>
-              </Form.Item>
-            </>
-          )}
-        </div>
-
-        <div className="form-group">
-          <CommonInputField
-            name="location"
-            label="Location"
-            mandotary={true}
-            placeholder="Enter your Location"
-            type="text"
-            // error={"Please enter your Location"}
-          />
-        </div>
-        <div style={{ textAlign: "-webkit-right" }} className="save_btn">
-          <button className="primary-btn">
-            <span>Save</span>
-            <svg
-              width="24"
-              height="24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+          <div style={{ textAlign: "-webkit-right" }} className="save_btn">
+            <Button
+              type="primary"
+              size="large"
+              onClick={handleSave}
+              className="nav-btn next-btn"
             >
-              <path
-                d="M16 5.833L8.166 16.833L3.666 12.333"
-                stroke="#fff"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
+              <MdFileDownloadDone style={{ fontSize: 22 }} />
+              Save
+            </Button>
+          </div>
         </div>
-      </div>
+      </Form>
     ),
+
     resume: () => (
       <>
         <Title level={4}>Resume</Title>
@@ -694,7 +1349,7 @@ export default function MainProfile() {
             showUploadList={false}
             accept=".doc,.docx,.pdf"
             maxCount={1}
-            beforeUpload={() => false} // Prevent auto-upload
+            beforeUpload={handleBeforeUpload}
           >
             <Button
               style={{ background: "#5f2eea" }}
@@ -709,6 +1364,23 @@ export default function MainProfile() {
               </Text>
             </div>
           </Upload>
+
+          {resumeFile && (
+            <div style={{ marginTop: 16 }}>
+              <Text strong>Selected File: </Text>
+              <Text>{resumeFile.name}</Text>
+            </div>
+          )}
+
+          <div style={{ textAlign: "right", marginTop: 24 }}>
+            <Button
+              type="primary"
+              style={{ background: "#5f2eea" }}
+              onClick={handleFileSave}
+            >
+              Save Resume
+            </Button>
+          </div>
         </div>
       </>
     ),
@@ -743,8 +1415,13 @@ export default function MainProfile() {
           style={{ height: 150 }}
           mandatory={true}
           rows={6}
-          value={aboutText}
-          onChange={(e) => setAboutText(e.target.value)}
+          label={"About"}
+          value={aboutTextNew}
+          onChange={(e) => {
+            setAboutTextNew(e.target.value);
+            setAboutTextError(nameValidator(e.target.value));
+          }}
+          error={aboutTextError}
         />
 
         <Button
@@ -771,6 +1448,18 @@ export default function MainProfile() {
         >
           Generate with AI
         </Button>
+
+        <div style={{ textAlign: "-webkit-right" }} className="save_btn">
+          <Button
+            type="primary"
+            size="large"
+            onClick={handleAboutSave}
+            className="nav-btn next-btn"
+          >
+            <MdFileDownloadDone style={{ fontSize: 22 }} />
+            Save
+          </Button>
+        </div>
       </div>
     ),
 
@@ -842,17 +1531,21 @@ export default function MainProfile() {
             onPressEnter={handleCustomSkillAdd}
             value={customSkill}
             name={"Job title"}
-            onChange={(e) => setCustomSkill(e.target.value)}
+            onChange={(e) => {
+              setCustomSkill(e.target.value);
+              if (customSkillError) setCustomSkillError("");
+            }}
             mandotary={true}
             placeholder={"List your skills here, showcasing what you excel at."}
-            // error={"Please enter your job title"}
+            error={customSkillError}
           />
+
           <Button
             type="primary"
             style={{ marginTop: 20, background: "#5f2eea" }}
-            onClick={handleCustomSkillAdd}
+            onClick={handleSkillsSave}
           >
-            Add Custom Skill
+            Add Skill
           </Button>
         </div>
       </div>
@@ -864,9 +1557,25 @@ export default function MainProfile() {
             label={"Qualification"}
             name={"qualificaton"}
             placeholder={"Select Qualification"}
+            value={qualificaton}
             mandatory={true}
             showSearch={true}
             optionFilterProp={"lable"}
+            options={[
+              {
+                value: "Fresher",
+                label: "Fresher",
+              },
+              {
+                value: "Experience",
+                label: "Experience",
+              },
+            ]}
+            onChange={(value) => {
+              setQualification(value);
+              setQualificationError(selectValidator(value));
+            }}
+            error={qualificatonError}
           />
         </div>
 
@@ -879,6 +1588,22 @@ export default function MainProfile() {
               mandatory={true}
               showSearch={true}
               optionFilterProp={"lable"}
+              value={educationCourse}
+              options={[
+                {
+                  value: "Fresher",
+                  label: "Fresher",
+                },
+                {
+                  value: "Experience",
+                  label: "Experience",
+                },
+              ]}
+              onChange={(value) => {
+                setEducationCourse(value);
+                setEducationCourseError(selectValidator(value));
+              }}
+              error={educationCourseError}
             />
           </div>
         </div>
@@ -889,8 +1614,24 @@ export default function MainProfile() {
             name={"specialization"}
             placeholder={"Select Specialization"}
             mandatory={true}
+            value={specialization}
             showSearch={true}
             optionFilterProp={"lable"}
+            options={[
+              {
+                value: "Fresher",
+                label: "Fresher",
+              },
+              {
+                value: "Experience",
+                label: "Experience",
+              },
+            ]}
+            onChange={(value) => {
+              setSpecialization(value);
+              setSpecializationError(selectValidator(value));
+            }}
+            error={specializationError}
           />
         </div>
 
@@ -901,36 +1642,54 @@ export default function MainProfile() {
             mandotary={true}
             placeholder="Collage"
             type="text"
-            // error={"Please enter your Collage"}
+            value={collage}
+            onChange={(e) => {
+              setCollage(e.target.value);
+              setCollageError(nameValidator(e.target.value));
+            }}
+            error={collageError}
           />
         </div>
 
-        <Row style={{ alignItems: "end", gap: 20 }}>
-          <Col lg={11}>
-            <div className="form-group">
-              <CommonInputField
-                name="startyear"
-                label="Start year"
-                mandotary={true}
-                placeholder="Start year"
-                type="date"
-                // error={"Please enter your Start year"}
-              />
-            </div>
-          </Col>
-          <Col lg={11}>
-            <div className="form-group">
-              <CommonInputField
-                name="endyear"
-                label="End year"
-                mandotary={true}
-                placeholder="End year"
-                type="date"
-                // error={"Please enter your End year"}
-              />
-            </div>
-          </Col>
-        </Row>
+        <div style={{ alignItems: "center" }} className="form-row">
+          <div className="form-group">
+            <CommonDatePicker
+              value={educationStartDate}
+              label="Start Year"
+              name="startyear"
+              placeholder="Start Year"
+              onChange={(value) => {
+                setEducationStartDate(value);
+
+                if (!value || value.trim() === "") {
+                  setEducationStartDateError(" is required");
+                } else {
+                  setEducationStartDateError("");
+                }
+              }}
+              error={educationStartDateError}
+            />
+          </div>
+
+          <div className="form-group">
+            <CommonDatePicker
+              value={educationEndDate}
+              label="End Year"
+              name="endyear"
+              placeholder="End Year"
+              onChange={(value) => {
+                setEducationEndDate(value);
+
+                if (!value || value.trim() === "") {
+                  setEducationEndDateError(" is required");
+                } else {
+                  setEducationEndDateError("");
+                }
+              }}
+              error={educationEndDateError}
+            />
+          </div>
+        </div>
 
         <div className="form-group">
           <CommonSelectField
@@ -940,6 +1699,22 @@ export default function MainProfile() {
             mandatory={true}
             showSearch={true}
             optionFilterProp={"lable"}
+            value={endDate}
+            options={[
+              {
+                value: "Fresher",
+                label: "Fresher",
+              },
+              {
+                value: "Experience",
+                label: "Experience",
+              },
+            ]}
+            onChange={(value) => {
+              setCourseType(value);
+              setCourseTypeError(selectValidator(value));
+            }}
+            error={courseTypeError}
           />
         </div>
 
@@ -949,10 +1724,9 @@ export default function MainProfile() {
               <CommonInputField
                 name="percentage"
                 label="Percentage"
-                mandotary={true}
                 placeholder="Percentage"
                 type="text"
-                // error={"Please enter your Percentage"}
+                value={percentage}
               />
             </div>
           </Col>
@@ -961,10 +1735,9 @@ export default function MainProfile() {
               <CommonInputField
                 name="cgpa"
                 label="CGPA"
-                mandotary={true}
                 placeholder="CGPA"
                 type="text"
-                // error={"Please Enter your CGPA"}
+                value={cgpa}
               />
             </div>
           </Col>
@@ -976,10 +1749,8 @@ export default function MainProfile() {
               <CommonInputField
                 name="rollnumber"
                 label="Roll Number"
-                mandotary={true}
                 placeholder="Roll Number"
                 type="number"
-                // error={"Please Enter your Roll Number"}
               />
             </div>
           </Col>
@@ -989,7 +1760,6 @@ export default function MainProfile() {
                 label="Are you a Lateral Entry Student?"
                 name="lateralstudent"
                 placeholder="Lateral Entry"
-                mandatory={true}
                 showSearch={true}
                 options={[
                   { value: "Yes", label: "Yes" },
@@ -1002,6 +1772,17 @@ export default function MainProfile() {
             </div>
           </Col>
         </Row>
+        <div style={{ textAlign: "-webkit-right" }} className="save_btn">
+          <Button
+            type="primary"
+            size="large"
+            onClick={handleEducationSave}
+            className="nav-btn next-btn"
+          >
+            <MdFileDownloadDone style={{ fontSize: 22 }} />
+            Save
+          </Button>
+        </div>
       </div>
     ),
     experience: () => (
@@ -1013,7 +1794,23 @@ export default function MainProfile() {
             mandatory={true}
             placeholder="Select Designation"
             showSearch={true}
+            value={designation}
             optionFilterProp="label"
+            options={[
+              {
+                value: "Fresher",
+                label: "Fresher",
+              },
+              {
+                value: "Experience",
+                label: "Experience",
+              },
+            ]}
+            onChange={(value) => {
+              setDesignation(value);
+              setDesignationError(selectValidator(value));
+            }}
+            error={designationError}
           />
         </div>
 
@@ -1024,7 +1821,23 @@ export default function MainProfile() {
             mandatory={true}
             placeholder="Select Organisation"
             showSearch={true}
+            value={organisation}
             optionFilterProp="label"
+            options={[
+              {
+                value: "Fresher",
+                label: "Fresher",
+              },
+              {
+                value: "Experience",
+                label: "Experience",
+              },
+            ]}
+            onChange={(value) => {
+              setOrganisation(value);
+              setOrganisationError(selectValidator(value));
+            }}
+            error={organisationError}
           />
         </div>
 
@@ -1035,47 +1848,62 @@ export default function MainProfile() {
             mandatory={true}
             placeholder="Select Employmenttype"
             showSearch={true}
+            value={employmentType}
             optionFilterProp="label"
+            options={[
+              {
+                value: "Fresher",
+                label: "Fresher",
+              },
+              {
+                value: "Experience",
+                label: "Experience",
+              },
+            ]}
+            onChange={(value) => {
+              setEmploymentType(value);
+              setEmploymentTypeError(selectValidator(value));
+            }}
+            error={employmentTypeError}
           />
         </div>
 
         <div style={{ alignItems: "end" }} className="form-row">
           <div className="form-group">
-            <Form.Item
-              layout="vertical"
-              label={<span style={{ fontWeight: 500 }}>Duration</span>}
-              name="Duration"
-              rules={[
-                {
-                  required: true,
-                  message: "Please Select your Start Date",
-                },
-              ]}
-            >
-              <DatePicker
-                placeholder="Start date"
-                onChange={onChangeDate}
-                needConfirm
-              />
-            </Form.Item>
+            <CommonDatePicker
+              value={workExpStartDate}
+              label="Start Date"
+              name="startdate"
+              placeholder="Start Date"
+              onChange={(value) => {
+                setWorkExpStartDate(value);
+
+                if (!value || value.trim() === "") {
+                  setWorkExpStartDateError(" is required");
+                } else {
+                  setWorkExpStartDateError("");
+                }
+              }}
+              error={workExpStartDateError}
+            />
           </div>
           <div className="form-group">
-            <Form.Item
-              layout="vertical"
-              name="Duration"
-              rules={[
-                {
-                  required: true,
-                  message: "Please Select your End Date",
-                },
-              ]}
-            >
-              <DatePicker
-                placeholder="End date"
-                onChange={onChangeDate}
-                needConfirm
-              />
-            </Form.Item>
+            <CommonDatePicker
+              value={workExpEndDate}
+              label="End Date"
+              name="enddate"
+              placeholder="End Date"
+              onChange={(value) => {
+                setWorkExpEndDate(value);
+
+                if (!value || value.trim() === "") {
+                  setWorkExpEndDateError(" is required");
+                } else {
+                  setWorkExpEndDateError("");
+                }
+              }}
+              error={workExpEndDateError}
+            />
           </div>
         </div>
 
@@ -1086,8 +1914,24 @@ export default function MainProfile() {
             mandotary={true}
             placeholder={"Location"}
             type={"text"}
-            // error={"Please Enter your Location"}
+            value={workExpLocation}
+            onChange={(e) => {
+              setWorkExpLocation(e.target.value);
+              setWorkExpLocationError(nameValidator(e.target.value));
+            }}
+            error={workExpLocationError}
           />
+        </div>
+        <div style={{ textAlign: "-webkit-right" }} className="save_btn">
+          <Button
+            type="primary"
+            size="large"
+            onClick={handleWorkExpSave}
+            className="nav-btn next-btn"
+          >
+            <MdFileDownloadDone style={{ fontSize: 22 }} />
+            Save
+          </Button>
         </div>
       </div>
     ),
@@ -1101,7 +1945,11 @@ export default function MainProfile() {
               mandotary={true}
               placeholder="Add link"
               type="text"
-              // error={"Please Enter your Linkedin"}
+              value={socialLinks.Linkedin}
+              onChange={(e) =>
+                handleSocialLinksSave("Linkedin", e.target.value)
+              }
+              error={socialLinkErrors.Linkedin}
             />
           </div>
           <div className="form-group">
@@ -1111,7 +1959,11 @@ export default function MainProfile() {
               mandotary={true}
               placeholder="Add link"
               type="text"
-              // error={"Please Enter your Facebook"}
+              value={socialLinks.Facebook}
+              onChange={(e) =>
+                handleSocialLinksSave("Facebook", e.target.value)
+              }
+              error={socialLinkErrors.Facebook}
             />
           </div>
         </div>
@@ -1124,7 +1976,11 @@ export default function MainProfile() {
               mandotary={true}
               placeholder="Add link"
               type="text"
-              // error={"Please Enter your Instagram"}
+              value={socialLinks.Instagram}
+              onChange={(e) =>
+                handleSocialLinksSave("Instagram", e.target.value)
+              }
+              error={socialLinkErrors.Instagram}
             />
           </div>
           <div className="form-group">
@@ -1134,7 +1990,9 @@ export default function MainProfile() {
               mandotary={true}
               placeholder="Add link"
               type="text"
-              // error={"Please Enter your Twitter"}
+              value={socialLinks.Twitter}
+              error={socialLinkErrors.Twitter}
+              onChange={(e) => handleSocialLinksSave("Twitter", e.target.value)}
             />
           </div>
         </div>
@@ -1147,7 +2005,11 @@ export default function MainProfile() {
               mandotary={true}
               placeholder="Add link"
               type="text"
-              // error={"Please Enter your Dribbble"}
+              value={socialLinks.Dribbble}
+              error={socialLinkErrors.Dribbble}
+              onChange={(e) =>
+                handleSocialLinksSave("Dribbble", e.target.value)
+              }
             />
           </div>
           <div className="form-group">
@@ -1157,9 +2019,22 @@ export default function MainProfile() {
               mandotary={true}
               placeholder="Add link"
               type="text"
-              // error={"Please Enter your Behance"}
+              value={socialLinks.Behance}
+              error={socialLinkErrors.Behance}
+              onChange={(e) => handleSocialLinksSave("Behance", e.target.value)}
             />
           </div>
+        </div>
+        <div style={{ textAlign: "-webkit-right" }} className="save_btn">
+          <Button
+            type="primary"
+            size="large"
+            className="nav-btn next-btn"
+            onClick={handleAddSocialLinks}
+          >
+            <IoMdAdd style={{ fontSize: 22 }} />
+            Add
+          </Button>
         </div>
       </div>
     ),
@@ -1173,7 +2048,12 @@ export default function MainProfile() {
             mandotary={true}
             placeholder="Project Name"
             type="text"
-            // error={"Please Enter your Project Name"}
+            value={project}
+            onChange={(e) => {
+              setProject(e.target.value);
+              setProjectError(nameValidator(e.target.value));
+            }}
+            error={projectError}
           />
         </div>
 
@@ -1182,12 +2062,7 @@ export default function MainProfile() {
             layout="vertical"
             label={<span style={{ fontWeight: 500 }}>Project Type</span>}
             name="projecttype"
-            rules={[
-              {
-                required: true,
-                message: "Please Select your Project Type",
-              },
-            ]}
+            required
           >
             <div className="job_nature">
               <button
@@ -1197,7 +2072,11 @@ export default function MainProfile() {
                     ? "job_nature_button_active"
                     : "job_nature_button"
                 }
-                onClick={() => handleButtonClick("Full Time")}
+                onClick={() => {
+                  handleProjectTypeClick("Full Time");
+                  setProjectType("Full Time");
+                  setProjectTypeError("");
+                }}
               >
                 Full Time
               </button>
@@ -1209,7 +2088,11 @@ export default function MainProfile() {
                     ? "job_nature_button_active"
                     : "job_nature_button"
                 }
-                onClick={() => handleButtonClick("Part Time")}
+                onClick={() => {
+                  handleProjectTypeClick("Part Time");
+                  setProjectType("Part Time");
+                  setProjectTypeError("");
+                }}
               >
                 Part Time
               </button>
@@ -1221,58 +2104,65 @@ export default function MainProfile() {
                     ? "job_nature_button_active"
                     : "job_nature_button"
                 }
-                onClick={() => handleButtonClick("Freelance")}
+                onClick={() => {
+                  handleProjectTypeClick("Freelance");
+                  setProjectType("Freelance");
+                  setProjectTypeError("");
+                }}
               >
                 Freelance
               </button>
             </div>
+            {projectTypeError && (
+              <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+                {projectTypeError}
+              </div>
+            )}
           </Form.Item>
         </div>
 
-        <Row style={{ alignItems: "end", gap: 20 }}>
-          <Col lg={11}>
-            <div className="form-group">
-              <Form.Item
-                layout="vertical"
-                label={
-                  <span style={{ fontWeight: 500 }}>Project Duration</span>
+        <div
+          style={{ alignItems: "center", marginTop: 15 }}
+          className="form-row"
+        >
+          <div className="form-group">
+            <CommonDatePicker
+              value={projectStartDate}
+              label="Start Date"
+              name="enddate"
+              placeholder="Start Date"
+              onChange={(value) => {
+                setProjectStartDate(value);
+
+                if (!value || value.trim() === "") {
+                  setProjectStartDateError(" is required");
+                } else {
+                  setProjectStartDateError("");
                 }
-                rules={[
-                  {
-                    required: true,
-                    message: "Please Enter Project Duration",
-                  },
-                ]}
-                name={"Duration"}
-              >
-                <DatePicker
-                  placeholder="Start date"
-                  onChange={onChangeDate}
-                  needConfirm
-                />
-              </Form.Item>
-            </div>
-          </Col>
-          <Col lg={11}>
-            <div className="form-group">
-              <Form.Item
-                layout="vertical"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please Enter your End date",
-                  },
-                ]}
-              >
-                <DatePicker
-                  placeholder="End date"
-                  onChange={onChangeDate}
-                  needConfirm
-                />
-              </Form.Item>
-            </div>
-          </Col>
-        </Row>
+              }}
+              error={projectStartDateError}
+            />
+          </div>
+
+          <div className="form-group">
+            <CommonDatePicker
+              value={projectEndDate}
+              label="End Date"
+              name="enddate"
+              placeholder="End Date"
+              onChange={(value) => {
+                setProjectEndDate(value);
+
+                if (!value || value.trim() === "") {
+                  setProjectEndDateError(" is required");
+                } else {
+                  setProjectEndDateError("");
+                }
+              }}
+              error={projectEndDateError}
+            />
+          </div>
+        </div>
 
         {/*  */}
 
@@ -1282,7 +2172,24 @@ export default function MainProfile() {
             placeholder={"Enter your description"}
             mandatory={true}
             name={"description"}
+            value={projectDescription}
+            onChange={(e) => {
+              setProjectDescription(e.target.value);
+              setProjectDescriptionError(nameValidator(e.target.value));
+            }}
+            error={projectDescriptionError}
           />
+        </div>
+        <div style={{ textAlign: "-webkit-right" }} className="save_btn">
+          <Button
+            type="primary"
+            size="large"
+            onClick={handleProjectSave}
+            className="nav-btn next-btn"
+          >
+            <MdFileDownloadDone style={{ fontSize: 22 }} />
+            Save
+          </Button>
         </div>
       </div>
     ),
@@ -1410,6 +2317,10 @@ export default function MainProfile() {
                 className="userprofile-edit-profile"
                 type="primary"
                 icon={<EditOutlined />}
+                onClick={() => {
+                  setActiveTab("basic");
+                  showDrawer();
+                }}
               >
                 Edit Profile
               </Button>
@@ -1454,7 +2365,7 @@ export default function MainProfile() {
                 Adding your Resume helps you to tell who you are and what makes
                 you different — to employers and recruiters.
               </p>
-              <label
+              {/* <label
                 className="resume_upload"
                 htmlFor="upload-input"
                 style={{ cursor: "pointer" }}
@@ -1467,9 +2378,9 @@ export default function MainProfile() {
                   style={{ display: "none" }}
                   onChange={handleFileChange}
                 />
-              </label>
+              </label> */}
 
-              <Button type="primary" className="upload-resume-btn">
+              {/* <Button type="primary" className="upload-resume-btn">
                 Upload Resume
               </Button>
 
@@ -1477,7 +2388,7 @@ export default function MainProfile() {
                 <div style={{ marginTop: "15px", fontWeight: "bold" }}>
                   Selected File: {fileName}
                 </div>
-              )}
+              )} */}
             </Card>
           </Card>
 
@@ -1530,10 +2441,38 @@ export default function MainProfile() {
           </Card>
         </div>
 
+        {/* Resume upload  Sections */}
+        <div style={{ marginTop: 25 }} className="profile-sections">
+          <div className="profile-section-card userprofile_cards">
+            <div className="skills_card">
+              <div style={{ textAlign: "left" }}>
+                <h3>Resume</h3>
+                <p className="profile-section-description">
+                  Adding your Resume helps you to tell who you are and what
+                  makes you different to employers and recruiters.
+                </p>
+                <Button
+                  onClick={() => {
+                    setActiveTab("resume");
+                    showDrawer();
+                  }}
+                  style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
+                  type="link"
+                >
+                  <PlusOutlined />
+                  Add Resume
+                </Button>
+              </div>
+              <div>
+                <img src={profile1}></img>
+              </div>
+            </div>
+            <Divider />
+          </div>
+        </div>
+
         {/* Profile Sections */}
         <div style={{ marginTop: 25 }} className="profile-sections">
-          {/* social link Section */}
-
           <div className="profile-section-card userprofile_cards">
             <div className="skills_card">
               <div style={{ textAlign: "left" }}>

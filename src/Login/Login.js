@@ -36,7 +36,6 @@ const LoginPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsLoading(true);
 
     const emailValidate = emailValidator(email);
     const passwordValidate = passwordValidator(password);
@@ -48,7 +47,18 @@ const LoginPage = () => {
     } else {
       console.log("recuiter api");
     }
-    navigate("/job-portal");
+
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      message.success(
+        `${
+          activeTab === "candidate" ? "Candidate" : "Recruiter"
+        } Login successfully!`
+      );
+
+      navigate("/job-portal");
+    }, 1500);
   };
 
   const tabItems = [
@@ -101,7 +111,6 @@ const LoginPage = () => {
                 activeKey={activeTab}
                 onChange={(value) => {
                   setActiveTab(value);
-                  console.log("valllllll", value);
                   setEmail("");
                   setEmailError("");
                   setPassword("");
@@ -118,7 +127,7 @@ const LoginPage = () => {
                 form={form}
                 className="login_form"
                 layout="vertical"
-                onSubmitCapture={handleSubmit}
+                // onSubmitCapture={handleSubmit}
               >
                 <div style={{ marginBottom: "4px" }}>
                   <CommonInputField
@@ -177,6 +186,7 @@ const LoginPage = () => {
                     htmlType="submit"
                     block
                     size="large"
+                    onClick={handleSubmit}
                     loading={isLoading}
                     className="premium-button"
                   >

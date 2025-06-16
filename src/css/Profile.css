@@ -410,8 +410,9 @@
 }
 
 .user_details_drawer .ant-form-item {
-  margin-bottom: 10px;
+  margin-bottom: 0px;
 }
+
 
 .ant-upload-wrapper
   .ant-upload-list

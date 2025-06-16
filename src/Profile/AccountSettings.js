@@ -2,12 +2,27 @@ import React, { useState } from "react";
 import { IoMdCall } from "react-icons/io";
 import { HiOutlineMail } from "react-icons/hi";
 import { GoDotFill } from "react-icons/go";
-import { Drawer, Input, Form } from "antd";
+import { Drawer, Input, Form, message } from "antd";
+import CommonInputField from "../Common/CommonInputField";
+import {
+  emailValidator,
+  nameValidator,
+  phoneValidation,
+} from "../Common/Validation";
 export default function AccountSettings() {
   // State for active tab
   const [activeTab, setActiveTab] = useState("Users Roles / Permissions");
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [open, setOpen] = useState(false);
+  const [fname, setFname] = useState("");
+  const [fnameError, setFnameError] = useState("");
+  const [lname, setLname] = useState("");
+  const [lnameError, setLnameError] = useState("");
+  const [offEmail, setOffEmail] = useState("");
+  const [offEmailError, setOffEmailError] = useState("");
+  const [mobNumber, setMobNumber] = useState("");
+  const [mobNumberError, setMobNumberError] = useState("");
+
   // Sample user data
   const [users, setUsers] = useState([
     {
@@ -64,6 +79,59 @@ export default function AccountSettings() {
     setOpen(false);
   };
 
+  const handleAddUser = (e) => {
+    e.preventDefault();
+
+    const fnameValidate = nameValidator(fname);
+    const lnameValidate = nameValidator(lname);
+    const offEmailValidate = emailValidator(offEmail);
+    const mobNumberValidate = phoneValidation(mobNumber);
+
+    setFnameError(fnameValidate);
+    setLnameError(lnameValidate);
+    setOffEmailError(offEmailValidate);
+    setMobNumberError(mobNumberValidate);
+
+    const hasAddUserError = [
+      fnameValidate,
+      lnameValidate,
+      offEmailValidate,
+      mobNumberValidate,
+    ].some((val) => val !== "");
+
+    if (hasAddUserError) {
+      console.log("Validation error found");
+      message.error("Please fill all fields correctly before proceeding.");
+      return;
+    }
+
+    const fullName = `${fname} ${lname}`;
+    const newUser = {
+      id: users.length + 1, // or use Date.now() for uniqueness
+      name: fullName,
+      email: offEmail,
+      phone: mobNumber,
+      role: "Evaluator", // or default role
+      avatar: `${fname.charAt(0)}${lname.charAt(0)}`.toUpperCase(),
+    };
+
+    // ✅ Add new user to state
+    setUsers((prevUsers) => [...prevUsers, newUser]);
+
+    // Reset fields
+    setFname("");
+    setLname("");
+    setOffEmail("");
+    setMobNumber("");
+    setFnameError("");
+    setLnameError("");
+    setOffEmailError("");
+    setMobNumberError("");
+
+    message.success("New user added successfully.");
+    onClose();
+  };
+
   return (
     <div className="account-settings-container">
       <h2 style={{ textAlign: "left" }}>Account Settings</h2>
@@ -92,6 +160,7 @@ export default function AccountSettings() {
             </p>
           </div>
 
+          {/* User Cards */}
           {/* User Cards */}
           {users.map((user) => (
             <div key={user.id} className="user-card">
@@ -144,83 +213,66 @@ export default function AccountSettings() {
           >
             <div className="form-row">
               <div className="form-group">
-                <Form.Item
-                  layout="vertical"
-                  label={<span style={{ fontWeight: 500 }}>First Name</span>}
-                  name="fname"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter your First Name",
-                    },
-                  ]}
-                >
-                  <Input
-                    placeholder="Enter your fname"
-                    className="premium-input"
-                  />
-                </Form.Item>
+                <CommonInputField
+                  label={"First name"}
+                  value={fname}
+                  name={"fname"}
+                  mandotary={true}
+                  placeholder={"Enter your fname"}
+                  onChange={(e) => {
+                    setFname(e.target.value);
+                    setFnameError(nameValidator(e.target.value));
+                  }}
+                  error={fnameError}
+                />
               </div>
               <div className="form-group">
-                <Form.Item
-                  layout="vertical"
-                  label={<span style={{ fontWeight: 500 }}>Last Name</span>}
-                  name="lname"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter your Last Name",
-                    },
-                  ]}
-                >
-                  <Input
-                    placeholder="Enter your lname"
-                    className="premium-input"
-                  />
-                </Form.Item>
+                <CommonInputField
+                  label={"Last name"}
+                  placeholder={"Enter your lname"}
+                  value={lname}
+                  name={"lname"}
+                  mandotary={true}
+                  onChange={(e) => {
+                    setLname(e.target.value);
+                    setLnameError(nameValidator(e.target.value));
+                  }}
+                  error={lnameError}
+                />
               </div>
             </div>
             <div className="form-group">
-              <Form.Item
-                layout="vertical"
-                label={<span style={{ fontWeight: 500 }}>Official Email</span>}
-                name="email"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter your Official Email",
-                  },
-                ]}
-              >
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  className="premium-input"
-                />
-              </Form.Item>
+              <CommonInputField
+                name={"email"}
+                label="Official Email"
+                mandotary={true}
+                placeholder={"Enter your email"}
+                value={offEmail}
+                onChange={(e) => {
+                  setOffEmail(e.target.value);
+                  setOffEmailError(emailValidator(e.target.value));
+                }}
+                error={offEmailError}
+              />
             </div>
 
             <div className="form-group">
-              <Form.Item
-                layout="vertical"
-                label={<span style={{ fontWeight: 500 }}>Mobile No.</span>}
-                name="email"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter your Number",
-                  },
-                ]}
-              >
-                <Input
-                  type="tel"
-                  placeholder="Number"
-                  className="premium-input"
-                />
-              </Form.Item>
+              <CommonInputField
+                name={"Phone number"}
+                label="Mobile No."
+                mandotary={true}
+                placeholder={"Enter your Mobile No."}
+                type={"tel"}
+                value={mobNumber}
+                onChange={(e) => {
+                  setMobNumber(e.target.value);
+                  setMobNumberError(phoneValidation(e.target.value));
+                }}
+                error={mobNumberError}
+              />
             </div>
-            <div style={{textAlign: "end"}}>
-              <button>Add +</button>
+            <div style={{ textAlign: "end" }}>
+              <button onClick={handleAddUser}>Add +</button>
             </div>
           </Drawer>
         </>

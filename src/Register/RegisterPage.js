@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Tabs,
   Form,
@@ -32,99 +32,76 @@ import {
   orgNameValidation,
   orgTypeValidation,
 } from "../Common/Validation";
+import { CommonToaster } from "../Common/CommonToaster";
 import CommonInputField from "../Common/CommonInputField";
 import CommonPasswordField from "../Common/CommonPasswordField";
 
 const { Title, Text, Link } = Typography;
 
 const RegisterPage = () => {
+  const [form] = Form.useForm();
+  const [name, setName] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [orgName, setOrgName] = useState("");
+  const [orgNameError, setOrgNameError] = useState("");
+  const [orgType, setOrgType] = useState("");
+  const [orgTypeError, setOrgTypeError] = useState("");
   const [activeTab, setActiveTab] = useState("candidate");
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    orgName: "",
-    orgType: "",
-  });
-  const [errors, setErrors] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    orgName: "",
-    orgType: "",
-  });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleInputChange = (field, value) => {
-    let validator;
-    switch (field) {
-      case "name":
-        validator = nameValidator;
-        break;
-      case "phone":
-        validator = phoneValidation;
-        break;
-      case "email":
-        validator = emailValidator;
-        break;
-      case "password":
-        validator = passwordValidator;
-        break;
-      case "confirmPassword":
-        validator = (val) => confirmPasswordValidation(formData.password, val);
-        break;
-      case "orgName":
-        validator = orgNameValidation;
-        break;
-      case "orgType":
-        validator = orgTypeValidation;
-        break;
-      default:
-        validator = () => "";
-    }
+  const handleSubmit = () => {
+    const nameValidate = nameValidator(name);
+    const phoneValidate = phoneValidation(phone);
+    const emailValidate = emailValidator(email);
+    const passwordValidate = passwordValidator(password);
+    const confirmPasswordValidate = confirmPasswordValidation(
+      password,
+      confirmPassword
+    );
+    const orgNameValidate =
+      activeTab === "recruiter" ? orgNameValidation(orgName) : "";
+    const orgTypeValidate =
+      activeTab === "recruiter" ? orgTypeValidation(orgType) : "";
 
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: validator(value) }));
-  };
+    setNameError(nameValidate);
+    setPhoneError(phoneValidate);
+    setEmailError(emailValidate);
+    setPasswordError(passwordValidate);
+    setConfirmPasswordError(confirmPasswordValidate);
+    setOrgNameError(orgNameValidate);
+    setOrgTypeError(orgTypeValidate);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    // Validate all fields
-    const newErrors = {
-      name: nameValidator(formData.name),
-      phone: phoneValidation(formData.phone),
-      email: emailValidator(formData.email),
-      password: passwordValidator(formData.password),
-      confirmPassword: confirmPasswordValidation(
-        formData.password,
-        formData.confirmPassword
-      ),
-      orgName:
-        activeTab === "recruiter" ? orgNameValidation(formData.orgName) : "",
-      orgType:
-        activeTab === "recruiter" ? orgTypeValidation(formData.orgType) : "",
-    };
-
-    setErrors(newErrors);
-
-    const hasErrors = Object.values(newErrors).some((error) => error !== "");
-    if (hasErrors) {
-      setIsLoading(false);
+    if (
+      nameValidate ||
+      phoneValidate ||
+      emailValidate ||
+      passwordValidate ||
+      confirmPasswordValidate ||
+      orgNameValidate ||
+      orgTypeValidate
+    )
       return;
-    }
+
+    setIsLoading(true);
 
     setTimeout(() => {
       setIsLoading(false);
-      message.success("Registration successful!");
+      message.success(
+        `${
+          activeTab === "candidate" ? "Candidate" : "Recruiter"
+        } registered successfully!`
+      );
       navigate("/login");
-    }, 3000);
+    }, 1500);
   };
 
   const tabItems = [
@@ -145,6 +122,14 @@ const RegisterPage = () => {
       ),
     },
   ];
+
+  useEffect(() => {
+    setEmail("");
+    setPassword("");
+    setName("");
+    setConfirmPassword("");
+    setPhone("");
+  }, [activeTab]);
 
   return (
     <div className="loginpage_container">
@@ -170,7 +155,15 @@ const RegisterPage = () => {
 
               <Tabs
                 activeKey={activeTab}
-                onChange={setActiveTab}
+                onChange={(value) => {
+                  setActiveTab(value);
+                  setEmailError("");
+                  setNameError("");
+                  setConfirmPasswordError("");
+                  setPhoneError("");
+                  setPasswordError("");
+                  form.resetFields();
+                }}
                 centered
                 size="large"
                 tabBarStyle={{ marginBottom: 32 }}
@@ -178,9 +171,10 @@ const RegisterPage = () => {
               />
 
               <Form
+                form={form}
                 className="login_form"
                 layout="vertical"
-                onSubmitCapture={handleSubmit}
+                // onFinish={handleSubmit}
               >
                 <div style={{ marginBottom: "0px" }}>
                   <CommonInputField
@@ -191,9 +185,12 @@ const RegisterPage = () => {
                     prefix={
                       <UserOutlined style={{ color: "rgba(0, 0, 0, 0.25)" }} />
                     }
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    error={errors.name}
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setNameError(nameValidator(e.target.value));
+                    }}
+                    error={nameError}
                   />
                 </div>
 
@@ -206,9 +203,12 @@ const RegisterPage = () => {
                     prefix={
                       <PhoneOutlined style={{ color: "rgba(0, 0, 0, 0.25)" }} />
                     }
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    error={errors.phone}
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      setPhoneError(phoneValidation(e.target.value));
+                    }}
+                    error={phoneError}
                   />
                 </div>
 
@@ -221,9 +221,12 @@ const RegisterPage = () => {
                     prefix={
                       <MailOutlined style={{ color: "rgba(0, 0, 0, 0.25)" }} />
                     }
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    error={errors.email}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailError(emailValidator(e.target.value));
+                    }}
+                    error={emailError}
                   />
                 </div>
 
@@ -241,11 +244,12 @@ const RegisterPage = () => {
                               style={{ color: "rgba(0, 0, 0, 0.25)" }}
                             />
                           }
-                          value={formData.orgName}
-                          onChange={(e) =>
-                            handleInputChange("orgName", e.target.value)
-                          }
-                          error={errors.orgName}
+                          value={orgName}
+                          onChange={(e) => {
+                            setOrgName(e.target.value);
+                            setOrgNameError(orgNameValidation(e.target.value));
+                          }}
+                          error={orgNameError}
                         />
                       </div>
                       <div style={{ marginBottom: "0px" }}>
@@ -259,11 +263,12 @@ const RegisterPage = () => {
                               style={{ color: "rgba(0, 0, 0, 0.25)" }}
                             />
                           }
-                          value={formData.orgType}
-                          onChange={(e) =>
-                            handleInputChange("orgType", e.target.value)
-                          }
-                          error={errors.orgType}
+                          value={orgType}
+                          onChange={(e) => {
+                            setOrgType(e.target.value);
+                            setOrgTypeError(orgTypeValidation(e.target.value));
+                          }}
+                          error={orgTypeError}
                         />
                       </div>
                     </div>
@@ -278,11 +283,12 @@ const RegisterPage = () => {
                       prefix={
                         <LockOutlined style={{ color: "rgba(0,0,0,.25)" }} />
                       }
-                      value={formData.password}
-                      onChange={(e) =>
-                        handleInputChange("password", e.target.value)
-                      }
-                      error={errors.password}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setPasswordError(passwordValidator(e.target.value));
+                      }}
+                      error={passwordError}
                       mandatory={true}
                       min={8}
                     />
@@ -296,25 +302,19 @@ const RegisterPage = () => {
                       prefix={
                         <LockOutlined style={{ color: "rgba(0,0,0,.25)" }} />
                       }
-                      value={formData.confirmPassword}
-                      onChange={(e) =>
-                        handleInputChange("confirmPassword", e.target.value)
-                      }
-                      error={errors.confirmPassword}
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        setConfirmPasswordError(
+                          confirmPasswordValidation(password, e.target.value)
+                        );
+                      }}
+                      error={confirmPasswordError}
                       mandatory={true}
                       min={8}
                     />
                   </div>
                 </div>
-
-                {/* <div style={{ marginBottom: 14, marginTop: 30 }}>
-                  <Form.Item name="terms" valuePropName="checked">
-                    <Checkbox style={{ fontWeight: 500 }}>
-                      I agree to the <Link href="#">Terms of Service</Link> and{" "}
-                      <Link href="#">Privacy Policy</Link>
-                    </Checkbox>
-                  </Form.Item>
-                </div> */}
 
                 <Form.Item>
                   <Button
@@ -322,6 +322,7 @@ const RegisterPage = () => {
                     htmlType="submit"
                     block
                     size="large"
+                    onClick={handleSubmit}
                     loading={isLoading}
                     className="premium-button"
                   >
@@ -334,13 +335,13 @@ const RegisterPage = () => {
                 </Form.Item>
                 <div style={{ textAlign: "center", marginTop: 20 }}>
                   <Text type="secondary" style={{ fontSize: 15 }}>
-                    Already have an account? 
+                    Already have an account?
                     <Link
                       href="/login"
                       style={{ color: "#8d3ffb", fontWeight: 600 }}
                       className="hover-underline"
                     >
-                       Sign in now
+                      Sign in now
                     </Link>
                   </Text>
                 </div>

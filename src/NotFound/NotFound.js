@@ -3,7 +3,6 @@ import { motion, useAnimation } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import logo from "../images/careerfast_logo.png";
 import "../css/NotFound.css";
-
 const NotFound = () => {
   const controls = useAnimation();
   const [ref, inView] = useInView();
@@ -21,9 +20,9 @@ const NotFound = () => {
       opacity: 1,
       transition: {
         staggerChildren: 0.3,
-        delayChildren: 0.2
-      }
-    }
+        delayChildren: 0.2,
+      },
+    },
   };
 
   const itemVariants = {
@@ -34,32 +33,32 @@ const NotFound = () => {
       transition: {
         type: "spring",
         damping: 10,
-        stiffness: 100
-      }
-    }
+        stiffness: 100,
+      },
+    },
   };
 
   const logoVariants = {
     hover: {
       rotate: [0, 10, -10, 0],
-      transition: { duration: 0.8 }
+      transition: { duration: 0.8 },
     },
-    tap: { scale: 0.95 }
+    tap: { scale: 0.95 },
   };
 
   const pathVariants = {
     hidden: {
       pathLength: 0,
-      opacity: 0
+      opacity: 0,
     },
     visible: {
       pathLength: 1,
       opacity: 1,
       transition: {
         duration: 2,
-        ease: "easeInOut"
-      }
-    }
+        ease: "easeInOut",
+      },
+    },
   };
 
   return (
@@ -75,13 +74,13 @@ const NotFound = () => {
               opacity: [0, 0.3, 0],
               scale: [0, 1.5, 0],
               x: Math.random() * 100 - 50,
-              y: Math.random() * 100 - 50
+              y: Math.random() * 100 - 50,
             }}
             transition={{
               duration: Math.random() * 10 + 10,
               repeat: Infinity,
               repeatType: "reverse",
-              delay: Math.random() * 5
+              delay: Math.random() * 5,
             }}
           />
         ))}
@@ -95,11 +94,7 @@ const NotFound = () => {
         variants={containerVariants}
       >
         {/* Animated logo */}
-        <motion.div
-          variants={itemVariants}
-          whileHover="hover"
-          whileTap="tap"
-        >
+        <motion.div variants={itemVariants} whileHover="hover" whileTap="tap">
           <motion.img
             src={logo}
             alt="CareerFast Logo"
@@ -116,7 +111,7 @@ const NotFound = () => {
             transition={{
               repeat: Infinity,
               repeatType: "reverse",
-              duration: 1.5
+              duration: 1.5,
             }}
           >
             4
@@ -128,7 +123,7 @@ const NotFound = () => {
               repeat: Infinity,
               repeatType: "reverse",
               duration: 1.5,
-              delay: 0.2
+              delay: 0.2,
             }}
           >
             0
@@ -140,7 +135,7 @@ const NotFound = () => {
               repeat: Infinity,
               repeatType: "reverse",
               duration: 1.5,
-              delay: 0.4
+              delay: 0.4,
             }}
           >
             4
@@ -174,7 +169,7 @@ const NotFound = () => {
             className="home-button"
             whileHover={{
               scale: 1.05,
-              boxShadow: "0 5px 15px rgba(105, 0, 173, 0.4)"
+              boxShadow: "0 5px 15px rgba(105, 0, 173, 0.4)",
             }}
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}

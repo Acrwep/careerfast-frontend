@@ -9,6 +9,7 @@ export default function CommonTextArea({
   value,
   errormessage,
   label,
+  error,
   message,
   onChange,
   clasname = "premium-input",
@@ -24,8 +25,6 @@ export default function CommonTextArea({
         rules={[
           {
             required: { mandatory },
-            message:
-              errormessage || `Please select your ${label?.toLowerCase()}`,
           },
         ]}
       >
@@ -37,6 +36,13 @@ export default function CommonTextArea({
           className="premium-input"
         />
       </Form.Item>
+      <div
+        className={
+          error ? "show-premium-input-error" : "hide-premium-input-error"
+        }
+      >
+        <p style={{ color: "red" }}>{label + error}</p>
+      </div>
     </div>
   );
 }

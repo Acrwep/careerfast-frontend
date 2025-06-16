@@ -48,6 +48,7 @@ import {
   selectValidator,
 } from "../Common/Validation";
 import { phoneValidation } from "../Common/Validation";
+import CommonDatePicker from "../Common/CommonDatePicker";
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -59,25 +60,54 @@ const ProfileDetails = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(25);
   const [fname, setFname] = useState("");
+  const [fnameError, setFnameError] = useState("");
   const [lname, setLname] = useState("");
+  const [lnameError, setLnameError] = useState("");
   const [emailVerified, setEmailVerified] = useState("");
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [numberVerified, setNumberVerified] = useState("");
   const [number, setNumber] = useState("");
+  const [numberError, setNumberError] = useState("");
   const [pincode, setPincode] = useState("");
+  const [pincodeError, setPincodeError] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentlyWorking, setCurrentlyWorking] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [countryList, setCountryList] = useState([]);
+  const [country, setCountry] = useState([]);
+  const [countryError, setCountryError] = useState("");
   const [countryId, setCountryId] = useState(null);
+  const [state, setState] = useState("");
+  const [stateError, setStateError] = useState("");
   const [stateId, setStateId] = useState(null);
   const [countryIdError, setCountryIdError] = useState(null);
   const [stateList, setStateList] = useState([]);
+  const [city, setCity] = useState("");
+  const [cityError, setCityError] = useState("");
   const [cityList, setCityList] = useState([]);
   const [selectedState, setSelectedState] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
+
+  // 2
+  const [selectExperienceType, setSelectExperienceType] = useState("");
+  const [selectExperienceTypeError, setSelectExperienceTypeError] =
+    useState("");
+  const [totalYearsExperience, setTotalYearsExperience] = useState("");
+  const [totalYearsExperienceError, setTotalYearsExperienceError] =
+    useState("");
+  const [totalMonthsExperience, setTotalMonthsExperience] = useState("");
+  const [totalMonthsExperienceError, setTotalMonthsExperienceError] =
+    useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobTitleError, setJobTitleError] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [companyNameError, setCompanyNameError] = useState("");
+  const [designation, setDesignation] = useState("");
+  const [designationError, setDesignationError] = useState("");
+
   const [experienceType, setExperienceType] = useState(null);
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [otpModalOpen, setOtpModalOpen] = useState(false);
@@ -85,21 +115,12 @@ const ProfileDetails = () => {
   const [otpSending, setOtpSending] = useState(false);
   const [otpError, setOtpError] = useState(null);
   const [recaptchaReady, setRecaptchaReady] = useState(false);
-
   const recaptchaContainerRef = useRef(null);
   const [recaptchaVerifier, setRecaptchaVerifier] = useState(null);
   const [recaptchaInitAttempts, setRecaptchaInitAttempts] = useState(0);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [customSkill, setCustomSkill] = useState("");
-
-  // errors
-  const fnameError = nameValidator(fname);
-  const lnameError = nameValidator(lname);
-  const emailError = emailValidator(email);
-  const numberError = phoneValidation(number);
-  const pincodeError = pincodeValidator(pincode);
-  const countryError = selectValidator(countryId);
-  const stateError = selectValidator(stateId);
+  const [skillsError, setSkillsError] = useState(null);
 
   const initializeRecaptcha = useCallback(async () => {
     try {
@@ -178,7 +199,6 @@ const ProfileDetails = () => {
   }, [initializeRecaptcha]);
 
   useEffect(() => {
-    // Load reCAPTCHA script dynamically if not present
     if (!window.recaptchaVerifier) {
       const script = document.createElement("script");
       script.src = "https://www.google.com/recaptcha/api.js?render=explicit";
@@ -355,17 +375,108 @@ const ProfileDetails = () => {
     e.preventDefault();
 
     // Run validators again
-    const fnameErr = nameValidator(fname);
-    const lnameErr = nameValidator(lname);
-    const emailErr = emailValidator(email);
-    const phoneErr = phoneValidation(number);
-    const pinErr = pincodeValidator(pincode);
-    const countryErr = selectValidator(countryId);
 
-    // If any error exists, prevent going to next step
-    if (fnameErr || lnameErr || emailErr || phoneErr || pinErr || countryErr) {
-      message.error("Please fill all fields correctly before proceeding.");
-      return;
+    if (currentStep === 0) {
+      const fnameValidate = nameValidator(fname);
+      const lnameValidate = nameValidator(lname);
+      const emailValidate = emailValidator(email);
+      const phoneValidate = phoneValidation(number);
+      const pincodeValidate = pincodeValidator(pincode);
+      const countryValidate = selectValidator(countryId);
+      const stateValidate = selectValidator(state);
+      const cityValidate = selectValidator(city);
+
+      setFnameError(fnameValidate);
+      setLnameError(lnameValidate);
+      setEmailError(emailValidate);
+      setNumberError(phoneValidate);
+      setPincodeError(pincodeValidate);
+      setCountryError(countryValidate);
+      setStateError(stateValidate);
+      setCityError(cityValidate);
+
+      if (
+        fnameValidate ||
+        lnameValidate ||
+        emailValidate ||
+        phoneValidate ||
+        pincodeValidate ||
+        countryValidate ||
+        stateValidate ||
+        cityValidate
+      ) {
+        message.error("Please fill all fields correctly before proceeding.");
+        return;
+      }
+    }
+
+    if (currentStep === 1 || experienceType === "Experience") {
+      const selectExperienceTypeValidate =
+        selectValidator(selectExperienceType);
+
+      setSelectExperienceTypeError(selectExperienceTypeValidate);
+
+      let experienceErrors = false;
+      if (selectExperienceType === "Experience") {
+        const totalYearsExperienceValidate =
+          selectValidator(totalYearsExperience);
+        const totalMonthsExperienceValidate = selectValidator(
+          totalMonthsExperience
+        );
+        const jobTitleValidate = nameValidator(jobTitle);
+        // const companyNameValidate = nameValidator(companyName);
+        // const designationValidate = nameValidator(designation);
+
+        setTotalYearsExperienceError(totalYearsExperienceValidate);
+        setTotalMonthsExperienceError(totalMonthsExperienceValidate);
+        setJobTitleError(jobTitleValidate);
+
+        let companyErrors = [];
+        const validateCompanyFields = companies.map((item, index) => {
+          return {
+            ...item,
+            companyNameError: nameValidator(item.companyName),
+            designationError: nameValidator(item.designation),
+            startDateError: selectValidator(item.startDate),
+            endDateError:
+              item.currentlyWorking === true
+                ? ""
+                : selectValidator(item.endDate),
+          };
+        });
+
+        console.log("valllllll", validateCompanyFields);
+        setCompanies(validateCompanyFields);
+
+        companyErrors = validateCompanyFields.filter(
+          (f) =>
+            f.companyNameError !== "" ||
+            f.designationError !== "" ||
+            f.startDateError !== "" ||
+            f.endDateError !== ""
+        );
+        console.log("errrrrr", companyErrors);
+
+        if (
+          selectExperienceTypeValidate ||
+          totalYearsExperienceValidate ||
+          totalMonthsExperienceValidate ||
+          jobTitleValidate ||
+          companyErrors.length >= 1
+        ) {
+          message.error("Please fill all fields correctly before proceeding.");
+          return;
+        }
+      }
+
+      // Validate skills (required for both fresher and experience)
+      const skillsError =
+        selectedSkills.length === 0 ? "Please add at least one skill" : null;
+
+      if (selectExperienceTypeValidate || experienceErrors || skillsError) {
+        message.error("Please add at least one skill");
+        return;
+      }
     }
 
     if (currentStep < stepItems.length - 1) {
@@ -384,6 +495,7 @@ const ProfileDetails = () => {
   // add company
   const [companies, setCompanies] = useState([
     {
+      id: Date.now(),
       companyName: "",
       designation: "",
       startDate: "",
@@ -396,6 +508,7 @@ const ProfileDetails = () => {
     setCompanies([
       ...companies,
       {
+        id: Date.now(),
         companyName: "",
         designation: "",
         startDate: "",
@@ -403,6 +516,36 @@ const ProfileDetails = () => {
         currentlyWorking: false,
       },
     ]);
+  };
+
+  const handleCompanyFields = (index, fieldName, value) => {
+    const updateDatas = [...companies];
+    updateDatas[index][fieldName] = value;
+
+    if (fieldName === "companyName") {
+      updateDatas[index].companyNameError = nameValidator(value);
+    }
+
+    if (fieldName === "designation") {
+      updateDatas[index].designationError = nameValidator(value);
+    }
+
+    if (fieldName === "startDate") {
+      updateDatas[index].startDateError = selectValidator(value);
+    }
+
+    if (fieldName === "endDate") {
+      updateDatas[index].endDateError = selectValidator(value);
+    }
+
+    if (fieldName === "currentlyWorking") {
+      if (updateDatas[index].currentlyWorking === true) {
+        updateDatas[index].endDate = "";
+        updateDatas[index].endDateError = "";
+      }
+    }
+
+    setCompanies(updateDatas);
   };
 
   const handleDeleteCompany = (index) => {
@@ -483,7 +626,11 @@ const ProfileDetails = () => {
                     mandotary={true}
                     placeholder={"Enter your first name"}
                     type={"text"}
-                    onChange={(e) => setFname(e.target.value)}
+                    value={fname}
+                    onChange={(e) => {
+                      setFname(e.target.value);
+                      setFnameError(nameValidator(e.target.value));
+                    }}
                     error={fnameError}
                   />
                 </div>
@@ -492,9 +639,13 @@ const ProfileDetails = () => {
                     name={"Last Name"}
                     label="Last Name"
                     mandotary={true}
+                    value={lname}
                     placeholder={"Enter your last name"}
                     type={"text"}
-                    onChange={(e) => setLname(e.target.value)}
+                    onChange={(e) => {
+                      setLname(e.target.value);
+                      setLnameError(nameValidator(e.target.value));
+                    }}
                     error={lnameError}
                   />
                 </div>
@@ -506,7 +657,11 @@ const ProfileDetails = () => {
                   mandotary={true}
                   placeholder={"Enter your email"}
                   type={"email"}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailError(emailValidator(e.target.value));
+                  }}
                   error={emailError}
                 />
               </div>
@@ -517,7 +672,11 @@ const ProfileDetails = () => {
                   mandotary={true}
                   placeholder={"Enter your phone number"}
                   type={"tel"}
-                  onChange={(e) => setNumber(e.target.value)}
+                  value={number}
+                  onChange={(e) => {
+                    setNumber(e.target.value);
+                    setNumberError(phoneValidation(e.target.value));
+                  }}
                   error={numberError}
                 />
               </div>
@@ -533,10 +692,12 @@ const ProfileDetails = () => {
                       value: country.isoCode,
                     }))}
                     showSearch={true}
-                    error={countryError}
                     onChange={(value) => {
                       handleCountryChange(value);
+                      setCountry(value);
+                      setCountryError(selectValidator(value));
                     }}
+                    error={countryError}
                   />
                 </div>
                 <div className="form-group">
@@ -550,13 +711,18 @@ const ProfileDetails = () => {
                       label: state.name,
                       value: state.name,
                     }))}
-                    onChange={handleStateChange}
+                    onChange={(value) => {
+                      handleStateChange(value);
+                      setState(value);
+                      setStateError(selectValidator(value));
+                    }}
                     showSearch={true}
+                    error={stateError}
                   />
                 </div>
               </div>
 
-              <div style={{ marginTop: 20 }} className="form-row">
+              <div className="form-row">
                 <div className="form-group">
                   <CommonSelectField
                     label="City"
@@ -564,8 +730,13 @@ const ProfileDetails = () => {
                     mandatory={true}
                     placeholder="Select City"
                     options={cityList}
-                    onChange={handleCityChange}
+                    onChange={(value) => {
+                      handleCityChange(value);
+                      setCity(value);
+                      setCityError(selectValidator(value));
+                    }}
                     showSearch={true}
+                    error={cityError}
                   />
                 </div>
 
@@ -576,7 +747,10 @@ const ProfileDetails = () => {
                     mandotary={true}
                     placeholder={"Enter your pincode"}
                     type={"number"}
-                    onChange={(e) => setPincode(e.target.value)}
+                    onChange={(e) => {
+                      setPincode(e.target.value);
+                      setPincodeError(pincodeValidator(e.target.value));
+                    }}
                     error={pincodeError}
                   />
                 </div>
@@ -584,7 +758,7 @@ const ProfileDetails = () => {
               <div className="form-group">
                 <CommonTextArea
                   label={"Address"}
-                  // name={"address"}
+                  name={"address"}
                   placeholder={"Enter Your Address"}
                 />
               </div>
@@ -601,7 +775,7 @@ const ProfileDetails = () => {
         <div className="step-content">
           <Card className="premium-card">
             <div className="form-section">
-              <div className="form-group">
+              <div style={{ marginBottom: 20 }} className="form-group">
                 <CommonSelectField
                   label="Fresher / Experience"
                   name="fresherexperience"
@@ -617,8 +791,13 @@ const ProfileDetails = () => {
                       label: "Experience",
                     },
                   ]}
-                  onChange={handleExperienceTypeChange}
+                  onChange={(value) => {
+                    handleExperienceTypeChange(value);
+                    setSelectExperienceType(value);
+                    setSelectExperienceTypeError(selectValidator(value));
+                  }}
                   showSearch={true}
+                  error={selectExperienceTypeError}
                 />
               </div>
               {(experienceType === "Experience" || experienceType === null) && (
@@ -681,6 +860,11 @@ const ProfileDetails = () => {
                           },
                         ]}
                         showSearch={true}
+                        onChange={(value) => {
+                          setTotalYearsExperience(value);
+                          setTotalYearsExperienceError(selectValidator(value));
+                        }}
+                        error={totalYearsExperienceError}
                       />
                     </div>
                     <div className="form-group">
@@ -743,7 +927,12 @@ const ProfileDetails = () => {
                             label: "12 Months",
                           },
                         ]}
+                        onChange={(value) => {
+                          setTotalMonthsExperience(value);
+                          setTotalMonthsExperienceError(selectValidator(value));
+                        }}
                         showSearch={true}
+                        error={totalMonthsExperienceError}
                       />
                     </div>
                   </div>
@@ -752,13 +941,18 @@ const ProfileDetails = () => {
                       name={"Job title"}
                       label="Job Title"
                       mandotary={true}
+                      value={jobTitle}
                       placeholder={"Software Engineer"}
                       type={"text"}
-                      // error={"Please enter your job title"}
+                      onChange={(e) => {
+                        setJobTitle(e.target.value);
+                        setJobTitleError(nameValidator(e.target.value));
+                      }}
+                      error={jobTitleError}
                     />
                   </div>
                   {companies.map((company, index) => (
-                    <div className="add-company-section" key={company.id}>
+                    <div className="add-company-section" key={index}>
                       <div style={{ display: "flex", justifyContent: "end" }}>
                         {index == 0 ? (
                           ""
@@ -773,65 +967,61 @@ const ProfileDetails = () => {
                       <div className="form-row">
                         <div className="form-group">
                           <CommonInputField
-                            name={"Company name"}
                             label=" Company name"
                             mandotary={true}
                             placeholder={"Tech Corp Inc."}
-                            type={"text"}
-                            // error={"Please enter your  Company name"}
+                            value={company.companyName}
+                            error={company.companyNameError}
+                            onChange={(e) =>
+                              handleCompanyFields(
+                                index,
+                                "companyName",
+                                e.target.value
+                              )
+                            }
                           />
                         </div>
                         <div className="form-group">
                           <CommonInputField
-                            name={"Designation"}
                             label=" Designation"
                             mandotary={true}
                             placeholder={"Enter your designation"}
-                            type={"text"}
-                            // error={"Please enter your  designation"}
+                            value={company.designation}
+                            error={company.designationError}
+                            onChange={(e) =>
+                              handleCompanyFields(
+                                index,
+                                "designation",
+                                e.target.value
+                              )
+                            }
                           />
                         </div>
                       </div>
 
                       <div className="form-row">
                         <div className="from-group">
-                          <Form.Item
-                            layout="vertical"
-                            label={
-                              <span style={{ fontWeight: 500 }}>
-                                Start Date
-                              </span>
+                          <CommonDatePicker
+                            label="Start Date"
+                            value={company.startDate}
+                            error={company.startDateError}
+                            onChange={(value) =>
+                              handleCompanyFields(index, "startDate", value)
                             }
-                            name={["companies", index, "startdate"]}
-                            rules={[
-                              {
-                                required: true,
-                                message: "Please pick your start date",
-                              },
-                            ]}
-                          >
-                            <DatePicker
-                              value={startDate}
-                              onChange={(date) => setStartDate(date)}
-                              style={{ width: "100%" }}
-                            />
-                          </Form.Item>
+                          />
                         </div>
                         <div className="from-group">
-                          <Form.Item
-                            layout="vertical"
-                            label={
-                              <span style={{ fontWeight: 500 }}>End Date</span>
+                          <CommonDatePicker
+                            label="End Date"
+                            value={company.endDate}
+                            error={company.endDateError}
+                            onChange={(value) =>
+                              handleCompanyFields(index, "endDate", value)
                             }
-                            name={["companies", index, "enddate"]}
-                          >
-                            <DatePicker
-                              value={endDate}
-                              onChange={(date) => setEndDate(date)}
-                              disabled={company.currentlyWorking}
-                              style={{ width: "100%" }}
-                            />
-                          </Form.Item>
+                            disabled={
+                              company.currentlyWorking === true ? true : false
+                            }
+                          />
                         </div>
                       </div>
                       <div
@@ -840,7 +1030,14 @@ const ProfileDetails = () => {
                       >
                         <Checkbox
                           checked={company.currentlyWorking}
-                          onChange={(e) => handleCheckboxChange(index, e)}
+                          // onChange={(e) => handleCheckboxChange(index, e)}
+                          onChange={(e) =>
+                            handleCompanyFields(
+                              index,
+                              "currentlyWorking",
+                              e.target.checked
+                            )
+                          }
                         >
                           Currently Working?
                         </Checkbox>
@@ -885,13 +1082,13 @@ const ProfileDetails = () => {
                   label={"Skills"}
                   onPressEnter={handleCustomSkillAdd}
                   value={customSkill}
-                  name={"Job title"}
+                  name={"skills"}
                   onChange={(e) => setCustomSkill(e.target.value)}
                   mandotary={true}
                   placeholder={
                     "List your skills here, showcasing what you excel at."
                   }
-                  // error={"Please enter your job title"}
+                  error={skillsError}
                 />
               </div>
             </div>

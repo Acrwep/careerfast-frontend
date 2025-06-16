@@ -17,6 +17,7 @@ import {
   Tag,
   Divider,
   Card,
+  message,
 } from "antd";
 import {
   UserOutlined,
@@ -54,6 +55,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
+import { nameValidator, selectValidator } from "../Common/Validation";
 const { Option } = Select;
 const { Group: InputGroup } = Input;
 export default function PostJobs() {
@@ -79,6 +81,21 @@ export default function PostJobs() {
   const [genderselected, setGenderSelected] = useState("All");
   const [otherBenifitselected, setOtherBenifitSelected] = useState("stock");
   const [showMore, setShowMore] = useState(false);
+  //
+  const [companyName, setCompanyName] = useState("");
+  const [companyNameError, setCompanyNameError] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobTitleError, setJobTitleError] = useState("");
+  const [jobNature, setJobNature] = useState("");
+  const [jobNatureError, setJobNatureError] = useState("");
+  const [workplaceType, setWorkplaceType] = useState("");
+  const [workplaceTypeError, setWorkplaceTypeError] = useState("");
+  const [jobCategory, setJobCategory] = useState("");
+  const [jobCategoryError, setJobCategoryError] = useState("");
+  const [skillsRequired, setSkillsRequired] = useState("");
+  const [skillsRequiredError, setSkillsRequiredError] = useState("");
+  const [salaryDetails, setSalaryDetails] = useState("");
+  const [salaryDetailsError, setSalaryDetailsError] = useState("");
 
   const jobNatureOptions = [
     { id: 1, name: "Job" },
@@ -223,6 +240,59 @@ export default function PostJobs() {
     setValue(aiContent);
   };
 
+  const handlePublishPost = (e) => {
+    e.preventDefault();
+
+    const companyNameValidate = nameValidator(companyName);
+    const jobTitleValidate = nameValidator(jobTitle);
+    const jobNatureValidate = selectValidator(jobNature);
+    const workplaceTypeValidate = selectValidator(workplaceType);
+    const jobCategoryValidate = selectValidator(jobCategory);
+    const skillsRequiredValidate = selectValidator(skillsRequired);
+    const salaryDetailsValidate = selectValidator(salaryDetails);
+
+    setCompanyNameError(companyNameValidate);
+    setJobTitleError(jobTitleValidate);
+    setJobNatureError(jobNatureValidate);
+    setWorkplaceTypeError(workplaceTypeValidate);
+    setJobCategoryError(jobCategoryValidate);
+    setSkillsRequiredError(skillsRequiredValidate);
+    setSalaryDetailsError(salaryDetailsValidate);
+
+    if (setWorkplaceTypeError == "") {
+    }
+
+    const hasPostJobError = [
+      companyNameValidate,
+      jobTitleValidate,
+      jobNatureValidate,
+      workplaceTypeValidate,
+      jobCategoryValidate,
+      skillsRequiredValidate,
+      salaryDetailsValidate,
+    ].some((val) => val !== "");
+
+    if (hasPostJobError) {
+      console.log("error publish the post");
+      message.error("Please fill all fields correctly before proceeding.");
+      return;
+    }
+    console.log("All validations passed");
+
+    const postJobData = {
+      companyName: companyName,
+      jobTitle: jobTitle,
+      jobNature: jobNature,
+      workplaceType: workplaceType,
+      jobCategory: jobCategory,
+      skillsRequired: skillsRequired,
+      salaryDetails: salaryDetails,
+    };
+
+    console.log("Saving Job post data:", postJobData);
+    message.success("Job post details saved successfully.");
+  };
+
   return (
     <section className="post_jobs_section">
       <Row>
@@ -287,7 +357,12 @@ export default function PostJobs() {
             mandotary={true}
             placeholder={"Enter your company name"}
             type={"text"}
-            // error={"Please enter your company name"}
+            value={companyName}
+            onChange={(e) => {
+              setCompanyName(e.target.value);
+              setCompanyNameError(nameValidator(e.target.value));
+            }}
+            error={companyNameError}
           />
 
           <div className="form-group">
@@ -297,7 +372,12 @@ export default function PostJobs() {
               mandotary={true}
               placeholder={"Enter your job title"}
               type={"text"}
-              // error={"Please enter your job title"}
+              value={jobTitle}
+              onChange={(e) => {
+                setJobTitle(e.target.value);
+                setJobTitleError(nameValidator(e.target.value));
+              }}
+              error={jobTitleError}
             />
           </div>
 
@@ -305,11 +385,10 @@ export default function PostJobs() {
             <Form.Item
               layout="vertical"
               label={<span style={{ fontWeight: 500 }}>Job Nature</span>}
-              name="fname"
+              name="jobnature"
               rules={[
                 {
                   required: true,
-                  message: "Please Select your Job Nature",
                 },
               ]}
             >
@@ -326,6 +405,8 @@ export default function PostJobs() {
                       }
                       onClick={() => {
                         setActiveButton(index);
+                        setJobNature(item.name);
+                        setJobNatureError(selectValidator(item.name));
 
                         const selectedType = jobNatureOptions[index]?.name;
                         if (selectedType !== "Internship") {
@@ -347,10 +428,18 @@ export default function PostJobs() {
                   );
                 })}
               </div>
+              {jobNatureError && (
+                <div
+                  className="error-message"
+                  style={{ color: "red", marginTop: "8px" }}
+                >
+                  {jobNatureError}
+                </div>
+              )}
             </Form.Item>
           </div>
 
-          <div className="form-group">
+          <div style={{ marginTop: 15 }} className="form-group">
             {jobNatureOptions[activeButton]?.name === "Internship" && (
               <Form.Item
                 layout="vertical"
@@ -374,7 +463,9 @@ export default function PostJobs() {
                             ? "internship_duration_button_active"
                             : "internship_duration_button"
                         }
-                        onClick={() => setInternshipDurationActiveButton(index)}
+                        onClick={() => {
+                          setInternshipDurationActiveButton(index);
+                        }}
                       >
                         {item.name === "In Weeks" ? (
                           <FaCalendarDay />
@@ -436,10 +527,11 @@ export default function PostJobs() {
               )}
           </div>
 
-          <div className="form-group">
+          <div style={{ marginTop: 15 }} className="form-group">
             <div className="job_nature">
               <Form.Item
                 layout="vertical"
+                name={"workplaceType"}
                 label={<span style={{ fontWeight: 500 }}>Workplace Type</span>}
                 style={{ marginBottom: "0px" }}
                 rules={[
@@ -450,35 +542,53 @@ export default function PostJobs() {
                 ]}
               >
                 <div className="work_type">
-                  {workPlaceType.map((item, index) => {
-                    return (
-                      <button
-                        className={
-                          index === workTypeActiveButton
-                            ? "work_type_button_active"
-                            : "work_type_button"
+                  {workPlaceType.map((item, index) => (
+                    <button
+                      type="button"
+                      key={index}
+                      className={
+                        index === workTypeActiveButton
+                          ? "work_type_button_active"
+                          : "work_type_button"
+                      }
+                      onClick={() => {
+                        setWorkTypeActiveButton(index);
+                        setWorkplaceType(item.name);
+                        const error = selectValidator(item.name);
+                        setWorkplaceTypeError(error);
+
+                        if (error === "") {
+                          console.log("Workplace type is valid!");
                         }
-                        onClick={() => setWorkTypeActiveButton(index)}
-                      >
-                        {item.name === "In Office" ? (
-                          <PiOfficeChairLight />
-                        ) : item.name === "Work From Home" ? (
-                          <IoHomeOutline />
-                        ) : item.name === "On Field" ? (
-                          <FaTruckFieldUn />
-                        ) : (
-                          <TbContract />
-                        )}{" "}
-                        {item.name}
-                      </button>
-                    );
-                  })}
+                      }}
+                    >
+                      {item.name === "In Office" ? (
+                        <PiOfficeChairLight />
+                      ) : item.name === "Work From Home" ? (
+                        <IoHomeOutline />
+                      ) : item.name === "On Field" ? (
+                        <FaTruckFieldUn />
+                      ) : (
+                        <TbContract />
+                      )}{" "}
+                      {item.name}
+                    </button>
+                  ))}
                 </div>
+                {workplaceTypeError && (
+                  <div
+                    className="error-message"
+                    style={{ color: "red", marginTop: "8px" }}
+                  >
+                    {workplaceTypeError}
+                  </div>
+                )}
               </Form.Item>
             </div>
+            
           </div>
 
-          <div className="form-group">
+          <div style={{ marginTop: 15 }} className="form-group">
             {(workPlaceType[workTypeActiveButton]?.name === "In Office" ||
               workPlaceType[workTypeActiveButton]?.name === "On Field" ||
               workPlaceType[workTypeActiveButton]?.name === "Hybrid") && (
@@ -531,33 +641,25 @@ export default function PostJobs() {
           {/*  */}
 
           {/* Job category */}
-          <div className="form-group">
-            <Form.Item
-              layout="vertical"
-              label={<span style={{ fontWeight: 500 }}>Job Category</span>}
-              name="job_category"
-              rules={[
-                {
-                  required: true,
-                  message: "Select your Job Category",
-                },
+          <div style={{ marginTop: 15 }} className="form-group">
+            <CommonSelectField
+              label={"Job Category"}
+              showSearch={true}
+              value={jobCategory}
+              mandatory={true}
+              name={"Job category"}
+              placeholder={"Select Location"}
+              options={[
+                { value: "1", label: "Chennai" },
+                { value: "2", label: "Mumbai" },
+                { value: "3", label: "Bangalore" },
               ]}
-            >
-              <Text>
-                Choose relevant Category this Job falls into to automatically
-                populate additional data & enhance the visibility of your job
-                listing for potential candidates.
-              </Text>
-              <CommonSelectField
-                showSearch={true}
-                placeholder={"Select Location"}
-                options={[
-                  { value: "1", label: "Chennai" },
-                  { value: "2", label: "Mumbai" },
-                  { value: "3", label: "Bangalore" },
-                ]}
-              />
-            </Form.Item>
+              onChange={(value) => {
+                setJobCategory(value);
+                setJobCategoryError(selectValidator(value));
+              }}
+              error={jobCategoryError}
+            />
 
             <CommonSelectField
               label={"Skills Required"}
@@ -570,6 +672,11 @@ export default function PostJobs() {
                 { value: "2", label: "Mumbai" },
                 { value: "3", label: "Bangalore" },
               ]}
+              onChange={(value) => {
+                setSkillsRequired(value);
+                setSkillsRequiredError(selectValidator(value));
+              }}
+              error={skillsRequiredError}
             />
           </div>
 
@@ -678,30 +785,46 @@ export default function PostJobs() {
               Add compensation details to filter better candidates and speed up
               the sourcing process.
             </p>
-
-            <h5>Salary Type</h5>
-            <div className="job_nature">
-              {salaryType.map((item, index) => (
-                <button
-                  key={index}
-                  className={
-                    index === salaryTypeActiveButton
-                      ? "experience_required_button_active"
-                      : "experience_required_button"
-                  }
-                  onClick={() => setSalaryTypeActiveButton(index)}
+            <Form.Item
+              layout="vertical"
+              label={<h5>Salary Type</h5>}
+              name="internship_duration"
+            >
+              <div className="job_nature">
+                {salaryType.map((item, index) => (
+                  <button
+                    key={index}
+                    className={
+                      index === salaryTypeActiveButton
+                        ? "experience_required_button_active"
+                        : "experience_required_button"
+                    }
+                    onClick={() => {
+                      setSalaryTypeActiveButton(index);
+                      setSalaryDetails(item.name);
+                      setSalaryDetailsError(selectValidator(item.name));
+                    }}
+                  >
+                    {item.name === "Fixed" ? (
+                      <LuLocateFixed />
+                    ) : item.name === "Range" ? (
+                      <RiEqualizerLine />
+                    ) : (
+                      <TbContract />
+                    )}{" "}
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+              {salaryDetailsError && (
+                <div
+                  className="error-message"
+                  style={{ color: "red", marginTop: "8px" }}
                 >
-                  {item.name === "Fixed" ? (
-                    <LuLocateFixed />
-                  ) : item.name === "Range" ? (
-                    <RiEqualizerLine />
-                  ) : (
-                    <TbContract />
-                  )}{" "}
-                  {item.name}
-                </button>
-              ))}
-            </div>
+                  {salaryDetailsError}
+                </div>
+              )}
+            </Form.Item>
 
             {salaryType[salaryTypeActiveButton]?.name === "Fixed" && (
               <div className="salary_details_inner">
@@ -927,7 +1050,7 @@ export default function PostJobs() {
                   />
                 </svg>
               </button>
-              <button className="primary-btn">
+              <button onClick={handlePublishPost} className="primary-btn">
                 <span>Publish</span>
                 <svg
                   width="24"

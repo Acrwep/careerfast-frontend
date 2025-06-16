@@ -54,11 +54,15 @@ export const passwordValidator = (password) => {
 
 export const confirmPasswordValidation = (password, confirmPassword) => {
   let error = "";
-  if (!confirmPassword || confirmPassword.trim() === "")
-    return " is not valid.";
-  if (password !== confirmPassword) return " do not match.";
+  if (!confirmPassword || confirmPassword.trim() === "") {
+    return " is required.";
+  }
+  if (password !== confirmPassword) {
+    return " do not match.";
+  }
   return error;
 };
+
 
 export const pincodeValidator = (pincode) => {
   let error = "";
@@ -75,3 +79,18 @@ export const selectValidator = (selectValue) => {
     return "";
   }
 };
+
+export const genderValidator = (genderValue) => {
+  if (!genderValue || genderValue.trim().length === 0) {
+    return "Gender is required.";
+  }
+  return "";
+};
+
+export const userTypeValidator = (userTypeValue) => {
+  if (!userTypeValue || userTypeValue.trim().length === 0) {
+    return "User type is required.";
+  }
+  return "";
+};
+
