@@ -58,7 +58,7 @@ export default function CommonSelectField({
           error ? "show-premium-input-error" : "hide-premium-input-error"
         }
       >
-        <p style={{ color: "red" }}>{label + error}</p>
+        <p style={{ color: "red", marginTop:6 }}>{label + error}</p>
       </div>
     </div>
   );

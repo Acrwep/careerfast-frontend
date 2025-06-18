@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Row,
   Col,
@@ -56,6 +56,7 @@ import "react-quill/dist/quill.snow.css";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
 import { nameValidator, selectValidator } from "../Common/Validation";
+import { useNavigate } from "react-router-dom"; // For navigation
 const { Option } = Select;
 const { Group: InputGroup } = Input;
 export default function PostJobs() {
@@ -63,6 +64,7 @@ export default function PostJobs() {
   const [profileImage, setProfileImage] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [activeButton, setActiveButton] = useState(null);
+  const [inWeekactiveButton, setInWeekActiveButton] = useState("");
   const [workTypeActiveButton, setWorkTypeActiveButton] = useState(null);
   const [internshipDurationActiveButton, setInternshipDurationActiveButton] =
     useState(null);
@@ -88,6 +90,9 @@ export default function PostJobs() {
   const [jobTitleError, setJobTitleError] = useState("");
   const [jobNature, setJobNature] = useState("");
   const [jobNatureError, setJobNatureError] = useState("");
+  const [jobInternshipDuration, setJobInternshipDuration] = useState("");
+  const [jobInternshipDurationError, setJobInternshipDurationError] =
+    useState("");
   const [workplaceType, setWorkplaceType] = useState("");
   const [workplaceTypeError, setWorkplaceTypeError] = useState("");
   const [jobCategory, setJobCategory] = useState("");
@@ -96,6 +101,9 @@ export default function PostJobs() {
   const [skillsRequiredError, setSkillsRequiredError] = useState("");
   const [salaryDetails, setSalaryDetails] = useState("");
   const [salaryDetailsError, setSalaryDetailsError] = useState("");
+  const [eligibility, setEligibility] = useState("");
+  const [eligibilityError, setEligibilityError] = useState("");
+  const navigate = useNavigate();
 
   const jobNatureOptions = [
     { id: 1, name: "Job" },
@@ -250,7 +258,11 @@ export default function PostJobs() {
     const jobCategoryValidate = selectValidator(jobCategory);
     const skillsRequiredValidate = selectValidator(skillsRequired);
     const salaryDetailsValidate = selectValidator(salaryDetails);
+    const jobInternshipDurationValidate =
+      jobNature === "Internship" ? selectValidator(jobInternshipDuration) : "";
+    const eligibilityValidate = selectValidator(eligibility);
 
+    // Set all error states
     setCompanyNameError(companyNameValidate);
     setJobTitleError(jobTitleValidate);
     setJobNatureError(jobNatureValidate);
@@ -258,10 +270,10 @@ export default function PostJobs() {
     setJobCategoryError(jobCategoryValidate);
     setSkillsRequiredError(skillsRequiredValidate);
     setSalaryDetailsError(salaryDetailsValidate);
+    setJobInternshipDurationError(jobInternshipDurationValidate);
+    setEligibilityError(eligibilityValidate);
 
-    if (setWorkplaceTypeError == "") {
-    }
-
+    // Validation check
     const hasPostJobError = [
       companyNameValidate,
       jobTitleValidate,
@@ -270,6 +282,8 @@ export default function PostJobs() {
       jobCategoryValidate,
       skillsRequiredValidate,
       salaryDetailsValidate,
+      ...(jobNature === "Internship" ? [jobInternshipDurationValidate] : []),
+      eligibilityValidate,
     ].some((val) => val !== "");
 
     if (hasPostJobError) {
@@ -277,20 +291,29 @@ export default function PostJobs() {
       message.error("Please fill all fields correctly before proceeding.");
       return;
     }
+
     console.log("All validations passed");
 
+    // Prepare final payload
     const postJobData = {
-      companyName: companyName,
-      jobTitle: jobTitle,
-      jobNature: jobNature,
-      workplaceType: workplaceType,
-      jobCategory: jobCategory,
-      skillsRequired: skillsRequired,
-      salaryDetails: salaryDetails,
+      companyName,
+      jobTitle,
+      jobNature,
+      workplaceType,
+      jobCategory,
+      skillsRequired,
+      salaryDetails,
+      ...(jobNature === "Internship" && {
+        jobInternshipDuration,
+      }),
+      eligibility,
     };
 
-    console.log("Saving Job post data:", postJobData);
-    message.success("Job post details saved successfully.");
+    setTimeout(() => {
+      console.log("Saving Job post data:", postJobData);
+      message.success("Job Posted Successfully.");
+      navigate("/job-portal");
+    }, 1000);
   };
 
   return (
@@ -381,66 +404,78 @@ export default function PostJobs() {
             />
           </div>
 
-          <div className="form-group">
+          <div style={{ marginTop: 15 }} className="form-group">
             <Form.Item
               layout="vertical"
-              label={<span style={{ fontWeight: 500 }}>Job Nature</span>}
+              label={<span style={{ fontWeight: 500 }}>Job Nature </span>}
               name="jobnature"
               rules={[
                 {
                   required: true,
+                  message: "Please Select your Job Nature ",
                 },
               ]}
             >
               <div className="job_nature">
-                {jobNatureOptions.map((item, index) => {
-                  return (
-                    <button
-                      type="button"
-                      key={index}
-                      className={
-                        index === activeButton
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => {
-                        setActiveButton(index);
-                        setJobNature(item.name);
-                        setJobNatureError(selectValidator(item.name));
+                <button
+                  type="button"
+                  className={
+                    activeButton === "Job"
+                      ? "job_nature_button_active"
+                      : "job_nature_button"
+                  }
+                  onClick={() => {
+                    setActiveButton("Job");
+                    setJobNature("Job");
+                    setJobNatureError("");
+                  }}
+                >
+                  <HiMiniComputerDesktop /> Job
+                </button>
 
-                        const selectedType = jobNatureOptions[index]?.name;
-                        if (selectedType !== "Internship") {
-                          setInternshipDurationActiveButton(null);
-                          setWeeksActiveButton(null);
-                          setMonthsActiveButton(null);
-                        }
-                      }}
-                    >
-                      {item.name === "Job" ? (
-                        <HiMiniComputerDesktop />
-                      ) : item.name === "Internship" ? (
-                        <MdOutlineEventNote />
-                      ) : (
-                        <TbContract />
-                      )}{" "}
-                      {item.name}
-                    </button>
-                  );
-                })}
+                <button
+                  type="button"
+                  className={
+                    activeButton === "Internship"
+                      ? "job_nature_button_active"
+                      : "job_nature_button"
+                  }
+                  onClick={() => {
+                    setActiveButton("Internship");
+                    setJobNature("Internship");
+                    setJobNatureError("");
+                  }}
+                >
+                  <MdOutlineEventNote /> Internship
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    activeButton === "Contract"
+                      ? "job_nature_button_active"
+                      : "job_nature_button"
+                  }
+                  onClick={() => {
+                    setActiveButton("Contract");
+                    setJobNature("Contract");
+                    setJobNatureError("");
+                  }}
+                >
+                  <TbContract /> Contract
+                </button>
               </div>
               {jobNatureError && (
-                <div
-                  className="error-message"
-                  style={{ color: "red", marginTop: "8px" }}
-                >
-                  {jobNatureError}
+                <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+                  {"Job nature" + jobNatureError}
                 </div>
               )}
             </Form.Item>
           </div>
+          {/*  */}
 
           <div style={{ marginTop: 15 }} className="form-group">
-            {jobNatureOptions[activeButton]?.name === "Internship" && (
+            {activeButton === "Internship" && (
               <Form.Item
                 layout="vertical"
                 label={
@@ -455,38 +490,53 @@ export default function PostJobs() {
                 ]}
               >
                 <div className="job_nature">
-                  {internshipDuration.map((item, index) => {
-                    return (
-                      <button
-                        className={
-                          index === internshipDurationActiveButton
-                            ? "internship_duration_button_active"
-                            : "internship_duration_button"
-                        }
-                        onClick={() => {
-                          setInternshipDurationActiveButton(index);
-                        }}
-                      >
-                        {item.name === "In Weeks" ? (
-                          <FaCalendarDay />
-                        ) : item.name === "In Months" ? (
-                          <FaCalendarDays />
-                        ) : (
-                          <TbContract />
-                        )}{" "}
-                        {item.name}
-                      </button>
-                    );
-                  })}
+                  <button
+                    type="button"
+                    className={
+                      internshipDurationActiveButton === "In Weeks"
+                        ? "internship_duration_button_active"
+                        : "internship_duration_button"
+                    }
+                    onClick={() => {
+                      setInternshipDurationActiveButton("In Weeks");
+                      setJobInternshipDuration("In Weeks");
+                      setJobInternshipDurationError("");
+                    }}
+                  >
+                    <HiMiniComputerDesktop /> In Weeks
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      internshipDurationActiveButton === "In Months"
+                        ? "internship_duration_button_active"
+                        : "internship_duration_button"
+                    }
+                    onClick={() => {
+                      setInternshipDurationActiveButton("In Months");
+                      setJobInternshipDuration("In Months");
+                      setJobInternshipDurationError("");
+                    }}
+                  >
+                    <HiMiniComputerDesktop /> In Months
+                  </button>
                 </div>
+                {jobInternshipDurationError && (
+                  <div
+                    className="error-message"
+                    style={{ color: "red", marginTop: "8px" }}
+                  >
+                    {"Internship" + jobInternshipDurationError}
+                  </div>
+                )}
               </Form.Item>
             )}
           </div>
 
-          <div className="form-group">
-            {jobNatureOptions[activeButton]?.name === "Internship" &&
-              internshipDuration[internshipDurationActiveButton]?.name ===
-                "In Weeks" && (
+          <div style={{ marginTop: 15 }} className="form-group">
+            {activeButton === "Internship" &&
+              internshipDurationActiveButton === "In Weeks" && (
                 <div className="job_nature">
                   {weeks.map((item, index) => (
                     <button
@@ -505,9 +555,8 @@ export default function PostJobs() {
                 </div>
               )}
 
-            {jobNatureOptions[activeButton]?.name === "Internship" &&
-              internshipDuration[internshipDurationActiveButton]?.name ===
-                "In Months" && (
+            {activeButton === "Internship" &&
+              internshipDurationActiveButton === "In Months" && (
                 <div className="job_nature">
                   {months.map((item, index) => (
                     <button
@@ -542,56 +591,70 @@ export default function PostJobs() {
                 ]}
               >
                 <div className="work_type">
-                  {workPlaceType.map((item, index) => (
-                    <button
-                      type="button"
-                      key={index}
-                      className={
-                        index === workTypeActiveButton
-                          ? "work_type_button_active"
-                          : "work_type_button"
-                      }
-                      onClick={() => {
-                        setWorkTypeActiveButton(index);
-                        setWorkplaceType(item.name);
-                        const error = selectValidator(item.name);
-                        setWorkplaceTypeError(error);
+                  <button
+                    type="button"
+                    className={
+                      workTypeActiveButton === "In Office"
+                        ? "work_type_button_active"
+                        : "work_type_button"
+                    }
+                    onClick={() => {
+                      setWorkTypeActiveButton("In Office");
+                      setWorkplaceType("In Office");
+                      setWorkplaceTypeError("");
+                    }}
+                  >
+                    <PiOfficeChairLight /> In Office
+                  </button>
 
-                        if (error === "") {
-                          console.log("Workplace type is valid!");
-                        }
-                      }}
-                    >
-                      {item.name === "In Office" ? (
-                        <PiOfficeChairLight />
-                      ) : item.name === "Work From Home" ? (
-                        <IoHomeOutline />
-                      ) : item.name === "On Field" ? (
-                        <FaTruckFieldUn />
-                      ) : (
-                        <TbContract />
-                      )}{" "}
-                      {item.name}
-                    </button>
-                  ))}
+                  <button
+                    type="button"
+                    className={
+                      workTypeActiveButton === "Work From Home"
+                        ? "work_type_button_active"
+                        : "work_type_button"
+                    }
+                    onClick={() => {
+                      setWorkTypeActiveButton("Work From Home");
+                      setWorkplaceType("Work From Home");
+                      setWorkplaceTypeError("");
+                    }}
+                  >
+                    <PiOfficeChairLight /> Work From Home
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      workTypeActiveButton === "On Field"
+                        ? "work_type_button_active"
+                        : "work_type_button"
+                    }
+                    onClick={() => {
+                      setWorkTypeActiveButton("On Field");
+                      setWorkplaceType("On Field");
+                      setWorkplaceTypeError("");
+                    }}
+                  >
+                    <FaTruckFieldUn /> On Field
+                  </button>
                 </div>
                 {workplaceTypeError && (
                   <div
                     className="error-message"
                     style={{ color: "red", marginTop: "8px" }}
                   >
-                    {workplaceTypeError}
+                    {"Workplace Type" + workplaceTypeError}
                   </div>
                 )}
               </Form.Item>
             </div>
-            
           </div>
 
           <div style={{ marginTop: 15 }} className="form-group">
-            {(workPlaceType[workTypeActiveButton]?.name === "In Office" ||
-              workPlaceType[workTypeActiveButton]?.name === "On Field" ||
-              workPlaceType[workTypeActiveButton]?.name === "Hybrid") && (
+            {(workTypeActiveButton === "In Office" ||
+              workTypeActiveButton === "On Field" ||
+              workTypeActiveButton === "Hybrid") && (
               <Form.Item
                 layout="vertical"
                 label={<span style={{ fontWeight: 500 }}>Work Location</span>}
@@ -708,35 +771,55 @@ export default function PostJobs() {
             )}
 
             <div className="experience_required">
-              <p>Experience Required (In Years)</p>
+              <p>
+                <span style={{ color: "red" }}>*</span> Experience Required (In
+                Years)
+              </p>
               <div className="job_nature">
-                {experienceRequired.map((item, index) => {
-                  return (
-                    <button
-                      className={
-                        index === experienceRequiredActiveButton
-                          ? "experience_required_button_active"
-                          : "experience_required_button"
-                      }
-                      onClick={() => setExperienceRequiredActiveButton(index)}
-                    >
-                      {item.name === "Fresher" ? (
-                        <FaPersonCircleExclamation />
-                      ) : item.name === "Experienced" ? (
-                        <FaPersonCircleCheck />
-                      ) : (
-                        <TbContract />
-                      )}{" "}
-                      {item.name}
-                    </button>
-                  );
-                })}
+                <button
+                  type="button"
+                  className={
+                    experienceRequiredActiveButton === "Fresher"
+                      ? "experience_required_button_active"
+                      : "experience_required_button"
+                  }
+                  onClick={() => {
+                    setExperienceRequiredActiveButton("Fresher");
+                    setEligibility("Fresher");
+                    setEligibilityError("");
+                  }}
+                >
+                  <FaPersonCircleExclamation /> Fresher
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    experienceRequiredActiveButton === "Experienced"
+                      ? "experience_required_button_active"
+                      : "experience_required_button"
+                  }
+                  onClick={() => {
+                    setExperienceRequiredActiveButton("Experienced");
+                    setEligibility("Experienced");
+                    setEligibilityError("");
+                  }}
+                >
+                  <FaPersonCircleCheck /> Experienced
+                </button>
               </div>
+              {eligibilityError && (
+                <div
+                  className="error-message"
+                  style={{ color: "red", marginTop: "8px" }}
+                >
+                  {"Experience" + eligibilityError}
+                </div>
+              )}
             </div>
 
             <div className="experience_required">
-              {experienceRequired[experienceRequiredActiveButton]?.name ===
-              "Fresher" ? (
+              {experienceRequiredActiveButton === "Fresher" ? (
                 <>
                   <p>Experience Required (In Years)</p>
                   <div className="job_nature">
@@ -762,8 +845,7 @@ export default function PostJobs() {
                 </>
               ) : null}
 
-              {experienceRequired[experienceRequiredActiveButton]?.name ===
-              "Experienced" ? (
+              {experienceRequiredActiveButton === "Experienced" ? (
                 <>
                   <div className="">
                     <CommonInputField
@@ -787,7 +869,11 @@ export default function PostJobs() {
             </p>
             <Form.Item
               layout="vertical"
-              label={<h5>Salary Type</h5>}
+              label={
+                <h5>
+                  <span style={{ color: "red" }}>*</span> Salary Type
+                </h5>
+              }
               name="internship_duration"
             >
               <div className="job_nature">
@@ -821,7 +907,7 @@ export default function PostJobs() {
                   className="error-message"
                   style={{ color: "red", marginTop: "8px" }}
                 >
-                  {salaryDetailsError}
+                  {"Salary Type" + salaryDetailsError}
                 </div>
               )}
             </Form.Item>
