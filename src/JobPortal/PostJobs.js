@@ -103,6 +103,9 @@ export default function PostJobs() {
   const [salaryDetailsError, setSalaryDetailsError] = useState("");
   const [eligibility, setEligibility] = useState("");
   const [eligibilityError, setEligibilityError] = useState("");
+  const [workLocation, setWorkLocation] = useState("");
+  const [workLocationError, setWorkLocationError] = useState("");
+
   const navigate = useNavigate();
 
   const jobNatureOptions = [
@@ -261,6 +264,7 @@ export default function PostJobs() {
     const jobInternshipDurationValidate =
       jobNature === "Internship" ? selectValidator(jobInternshipDuration) : "";
     const eligibilityValidate = selectValidator(eligibility);
+    const workLocationValidate = selectValidator(workLocation);
 
     // Set all error states
     setCompanyNameError(companyNameValidate);
@@ -272,6 +276,7 @@ export default function PostJobs() {
     setSalaryDetailsError(salaryDetailsValidate);
     setJobInternshipDurationError(jobInternshipDurationValidate);
     setEligibilityError(eligibilityValidate);
+    setWorkLocationError(workLocationValidate);
 
     // Validation check
     const hasPostJobError = [
@@ -284,6 +289,7 @@ export default function PostJobs() {
       salaryDetailsValidate,
       ...(jobNature === "Internship" ? [jobInternshipDurationValidate] : []),
       eligibilityValidate,
+      workLocationValidate,
     ].some((val) => val !== "");
 
     if (hasPostJobError) {
@@ -307,6 +313,7 @@ export default function PostJobs() {
         jobInternshipDuration,
       }),
       eligibility,
+      workLocation,
     };
 
     setTimeout(() => {
@@ -667,26 +674,48 @@ export default function PostJobs() {
                 ]}
               >
                 <div className="job_nature">
-                  {work_location.map((item, index) => {
-                    return (
-                      <button
-                        type="button"
-                        key={index}
-                        className={
-                          index === workLocationActiveButton
-                            ? "work_location_button_active"
-                            : "work_location_button"
-                        }
-                        onClick={() => setWorkLocationActiveButton(index)}
-                      >
-                        {item.name}
-                      </button>
-                    );
-                  })}
-                </div>
+                  <button
+                    type="button"
+                    className={
+                      workLocationActiveButton === "Specific Location"
+                        ? "work_location_button_active"
+                        : "work_location_button"
+                    }
+                    onClick={() => {
+                      setWorkLocationActiveButton("Specific Location");
+                      setWorkLocation("Specific Location");
+                      setWorkLocationError("");
+                    }}
+                  >
+                    <PiOfficeChairLight /> Specific Location
+                  </button>
 
-                {work_location[workLocationActiveButton]?.name ===
-                "Specific Location" ? (
+                  <button
+                    type="button"
+                    className={
+                      workLocationActiveButton === "Pan India"
+                        ? "work_location_button_active"
+                        : "work_location_button"
+                    }
+                    onClick={() => {
+                      setWorkLocationActiveButton("Pan India");
+                      setWorkLocation("Pan India");
+                      setWorkLocationError("");
+                    }}
+                  >
+                    <PiOfficeChairLight /> Pan India
+                  </button>
+                </div>
+                {workLocationError && (
+                  <div
+                    className="error-message"
+                    style={{ color: "red", marginTop: "8px" }}
+                  >
+                    {"Work location" + workLocationError}
+                  </div>
+                )}
+
+                {workLocationActiveButton === "Specific Location" ? (
                   <CommonSelectField
                     style={{ marginTop: "20px" }}
                     showSearch={true}

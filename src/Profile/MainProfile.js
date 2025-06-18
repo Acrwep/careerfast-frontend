@@ -308,7 +308,7 @@ export default function MainProfile() {
     };
     console.log("Saving user data:", userData);
     message.success("Profile details saved successfully.");
-    onCloseDrawer();
+    resetFormFields();
   };
 
   //
@@ -361,7 +361,7 @@ export default function MainProfile() {
     };
     console.log("Saving user data:", educationUserData);
     message.success("Education details saved successfully.");
-    onCloseDrawer();
+    resetFormFields();
   };
 
   const handleWorkExpSave = (e) => {
@@ -407,7 +407,7 @@ export default function MainProfile() {
     };
     console.log("Saving user data:", workExpUserData);
     message.success("Education details saved successfully.");
-    onCloseDrawer();
+    resetFormFields();
   };
 
   const handleProjectSave = (e) => {
@@ -455,7 +455,7 @@ export default function MainProfile() {
     };
     console.log("Saving user data:", projectUserData);
     message.success("Education details saved successfully.");
-    onCloseDrawer();
+    resetFormFields();
   };
 
   const handleAboutSave = (e) => {
@@ -478,7 +478,7 @@ export default function MainProfile() {
     };
     console.log("Saving user data:", aboutUserData);
     message.success("About details saved successfully.");
-    onCloseDrawer();
+    resetFormFields();
   };
 
   const handleBeforeUpload = (file) => {
@@ -527,7 +527,7 @@ export default function MainProfile() {
 
     console.log("Saving skills data:", customSkillUserData);
     message.success("Skills saved successfully.");
-    onCloseDrawer();
+    resetFormFields();
 
     // Reset states
     setCustomSkill("");
@@ -541,7 +541,7 @@ export default function MainProfile() {
       return;
     }
 
-    onCloseDrawer();
+    resetFormFields();
     console.log("Saving file:", resumeFile);
     message.success("Resume saved successfully!");
   };
@@ -615,7 +615,7 @@ export default function MainProfile() {
 
     setSavedLinks((prev) => [...prev, linksArray]);
     console.log("Saved Social Links:", linksArray);
-    onCloseDrawer();
+    resetFormFields();
     message.success("Social links saved successfully!");
 
     // Reset inputs and errors
@@ -678,9 +678,118 @@ export default function MainProfile() {
     setOpen(true);
   };
 
-  const onCloseDrawer = () => {
+  const [resetTrigger, setResetTrigger] = useState(false);
+
+  const resetFormFields = () => {
+    // Basic Details
+    console.log("resetttt");
+
+    setFname("");
+    setLname("");
+    setUserName("");
+    setEmail("");
+    setPhoneNumber("");
+    setGender("");
+    setUserType("");
+    setLocation("");
+    setCourse("");
+    setStartDate("");
+    setEndDate("");
+    setFresherCourse("");
+    setFresherStartDate("");
+    setFresherEndDate("");
+    setActiveButton(null);
+    setUserTypeActiveButton(null);
+    setClass(null);
+
+    // Education
+    setQualification("");
+    setEducationCourse("");
+    setSpecialization("");
+    setCollage("");
+    setCourseType("");
+    setPercentage("");
+    setCgpa("");
+    setEducationStartDate("");
+    setEducationEndDate("");
+
+    // Work Experience
+    setDesignation("");
+    setOrganisation("");
+    setEmploymentType("");
+    setWorkExpStartDate("");
+    setWorkExpEndDate("");
+    setWorkExpLocation("");
+
+    // Projects
+    setProject("");
+    setProjectType("");
+    setProjectStartDate("");
+    setProjectEndDate("");
+    setProjectDescription("");
+
+    // Skills
+    setSelectedSkills([]);
+    setCustomSkill("");
+
+    // About
+    setAboutTextNew("");
+
+    // Resume
+    setResumeFile(null);
+
+    // Social Links
+    setSocialLinks({
+      Linkedin: "",
+      Facebook: "",
+      Instagram: "",
+      Twitter: "",
+      Dribbble: "",
+      Behance: "",
+    });
+
+    // Errors
+    setFnameError("");
+    setLnameError("");
+    setUserNameError("");
+    setEmailError("");
+    setPhoneNumberError("");
+    setGenderError("");
+    setUserTypeError("");
+    setLocationError("");
+    setCourseError("");
+    setStartDateError("");
+    setEndDateError("");
+    setFresherCourseError("");
+    setFresherStartDateError("");
+    setFresherEndDateError("");
+    setQualificationError("");
+    setEducationCourseError("");
+    setSpecializationError("");
+    setCollageError("");
+    setCourseTypeError("");
+    setEducationStartDateError("");
+    setEducationEndDateError("");
+    setDesignationError("");
+    setOrganisationError("");
+    setEmploymentTypeError("");
+    setWorkExpStartDateError("");
+    setWorkExpEndDateError("");
+    setWorkExpLocationError("");
+    setProjectError("");
+    setProjectTypeError("");
+    setProjectStartDateError("");
+    setProjectEndDateError("");
+    setProjectDescriptionError("");
+    setCustomSkillError("");
+    setAboutTextError("");
     setOpen(false);
+    // setResetTrigger((prev) => !prev);
   };
+
+  // useEffect(() => {
+
+  // }, [resetTrigger]);
 
   const handleAddSkill = (skill) => {
     if (!selectedSkills.includes(skill)) {
@@ -779,12 +888,10 @@ export default function MainProfile() {
           <div className="form-row">
             <div className="form-group">
               <CommonInputField
-                name="fname"
                 label="First Name"
                 mandotary={true}
                 value={fname}
                 placeholder="Enter your first name"
-                type="text"
                 onChange={(e) => {
                   setFname(e.target.value);
                   setFnameError(nameValidator(e.target.value));
@@ -794,7 +901,6 @@ export default function MainProfile() {
             </div>
             <div className="form-group">
               <CommonInputField
-                name="lname"
                 label="Last Name"
                 mandotary={true}
                 value={lname}
@@ -811,7 +917,6 @@ export default function MainProfile() {
 
           <div className="form-group">
             <CommonInputField
-              name="Username"
               label="Username"
               mandotary={true}
               value={userName}
@@ -2319,6 +2424,7 @@ export default function MainProfile() {
                 icon={<EditOutlined />}
                 onClick={() => {
                   setActiveTab("basic");
+                  console.log("fffffffffffff", fname);
                   showDrawer();
                 }}
               >
@@ -2980,7 +3086,7 @@ export default function MainProfile() {
             <Drawer
               title={null}
               placement="right"
-              onClose={onCloseDrawer}
+              onClose={resetFormFields}
               open={open}
               width={1100}
               className="user_details_drawer"
@@ -3013,7 +3119,10 @@ export default function MainProfile() {
                   <Menu
                     mode="vertical"
                     selectedKeys={[activeTab]}
-                    onClick={(e) => setActiveTab(e.key)}
+                    onClick={(e) => {
+                      // resetFormFields();
+                      setActiveTab(e.key);
+                    }}
                     items={items}
                   />
                 </div>

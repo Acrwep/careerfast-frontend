@@ -24,6 +24,7 @@ import AccountSettings from "./Profile/AccountSettings";
 import ProSubscription from "./Profile/ProSubscription";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 function App() {
   return (

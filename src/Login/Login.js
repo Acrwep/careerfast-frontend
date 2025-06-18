@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom"; // For navigation
 import { emailValidator, passwordValidator } from "../Common/Validation";
 import CommonInputField from "../Common/CommonInputField";
 import CommonPasswordField from "../Common/CommonPasswordField";
+import { login } from "../ApiService/action";
 
 const { Title, Text, Link } = Typography;
 
@@ -34,16 +35,35 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    setEmail("");
+  }, [activeTab]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const emailValidate = emailValidator(email);
     const passwordValidate = passwordValidator(password);
 
-    if (emailValidate || passwordValidate) return;
+    if (emailValidate || passwordValidate) {
+      setEmailError(emailValidate);
+      setPasswordError(passwordValidate);
+      return;
+    }
 
     if (activeTab === "candidate") {
       console.log("candidate api");
+
+      const payload = {
+        email: email,
+        password: password,
+      };
+      try {
+        const response = await login(payload);
+        console.log(response);
+      } catch (error) {
+        console.log(error);
+      }
     } else {
       console.log("recuiter api");
     }
@@ -57,7 +77,7 @@ const LoginPage = () => {
         } Login successfully!`
       );
 
-      navigate("/job-portal");
+      // navigate("/job-portal");
     }, 1500);
   };
 
@@ -79,10 +99,6 @@ const LoginPage = () => {
       ),
     },
   ];
-
-  useEffect(() => {
-    setEmail("");
-  }, [activeTab]);
 
   return (
     <div className="loginpage_container">

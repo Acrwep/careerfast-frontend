@@ -262,20 +262,22 @@ export default function Header() {
                 santhoshkathirvel.s@actechnologies.com
               </Text>
               <div style={{ marginTop: 12 }}>
-                <Button
-                  type="text"
-                  style={{
-                    color: "#8d3ffb",
-                    padding: 6,
-                    height: "auto",
-                    fontWeight: 500,
-                    background: "#fff",
-                    border: "none",
-                  }}
-                  icon={<ArrowRightOutlined style={{ fontSize: 12 }} />}
-                >
-                  View Profile
-                </Button>
+                <a href="/user-profile">
+                  <Button
+                    type="text"
+                    style={{
+                      color: "#8d3ffb",
+                      padding: 6,
+                      height: "auto",
+                      fontWeight: 500,
+                      background: "#fff",
+                      border: "none",
+                    }}
+                    icon={<ArrowRightOutlined style={{ fontSize: 12 }} />}
+                  >
+                    View Profile
+                  </Button>
+                </a>
               </div>
             </div>
           </Space>

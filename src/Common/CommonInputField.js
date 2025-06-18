@@ -19,27 +19,23 @@ export default function CommonInputField({
 }) {
   return (
     <div className="commoninputfield">
-      <Form.Item
-        layout="vertical"
+      <div style={{ display: "flex" }}>
+        <p style={{ color: "black" }}>
+          <span style={{ color: "red" }}>{mandotary === true ? "*" : ""}</span>{" "}
+          {label}
+        </p>
+      </div>
+      <Input
         name={name}
-        label={<span style={{ fontWeight: 500 }}>{label}</span>}
-        rules={[
-          {
-            required: mandotary,
-          },
-        ]}
-      >
-        <Input
-          placeholder={placeholder}
-          className={"premium-input"}
-          onChange={onChange}
-          type={type}
-          pattern={pattern}
-          value={value}
-          prefix={prefix}
-          onPressEnter={onPressEnter}
-        />
-      </Form.Item>
+        placeholder={placeholder}
+        className={"premium-input"}
+        onChange={onChange}
+        type={type}
+        pattern={pattern}
+        value={value}
+        prefix={prefix}
+        onPressEnter={onPressEnter}
+      />
       <div
         className={
           error ? "show-premium-input-error" : "hide-premium-input-error"
