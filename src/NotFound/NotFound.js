@@ -165,17 +165,20 @@ const NotFound = () => {
 
         {/* Animated button */}
         <motion.div variants={itemVariants}>
-          <motion.button
-            className="home-button"
-            whileHover={{
-              scale: 1.05,
-              boxShadow: "0 5px 15px rgba(105, 0, 173, 0.4)",
-            }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-          >
-            Return Home
-          </motion.button>
+          <a href="/login">
+            {" "}
+            <motion.button
+              className="home-button"
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0 5px 15px rgba(105, 0, 173, 0.4)",
+              }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              Return Home
+            </motion.button>{" "}
+          </a>
         </motion.div>
       </motion.div>
     </div>

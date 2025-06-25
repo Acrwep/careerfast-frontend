@@ -15,11 +15,11 @@ export const nameValidator = (name) => {
 };
 
 export const orgTypeValidation = (orgType) => {
-  let error = "";
-  if (!orgType || orgType.length <= 0) error = " is required ";
-  else if (!orgTypeRegex.test(orgType) || orgType.length < 3)
-    error = " is not valid ";
-  return error;
+  if (!orgType || orgType.length <= 0) {
+    return " is required ";
+  } else {
+    return "";
+  }
 };
 
 export const orgNameValidation = (orgName) => {
@@ -63,7 +63,6 @@ export const confirmPasswordValidation = (password, confirmPassword) => {
   return error;
 };
 
-
 export const pincodeValidator = (pincode) => {
   let error = "";
   if (!pincode || pincode.length <= 0) error = " is required ";
@@ -93,4 +92,3 @@ export const userTypeValidator = (userTypeValue) => {
   }
   return "";
 };
-

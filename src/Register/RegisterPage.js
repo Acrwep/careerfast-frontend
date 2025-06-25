@@ -35,13 +35,17 @@ import {
 import { CommonToaster } from "../Common/CommonToaster";
 import CommonInputField from "../Common/CommonInputField";
 import CommonPasswordField from "../Common/CommonPasswordField";
+import { getOrganizationType, register } from "../ApiService/action";
+import CommonSelectField from "../Common/CommonSelectField";
 
 const { Title, Text, Link } = Typography;
 
 const RegisterPage = () => {
   const [form] = Form.useForm();
-  const [name, setName] = useState("");
-  const [nameError, setNameError] = useState("");
+  const [fname, setFname] = useState("");
+  const [fnameError, setFnameError] = useState("");
+  const [lname, setLname] = useState("");
+  const [lnameError, setLnameError] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [email, setEmail] = useState("");
@@ -56,10 +60,26 @@ const RegisterPage = () => {
   const [orgTypeError, setOrgTypeError] = useState("");
   const [activeTab, setActiveTab] = useState("candidate");
   const [isLoading, setIsLoading] = useState(false);
+  const [orgTypeOptions, setOrgTypeOptions] = useState([]);
   const navigate = useNavigate();
 
-  const handleSubmit = () => {
-    const nameValidate = nameValidator(name);
+  useEffect(() => {
+    getOrganizationTypeDate();
+  }, []);
+
+  const getOrganizationTypeDate = async () => {
+    try {
+      const response = await getOrganizationType();
+      console.log("orgtype", response);
+      setOrgTypeOptions(response?.data?.data || []);
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  const handleSubmit = async () => {
+    const fnameValidate = nameValidator(fname);
+    const lnameValidate = nameValidator(lname);
     const phoneValidate = phoneValidation(phone);
     const emailValidate = emailValidator(email);
     const passwordValidate = passwordValidator(password);
@@ -72,7 +92,8 @@ const RegisterPage = () => {
     const orgTypeValidate =
       activeTab === "recruiter" ? orgTypeValidation(orgType) : "";
 
-    setNameError(nameValidate);
+    setFnameError(fnameValidate);
+    setLnameError(lnameValidate);
     setPhoneError(phoneValidate);
     setEmailError(emailValidate);
     setPasswordError(passwordValidate);
@@ -81,7 +102,8 @@ const RegisterPage = () => {
     setOrgTypeError(orgTypeValidate);
 
     if (
-      nameValidate ||
+      fnameValidate ||
+      lnameValidate ||
       phoneValidate ||
       emailValidate ||
       passwordValidate ||
@@ -91,17 +113,36 @@ const RegisterPage = () => {
     )
       return;
 
-    setIsLoading(true);
+    const registerload = {
+      first_name: fname,
+      last_name: lname,
+      phone_code: "+91",
+      phone: phone,
+      email: email,
+      password: password,
+      organization: orgName,
+      organization_type_id: orgType,
+      role_id: activeTab === "candidate" ? 2 : 3,
+    };
 
-    setTimeout(() => {
-      setIsLoading(false);
-      message.success(
-        `${
-          activeTab === "candidate" ? "Candidate" : "Recruiter"
-        } registered successfully!`
-      );
-      navigate("/login");
-    }, 1500);
+    try {
+      const response = await register(registerload);
+      console.log("Register response", response);
+      setIsLoading(true);
+
+      setTimeout(() => {
+        setIsLoading(false);
+        message.success(
+          `${
+            activeTab === "candidate" ? "Candidate" : "Recruiter"
+          } registered successfully!`
+        );
+        navigate("/login");
+      }, 1500);
+    } catch (error) {
+      console.log("Error", error);
+      message.error(error.response.data.details);
+    }
   };
 
   const tabItems = [
@@ -126,7 +167,7 @@ const RegisterPage = () => {
   useEffect(() => {
     setEmail("");
     setPassword("");
-    setName("");
+    setFname("");
     setConfirmPassword("");
     setPhone("");
   }, [activeTab]);
@@ -137,8 +178,11 @@ const RegisterPage = () => {
         <Col span={12}>
           {" "}
           <div className="floating_circle1"></div>
-          <div style={{ height: 870 }} className="login-animation">
-            <Card className="login_card" bordered={false}>
+          <div
+            style={{ height: 800, placeContent: "center" }}
+            className="login-animation"
+          >
+            <Card className="login_card">
               <div style={{ textAlign: "center", marginBottom: 12 }}>
                 <Title
                   level={2}
@@ -158,7 +202,8 @@ const RegisterPage = () => {
                 onChange={(value) => {
                   setActiveTab(value);
                   setEmailError("");
-                  setNameError("");
+                  setFnameError("");
+                  setLnameError("");
                   setConfirmPasswordError("");
                   setPhoneError("");
                   setPasswordError("");
@@ -170,64 +215,87 @@ const RegisterPage = () => {
                 items={tabItems}
               />
 
-              <Form
-                form={form}
-                className="login_form"
-                layout="vertical"
-                // onFinish={handleSubmit}
-              >
+              <Form form={form} className="login_form" layout="vertical">
                 <div style={{ marginBottom: "0px" }}>
-                  <CommonInputField
-                    label="Full Name"
-                    name="name"
-                    mandotary={true}
-                    placeholder="Enter your full name"
-                    prefix={
-                      <UserOutlined style={{ color: "rgba(0, 0, 0, 0.25)" }} />
-                    }
-                    value={name}
-                    onChange={(e) => {
-                      setName(e.target.value);
-                      setNameError(nameValidator(e.target.value));
-                    }}
-                    error={nameError}
-                  />
+                  <div className="form-row">
+                    <CommonInputField
+                      label="First Name"
+                      name="name"
+                      mandotary={true}
+                      placeholder="Enter your first name"
+                      prefix={
+                        <UserOutlined
+                          style={{ color: "rgba(0, 0, 0, 0.25)" }}
+                        />
+                      }
+                      value={fname}
+                      onChange={(e) => {
+                        setFname(e.target.value);
+                        setFnameError(nameValidator(e.target.value));
+                      }}
+                      error={fnameError}
+                    />
+
+                    <CommonInputField
+                      label="Last Name"
+                      name="name"
+                      mandotary={true}
+                      placeholder="Enter your last name"
+                      prefix={
+                        <UserOutlined
+                          style={{ color: "rgba(0, 0, 0, 0.25)" }}
+                        />
+                      }
+                      value={lname}
+                      onChange={(e) => {
+                        setLname(e.target.value);
+                        setLnameError(nameValidator(e.target.value));
+                      }}
+                      error={lnameError}
+                    />
+                  </div>
                 </div>
 
-                <div style={{ marginBottom: "0px" }}>
-                  <CommonInputField
-                    label="Phone Number"
-                    name="phone"
-                    mandotary={true}
-                    placeholder="Enter your phone number"
-                    prefix={
-                      <PhoneOutlined style={{ color: "rgba(0, 0, 0, 0.25)" }} />
-                    }
-                    value={phone}
-                    onChange={(e) => {
-                      setPhone(e.target.value);
-                      setPhoneError(phoneValidation(e.target.value));
-                    }}
-                    error={phoneError}
-                  />
-                </div>
+                <div className="form-row">
+                  <div style={{ marginBottom: "0px" }}>
+                    <CommonInputField
+                      label="Phone Number"
+                      name="phone"
+                      mandotary={true}
+                      placeholder="Enter your phone number"
+                      prefix={
+                        <PhoneOutlined
+                          style={{ color: "rgba(0, 0, 0, 0.25)" }}
+                        />
+                      }
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        setPhoneError(phoneValidation(e.target.value));
+                      }}
+                      error={phoneError}
+                    />
+                  </div>
 
-                <div style={{ marginBottom: "0px" }}>
-                  <CommonInputField
-                    label="Email"
-                    name="email"
-                    mandotary={true}
-                    placeholder="Enter your email"
-                    prefix={
-                      <MailOutlined style={{ color: "rgba(0, 0, 0, 0.25)" }} />
-                    }
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setEmailError(emailValidator(e.target.value));
-                    }}
-                    error={emailError}
-                  />
+                  <div style={{ marginBottom: "0px" }}>
+                    <CommonInputField
+                      label="Email"
+                      name="email"
+                      mandotary={true}
+                      placeholder="Enter your email"
+                      prefix={
+                        <MailOutlined
+                          style={{ color: "rgba(0, 0, 0, 0.25)" }}
+                        />
+                      }
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setEmailError(emailValidator(e.target.value));
+                      }}
+                      error={emailError}
+                    />
+                  </div>
                 </div>
 
                 {activeTab === "recruiter" && (
@@ -253,20 +321,21 @@ const RegisterPage = () => {
                         />
                       </div>
                       <div style={{ marginBottom: "0px" }}>
-                        <CommonInputField
+                        <CommonSelectField
                           label="Organization Type"
                           name="orgType"
                           mandotary={true}
-                          placeholder="E.g., IT, Healthcare, Finance"
+                          placeholder="Select organization"
                           prefix={
                             <SolutionOutlined
                               style={{ color: "rgba(0, 0, 0, 0.25)" }}
                             />
                           }
                           value={orgType}
-                          onChange={(e) => {
-                            setOrgType(e.target.value);
-                            setOrgTypeError(orgTypeValidation(e.target.value));
+                          options={orgTypeOptions}
+                          onChange={(value) => {
+                            setOrgType(value);
+                            setOrgTypeError(orgTypeValidation(value));
                           }}
                           error={orgTypeError}
                         />
@@ -280,9 +349,6 @@ const RegisterPage = () => {
                       label="Password"
                       name="password"
                       placeholder="••••••••"
-                      prefix={
-                        <LockOutlined style={{ color: "rgba(0,0,0,.25)" }} />
-                      }
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
@@ -299,9 +365,6 @@ const RegisterPage = () => {
                       label="Confirm Password"
                       name="confirmPassword"
                       placeholder="••••••••"
-                      prefix={
-                        <LockOutlined style={{ color: "rgba(0,0,0,.25)" }} />
-                      }
                       value={confirmPassword}
                       onChange={(e) => {
                         setConfirmPassword(e.target.value);
@@ -352,7 +415,10 @@ const RegisterPage = () => {
 
         <Col span={12}>
           {" "}
-          <div style={{ height: 870 }} className="login_image">
+          <div
+            style={{ height: 800, placeContent: "center" }}
+            className="login_image"
+          >
             <img src={loginImage} alt="Registration illustration"></img>
           </div>
           <div className="floating_circle2"></div>

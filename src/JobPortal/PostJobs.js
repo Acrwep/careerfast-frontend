@@ -9,11 +9,9 @@ import {
   Form,
   Input,
   Select,
-  Text,
   Switch,
   InputNumber,
   Space,
-  Selected,
   Tag,
   Divider,
   Card,
@@ -21,13 +19,7 @@ import {
 } from "antd";
 import {
   UserOutlined,
-  SolutionOutlined,
-  CreditCardOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
   EditOutlined,
-  ArrowRightOutlined,
-  MailOutlined,
   LineChartOutlined,
   MedicineBoxOutlined,
   CarOutlined,
@@ -37,10 +29,7 @@ import { HiMiniComputerDesktop } from "react-icons/hi2";
 import { MdOutlineEventNote } from "react-icons/md";
 import { TbContract } from "react-icons/tb";
 import { PiOfficeChairLight } from "react-icons/pi";
-import { IoHomeOutline } from "react-icons/io5";
 import { FaTruckFieldUn } from "react-icons/fa6";
-import { FaCalendarDay } from "react-icons/fa6";
-import { FaCalendarDays } from "react-icons/fa6";
 import { FaPersonCircleExclamation } from "react-icons/fa6";
 import { FaPersonCircleCheck } from "react-icons/fa6";
 import { FaBusinessTime } from "react-icons/fa";
@@ -50,112 +39,93 @@ import { RiEqualizerLine } from "react-icons/ri";
 import { FaAngleUp } from "react-icons/fa";
 import { FaAngleDown } from "react-icons/fa";
 import { FaHeartCircleCheck } from "react-icons/fa6";
-import { style } from "framer-motion/client";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
 import { nameValidator, selectValidator } from "../Common/Validation";
 import { useNavigate } from "react-router-dom"; // For navigation
+import {
+  getBenifitsData,
+  getDuration,
+  getDurationTypes,
+  getEligibilityData,
+  getGenderData,
+  getJobNature,
+  getSalaryData,
+  getWorkPlaceLocation,
+  getWorkPlaceType,
+  getYears,
+} from "../ApiService/action";
+import { option } from "framer-motion/client";
 const { Option } = Select;
 const { Group: InputGroup } = Input;
 export default function PostJobs() {
   const [companyLogo, setCompanyLogo] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [activeButton, setActiveButton] = useState(null);
-  const [inWeekactiveButton, setInWeekActiveButton] = useState("");
+  const [jobNatureId, setJobNatureId] = useState(1);
   const [workTypeActiveButton, setWorkTypeActiveButton] = useState(null);
-  const [internshipDurationActiveButton, setInternshipDurationActiveButton] =
-    useState(null);
   const [weeksActiveButton, setWeeksActiveButton] = useState(null);
-  const [monthsActiveButton, setMonthsActiveButton] = useState(null);
   const [workLocationActiveButton, setWorkLocationActiveButton] =
     useState(null);
-  const [selectedCountry, setSelectedCountry] = useState(null);
-  const [isFirstSwitchChecked, setIsFirstSwitchChecked] = useState(false);
   const { Title, Text } = Typography;
   const [experienceRequiredActiveButton, setExperienceRequiredActiveButton] =
     useState(null);
   const [fresherPassActiveButton, setFresherPassActiveButton] = useState(null);
+  const [selectedFresherPass, setSelectedFresherPass] = useState([]);
+  const [experienceRequired, setExperienceRequired] = useState("");
   const [salaryTypeActiveButton, setSalaryTypeActiveButton] = useState(null);
   const [diversityenabled, setDiversityEnabled] = useState(true);
   const [genderselected, setGenderSelected] = useState("All");
-  const [otherBenifitselected, setOtherBenifitSelected] = useState("stock");
   const [showMore, setShowMore] = useState(false);
+  const [selectedBenefits, setSelectedBenefits] = useState([]);
   //
   const [companyName, setCompanyName] = useState("");
   const [companyNameError, setCompanyNameError] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [jobTitleError, setJobTitleError] = useState("");
-  const [jobNature, setJobNature] = useState("");
   const [jobNatureError, setJobNatureError] = useState("");
+  const [jobNatureOptions, setJobNatureOptions] = useState([]);
   const [jobInternshipDuration, setJobInternshipDuration] = useState("");
   const [jobInternshipDurationError, setJobInternshipDurationError] =
     useState("");
+  const [internshipDurationTypeData, setInternshipDurationTypeData] = useState(
+    []
+  );
+  const [internShipDuration, setIntershipDuration] = useState([]);
+  const [selectedDurationId, setSelectedDurationId] = useState(null);
   const [workplaceType, setWorkplaceType] = useState("");
   const [workplaceTypeError, setWorkplaceTypeError] = useState("");
+  const [workplaceTypeData, setWorkplaceTypeData] = useState([]);
+  const [workplaceLocation, setWorkplaceLocation] = useState([]);
   const [jobCategory, setJobCategory] = useState("");
   const [jobCategoryError, setJobCategoryError] = useState("");
-  const [skillsRequired, setSkillsRequired] = useState("");
+  const [jobCategoryName, setJobCategoryName] = useState("");
+  const [skillsRequired, setSkillsRequired] = useState([]);
   const [skillsRequiredError, setSkillsRequiredError] = useState("");
   const [salaryDetails, setSalaryDetails] = useState("");
   const [salaryDetailsError, setSalaryDetailsError] = useState("");
   const [eligibility, setEligibility] = useState("");
   const [eligibilityError, setEligibilityError] = useState("");
+  const [eligibilityData, setEligibilityData] = useState([]);
+  const [eligibilityYear, setEligibilityYear] = useState("");
+  const [eligibilityYearData, setEligibilityYearData] = useState([]);
   const [workLocation, setWorkLocation] = useState("");
   const [workLocationError, setWorkLocationError] = useState("");
+  const [specificLocation, setSpecificLocation] = useState("");
+  const [specificLocationName, setSpecificLocationName] = useState("");
+  const [otherBenifits, setOtherBenifits] = useState([]);
+  const [gender, setGender] = useState([]);
+  const [genderData, setGenderData] = useState("");
+  const [salaryData, setSalaryDate] = useState([]);
+  // salary
+  const [currency, setCurrency] = useState("INR");
+  const [fixedSalary, setFixedSalary] = useState("");
+  const [salaryMin, setSalaryMin] = useState("");
+  const [salaryMax, setSalaryMax] = useState("");
 
   const navigate = useNavigate();
-
-  const jobNatureOptions = [
-    { id: 1, name: "Job" },
-    { id: 2, name: "Internship" },
-    { id: 3, name: "Contract" },
-  ];
-
-  const workPlaceType = [
-    { id: 1, name: "In Office" },
-    { id: 2, name: "Work From Home" },
-    { id: 3, name: "On Field" },
-    { id: 4, name: "Hybrid" },
-  ];
-
-  const internshipDuration = [
-    { id: 1, name: "In Weeks" },
-    { id: 2, name: "In Months" },
-  ];
-
-  const weeks = [
-    { id: 1, name: "1 Week" },
-    { id: 2, name: "2 Weeks" },
-    { id: 3, name: "3 Weeks" },
-  ];
-
-  const months = [
-    { id: 1, name: "1 Month" },
-    { id: 2, name: "2 Months" },
-    { id: 3, name: "3 Months" },
-    { id: 3, name: "4 Months" },
-    { id: 3, name: "5 Months" },
-    { id: 3, name: "6 Months" },
-    { id: 3, name: "7 Months" },
-    { id: 3, name: "8 Months" },
-    { id: 3, name: "9 Months" },
-    { id: 3, name: "10 Months" },
-    { id: 3, name: "11 Months" },
-    { id: 3, name: "12 Months" },
-  ];
-
-  const work_location = [
-    { id: 1, name: "Specific Location" },
-    { id: 2, name: "Pan India" },
-  ];
-
-  const experienceRequired = [
-    { id: 1, name: "Fresher" },
-    { id: 2, name: "Experienced" },
-  ];
 
   const fresherPass = [
     { id: 1, name: "All" },
@@ -165,20 +135,153 @@ export default function PostJobs() {
     { id: 2, name: "2024" },
   ];
 
-  const salaryType = [
-    { id: 1, name: "Fixed" },
-    { id: 2, name: "Range" },
+  const workplaceOptions = [
+    { value: "1", label: "Chennai" },
+    { value: "2", label: "Mumbai" },
+    { value: "3", label: "Bangalore" },
   ];
 
-  const diversityOptions = [
-    "All",
-    "Female",
-    "Male",
-    "Transgender",
-    "Intersex",
-    "Non-binary",
-    "Others",
+  const jobCategoryOptions = [
+    { value: "1", label: "Web Developer" },
+    { value: "2", label: "React Developer" },
+    { value: "3", label: "UXUI Designer" },
   ];
+
+  const skillsRequiredOptions = [
+    { value: "1", label: "React" },
+    { value: "2", label: "Java" },
+    { value: "3", label: "Python" },
+  ];
+
+  useEffect(() => {
+    getJobNatureData();
+  }, []);
+
+  const getJobNatureData = async () => {
+    try {
+      const response = await getJobNature();
+      console.log(response);
+      setJobNatureOptions(response?.data?.data || []);
+    } catch (error) {
+      console.log("job nature error", error);
+    } finally {
+      setTimeout(() => {
+        getWorkPlaceTypeData();
+      }, 300);
+    }
+  };
+
+  const getWorkPlaceTypeData = async () => {
+    try {
+      const response = await getWorkPlaceType();
+      setWorkplaceTypeData(response?.data?.data || []);
+      console.log("workplace type", response);
+    } catch (error) {
+      console.log("workplace type", error);
+    } finally {
+      getBenifitsDataType();
+    }
+  };
+
+  const getBenifitsDataType = async () => {
+    try {
+      const response = await getBenifitsData();
+      setOtherBenifits(response?.data?.data || []);
+      console.log("Benifits data", response);
+    } catch (error) {
+      console.log("Benifits data", error);
+    } finally {
+      getGenderDataType();
+    }
+  };
+
+  const getGenderDataType = async () => {
+    try {
+      const response = await getGenderData();
+      setGender(response?.data?.data || []);
+      console.log("gender", response);
+    } catch (error) {
+      console.log("gender error", error);
+    } finally {
+      setTimeout(() => {
+        getEligibilityDataTypes();
+      }, 300);
+    }
+  };
+
+  const getEligibilityDataTypes = async () => {
+    try {
+      const response = await getEligibilityData();
+      setEligibilityData(response?.data?.data || []);
+      console.log("Eligibility data", response);
+    } catch (error) {
+      console.log("Eligibility data error", error);
+    } finally {
+      setTimeout(() => {
+        getSalaryDataType();
+      }, 300);
+    }
+  };
+
+  const getYearsData = async () => {
+    try {
+      const response = await getYears();
+      setEligibilityYearData(response?.data?.data || []);
+      console.log("years", response);
+    } catch (error) {
+      console.log("years error", error);
+    }
+  };
+
+  const getSalaryDataType = async () => {
+    try {
+      const response = await getSalaryData();
+      setSalaryDate(response?.data?.data || []);
+      console.log("Salary data", response);
+    } catch (error) {
+      console.log("Salary data error", error);
+    } finally {
+      setTimeout(() => {
+        getYearsData();
+      }, 300);
+    }
+  };
+
+  //onclick functions
+  const getDurationTypesData = async () => {
+    try {
+      const response = await getDurationTypes();
+      setInternshipDurationTypeData(response?.data?.data || []);
+      console.log("Duration type", response);
+    } catch (error) {
+      console.log("duration type", error);
+    } finally {
+      setTimeout(() => {}, 300);
+    }
+  };
+
+  const getWorkPlaceLocationData = async () => {
+    try {
+      const response = await getWorkPlaceLocation();
+      setWorkplaceLocation(response?.data?.data || []);
+      console.log("workplace location", response);
+    } catch (error) {
+      console.log("workplace location", error);
+    }
+  };
+
+  const getDurationData = async (durationId) => {
+    const payload = {
+      duration_type_id: durationId,
+    };
+    try {
+      const response = await getDuration(payload);
+      setIntershipDuration(response?.data?.data || []);
+      console.log("duration typesss", response);
+    } catch (error) {
+      console.log("duration errorss", error);
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -193,32 +296,19 @@ export default function PostJobs() {
     setIsModalVisible(true);
   };
 
-  const onFirstSwitchChange = (checked) => {
-    setIsFirstSwitchChecked(checked);
-  };
-
   const handleTagClick = (tag) => {
     setGenderSelected(tag);
   };
 
-  const allBenefits = [
-    { key: "stock", icon: <LineChartOutlined />, label: "Employee Stock" },
-    {
-      key: "insurance",
-      icon: <MedicineBoxOutlined />,
-      label: "Medical Insurance",
-    },
-    { key: "transport1", icon: <CarOutlined />, label: "Transport" },
-    { key: "food1", icon: <CoffeeOutlined />, label: "Food & Beverages" },
-    { key: "transport2", icon: <CarOutlined />, label: "Transport" },
-    { key: "food2", icon: <CoffeeOutlined />, label: "Food & Beverages" },
-    { key: "transport3", icon: <CarOutlined />, label: "Transport" },
-    { key: "food3", icon: <CoffeeOutlined />, label: "Food & Beverages" },
-    { key: "transport4", icon: <CarOutlined />, label: "Transport" },
-    { key: "food4", icon: <CoffeeOutlined />, label: "Food & Beverages" },
-  ];
+  const toggleBenefitSelection = (key) => {
+    setSelectedBenefits((prevSelected) =>
+      prevSelected.includes(key)
+        ? prevSelected.filter((item) => item !== key)
+        : [...prevSelected, key]
+    );
+  };
 
-  const visibleBenefits = showMore ? allBenefits : allBenefits.slice(0, 4);
+  const visibleBenefits = showMore ? otherBenifits : otherBenifits.slice(0, 4);
 
   const defaultContent = `
   <p><strong>About the Opportunity:</strong></p>
@@ -256,13 +346,15 @@ export default function PostJobs() {
 
     const companyNameValidate = nameValidator(companyName);
     const jobTitleValidate = nameValidator(jobTitle);
-    const jobNatureValidate = selectValidator(jobNature);
+    const jobNatureValidate = selectValidator(jobNatureId);
     const workplaceTypeValidate = selectValidator(workplaceType);
     const jobCategoryValidate = selectValidator(jobCategory);
     const skillsRequiredValidate = selectValidator(skillsRequired);
     const salaryDetailsValidate = selectValidator(salaryDetails);
     const jobInternshipDurationValidate =
-      jobNature === "Internship" ? selectValidator(jobInternshipDuration) : "";
+      jobNatureId === "Internship"
+        ? selectValidator(jobInternshipDuration)
+        : "";
     const eligibilityValidate = selectValidator(eligibility);
     const workLocationValidate = selectValidator(workLocation);
 
@@ -287,29 +379,126 @@ export default function PostJobs() {
       jobCategoryValidate,
       skillsRequiredValidate,
       salaryDetailsValidate,
-      ...(jobNature === "Internship" ? [jobInternshipDurationValidate] : []),
+      ...(jobNatureId === "Internship" ? [jobInternshipDurationValidate] : []),
       eligibilityValidate,
-      workLocationValidate,
+      // workLocationValidate,
     ].some((val) => val !== "");
 
-    if (hasPostJobError) {
-      console.log("error publish the post");
-      message.error("Please fill all fields correctly before proceeding.");
-      return;
-    }
+    // if (hasPostJobError) {
+    //   console.log("error publish the post");
+    //   message.error("Please fill all fields correctly before proceeding.");
+    //   return;
+    // }
 
     console.log("All validations passed");
+    const getUserDetails = JSON.parse(localStorage.getItem("loginDetails"));
+    console.log("user details", getUserDetails);
+
+    const getDurationName = internShipDuration.find(
+      (f) => f.id === selectedDurationId
+    );
+
+    const selectedSkillNames = skillsRequiredOptions
+      .filter((opt) => skillsRequired.includes(opt.value))
+      .map((opt) => opt.label);
+
+    if (salaryDetails === 2) {
+      if (!salaryMin || !salaryMax) {
+        message.error("Please enter both minimum and maximum salary.");
+        return;
+      }
+
+      if (Number(salaryMax) <= Number(salaryMin)) {
+        message.error("Maximum salary must be greater than minimum salary.");
+        return;
+      }
+    }
+
+    const allBenefitsData = otherBenifits
+      .filter((b) => selectedBenefits.includes(b.id))
+      .map((b) => b.name);
+
+    const payload = {
+      user_id: getUserDetails.id,
+      company_name: companyName,
+      company_logo: "",
+      job_title: jobTitle,
+      job_nature:
+        jobNatureId === 1
+          ? "Job"
+          : jobNatureId === 2
+          ? "Internship"
+          : jobNatureId === 3
+          ? "Contract"
+          : "",
+      duration_period:
+        jobNatureId === 1
+          ? "Permanent"
+          : jobNatureId === 2
+          ? getDurationName.duration
+          : "Contract",
+      workplace_type:
+        workplaceType === 1
+          ? "In Office"
+          : workplaceType === 2
+          ? "Work From Home"
+          : "On Field",
+
+      work_location:
+        workLocation === 1
+          ? specificLocationName
+          : workLocation === 2
+          ? "Pan India"
+          : "",
+      job_category: jobCategoryName,
+      skills: selectedSkillNames,
+      experience_type:
+        eligibility === 1 ? "Fresher" : eligibility === 2 ? "Experienced" : "",
+      experience_required:
+        eligibility === 1
+          ? selectedFresherPass
+          : eligibility === 2
+          ? experienceRequired
+          : "",
+      salary_type: salaryDetails === 1 ? "Fixed" : "Range",
+      salary_figure:
+        salaryDetails === 1
+          ? {
+              currency: currency,
+              amount: fixedSalary,
+            }
+          : {
+              currency: currency,
+              min: salaryMin,
+              max: salaryMax,
+            },
+      diversity_hiring:
+        genderData === 1
+          ? "Male"
+          : genderData === 2
+          ? "Female"
+          : genderData === 3
+          ? "Transgender"
+          : genderData === 4
+          ? "Intersex"
+          : genderData === 5
+          ? "Non-binary"
+          : genderData === 6
+          ? "Others"
+          : "",
+      benefits: allBenefitsData,
+    };
 
     // Prepare final payload
     const postJobData = {
       companyName,
       jobTitle,
-      jobNature,
+      jobNatureId,
       workplaceType,
       jobCategory,
       skillsRequired,
       salaryDetails,
-      ...(jobNature === "Internship" && {
+      ...(jobNatureId === "Internship" && {
         jobInternshipDuration,
       }),
       eligibility,
@@ -317,10 +506,32 @@ export default function PostJobs() {
     };
 
     setTimeout(() => {
-      console.log("Saving Job post data:", postJobData);
-      message.success("Job Posted Successfully.");
-      navigate("/job-portal");
+      console.log("Saving Job post data:", payload);
+      // message.success("Job Posted Successfully.");
+      // navigate("/job-portal");
     }, 1000);
+  };
+
+  const handleFresherPassClick = (item) => {
+    const allYears = eligibilityYearData
+      .filter((i) => i.year !== "All")
+      .map((i) => i.year);
+
+    if (item.year === "All") {
+      if (selectedFresherPass.length === allYears.length) {
+        setSelectedFresherPass([]);
+      } else {
+        setSelectedFresherPass(allYears);
+      }
+    } else {
+      if (selectedFresherPass.includes(item.year)) {
+        setSelectedFresherPass((prev) =>
+          prev.filter((year) => year !== item.year)
+        );
+      } else {
+        setSelectedFresherPass((prev) => [...prev, item.year]);
+      }
+    }
   };
 
   return (
@@ -424,53 +635,40 @@ export default function PostJobs() {
               ]}
             >
               <div className="job_nature">
-                <button
-                  type="button"
-                  className={
-                    activeButton === "Job"
-                      ? "job_nature_button_active"
-                      : "job_nature_button"
-                  }
-                  onClick={() => {
-                    setActiveButton("Job");
-                    setJobNature("Job");
-                    setJobNatureError("");
-                  }}
-                >
-                  <HiMiniComputerDesktop /> Job
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    activeButton === "Internship"
-                      ? "job_nature_button_active"
-                      : "job_nature_button"
-                  }
-                  onClick={() => {
-                    setActiveButton("Internship");
-                    setJobNature("Internship");
-                    setJobNatureError("");
-                  }}
-                >
-                  <MdOutlineEventNote /> Internship
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    activeButton === "Contract"
-                      ? "job_nature_button_active"
-                      : "job_nature_button"
-                  }
-                  onClick={() => {
-                    setActiveButton("Contract");
-                    setJobNature("Contract");
-                    setJobNatureError("");
-                  }}
-                >
-                  <TbContract /> Contract
-                </button>
+                {jobNatureOptions.map((item) => {
+                  return (
+                    <button
+                      type="button"
+                      className={
+                        jobNatureId === item.id
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => {
+                        if (item.id === jobNatureId) {
+                          return;
+                        } else {
+                          setJobNatureId(item.id);
+                          setJobNatureError("");
+                          if (item.id === 2) {
+                            getDurationTypesData();
+                          } else {
+                            setInternshipDurationTypeData([]);
+                          }
+                        }
+                      }}
+                    >
+                      {item.id === 1 ? (
+                        <HiMiniComputerDesktop />
+                      ) : item.id === 2 ? (
+                        <MdOutlineEventNote />
+                      ) : (
+                        <TbContract />
+                      )}{" "}
+                      {item.name}
+                    </button>
+                  );
+                })}
               </div>
               {jobNatureError && (
                 <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
@@ -482,7 +680,7 @@ export default function PostJobs() {
           {/*  */}
 
           <div style={{ marginTop: 15 }} className="form-group">
-            {activeButton === "Internship" && (
+            {jobNatureId === 2 && (
               <Form.Item
                 layout="vertical"
                 label={
@@ -497,37 +695,30 @@ export default function PostJobs() {
                 ]}
               >
                 <div className="job_nature">
-                  <button
-                    type="button"
-                    className={
-                      internshipDurationActiveButton === "In Weeks"
-                        ? "internship_duration_button_active"
-                        : "internship_duration_button"
-                    }
-                    onClick={() => {
-                      setInternshipDurationActiveButton("In Weeks");
-                      setJobInternshipDuration("In Weeks");
-                      setJobInternshipDurationError("");
-                    }}
-                  >
-                    <HiMiniComputerDesktop /> In Weeks
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      internshipDurationActiveButton === "In Months"
-                        ? "internship_duration_button_active"
-                        : "internship_duration_button"
-                    }
-                    onClick={() => {
-                      setInternshipDurationActiveButton("In Months");
-                      setJobInternshipDuration("In Months");
-                      setJobInternshipDurationError("");
-                    }}
-                  >
-                    <HiMiniComputerDesktop /> In Months
-                  </button>
+                  {internshipDurationTypeData.map((item) => {
+                    return (
+                      <button
+                        type="button"
+                        className={
+                          jobInternshipDuration === item.id
+                            ? "internship_duration_button_active"
+                            : "internship_duration_button"
+                        }
+                        onClick={() => {
+                          getDurationData(item.id);
+                          setJobInternshipDuration(item.id);
+                          setJobInternshipDurationError("");
+                        }}
+                      >
+                        {item.name === "In Weeks" ? (
+                          <HiMiniComputerDesktop />
+                        ) : (
+                          <HiMiniComputerDesktop />
+                        )}{" "}
+                        {item.name}
+                      </button>
+                    );
+                  })}
                 </div>
                 {jobInternshipDurationError && (
                   <div
@@ -542,45 +733,29 @@ export default function PostJobs() {
           </div>
 
           <div style={{ marginTop: 15 }} className="form-group">
-            {activeButton === "Internship" &&
-              internshipDurationActiveButton === "In Weeks" && (
-                <div className="job_nature">
-                  {weeks.map((item, index) => (
+            {jobNatureId === 2 && (
+              <div className="job_nature">
+                {internShipDuration.map((item) => {
+                  return (
                     <button
                       type="button"
-                      key={index}
+                      key={item.id}
                       className={
-                        index === weeksActiveButton
+                        selectedDurationId === item.id
                           ? "weeks_button_active"
                           : "weeks_button"
                       }
-                      onClick={() => setWeeksActiveButton(index)}
+                      onClick={() => {
+                        setWeeksActiveButton(item.id);
+                        setSelectedDurationId(item.id);
+                      }}
                     >
-                      {item.name}
+                      {item.duration}
                     </button>
-                  ))}
-                </div>
-              )}
-
-            {activeButton === "Internship" &&
-              internshipDurationActiveButton === "In Months" && (
-                <div className="job_nature">
-                  {months.map((item, index) => (
-                    <button
-                      type="button"
-                      key={index}
-                      className={
-                        index === monthsActiveButton
-                          ? "months_button_active"
-                          : "months_button"
-                      }
-                      onClick={() => setMonthsActiveButton(index)}
-                    >
-                      {item.name}
-                    </button>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div style={{ marginTop: 15 }} className="form-group">
@@ -598,53 +773,30 @@ export default function PostJobs() {
                 ]}
               >
                 <div className="work_type">
-                  <button
-                    type="button"
-                    className={
-                      workTypeActiveButton === "In Office"
-                        ? "work_type_button_active"
-                        : "work_type_button"
-                    }
-                    onClick={() => {
-                      setWorkTypeActiveButton("In Office");
-                      setWorkplaceType("In Office");
-                      setWorkplaceTypeError("");
-                    }}
-                  >
-                    <PiOfficeChairLight /> In Office
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      workTypeActiveButton === "Work From Home"
-                        ? "work_type_button_active"
-                        : "work_type_button"
-                    }
-                    onClick={() => {
-                      setWorkTypeActiveButton("Work From Home");
-                      setWorkplaceType("Work From Home");
-                      setWorkplaceTypeError("");
-                    }}
-                  >
-                    <PiOfficeChairLight /> Work From Home
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      workTypeActiveButton === "On Field"
-                        ? "work_type_button_active"
-                        : "work_type_button"
-                    }
-                    onClick={() => {
-                      setWorkTypeActiveButton("On Field");
-                      setWorkplaceType("On Field");
-                      setWorkplaceTypeError("");
-                    }}
-                  >
-                    <FaTruckFieldUn /> On Field
-                  </button>
+                  {workplaceTypeData.map((item) => {
+                    return (
+                      <button
+                        type="button"
+                        className={
+                          workTypeActiveButton === item.id
+                            ? "work_type_button_active"
+                            : "work_type_button"
+                        }
+                        onClick={() => {
+                          if (item.id === 2) {
+                            getWorkPlaceLocationData();
+                          } else {
+                            setWorkplaceLocation([]);
+                          }
+                          setWorkTypeActiveButton(item.id);
+                          setWorkplaceType(item.id);
+                          setWorkplaceTypeError("");
+                        }}
+                      >
+                        <PiOfficeChairLight /> {item.name}
+                      </button>
+                    );
+                  })}
                 </div>
                 {workplaceTypeError && (
                   <div
@@ -659,9 +811,7 @@ export default function PostJobs() {
           </div>
 
           <div style={{ marginTop: 15 }} className="form-group">
-            {(workTypeActiveButton === "In Office" ||
-              workTypeActiveButton === "On Field" ||
-              workTypeActiveButton === "Hybrid") && (
+            {workTypeActiveButton === 2 ? (
               <Form.Item
                 layout="vertical"
                 label={<span style={{ fontWeight: 500 }}>Work Location</span>}
@@ -674,37 +824,25 @@ export default function PostJobs() {
                 ]}
               >
                 <div className="job_nature">
-                  <button
-                    type="button"
-                    className={
-                      workLocationActiveButton === "Specific Location"
-                        ? "work_location_button_active"
-                        : "work_location_button"
-                    }
-                    onClick={() => {
-                      setWorkLocationActiveButton("Specific Location");
-                      setWorkLocation("Specific Location");
-                      setWorkLocationError("");
-                    }}
-                  >
-                    <PiOfficeChairLight /> Specific Location
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      workLocationActiveButton === "Pan India"
-                        ? "work_location_button_active"
-                        : "work_location_button"
-                    }
-                    onClick={() => {
-                      setWorkLocationActiveButton("Pan India");
-                      setWorkLocation("Pan India");
-                      setWorkLocationError("");
-                    }}
-                  >
-                    <PiOfficeChairLight /> Pan India
-                  </button>
+                  {workplaceLocation.map((item) => {
+                    return (
+                      <button
+                        type="button"
+                        className={
+                          workLocationActiveButton === item.id
+                            ? "work_location_button_active"
+                            : "work_location_button"
+                        }
+                        onClick={() => {
+                          setWorkLocationActiveButton(item.id);
+                          setWorkLocation(item.id);
+                          setWorkLocationError("");
+                        }}
+                      >
+                        <PiOfficeChairLight /> {item.name}
+                      </button>
+                    );
+                  })}
                 </div>
                 {workLocationError && (
                   <div
@@ -715,20 +853,21 @@ export default function PostJobs() {
                   </div>
                 )}
 
-                {workLocationActiveButton === "Specific Location" ? (
+                {workLocationActiveButton === 1 ? (
                   <CommonSelectField
                     style={{ marginTop: "20px" }}
                     showSearch={true}
                     placeholder={"Select Location"}
-                    options={[
-                      { value: "1", label: "Chennai" },
-                      { value: "2", label: "Mumbai" },
-                      { value: "3", label: "Bangalore" },
-                    ]}
+                    value={specificLocation}
+                    onChange={(value, option) => {
+                      setSpecificLocation(value);
+                      setSpecificLocationName(option.label);
+                    }}
+                    options={workplaceOptions}
                   />
                 ) : null}
               </Form.Item>
-            )}
+            ) : null}
           </div>
           {/*  */}
 
@@ -740,14 +879,11 @@ export default function PostJobs() {
               value={jobCategory}
               mandatory={true}
               name={"Job category"}
-              placeholder={"Select Location"}
-              options={[
-                { value: "1", label: "Chennai" },
-                { value: "2", label: "Mumbai" },
-                { value: "3", label: "Bangalore" },
-              ]}
-              onChange={(value) => {
+              placeholder={"Select Job Category"}
+              options={jobCategoryOptions}
+              onChange={(value, option) => {
                 setJobCategory(value);
+                setJobCategoryName(option.label);
                 setJobCategoryError(selectValidator(value));
               }}
               error={jobCategoryError}
@@ -758,12 +894,10 @@ export default function PostJobs() {
               mandatory={true}
               name={"skill_required"}
               showSearch={true}
-              placeholder={"Select Location"}
-              options={[
-                { value: "1", label: "Chennai" },
-                { value: "2", label: "Mumbai" },
-                { value: "3", label: "Bangalore" },
-              ]}
+              mode="multiple"
+              placeholder={"Select skills"}
+              style={{ height: 56 }}
+              options={skillsRequiredOptions}
               onChange={(value) => {
                 setSkillsRequired(value);
                 setSkillsRequiredError(selectValidator(value));
@@ -775,29 +909,6 @@ export default function PostJobs() {
           <div className="eligibility">
             <h4>Eligibility</h4>
             <p>Add the eligibility criteria to better filter the candidates.</p>
-            <div className="switch_button">
-              <Text className="p">
-                Open for college students (currently studying)
-              </Text>
-              <Switch
-                size="default"
-                checked={isFirstSwitchChecked}
-                onChange={onFirstSwitchChange}
-              />
-            </div>
-
-            {isFirstSwitchChecked && (
-              <div className="switch_button">
-                <Text className="p">
-                  Any specific course/ specialization/ graduating year
-                </Text>
-                <Switch
-                  size="small"
-                  defaultChecked
-                  onChange={(checked) => console.log("Second:", checked)}
-                />
-              </div>
-            )}
 
             <div className="experience_required">
               <p>
@@ -805,37 +916,25 @@ export default function PostJobs() {
                 Years)
               </p>
               <div className="job_nature">
-                <button
-                  type="button"
-                  className={
-                    experienceRequiredActiveButton === "Fresher"
-                      ? "experience_required_button_active"
-                      : "experience_required_button"
-                  }
-                  onClick={() => {
-                    setExperienceRequiredActiveButton("Fresher");
-                    setEligibility("Fresher");
-                    setEligibilityError("");
-                  }}
-                >
-                  <FaPersonCircleExclamation /> Fresher
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    experienceRequiredActiveButton === "Experienced"
-                      ? "experience_required_button_active"
-                      : "experience_required_button"
-                  }
-                  onClick={() => {
-                    setExperienceRequiredActiveButton("Experienced");
-                    setEligibility("Experienced");
-                    setEligibilityError("");
-                  }}
-                >
-                  <FaPersonCircleCheck /> Experienced
-                </button>
+                {eligibilityData.map((item) => {
+                  return (
+                    <button
+                      type="button"
+                      className={
+                        experienceRequiredActiveButton === item.id
+                          ? "experience_required_button_active"
+                          : "experience_required_button"
+                      }
+                      onClick={() => {
+                        setExperienceRequiredActiveButton(item.id);
+                        setEligibility(item.id);
+                        setWorkLocationError("");
+                      }}
+                    >
+                      <FaPersonCircleExclamation /> {item.name}
+                    </button>
+                  );
+                })}
               </div>
               {eligibilityError && (
                 <div
@@ -848,38 +947,53 @@ export default function PostJobs() {
             </div>
 
             <div className="experience_required">
-              {experienceRequiredActiveButton === "Fresher" ? (
+              {experienceRequiredActiveButton === 1 ? (
                 <>
                   <p>Experience Required (In Years)</p>
                   <div className="job_nature">
-                    {fresherPass.map((item, index) => (
-                      <button
-                        key={index}
-                        className={
-                          index === fresherPassActiveButton
-                            ? "fresher_pass_button_active"
-                            : "fresher_pass_button"
-                        }
-                        onClick={() => setFresherPassActiveButton(index)}
-                      >
-                        {item.name === "All" ? (
-                          <MdFileDownloadDone />
-                        ) : (
-                          <FaBusinessTime />
-                        )}{" "}
-                        {item.name}
-                      </button>
-                    ))}
+                    {eligibilityYearData.map((item) => {
+                      const isSelected =
+                        item.year === "All"
+                          ? selectedFresherPass.length ===
+                            eligibilityYearData.filter((i) => i.year !== "All")
+                              .length
+                          : selectedFresherPass.includes(item.year);
+
+                      return (
+                        <button
+                          key={item.id}
+                          className={
+                            isSelected
+                              ? "fresher_pass_button_active"
+                              : "fresher_pass_button"
+                          }
+                          onClick={() => {
+                            handleFresherPassClick(item);
+                            setEligibilityYear(item.id);
+                          }}
+                        >
+                          {item.year === "All" ? (
+                            <MdFileDownloadDone />
+                          ) : (
+                            <FaBusinessTime />
+                          )}{" "}
+                          {item.year}
+                        </button>
+                      );
+                    })}
                   </div>
                 </>
               ) : null}
 
-              {experienceRequiredActiveButton === "Experienced" ? (
+              {experienceRequiredActiveButton === 2 ? (
                 <>
                   <div className="">
                     <CommonInputField
                       name={"Experience"}
                       label="Experience required"
+                      onChange={(e) => {
+                        setExperienceRequired(e.target.value);
+                      }}
                       mandotary={false}
                       placeholder={"Enter your Experience"}
                       type={"text"}
@@ -906,30 +1020,31 @@ export default function PostJobs() {
               name="internship_duration"
             >
               <div className="job_nature">
-                {salaryType.map((item, index) => (
-                  <button
-                    key={index}
-                    className={
-                      index === salaryTypeActiveButton
-                        ? "experience_required_button_active"
-                        : "experience_required_button"
-                    }
-                    onClick={() => {
-                      setSalaryTypeActiveButton(index);
-                      setSalaryDetails(item.name);
-                      setSalaryDetailsError(selectValidator(item.name));
-                    }}
-                  >
-                    {item.name === "Fixed" ? (
-                      <LuLocateFixed />
-                    ) : item.name === "Range" ? (
-                      <RiEqualizerLine />
-                    ) : (
-                      <TbContract />
-                    )}{" "}
-                    {item.name}
-                  </button>
-                ))}
+                {salaryData.map((item) => {
+                  return (
+                    <button
+                      className={
+                        salaryTypeActiveButton === item.id
+                          ? "experience_required_button_active"
+                          : "experience_required_button"
+                      }
+                      onClick={() => {
+                        setSalaryTypeActiveButton(item.id);
+                        setSalaryDetails(item.id);
+                        setSalaryDetailsError(selectValidator(item.name));
+                      }}
+                    >
+                      {item.id === 1 ? (
+                        <LuLocateFixed />
+                      ) : item.id === 2 ? (
+                        <RiEqualizerLine />
+                      ) : (
+                        <TbContract />
+                      )}{" "}
+                      {item.name}
+                    </button>
+                  );
+                })}
               </div>
               {salaryDetailsError && (
                 <div
@@ -941,52 +1056,71 @@ export default function PostJobs() {
               )}
             </Form.Item>
 
-            {salaryType[salaryTypeActiveButton]?.name === "Fixed" && (
+            {salaryTypeActiveButton === 1 && (
               <div className="salary_details_inner">
                 <h5>Salary Figure</h5>
                 <p>The salary on the job page will be shown in years only.</p>
                 <div className="job_nature">
+                  <Select
+                    value={currency}
+                    onChange={(value) => setCurrency(value)}
+                    style={{ border: "none" }}
+                  >
+                    <Option value="INR">₹ (INR)</Option>
+                    <Option value="USD">$ (USD)</Option>
+                    <Option value="EUR">€ (EUR)</Option>
+                  </Select>
+
                   <Input
-                    addonBefore={
-                      <Select
-                        defaultValue="INR"
-                        style={{ width: 90, border: "none" }}
-                      >
-                        <Option value="INR">₹ (INR)</Option>
-                        <Option value="USD">$ (USD)</Option>
-                        <Option value="EUR">€ (EUR)</Option>
-                      </Select>
-                    }
+                    style={{ width: "60%" }}
+                    value={fixedSalary}
+                    onChange={(e) => setFixedSalary(e.target.value)}
                     placeholder="Enter amount"
                   />
                 </div>
               </div>
             )}
 
-            {salaryType[salaryTypeActiveButton]?.name === "Range" && (
+            {salaryTypeActiveButton === 2 && (
               <div className="salary_details_inner">
                 <h5>Salary Figure</h5>
                 <p>The salary on the job page will be shown in years only.</p>
                 <div className="job_nature">
-                  <InputGroup compact>
-                    <Select defaultValue="INR" style={{ width: 100 }}>
-                      <Option value="INR">₹ (INR)</Option>
-                      <Option value="USD">$ (USD)</Option>
-                      <Option value="EUR">€ (EUR)</Option>
-                    </Select>
-                    <InputNumber
-                      className="premium-input"
-                      style={{ width: "30%", textAlign: "center" }}
-                      placeholder="Min"
-                      min={0}
-                    />
-                    <InputNumber
-                      className="premium-input"
-                      style={{ width: "30%", textAlign: "center" }}
-                      placeholder="Max"
-                      min={0}
-                    />
-                  </InputGroup>
+                  <Select
+                    value={currency}
+                    onChange={(value) => setCurrency(value)}
+                    style={{ width: 100 }}
+                  >
+                    <Option value="INR">₹ (INR)</Option>
+                    <Option value="USD">$ (USD)</Option>
+                    <Option value="EUR">€ (EUR)</Option>
+                  </Select>
+
+                  <InputNumber
+                    value={salaryMin}
+                    onChange={(value) => setSalaryMin(value)}
+                    placeholder="Min"
+                    min={0}
+                    style={{
+                      width: "30%",
+                      height: 45,
+                      placeContent: "center",
+                      textAlign: "center",
+                    }}
+                  />
+
+                  <InputNumber
+                    value={salaryMax}
+                    onChange={(value) => setSalaryMax(value)}
+                    placeholder="Max"
+                    min={0}
+                    style={{
+                      width: "30%",
+                      height: 45,
+                      placeContent: "center",
+                      textAlign: "center",
+                    }}
+                  />
                 </div>
               </div>
             )}
@@ -1017,18 +1151,20 @@ export default function PostJobs() {
             <Divider style={{ margin: "8px 0px 15px 0" }} />
             {diversityenabled && (
               <Space wrap>
-                {diversityOptions.map((tag) => (
+                {gender.map((item) => (
                   <Tag.CheckableTag
-                    key={tag}
-                    checked={genderselected === tag}
-                    onChange={() => handleTagClick(tag)}
+                    checked={genderselected === item.id}
+                    onChange={() => {
+                      handleTagClick(item.id);
+                      setGenderData(item.id);
+                    }}
                     style={{
                       border: "1px dashed #ccc",
                       borderRadius: 8,
                       padding: "4px 12px",
                     }}
                   >
-                    {tag}
+                    {item.name}
                   </Tag.CheckableTag>
                 ))}
               </Space>
@@ -1043,25 +1179,33 @@ export default function PostJobs() {
                   <Col key={item.key}>
                     <Card
                       hoverable
-                      onClick={() => setOtherBenifitSelected(item.key)}
+                      onClick={() => {
+                        toggleBenefitSelection(item.id);
+                      }}
                       style={{
                         width: 140,
                         textAlign: "center",
-                        border:
-                          otherBenifitselected === item.key
-                            ? "2px dashed #6a00ff"
-                            : "1px dashed #ccc",
-                        background:
-                          otherBenifitselected === item.key
-                            ? "#6a00ff14"
-                            : "#fff",
+                        border: selectedBenefits.includes(item.id)
+                          ? "2px dashed #6a00ff"
+                          : "1px dashed #ccc",
+                        background: selectedBenefits.includes(item.id)
+                          ? "#6a00ff14"
+                          : "#fff",
                         borderRadius: 8,
                       }}
                     >
                       <div style={{ fontSize: 24, marginBottom: 4 }}>
-                        {item.icon}
+                        {item.id === 1 ? (
+                          <LineChartOutlined />
+                        ) : item.id === 2 ? (
+                          <MedicineBoxOutlined />
+                        ) : item.id === 3 ? (
+                          <CarOutlined />
+                        ) : item.id === 4 ? (
+                          <CoffeeOutlined />
+                        ) : null}
                       </div>
-                      <Text>{item.label}</Text>
+                      <Text>{item.name}</Text>
                     </Card>
                   </Col>
                 ))}
@@ -1223,6 +1367,50 @@ export default function PostJobs() {
                 Description clear and specific to the role, highlighting
                 responsibilities, required skills, and growth opportunities. Use
                 the AI generator for quick drafts, then customize as needed.
+              </li>
+            </ul>
+          </div>
+
+          <div className="guidelines">
+            <h5>Shortlist faster & accurately</h5>
+            <h3>Follow these guidelines & recruitment rounds on next step:</h3>
+            <ul>
+              <li>
+                {" "}
+                <FaHeartCircleCheck className="heart_icon" />
+                Add assessment rounds like quiz, coding, case submissions etc.
+              </li>
+              <li>
+                {" "}
+                <FaHeartCircleCheck className="heart_icon" /> Accept submissions
+                via PPT, PDFs, DOC, CSVs, etc.
+              </li>
+              <li>
+                {" "}
+                <FaHeartCircleCheck className="heart_icon" /> Add Video
+                interview rounds for final selection of candidates.
+              </li>
+            </ul>
+          </div>
+
+          <div className="guidelines">
+            <h5>Shortlist faster & accurately</h5>
+            <h3>Follow these guidelines & recruitment rounds on next step:</h3>
+            <ul>
+              <li>
+                {" "}
+                <FaHeartCircleCheck className="heart_icon" />
+                Add assessment rounds like quiz, coding, case submissions etc.
+              </li>
+              <li>
+                {" "}
+                <FaHeartCircleCheck className="heart_icon" /> Accept submissions
+                via PPT, PDFs, DOC, CSVs, etc.
+              </li>
+              <li>
+                {" "}
+                <FaHeartCircleCheck className="heart_icon" /> Add Video
+                interview rounds for final selection of candidates.
               </li>
             </ul>
           </div>

@@ -21,3 +21,16 @@
 .show-premium-input-error p {
   margin-bottom: 0px !important;
 }
+
+.ant-input-number-outlined:hover {
+  border-color: #6a00ff;
+  background-color: #ffffff;
+}
+
+.ant-input-number-outlined:focus,
+:where(
+    .css-dev-only-do-not-override-1m2bkf9
+  ).ant-input-number-outlined:focus-within {
+  border-color: #6a00ff;
+  box-shadow: 0 0 0 2px rgb(78 5 255 / 10%);
+}

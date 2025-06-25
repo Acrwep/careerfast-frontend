@@ -94,6 +94,18 @@ body {
   border-color: #e2e8f0 !important;
 }
 
+.sessionmodal_okbuttonContainer {
+  text-align: end;
+  padding-top: 5px;
+}
+
+.sessionmodal_okbutton {
+  border: none;
+  background: green;
+  color: #fff;
+  border-radius: 7px;
+}
+
 .section-divider {
   margin: 30px 0;
   border-color: #f0f0f0;
@@ -175,10 +187,12 @@ body {
 }
 
 .form-row {
-  display: flex;
+  display: grid;
   gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
   margin-bottom: 0px;
   margin-top: 0px;
+  justify-content: center;
 }
 
 .form-row .form-group {

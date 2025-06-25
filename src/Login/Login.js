@@ -52,33 +52,36 @@ const LoginPage = () => {
     }
 
     if (activeTab === "candidate") {
-      console.log("candidate api");
-
       const payload = {
         email: email,
         password: password,
       };
       try {
         const response = await login(payload);
-        console.log(response);
+        console.log("login response", response);
+        const token = response.data.token;
+        localStorage.setItem("AccessToken", token);
+        const loginDetails = response.data.data[0];
+        console.log(loginDetails);
+        localStorage.setItem("loginDetails", JSON.stringify(loginDetails));
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsLoading(false);
+          message.success(
+            `${
+              activeTab === "candidate" ? "Candidate" : "Recruiter"
+            } Login successfully!`
+          );
+
+          navigate("/job-portal");
+        }, 1500);
       } catch (error) {
-        console.log(error);
+        console.log("login error", error);
+        message.error(error.response.data.details);
       }
     } else {
       console.log("recuiter api");
     }
-
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      message.success(
-        `${
-          activeTab === "candidate" ? "Candidate" : "Recruiter"
-        } Login successfully!`
-      );
-
-      // navigate("/job-portal");
-    }, 1500);
   };
 
   const tabItems = [
@@ -106,7 +109,10 @@ const LoginPage = () => {
         <Col span={12}>
           {" "}
           <div className="floating_circle1"></div>
-          <div style={{ height: 720 }} className="login-animation">
+          <div
+            style={{ height: 720, placeContent: "center" }}
+            className="login-animation"
+          >
             <Card className="login_card" bordered={false}>
               <div style={{ textAlign: "center", marginBottom: 12 }}>
                 <Title
