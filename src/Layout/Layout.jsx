@@ -10,7 +10,7 @@ import Header from "../Header/Header";
 import PostJobs from "../JobPortal/PostJobs";
 import JobFilter from "../JobPortal/JobFilter";
 import JobDetails from "../JobPortal/JobDetails";
-import UserProfile from "../Profile/UserProfile";
+import AdminProfile from "../Profile/AdminProfile";
 import NotFound from "../NotFound/NotFound";
 import MainProfile from "../Profile/MainProfile";
 import WatchList from "../Profile/WatchList";
@@ -21,6 +21,7 @@ import RecentlyViewed from "../Profile/RecentlyViewed";
 import Listing from "../Profile/Listing";
 import AccountSettings from "../Profile/AccountSettings";
 import ProSubscription from "../Profile/ProSubscription";
+import AdminDashboard from "../AdminDashboard/AdminDashboard";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const Layout = () => {
         <Route path="/post-jobs" element={<PostJobs />} />
         <Route path="/job-filter" element={<JobFilter />} />
         <Route path="/job-details" element={<JobDetails />} />
-        <Route path="/user-profile" element={<UserProfile />} />
+        <Route path="/admin-profile" element={<AdminProfile />} />
         <Route path="/main-profile" element={<MainProfile />} />
         <Route path="*" element={<NotFound />} />
         <Route path="/dummy" element={<Dummy />} />
@@ -64,6 +65,7 @@ const Layout = () => {
         <Route path="/listing" element={<Listing />} />
         <Route path="/accountsetting" element={<AccountSettings />} />
         <Route path="/pro-subscription" element={<ProSubscription />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
       </Routes>
     </div>
   );

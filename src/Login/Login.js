@@ -73,7 +73,7 @@ const LoginPage = () => {
             } Login successfully!`
           );
 
-          navigate("/job-portal");
+          navigate("/profiledetails");
         }, 1500);
       } catch (error) {
         console.log("login error", error);

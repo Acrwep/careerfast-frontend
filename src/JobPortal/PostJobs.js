@@ -62,9 +62,10 @@ const { Option } = Select;
 const { Group: InputGroup } = Input;
 export default function PostJobs() {
   const [companyLogo, setCompanyLogo] = useState("");
-  const [profileImage, setProfileImage] = useState("");
+  const [profileImage, setProfileImage] = useState(""); // This will now store Base64
+
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [jobNatureId, setJobNatureId] = useState(1);
+  const [jobNatureId, setJobNatureId] = useState(null);
   const [workTypeActiveButton, setWorkTypeActiveButton] = useState(null);
   const [weeksActiveButton, setWeeksActiveButton] = useState(null);
   const [workLocationActiveButton, setWorkLocationActiveButton] =
@@ -124,8 +125,22 @@ export default function PostJobs() {
   const [fixedSalary, setFixedSalary] = useState("");
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
+  const [jobOpenings, setJobOpenings] = useState("");
+  const [jobOpeningsError, setJobOpeningsError] = useState("");
+  const [workingDays, setWorkingDays] = useState("");
+  const [workingDaysName, setWorkingDaysName] = useState("");
+  const [workingDaysError, setWorkingDaysError] = useState("");
+  const MAX_LENGTH = 3000;
+  const [jobDescription, setJobDescription] = useState("");
+
+  const [touched, setTouched] = useState(false); // to control initial error
 
   const navigate = useNavigate();
+  const now = new Date();
+  const fetchDateTime =
+    now.toLocaleDateString("en-CA") +
+    " " +
+    now.toLocaleTimeString("en-GB", { hour12: false });
 
   const fresherPass = [
     { id: 1, name: "All" },
@@ -151,6 +166,12 @@ export default function PostJobs() {
     { value: "1", label: "React" },
     { value: "2", label: "Java" },
     { value: "3", label: "Python" },
+  ];
+
+  const workingDaysOptions = [
+    { value: "6 Working Days", label: "6 Working Days" },
+    { value: "5 Working Days", label: "5 Working Days" },
+    // { value: "3", label: "3" },
   ];
 
   useEffect(() => {
@@ -287,8 +308,15 @@ export default function PostJobs() {
     const file = e.target.files[0];
 
     if (file) {
-      const imageURL = URL.createObjectURL(file);
-      setProfileImage(imageURL);
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        console.log("Base64 Image:", base64String);
+        setProfileImage(base64String);
+      };
+
+      reader.readAsDataURL(file);
     }
   };
 
@@ -312,19 +340,29 @@ export default function PostJobs() {
 
   const defaultContent = `
   <p><strong>About the Opportunity:</strong></p>
-  <ul><li></li><li></li></ul>
-  <p><strong>Responsibilities of the Candidate:</strong></p>
-  <ul><li></li><li></li></ul>
+  <ul>
+    <li></li>
+    <li></li>
+  </ul>
+  <p style="margin-top: 30px;"><strong>Responsibilities of the Candidate:</strong></p>
+  <ul>
+    <li></li>
+    <li></li>
+  </ul>
   <p><strong>Requirements:</strong></p>
-  <ul><li></li><li></li></ul>
+  <ul>
+    <li></li>
+    <li></li>
+  </ul>
 `;
 
-  const MAX_LENGTH = 3000;
   const [value, setValue] = useState(defaultContent);
 
   const handleChange = (content, delta, source, editor) => {
     if (editor.getLength() <= MAX_LENGTH + 1) {
+      setTouched(true);
       setValue(content);
+      setJobDescription(content);
     }
   };
 
@@ -357,6 +395,9 @@ export default function PostJobs() {
         : "";
     const eligibilityValidate = selectValidator(eligibility);
     const workLocationValidate = selectValidator(workLocation);
+    const jobOpeningsValidate = selectValidator(jobOpenings);
+    const workingDaysValidate = selectValidator(workingDays);
+    const jobDescriptionValidate = nameValidator(jobDescription);
 
     // Set all error states
     setCompanyNameError(companyNameValidate);
@@ -369,6 +410,8 @@ export default function PostJobs() {
     setJobInternshipDurationError(jobInternshipDurationValidate);
     setEligibilityError(eligibilityValidate);
     setWorkLocationError(workLocationValidate);
+    setJobOpeningsError(jobCategoryValidate);
+    setWorkingDaysError(workingDaysValidate);
 
     // Validation check
     const hasPostJobError = [
@@ -381,6 +424,9 @@ export default function PostJobs() {
       salaryDetailsValidate,
       ...(jobNatureId === "Internship" ? [jobInternshipDurationValidate] : []),
       eligibilityValidate,
+      jobOpeningsValidate,
+      workingDaysValidate,
+      jobDescriptionValidate,
       // workLocationValidate,
     ].some((val) => val !== "");
 
@@ -421,7 +467,7 @@ export default function PostJobs() {
     const payload = {
       user_id: getUserDetails.id,
       company_name: companyName,
-      company_logo: "",
+      company_logo: profileImage,
       job_title: jobTitle,
       job_nature:
         jobNatureId === 1
@@ -436,13 +482,17 @@ export default function PostJobs() {
           ? "Permanent"
           : jobNatureId === 2
           ? getDurationName.duration
-          : "Contract",
+          : jobNatureId === 3
+          ? "Contract"
+          : "",
       workplace_type:
         workplaceType === 1
           ? "In Office"
           : workplaceType === 2
           ? "Work From Home"
-          : "On Field",
+          : workplaceType === 3
+          ? "On Field"
+          : "",
 
       work_location:
         workLocation === 1
@@ -460,7 +510,8 @@ export default function PostJobs() {
           : eligibility === 2
           ? experienceRequired
           : "",
-      salary_type: salaryDetails === 1 ? "Fixed" : "Range",
+      salary_type:
+        salaryDetails === 1 ? "Fixed" : salaryDetails === 2 ? "Range" : "",
       salary_figure:
         salaryDetails === 1
           ? {
@@ -487,6 +538,10 @@ export default function PostJobs() {
           ? "Others"
           : "",
       benefits: allBenefitsData,
+      created_at: fetchDateTime,
+      openings: jobOpenings,
+      working_days: workingDaysName,
+      job_description: jobDescription,
     };
 
     // Prepare final payload
@@ -557,6 +612,7 @@ export default function PostJobs() {
               icon={!profileImage && <UserOutlined />}
               className="profile-avatar"
             />
+
             <br></br>
             <label className="image_upload" htmlFor="upload-input">
               Click me
@@ -903,6 +959,42 @@ export default function PostJobs() {
                 setSkillsRequiredError(selectValidator(value));
               }}
               error={skillsRequiredError}
+            />
+          </div>
+
+          {/* Openings */}
+          <div style={{ marginTop: 0 }} className="form-group">
+            <CommonInputField
+              name={"Job Openings"}
+              label="Job Openings"
+              mandotary={true}
+              placeholder={"No.of openings"}
+              type={"text"}
+              value={jobOpenings}
+              onChange={(e) => {
+                setJobOpenings(e.target.value);
+                setJobOpeningsError(selectValidator(e.target.value));
+              }}
+              error={jobOpeningsError}
+            />
+          </div>
+
+          {/* Openings */}
+          <div style={{ marginTop: 0 }} className="form-group">
+            <CommonSelectField
+              label={"Working Days"}
+              showSearch={true}
+              value={workingDays}
+              mandatory={true}
+              name={"working_days"}
+              placeholder={"Choose working days"}
+              options={workingDaysOptions}
+              onChange={(value) => {
+                setWorkingDays(value);
+                setWorkingDaysName(value);
+                setWorkingDaysError(selectValidator(value));
+              }}
+              error={workingDaysError}
             />
           </div>
 
@@ -1282,7 +1374,10 @@ export default function PostJobs() {
               style={{
                 textAlign: "right",
                 fontSize: 12,
-                color: value.length >= MAX_LENGTH ? "red" : "gray",
+                color:
+                  value.replace(/<[^>]+>/g, "").length >= MAX_LENGTH
+                    ? "red"
+                    : "gray",
               }}
             >
               {value.replace(/<[^>]+>/g, "").length}/{MAX_LENGTH}
