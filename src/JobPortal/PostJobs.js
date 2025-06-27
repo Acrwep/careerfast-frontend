@@ -29,9 +29,7 @@ import { HiMiniComputerDesktop } from "react-icons/hi2";
 import { MdOutlineEventNote } from "react-icons/md";
 import { TbContract } from "react-icons/tb";
 import { PiOfficeChairLight } from "react-icons/pi";
-import { FaTruckFieldUn } from "react-icons/fa6";
 import { FaPersonCircleExclamation } from "react-icons/fa6";
-import { FaPersonCircleCheck } from "react-icons/fa6";
 import { FaBusinessTime } from "react-icons/fa";
 import { MdFileDownloadDone } from "react-icons/md";
 import { LuLocateFixed } from "react-icons/lu";
@@ -45,6 +43,7 @@ import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
 import { nameValidator, selectValidator } from "../Common/Validation";
 import { useNavigate } from "react-router-dom"; // For navigation
+import { State, City } from "country-state-city";
 import {
   getBenifitsData,
   getDuration,
@@ -56,14 +55,13 @@ import {
   getWorkPlaceLocation,
   getWorkPlaceType,
   getYears,
+  getSkillsData,
+  getJobCategoryData,
 } from "../ApiService/action";
-import { option } from "framer-motion/client";
 const { Option } = Select;
 const { Group: InputGroup } = Input;
 export default function PostJobs() {
-  const [companyLogo, setCompanyLogo] = useState("");
   const [profileImage, setProfileImage] = useState(""); // This will now store Base64
-
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [jobNatureId, setJobNatureId] = useState(null);
   const [workTypeActiveButton, setWorkTypeActiveButton] = useState(null);
@@ -73,7 +71,6 @@ export default function PostJobs() {
   const { Title, Text } = Typography;
   const [experienceRequiredActiveButton, setExperienceRequiredActiveButton] =
     useState(null);
-  const [fresherPassActiveButton, setFresherPassActiveButton] = useState(null);
   const [selectedFresherPass, setSelectedFresherPass] = useState([]);
   const [experienceRequired, setExperienceRequired] = useState("");
   const [salaryTypeActiveButton, setSalaryTypeActiveButton] = useState(null);
@@ -102,9 +99,10 @@ export default function PostJobs() {
   const [workplaceLocation, setWorkplaceLocation] = useState([]);
   const [jobCategory, setJobCategory] = useState("");
   const [jobCategoryError, setJobCategoryError] = useState("");
-  const [jobCategoryName, setJobCategoryName] = useState("");
+  const [jobCategoryOptions, setJobCategoryOptions] = useState([]);
   const [skillsRequired, setSkillsRequired] = useState([]);
   const [skillsRequiredError, setSkillsRequiredError] = useState("");
+  const [skillsRequiredOptions, setSkillsRequiredOption] = useState([]);
   const [salaryDetails, setSalaryDetails] = useState("");
   const [salaryDetailsError, setSalaryDetailsError] = useState("");
   const [eligibility, setEligibility] = useState("");
@@ -133,6 +131,9 @@ export default function PostJobs() {
   const MAX_LENGTH = 3000;
   const [jobDescription, setJobDescription] = useState("");
 
+  const [workLocationOption, setWorkLocationOption] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [touched, setTouched] = useState(false); // to control initial error
 
   const navigate = useNavigate();
@@ -142,40 +143,46 @@ export default function PostJobs() {
     " " +
     now.toLocaleTimeString("en-GB", { hour12: false });
 
-  const fresherPass = [
-    { id: 1, name: "All" },
-    { id: 2, name: "2021" },
-    { id: 2, name: "2022" },
-    { id: 2, name: "2023" },
-    { id: 2, name: "2024" },
-  ];
-
   const workplaceOptions = [
     { value: "1", label: "Chennai" },
     { value: "2", label: "Mumbai" },
     { value: "3", label: "Bangalore" },
   ];
 
-  const jobCategoryOptions = [
-    { value: "1", label: "Web Developer" },
-    { value: "2", label: "React Developer" },
-    { value: "3", label: "UXUI Designer" },
-  ];
-
-  const skillsRequiredOptions = [
-    { value: "1", label: "React" },
-    { value: "2", label: "Java" },
-    { value: "3", label: "Python" },
-  ];
-
   const workingDaysOptions = [
     { value: "6 Working Days", label: "6 Working Days" },
     { value: "5 Working Days", label: "5 Working Days" },
-    // { value: "3", label: "3" },
   ];
+
+  const indianStates = State.getStatesOfCountry("IN");
+
+  const allIndianCities = indianStates.flatMap((state) =>
+    City.getCitiesOfState("IN", state.isoCode)
+  );
+
+  const formattedCities = allIndianCities.map((city) => ({
+    label: city.name,
+    value: city.name,
+  }));
 
   useEffect(() => {
     getJobNatureData();
+  }, []);
+
+  useEffect(() => {
+    const loadCities = () => {
+      const states = State.getStatesOfCountry("IN");
+      const cities = states.flatMap((state) =>
+        City.getCitiesOfState("IN", state.isoCode)
+      );
+      const formatted = cities.map((city) => ({
+        label: city.name,
+        value: city.name,
+      }));
+      setWorkLocationOption(formatted);
+    };
+
+    loadCities();
   }, []);
 
   const getJobNatureData = async () => {
@@ -244,16 +251,6 @@ export default function PostJobs() {
     }
   };
 
-  const getYearsData = async () => {
-    try {
-      const response = await getYears();
-      setEligibilityYearData(response?.data?.data || []);
-      console.log("years", response);
-    } catch (error) {
-      console.log("years error", error);
-    }
-  };
-
   const getSalaryDataType = async () => {
     try {
       const response = await getSalaryData();
@@ -265,6 +262,53 @@ export default function PostJobs() {
       setTimeout(() => {
         getYearsData();
       }, 300);
+    }
+  };
+
+  const getYearsData = async () => {
+    try {
+      const response = await getYears();
+      setEligibilityYearData(response?.data?.data || []);
+      console.log("years", response);
+    } catch (error) {
+      console.log("years error", error);
+    } finally {
+      setTimeout(() => {
+        getSkillsDataType();
+      }, 300);
+    }
+  };
+
+  const getSkillsDataType = async () => {
+    try {
+      const response = await getSkillsData();
+      const formattedOptions =
+        response?.data?.data?.map((skill) => ({
+          label: skill.name,
+          value: skill.name,
+        })) || [];
+      setSkillsRequiredOption(formattedOptions);
+    } catch (error) {
+      console.log("skills error", error);
+    } finally {
+      setTimeout(() => {
+        getJobCategoryDataTypes();
+      }, 300);
+    }
+  };
+
+  const getJobCategoryDataTypes = async () => {
+    try {
+      const response = await getJobCategoryData();
+      const jobCategoryFormatted =
+        response?.data?.data?.map((jobCategory) => ({
+          label: jobCategory.category_name,
+          value: jobCategory.category_name,
+        })) || [];
+      setJobCategoryOptions(jobCategoryFormatted);
+      console.log("Job Category", response);
+    } catch (error) {
+      console.log("job cattt error", error);
     }
   };
 
@@ -312,7 +356,6 @@ export default function PostJobs() {
 
       reader.onloadend = () => {
         const base64String = reader.result;
-        console.log("Base64 Image:", base64String);
         setProfileImage(base64String);
       };
 
@@ -381,6 +424,7 @@ export default function PostJobs() {
 
   const handlePublishPost = (e) => {
     e.preventDefault();
+    // setIsLoading(true);
 
     const companyNameValidate = nameValidator(companyName);
     const jobTitleValidate = nameValidator(jobTitle);
@@ -397,7 +441,6 @@ export default function PostJobs() {
     const workLocationValidate = selectValidator(workLocation);
     const jobOpeningsValidate = selectValidator(jobOpenings);
     const workingDaysValidate = selectValidator(workingDays);
-    const jobDescriptionValidate = nameValidator(jobDescription);
 
     // Set all error states
     setCompanyNameError(companyNameValidate);
@@ -426,15 +469,13 @@ export default function PostJobs() {
       eligibilityValidate,
       jobOpeningsValidate,
       workingDaysValidate,
-      jobDescriptionValidate,
-      // workLocationValidate,
     ].some((val) => val !== "");
 
-    // if (hasPostJobError) {
-    //   console.log("error publish the post");
-    //   message.error("Please fill all fields correctly before proceeding.");
-    //   return;
-    // }
+    if (hasPostJobError) {
+      console.log("error publish the post");
+      message.error("Please fill all fields correctly before proceeding.");
+      return;
+    }
 
     console.log("All validations passed");
     const getUserDetails = JSON.parse(localStorage.getItem("loginDetails"));
@@ -443,10 +484,6 @@ export default function PostJobs() {
     const getDurationName = internShipDuration.find(
       (f) => f.id === selectedDurationId
     );
-
-    const selectedSkillNames = skillsRequiredOptions
-      .filter((opt) => skillsRequired.includes(opt.value))
-      .map((opt) => opt.label);
 
     if (salaryDetails === 2) {
       if (!salaryMin || !salaryMax) {
@@ -496,12 +533,12 @@ export default function PostJobs() {
 
       work_location:
         workLocation === 1
-          ? specificLocationName
+          ? specificLocation
           : workLocation === 2
           ? "Pan India"
           : "",
-      job_category: jobCategoryName,
-      skills: selectedSkillNames,
+      job_category: jobCategory,
+      skills: skillsRequired,
       experience_type:
         eligibility === 1 ? "Fresher" : eligibility === 2 ? "Experienced" : "",
       experience_required:
@@ -545,25 +582,24 @@ export default function PostJobs() {
     };
 
     // Prepare final payload
-    const postJobData = {
-      companyName,
-      jobTitle,
-      jobNatureId,
-      workplaceType,
-      jobCategory,
-      skillsRequired,
-      salaryDetails,
-      ...(jobNatureId === "Internship" && {
-        jobInternshipDuration,
-      }),
-      eligibility,
-      workLocation,
-    };
+    // const postJobData = {
+    //   companyName,
+    //   jobTitle,
+    //   jobNatureId,
+    //   workplaceType,
+    //   jobCategory,
+    //   skillsRequired,
+    //   salaryDetails,
+    //   ...(jobNatureId === "Internship" && {
+    //     jobInternshipDuration,
+    //   }),
+    //   eligibility,
+    //   workLocation,
+    // };
 
     setTimeout(() => {
-      console.log("Saving Job post data:", payload);
-      // message.success("Job Posted Successfully.");
-      // navigate("/job-portal");
+      message.success("Job Posted Successfully.");
+      navigate("/job-portal");
     }, 1000);
   };
 
@@ -857,7 +893,7 @@ export default function PostJobs() {
                 {workplaceTypeError && (
                   <div
                     className="error-message"
-                    style={{ color: "red", marginTop: "8px" }}
+                    style={{ color: "red", marginTop: "8px", fontSize: 13 }}
                   >
                     {"Workplace Type" + workplaceTypeError}
                   </div>
@@ -913,13 +949,14 @@ export default function PostJobs() {
                   <CommonSelectField
                     style={{ marginTop: "20px" }}
                     showSearch={true}
-                    placeholder={"Select Location"}
+                    name={"specific_location"}
+                    placeholder={"Select location"}
                     value={specificLocation}
                     onChange={(value, option) => {
                       setSpecificLocation(value);
                       setSpecificLocationName(option.label);
                     }}
-                    options={workplaceOptions}
+                    options={workLocationOption}
                   />
                 ) : null}
               </Form.Item>
@@ -937,9 +974,8 @@ export default function PostJobs() {
               name={"Job category"}
               placeholder={"Select Job Category"}
               options={jobCategoryOptions}
-              onChange={(value, option) => {
+              onChange={(value) => {
                 setJobCategory(value);
-                setJobCategoryName(option.label);
                 setJobCategoryError(selectValidator(value));
               }}
               error={jobCategoryError}
@@ -953,6 +989,7 @@ export default function PostJobs() {
               mode="multiple"
               placeholder={"Select skills"}
               style={{ height: 56 }}
+              value={skillsRequired}
               options={skillsRequiredOptions}
               onChange={(value) => {
                 setSkillsRequired(value);
@@ -1031,7 +1068,7 @@ export default function PostJobs() {
               {eligibilityError && (
                 <div
                   className="error-message"
-                  style={{ color: "red", marginTop: "8px" }}
+                  style={{ color: "red", marginTop: "8px", fontSize: 13 }}
                 >
                   {"Experience" + eligibilityError}
                 </div>
@@ -1141,7 +1178,7 @@ export default function PostJobs() {
               {salaryDetailsError && (
                 <div
                   className="error-message"
-                  style={{ color: "red", marginTop: "8px" }}
+                  style={{ color: "red", marginTop: "8px", fontSize: 13 }}
                 >
                   {"Salary Type" + salaryDetailsError}
                 </div>

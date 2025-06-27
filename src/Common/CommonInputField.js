@@ -41,7 +41,9 @@ export default function CommonInputField({
           error ? "show-premium-input-error" : "hide-premium-input-error"
         }
       >
-        <p style={{ color: "red", marginTop: 4 }}>{label + error}</p>
+        <p style={{ color: "red", marginTop: 4, fontSize: 13 }}>
+          {label + error}
+        </p>
       </div>
     </div>
   );

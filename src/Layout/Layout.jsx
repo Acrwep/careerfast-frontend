@@ -22,6 +22,7 @@ import Listing from "../Profile/Listing";
 import AccountSettings from "../Profile/AccountSettings";
 import ProSubscription from "../Profile/ProSubscription";
 import AdminDashboard from "../AdminDashboard/AdminDashboard";
+import ManageCandidate from "../AdminDashboard/ManageCandidate";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -66,6 +67,7 @@ const Layout = () => {
         <Route path="/accountsetting" element={<AccountSettings />} />
         <Route path="/pro-subscription" element={<ProSubscription />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/manage-candidate" element={<ManageCandidate />} />
       </Routes>
     </div>
   );

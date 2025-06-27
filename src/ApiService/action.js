@@ -215,14 +215,23 @@ export const getSalaryData = async () => {
   }
 };
 
-// export const getJobOpeningsData = async () => {
-//   try {
-//     const response = await api.get("/api/openings");
-//     return response;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+export const getSkillsData = async () => {
+  try {
+    const response = await api.get("/api/getSkills");
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getJobCategoryData = async () => {
+  try {
+    const response = await api.get("api/getJobCategories");
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // job post (post api)
 

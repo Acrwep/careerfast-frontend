@@ -46,6 +46,9 @@ export default function CommonSelectField({
           onChange={onChange}
           value={value}
           disabled={disabled}
+          filterOption={(input, option) =>
+            option.label.toLowerCase().includes(input.toLowerCase())
+          }
           options={options.map((item) => ({
             label: item.label ?? item.name,
             value: item.value ?? item.isoCode ?? item.id ?? item.name,
@@ -58,7 +61,9 @@ export default function CommonSelectField({
           error ? "show-premium-input-error" : "hide-premium-input-error"
         }
       >
-        <p style={{ color: "red", marginTop:6 }}>{label + error}</p>
+        <p style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+          {label + error}
+        </p>
       </div>
     </div>
   );
