@@ -34,3 +34,7 @@
   border-color: #6a00ff;
   box-shadow: 0 0 0 2px rgb(78 5 255 / 10%);
 }
+
+.ant-select-selector {
+  padding-left: 0px !important;
+}

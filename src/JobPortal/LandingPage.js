@@ -448,7 +448,7 @@ export default function JobPortalLandingPage() {
       <Header />
       <Row className="job-portal">
         <ParticlesBg type="cobweb" bg={true} color="#7f5af0" num={50} />
-        <Col style={{placeContent:"center"}} lg={12} sm={24} md={24} xs={24}>
+        <Col style={{ placeContent: "center" }} lg={12} sm={24} md={24} xs={24}>
           <div className="left-content">
             <div className="header-content">
               <h1>
@@ -459,43 +459,45 @@ export default function JobPortalLandingPage() {
                 and unlock your professional potential.
               </p>
               <div className="button-group">
-                <button className="primary-btn">
-                  <span>Find Jobs</span>
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M5 12H19M19 12L12 5M19 12L12 19"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+                <a href="job-filter">
+                  <button className="primary-btn">
+                    <span>Find Jobs</span>
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M5 12H19M19 12L12 5M19 12L12 19"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </a>
                 <a href="post-jobs">
-                <button className="secondary-btn">
-                  <span>Post Jobs</span>
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M12 5V19M5 12H19"
-                      stroke="#6900ad"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+                  <button className="secondary-btn">
+                    <span>Post Jobs</span>
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12 5V19M5 12H19"
+                        stroke="#6900ad"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
                 </a>
               </div>
             </div>
@@ -1196,24 +1198,24 @@ export default function JobPortalLandingPage() {
               <div className="post_jobs_btn">
                 <img src={post_jobs1}></img>
                 <a href="post-jobs">
-                <button className="primary-btn">
-                  <span>Post Jobs Now</span>
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M5 12H19M19 12L12 5M19 12L12 19"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+                  <button className="primary-btn">
+                    <span>Post Jobs Now</span>
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M5 12H19M19 12L12 5M19 12L12 19"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
                 </a>
               </div>
             </div>

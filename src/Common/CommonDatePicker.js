@@ -29,8 +29,13 @@ export default function CommonDatePicker({
 
   return (
     <div style={style}>
-      <div style={{ display: "flex" }}>
-        {label && <label className="commonfield_label"><span style={{color: "red"}}>* </span>{label}</label>}
+      <div style={{ display: "flex", marginBottom: 8 }}>
+        {label && (
+          <label className="commonfield_label">
+            <span style={{ color: "red" }}>* </span>
+            {label}
+          </label>
+        )}
         {mandatory === true ? <p style={{ color: "red" }}>*</p> : ""}
       </div>
       <Space direction="vertical" style={{ width: "100%" }}>

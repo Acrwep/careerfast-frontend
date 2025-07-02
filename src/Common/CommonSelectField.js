@@ -56,15 +56,18 @@ export default function CommonSelectField({
           {...rest}
         />
       </Form.Item>
-      <div
-        className={
-          error ? "show-premium-input-error" : "hide-premium-input-error"
-        }
-      >
-        <p style={{ color: "red", marginTop: 6, fontSize: 13 }}>
-          {label + error}
-        </p>
-      </div>
+
+      {mandatory === true && (
+        <div
+          className={
+            error ? "show-premium-input-error" : "hide-premium-input-error"
+          }
+        >
+          <p style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+            {label + error}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

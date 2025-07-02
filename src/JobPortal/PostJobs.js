@@ -117,7 +117,7 @@ export default function PostJobs() {
   const [otherBenifits, setOtherBenifits] = useState([]);
   const [gender, setGender] = useState([]);
   const [genderData, setGenderData] = useState("");
-  const [salaryData, setSalaryDate] = useState([]);
+  const [salaryData, setSalaryData] = useState([]);
   // salary
   const [currency, setCurrency] = useState("INR");
   const [fixedSalary, setFixedSalary] = useState("");
@@ -142,12 +142,6 @@ export default function PostJobs() {
     now.toLocaleDateString("en-CA") +
     " " +
     now.toLocaleTimeString("en-GB", { hour12: false });
-
-  const workplaceOptions = [
-    { value: "1", label: "Chennai" },
-    { value: "2", label: "Mumbai" },
-    { value: "3", label: "Bangalore" },
-  ];
 
   const workingDaysOptions = [
     { value: "6 Working Days", label: "6 Working Days" },
@@ -254,7 +248,7 @@ export default function PostJobs() {
   const getSalaryDataType = async () => {
     try {
       const response = await getSalaryData();
-      setSalaryDate(response?.data?.data || []);
+      setSalaryData(response?.data?.data || []);
       console.log("Salary data", response);
     } catch (error) {
       console.log("Salary data error", error);
@@ -1016,7 +1010,7 @@ export default function PostJobs() {
             />
           </div>
 
-          {/* Openings */}
+          {/* working days */}
           <div style={{ marginTop: 0 }} className="form-group">
             <CommonSelectField
               label={"Working Days"}

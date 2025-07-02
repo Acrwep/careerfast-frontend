@@ -41,6 +41,10 @@ import {
   Select,
 } from "antd";
 import ManageCandidate from "./ManageCandidate";
+import EditOpportunity from "./EditOpportunity";
+import JobDetails from "../JobPortal/JobDetails";
+import RegistrationChart from "./RegistrationChart";
+import ManageNotification from "./ManageNotification";
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -76,28 +80,11 @@ export default function AdminDashboard() {
       key: "5",
       icon: <VscGraph size={17} />,
       label: "Opportunity Stats",
-      children: [
-        {
-          key: "5-1",
-          label: "Analytics",
-          icon: <FaRegChartBar size={15} />,
-        },
-        {
-          key: "5-2",
-          label: "Reports",
-          icon: <FaChartLine size={15} />,
-        },
-      ],
     },
     {
       key: "6",
       icon: <IoNotifications size={18} />,
       label: "Manage Notifications",
-    },
-    {
-      key: "7",
-      icon: <IoSettingsSharp size={17} />,
-      label: "Settings",
     },
   ];
 
@@ -266,7 +253,7 @@ export default function AdminDashboard() {
           items={menuItems}
           style={{
             background: "transparent",
-            padding: "30px 0",
+            padding: "30px 10px",
             borderRight: "none",
           }}
           onClick={({ key }) => setActiveTab(key)}
@@ -412,16 +399,15 @@ export default function AdminDashboard() {
             </Dropdown>
           </Space>
         </Header>
-
-        <Content
-          style={{
-            margin: "24px 16px",
-            padding: 24,
-            minHeight: 280,
-            background: "transparent",
-          }}
-        >
-          {activeTab === "1" && (
+        {String(activeTab) === "1" && (
+          <Content
+            style={{
+              margin: "24px 16px",
+              padding: "24px 34px",
+              minHeight: 280,
+              background: "transparent",
+            }}
+          >
             <>
               <div
                 style={{
@@ -436,7 +422,12 @@ export default function AdminDashboard() {
                 </Title>
                 <Select
                   defaultValue="this_week"
-                  style={{ width: 180 }}
+                  style={{
+                    width: 180,
+                    background: "#E9E0FE",
+                    padding: "0px 5px 0px 10px",
+                    borderRadius: "6px",
+                  }}
                   suffixIcon={<FaChevronDown style={{ fontSize: 12 }} />}
                 >
                   <Option value="this_week">This Week</Option>
@@ -747,14 +738,36 @@ export default function AdminDashboard() {
                 </Col>
               </Row>
             </>
-          )}
+          </Content>
+        )}
 
-          {activeTab === "2" && (
-            <>
-              <ManageCandidate />
-            </>
-          )}
-        </Content>
+        {String(activeTab) === "2" && (
+          <Content
+            style={{
+              margin: "0px",
+              padding: 0,
+              background: "transparent",
+            }}
+          >
+            <ManageCandidate /> {/* Tab 2 content */}
+          </Content>
+        )}
+
+        {String(activeTab) === "3" && (
+          <Content
+            style={{
+              margin: "0px",
+              padding: 0,
+              background: "transparent",
+            }}
+          >
+            <EditOpportunity /> {/* Tab 2 content */}
+          </Content>
+        )}
+
+        {String(activeTab) === "4" && <JobDetails />}
+        {String(activeTab) === "5" && <RegistrationChart />}
+        {String(activeTab) === "6" && <ManageNotification />}
       </Layout>
     </Layout>
   );

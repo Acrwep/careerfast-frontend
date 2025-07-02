@@ -23,6 +23,9 @@ import AccountSettings from "../Profile/AccountSettings";
 import ProSubscription from "../Profile/ProSubscription";
 import AdminDashboard from "../AdminDashboard/AdminDashboard";
 import ManageCandidate from "../AdminDashboard/ManageCandidate";
+import EditOpportunity from "../AdminDashboard/EditOpportunity";
+import RegistrationChart from "../AdminDashboard/RegistrationChart";
+import ManageNotification from "../AdminDashboard/ManageNotification";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -67,7 +70,10 @@ const Layout = () => {
         <Route path="/accountsetting" element={<AccountSettings />} />
         <Route path="/pro-subscription" element={<ProSubscription />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/edit-opportunity" element={<EditOpportunity />} />
         <Route path="/manage-candidate" element={<ManageCandidate />} />
+        <Route path="/registration-chart" element={<RegistrationChart />} />
+        <Route path="/manage-notification" element={<ManageNotification />} />
       </Routes>
     </div>
   );

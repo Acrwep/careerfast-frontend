@@ -753,7 +753,7 @@ body {
 }
 
 .experience_required {
-  padding-top: 20px;
+  padding-top: 10px;
 }
 
 /* Salary Details Section */
@@ -1161,8 +1161,6 @@ body {
 .job_posting_submit .button-group {
   justify-content: space-between !important;
 }
-
-
 
 /* Responsive Adjustments */
 @media (max-width: 1200px) {

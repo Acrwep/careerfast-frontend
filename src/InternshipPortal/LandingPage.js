@@ -447,7 +447,7 @@ export default function JobPortalLandingPage() {
       <Header />
       <Row className="job-portal">
         <ParticlesBg type="cobweb" bg={true} color="#7f5af0" num={50} />
-        <Col style={{placeContent:"center"}} lg={12} sm={24} md={24} xs={24}>
+        <Col style={{ placeContent: "center" }} lg={12} sm={24} md={24} xs={24}>
           <div className="left-content">
             <div className="header-content">
               <h1>
@@ -458,24 +458,26 @@ export default function JobPortalLandingPage() {
                 dream companies!
               </p>
               <div className="button-group">
-                <button className="primary-btn">
-                  <span>Find Internships</span>
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M5 12H19M19 12L12 5M19 12L12 19"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+                <a href="job-filter">
+                  <button className="primary-btn">
+                    <span>Find Internships</span>
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M5 12H19M19 12L12 5M19 12L12 19"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </a>
                 <a href="post-jobs">
                   <button className="secondary-btn">
                     <span>Post Internships</span>

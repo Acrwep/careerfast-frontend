@@ -217,7 +217,7 @@ export default function ManageCandidate() {
           boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
         }}
       >
-        <div style={{ padding: "0 24px 24px" }}>
+        {/* <div style={{ padding: "0 24px 24px" }}>
           <Button
             block
             icon={<PlusOutlined />}
@@ -233,7 +233,7 @@ export default function ManageCandidate() {
           >
             Create New Round
           </Button>
-        </div>
+        </div> */}
 
         <Menu
           mode="inline"
@@ -243,26 +243,27 @@ export default function ManageCandidate() {
             {
               key: "all",
               label: <Text strong>All Applications</Text>,
-              style: { height: 48, marginTop: 20, border: "1px solid #5f2eea" },
+              style: { height: 48, marginTop: 15 },
             },
             {
               key: "r1",
               label: <Text strong>Screening Round</Text>,
-              style: { height: 48, marginTop: 20, border: "1px solid #5f2eea" },
+              style: { height: 48, marginTop: 15 },
             },
             {
               key: "r2",
               label: <Text strong>Final Round</Text>,
-              style: { height: 48, marginTop: 20, border: "1px solid #5f2eea" },
+              style: { height: 48, marginTop: 15 },
             },
           ]}
         />
       </Sider>
 
       {/* Main Content */}
-      <Layout>
+      <Layout style={{ padding: 20 }}>
         <Header
           style={{
+            borderRadius: 12,
             background: "#fff",
             padding: "0 32px",
             display: "flex",
@@ -304,7 +305,12 @@ export default function ManageCandidate() {
                   size="large"
                   placeholder="Filter"
                   suffixIcon={<FilterOutlined style={{ color: "#bfbfbf" }} />}
-                  style={{ width: 120 }}
+                  style={{
+                    width: 120,
+                    background: "#E9E0FE",
+                    padding: "0px 5px 0px 10px",
+                    borderRadius: "6px",
+                  }}
                 >
                   <Option value="all">All</Option>
                   <Option value="complete">Complete</Option>
