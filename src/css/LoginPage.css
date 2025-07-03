@@ -159,6 +159,10 @@ button {
   ) !important;
 }
 
+.ant-btn:not(:disabled):focus-visible {
+  outline: 3px solid #ffffff !important;
+}
+
 .hover-underline {
   position: relative;
 }

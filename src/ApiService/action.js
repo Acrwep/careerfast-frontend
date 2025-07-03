@@ -12,6 +12,7 @@ let modalInstance = null;
 api.interceptors.request.use(
   (config) => {
     const AccessToken = localStorage.getItem("AccessToken");
+    // console.log("my token", AccessToken);
     const expired = isTokenExpired(AccessToken);
     if (expired === true) {
       ShowModal();
