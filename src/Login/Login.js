@@ -11,6 +11,7 @@ import {
   message,
   Col,
   Row,
+  Modal,
 } from "antd";
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import "../css/LoginPage.css";
@@ -34,11 +35,25 @@ const LoginPage = () => {
 
   const [activeTab, setActiveTab] = useState("candidate");
   const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     setEmail("");
   }, [activeTab]);
+
+  const showLoading = () => {
+    setOpen(true);
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+  };
+
+  const closeModal = () => {
+    setOpen(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -195,6 +210,7 @@ const LoginPage = () => {
                     <Checkbox style={{ fontWeight: 500 }}>Remember me</Checkbox>
                   </Form.Item>
                   <Link
+                    onClick={showLoading}
                     style={{ color: "#8d3ffb", fontWeight: 500 }}
                     href="#"
                     className="hover-underline"
@@ -202,6 +218,38 @@ const LoginPage = () => {
                     Forgot password?
                   </Link>
                 </div>
+
+                <Modal
+                  title={<p>Loading Modal</p>}
+                  footer={
+                    <Button
+                      className="sendOtp"
+                      type="primary"
+                      onClick={closeModal}
+                    >
+                      Send OTP
+                    </Button>
+                  }
+                  loading={loading}
+                  open={open}
+                  onCancel={() => setOpen(false)}
+                >
+                  <div style={{ marginBottom: "4px" }}>
+                    <CommonInputField
+                      label="Email"
+                      name="email"
+                      mandotary={true}
+                      placeholder="Enter your email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setEmailError(emailValidator(e.target.value));
+                      }}
+                      error={emailError}
+                    />
+                  </div>
+                </Modal>
 
                 <Form.Item>
                   <Button
