@@ -107,7 +107,7 @@ button {
   box-shadow: 0 0 0 2px rgba(141, 63, 251, 0.1) !important;
 }
 
-.login_form .ant-form-item{
+.login_form .ant-form-item {
   margin-bottom: 1px !important;
 }
 
@@ -144,6 +144,19 @@ button {
   padding: 0 16px;
   font-size: 14px;
   color: rgba(0, 0, 0, 0.45);
+}
+
+.sendOtp {
+  background: linear-gradient(135deg, #7f5af0 0%, #5f2eea 50%, #4b1ea0 100%);
+}
+
+.sendOtp:hover {
+  background: linear-gradient(
+    135deg,
+    #7f5af0 0%,
+    #5f2eea 50%,
+    #4b1ea0 100%
+  ) !important;
 }
 
 .hover-underline {
@@ -222,7 +235,6 @@ button {
   }
 }
 .ant-btn-variant-solid:hover {
-  background: #6a5cff !important;
   color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(93, 72, 192, 0.4), 0 4px 6px rgba(0, 0, 0, 0.1);

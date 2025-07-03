@@ -11,17 +11,18 @@ import {
   message,
   Col,
   Row,
+  Modal,
+  Flex,
 } from "antd";
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import "../css/LoginPage.css";
 import loginImage from "../images/login_image.png";
-import Header from "../Header/Header";
 import { useNavigate } from "react-router-dom"; // For navigation
 import { emailValidator, passwordValidator } from "../Common/Validation";
 import CommonInputField from "../Common/CommonInputField";
 import CommonPasswordField from "../Common/CommonPasswordField";
 import { login } from "../ApiService/action";
-import axios from "axios";
+import { verifyOtp, forgotPassword, sendOtp } from "../ApiService/action";
 
 const { Title, Text, Link } = Typography;
 
@@ -32,13 +33,50 @@ const LoginPage = () => {
   const [passwordError, setPasswordError] = useState("");
   const [form] = Form.useForm();
 
-  const [activeTab, setActiveTab] = useState("candidate");
+  const [step, setStep] = useState(1);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpEmailError, setOtpEmailError] = useState("");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const [activeTab, setActiveTab] = useState("candidate");
+  const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     setEmail("");
   }, [activeTab]);
+
+  const showLoading = () => {
+    setOpen(true);
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+  };
+
+  const onChange = (text) => {
+    console.log("onChange:", text);
+  };
+  const onInput = (value) => {
+    console.log("onInput:", value);
+  };
+  const sharedProps = {
+    onChange,
+    onInput,
+  };
+
+  const handleModalClose = () => {
+    setOpen(false);
+    setStep(1);
+    setOtpEmail("");
+    setNewPassword("");
+    setOtp("");
+    setNewPasswordError("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -85,6 +123,91 @@ const LoginPage = () => {
     }
   };
 
+  // Step 1: Send OTP
+  const handleSendOtp = async () => {
+    const otpEmailValidate = emailValidator(otpEmail);
+    if (otpEmailValidate) {
+      setOtpEmailError(otpEmailValidate);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const payload = {
+        email: otpEmail,
+      };
+
+      const res = await sendOtp(payload);
+
+      if (res?.data?.message) {
+        message.success("OTP sent to your email");
+        setStep(2);
+      } else {
+        message.error(res?.data?.message || "Failed to send OTP");
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Error sending OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Step 2: Verify OTP
+  const handleVerifyOtp = async () => {
+    setOtpEmail("");
+    setIsLoading(true);
+    try {
+      const payload = {
+        email: otpEmail,
+        otp: otp,
+      };
+      const res = await verifyOtp(payload);
+      if (res?.data?.message) {
+        message.success("OTP verified");
+        setStep(3);
+      } else {
+        message.error(res?.data?.message || "Invalid OTP");
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Error verifying OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Step 3: Reset Password
+  const handleResetPassword = async () => {
+    const newPasswordValidate = passwordValidator(newPassword);
+
+    if (newPasswordValidate) {
+      setNewPasswordError(newPasswordValidate);
+      return;
+    }
+    setIsLoading(true);
+    setOtp("");
+    try {
+      const payload = {
+        email: otpEmail,
+        password: newPassword,
+      };
+      const res = await forgotPassword(payload);
+      if (res?.data?.message) {
+        message.success("Password changed successful");
+        setTimeout(() => {
+          handleModalClose(); // close & reset
+        }, 1000);
+      } else {
+        message.error(res?.data?.message || "Failed to change password");
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Error resetting password");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const tabItems = [
     {
       key: "candidate",
@@ -114,7 +237,7 @@ const LoginPage = () => {
             style={{ height: 720, placeContent: "center" }}
             className="login-animation"
           >
-            <Card className="login_card" bordered={false}>
+            <Card className="login_card">
               <div style={{ textAlign: "center", marginBottom: 12 }}>
                 <Title
                   level={2}
@@ -146,12 +269,7 @@ const LoginPage = () => {
                 items={tabItems}
               />
 
-              <Form
-                form={form}
-                className="login_form"
-                layout="vertical"
-                // onSubmitCapture={handleSubmit}
-              >
+              <Form form={form} className="login_form" layout="vertical">
                 <div style={{ marginBottom: "4px" }}>
                   <CommonInputField
                     label="Email"
@@ -195,8 +313,8 @@ const LoginPage = () => {
                     <Checkbox style={{ fontWeight: 500 }}>Remember me</Checkbox>
                   </Form.Item>
                   <Link
+                    onClick={showLoading}
                     style={{ color: "#8d3ffb", fontWeight: 500 }}
-                    href="#"
                     className="hover-underline"
                   >
                     Forgot password?
@@ -287,6 +405,80 @@ const LoginPage = () => {
             </Card>
           </div>
         </Col>
+
+        <Modal
+          title="Forgot Password"
+          open={open}
+          onCancel={handleModalClose}
+          footer={null}
+        >
+          {step === 1 && (
+            <>
+              <CommonInputField
+                label="Email"
+                mandotary={true}
+                placeholder={"Enter your valid email"}
+                type="email"
+                value={otpEmail}
+                onChange={(e) => {
+                  setOtpEmail(e.target.value);
+                  setOtpEmailError(emailValidator(e.target.value));
+                }}
+                error={otpEmailError}
+              />
+              <Button
+                className="sendOtp"
+                type="primary"
+                // loading={isLoading}
+                onClick={handleSendOtp}
+              >
+                Send OTP
+              </Button>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <Typography.Title level={5}>Enter OTP</Typography.Title>
+              <Input.OTP value={otp} onChange={(val) => setOtp(val)} />
+              <br></br>
+              <Button
+                style={{ marginTop: 20 }}
+                className="sendOtp"
+                type="primary"
+                loading={isLoading}
+                onClick={handleVerifyOtp}
+              >
+                Verify OTP
+              </Button>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <CommonPasswordField
+                label="New Password"
+                type="password"
+                value={newPassword}
+                placeholder="••••••••"
+                prefix={<LockOutlined style={{ color: "rgba(0,0,0,.25)" }} />}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  setNewPasswordError(passwordValidator(e.target.value));
+                }}
+                error={newPasswordError}
+              />
+              <Button
+                className="sendOtp"
+                type="primary"
+                loading={isLoading}
+                onClick={handleResetPassword}
+              >
+                Reset Password
+              </Button>
+            </>
+          )}
+        </Modal>
 
         <Col span={12}>
           {" "}
