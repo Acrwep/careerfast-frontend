@@ -13,6 +13,7 @@ api.interceptors.request.use(
   (config) => {
     const AccessToken = localStorage.getItem("AccessToken");
     const expired = isTokenExpired(AccessToken);
+    console.log("my token", AccessToken);
     if (expired === true) {
       ShowModal();
       return Promise.reject(new Error("Token is expired"));
@@ -238,6 +239,25 @@ export const getJobCategoryData = async () => {
 export const createJobPost = async (jobPostPayload) => {
   try {
     const response = await api.post("/api/jobPosting", jobPostPayload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// closing registration api
+
+export const closeRegistration = async (token) => {
+  try {
+    const response = await api.put(
+      "/api/registrationClose",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     return response;
   } catch (error) {
     throw error;

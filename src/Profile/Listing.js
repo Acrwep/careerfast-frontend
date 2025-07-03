@@ -7,19 +7,21 @@ import {
   FiCalendar,
   FiBriefcase,
   FiAward,
-  FiBook
+  FiBook,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
+import { IoMdCloseCircleOutline } from "react-icons/io";
+import { Menu, Dropdown, message } from "antd";
+import axios from "axios";
+import { closeRegistration } from "../ApiService/action";
 
-
-
-
-export default function ListingDashboard(){
+export default function ListingDashboard() {
   const [activeTab, setActiveTab] = useState("All");
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [edit, setEdit] = useState(true);
 
   useEffect(() => {
     setTimeout(() => {
@@ -36,7 +38,7 @@ export default function ListingDashboard(){
           expired: true,
           impressions: 120,
           registrations: 45,
-          logo: "https://randomuser.me/api/portraits/lego/1.jpg"
+          logo: "https://randomuser.me/api/portraits/lego/1.jpg",
         },
         {
           id: 2,
@@ -50,7 +52,7 @@ export default function ListingDashboard(){
           expired: false,
           impressions: 320,
           registrations: 128,
-          logo: "https://randomuser.me/api/portraits/lego/2.jpg"
+          logo: "https://randomuser.me/api/portraits/lego/2.jpg",
         },
         {
           id: 3,
@@ -64,38 +66,63 @@ export default function ListingDashboard(){
           expired: true,
           impressions: 85,
           registrations: 32,
-          logo: "https://randomuser.me/api/portraits/lego/3.jpg"
-        }
+          logo: "https://randomuser.me/api/portraits/lego/3.jpg",
+        },
       ]);
       setLoading(false);
     }, 1000);
   }, []);
 
-  const filteredListings = listings.filter(listing => {
+  const moreOptions = (
+    <Menu
+      items={[
+        {
+          key: "1",
+          label: "Close Registration",
+          danger: true,
+          icon: <IoMdCloseCircleOutline />,
+        },
+      ]}
+    />
+  );
+
+  const filteredListings = listings.filter((listing) => {
     const matchesTab = activeTab === "All" || listing.type === activeTab;
-    const matchesFilter = activeFilter === "All" || listing.status === activeFilter;
-    const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         listing.company.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter =
+      activeFilter === "All" || listing.status === activeFilter;
+    const matchesSearch =
+      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.company.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesFilter && matchesSearch;
   });
 
-  const totalImpressions = listings.reduce((sum, listing) => sum + listing.impressions, 0);
-  const totalRegistrations = listings.reduce((sum, listing) => sum + listing.registrations, 0);
+  const totalImpressions = listings.reduce(
+    (sum, listing) => sum + listing.impressions,
+    0
+  );
+  const totalRegistrations = listings.reduce(
+    (sum, listing) => sum + listing.registrations,
+    0
+  );
 
   const tabs = ["All", "Scholarships", "Internships", "Jobs"];
   const filters = ["All", "Live", "Incomplete", "Rejected", "Approved"];
 
   const formatDate = (dateString) => {
-    const options = { day: 'numeric', month: 'short', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    const options = { day: "numeric", month: "short", year: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
   const getTypeIcon = (type) => {
-    switch(type) {
-      case "Jobs": return <FiBriefcase className="icon-blue" />;
-      case "Hackathons": return <FiAward className="icon-purple" />;
-      case "Scholarships": return <FiBook className="icon-green" />;
-      default: return <FiCalendar className="icon-gray" />;
+    switch (type) {
+      case "Jobs":
+        return <FiBriefcase className="icon-blue" />;
+      case "Hackathons":
+        return <FiAward className="icon-purple" />;
+      case "Scholarships":
+        return <FiBook className="icon-green" />;
+      default:
+        return <FiCalendar className="icon-gray" />;
     }
   };
 
@@ -119,9 +146,27 @@ export default function ListingDashboard(){
         </div>
 
         <div className="stats-container">
-          <StatCard title="Total Opportunities" value={listings.length} change="+12% from last month" icon={<FiBriefcase />} bgColor="purple" />
-          <StatCard title="Total Impressions" value={totalImpressions} change="+24% from last month" icon={<FiAward />} bgColor="blue" />
-          <StatCard title="Total Registrations" value={totalRegistrations} change="+8% from last month" icon={<FiBook />} bgColor="orange" />
+          <StatCard
+            title="Total Opportunities"
+            value={listings.length}
+            change="+12% from last month"
+            icon={<FiBriefcase />}
+            bgColor="purple"
+          />
+          <StatCard
+            title="Total Impressions"
+            value={totalImpressions}
+            change="+24% from last month"
+            icon={<FiAward />}
+            bgColor="blue"
+          />
+          <StatCard
+            title="Total Registrations"
+            value={totalRegistrations}
+            change="+8% from last month"
+            icon={<FiBook />}
+            bgColor="orange"
+          />
         </div>
 
         <div className="filter-container">
@@ -139,7 +184,9 @@ export default function ListingDashboard(){
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`filter-btn ${activeFilter === filter ? "active" : ""}`}
+                className={`filter-btn ${
+                  activeFilter === filter ? "active" : ""
+                }`}
               >
                 {filter}
               </button>
@@ -163,10 +210,14 @@ export default function ListingDashboard(){
                     className="listing-card"
                   >
                     <div className="card-inner">
-                      <img src={listing.logo} alt={listing.company} className="company-logo" />
+                      <img
+                        src={listing.logo}
+                        alt={listing.company}
+                        className="company-logo"
+                      />
                       <div className="listing-info">
                         <div className="listing-header">
-                          <div style={{textAlign:"left"}}>
+                          <div style={{ textAlign: "left" }}>
                             <h3>{listing.title}</h3>
                             <p>{listing.company}</p>
                           </div>
@@ -176,19 +227,48 @@ export default function ListingDashboard(){
                           </div>
                         </div>
                         <div className="listing-meta">
-                          <span>{formatDate(listing.startDate)} - {formatDate(listing.endDate)}{listing.expired && <span className="expired"> (Expired)</span>}</span>
-                          <span className={`badge ${listing.visibility.toLowerCase()}`}>{listing.visibility}</span>
-                          <span className={`badge ${listing.status.toLowerCase()}`}>{listing.status}</span>
+                          <span>
+                            {formatDate(listing.startDate)} -{" "}
+                            {formatDate(listing.endDate)}
+                            {listing.expired && (
+                              <span className="expired"> (Expired)</span>
+                            )}
+                          </span>
+                          <span
+                            className={`badge ${listing.visibility.toLowerCase()}`}
+                          >
+                            {listing.visibility}
+                          </span>
+                          <span
+                            className={`badge ${listing.status.toLowerCase()}`}
+                          >
+                            {listing.status}
+                          </span>
                         </div>
                         <div className="listing-footer">
                           <div>
-                            <span><strong>{listing.impressions}</strong> Impressions</span>
-                            <span><strong>{listing.registrations}</strong> Registrations</span>
+                            <span>
+                              <strong>{listing.impressions}</strong> Impressions
+                            </span>
+                            <span>
+                              <strong>{listing.registrations}</strong>{" "}
+                              Registrations
+                            </span>
                           </div>
                           <div className="listing-actions">
-                            <FiEdit />
+                            <a href="/admin-dashboard">
+                              <FiEdit style={{ cursor: "pointer" }} />
+                            </a>
+
                             <FiSettings />
-                            <FiMoreVertical />
+                            <Dropdown
+                              placement="bottomRight"
+                              overlay={moreOptions}
+                            >
+                              <FiMoreVertical
+                              // onClick={handleCloseRegistration}
+                              />
+                            </Dropdown>
                           </div>
                         </div>
                       </div>
@@ -204,7 +284,7 @@ export default function ListingDashboard(){
       </div>
     </div>
   );
-};
+}
 
 const StatCard = ({ title, value, change, icon, bgColor }) => {
   return (

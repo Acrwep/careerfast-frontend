@@ -413,7 +413,6 @@
   margin-bottom: 0px;
 }
 
-
 .ant-upload-wrapper
   .ant-upload-list
   .ant-upload-list-item-error
@@ -498,13 +497,13 @@
   letter-spacing: -0.5px;
 }
 
-.userprofile-edit-profile{
-  background:#5f2eea;
+.userprofile-edit-profile {
+  background: #5f2eea;
   border-color: #5f2eea;
 }
 
-.userprofile-edit-profile:hover{
-  background:#5f2eea !important;
+.userprofile-edit-profile:hover {
+  background: #5f2eea !important;
   border-color: #5f2eea;
 }
 
@@ -1614,11 +1613,13 @@
   display: flex;
   gap: 1rem;
   color: #6c757d;
+  align-items: flex-end;
 }
 
 .listing-actions svg {
   cursor: pointer;
   transition: all 0.2s ease;
+  color: #6c757d;
 }
 
 .listing-actions svg:hover {
