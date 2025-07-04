@@ -133,6 +133,8 @@ const RegisterPage = () => {
         activeTab === "candidate" ? 2 : activeTab === "recruiter" ? 2 : 3,
     };
 
+    console.log("registerload", registerload);
+
     try {
       const response = await register(registerload);
       console.log("Register response", response);

@@ -100,7 +100,7 @@ const LoginPage = () => {
     const emailValidate =
       activeTab === "recruiter"
         ? officialEmailValidator(officialEmail)
-        : emailValidator(emailValidate);
+        : emailValidator(email);
     const passwordValidate = passwordValidator(password);
 
     if (rememberMe) {

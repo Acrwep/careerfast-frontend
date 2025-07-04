@@ -16,6 +16,8 @@ export default function CommonInputField({
   onPressEnter,
   errorMessage,
   prefix,
+  readOnly,
+  disabled,
 }) {
   return (
     <div className="commoninputfield">
@@ -33,6 +35,8 @@ export default function CommonInputField({
         type={type}
         pattern={pattern}
         value={value}
+        readOnly={readOnly}
+        disabled={disabled}
         prefix={prefix}
         onPressEnter={onPressEnter}
       />

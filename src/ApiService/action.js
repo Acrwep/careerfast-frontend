@@ -295,3 +295,14 @@ export const forgotPassword = async (payload) => {
     throw error;
   }
 };
+
+// insert profile
+
+export const insertProfileData = async (payload) => {
+  try {
+    const response = await api.post("/api/insertProfile", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

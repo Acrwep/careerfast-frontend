@@ -49,6 +49,7 @@ import {
 } from "../Common/Validation";
 import { phoneValidation } from "../Common/Validation";
 import CommonDatePicker from "../Common/CommonDatePicker";
+import { insertProfileData } from "../ApiService/action";
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -57,6 +58,7 @@ dayjs.extend(customParseFormat);
 
 const ProfileDetails = () => {
   const [form] = Form.useForm();
+
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(25);
   const [fname, setFname] = useState("");
@@ -90,6 +92,7 @@ const ProfileDetails = () => {
   const [cityList, setCityList] = useState([]);
   const [selectedState, setSelectedState] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
+  const [address, setAddress] = useState("");
 
   // 2
   const [selectExperienceType, setSelectExperienceType] = useState("");
@@ -121,6 +124,9 @@ const ProfileDetails = () => {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [customSkill, setCustomSkill] = useState("");
   const [skillsError, setSkillsError] = useState(null);
+  const [startDateError, setstartDateError] = useState("");
+  const [endDateError, setendDateError] = useState("");
+  const [loginUserId, setLoginUserId] = useState(null);
 
   const initializeRecaptcha = useCallback(async () => {
     try {
@@ -211,6 +217,22 @@ const ProfileDetails = () => {
     }
   }, []);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+        setFname(loginDetails.first_name);
+        setLname(loginDetails.last_name);
+        setEmail(loginDetails.email);
+        setNumber(loginDetails.phone);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, []);
+
   const handleCountryChange = (countryCode) => {
     const country = countryList.find((c) => c.isoCode === countryCode);
     setCountryId(country);
@@ -250,11 +272,19 @@ const ProfileDetails = () => {
     setSelectedCity(cityName);
     form.setFieldsValue({ city: cityName });
   };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+
     if (file) {
-      const imageURL = URL.createObjectURL(file);
-      setProfileImage(imageURL);
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setProfileImage(base64String);
+      };
+
+      reader.readAsDataURL(file);
     }
   };
 
@@ -485,6 +515,37 @@ const ProfileDetails = () => {
     }
   };
 
+  const doneProfile = async () => {
+    const payload = {
+      profile_image: profileImage,
+      user_id: loginUserId,
+      country: country,
+      state: state,
+      city: city,
+      pincode: pincode,
+      address: address,
+      experience_type: selectExperienceType,
+      total_years: totalYearsExperience,
+      total_months: totalMonthsExperience,
+      job_title: jobTitle,
+      company_name: companyName,
+      designation: designation,
+      start_date: startDate,
+      end_date: endDate,
+      currently_working: currentlyWorking,
+      skills: selectedSkills,
+      is_email_verified: "verified",
+    };
+    try {
+      const response = await insertProfileData(payload);
+      console.log("my profile", response);
+      message.success("Profile inserted successfully!");
+    } catch (error) {
+      console.log("my profile error", error);
+      message.error("Fill all the required fields");
+    }
+  };
+
   const prevStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
@@ -621,16 +682,18 @@ const ProfileDetails = () => {
               <div className="form-row">
                 <div className="form-group">
                   <CommonInputField
-                    name={"First Name"}
+                    name="firstName"
                     label="First Name"
                     mandotary={true}
-                    placeholder={"Enter your first name"}
-                    type={"text"}
+                    placeholder="Enter your first name"
+                    type="text"
                     value={fname}
                     onChange={(e) => {
                       setFname(e.target.value);
                       setFnameError(nameValidator(e.target.value));
                     }}
+                    readOnly={true}
+                    disabled={true}
                     error={fnameError}
                   />
                 </div>
@@ -646,6 +709,8 @@ const ProfileDetails = () => {
                       setLname(e.target.value);
                       setLnameError(nameValidator(e.target.value));
                     }}
+                    readOnly={true}
+                    disabled={true}
                     error={lnameError}
                   />
                 </div>
@@ -662,6 +727,8 @@ const ProfileDetails = () => {
                     setEmail(e.target.value);
                     setEmailError(emailValidator(e.target.value));
                   }}
+                  readOnly={true}
+                  disabled={true}
                   error={emailError}
                 />
               </div>
@@ -677,6 +744,8 @@ const ProfileDetails = () => {
                     setNumber(e.target.value);
                     setNumberError(phoneValidation(e.target.value));
                   }}
+                  readOnly={true}
+                  disabled={true}
                   error={numberError}
                 />
               </div>
@@ -759,6 +828,10 @@ const ProfileDetails = () => {
                 <CommonTextArea
                   label={"Address"}
                   name={"address"}
+                  value={address}
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                  }}
                   placeholder={"Enter Your Address"}
                 />
               </div>
@@ -970,15 +1043,14 @@ const ProfileDetails = () => {
                             label=" Company name"
                             mandotary={true}
                             placeholder={"Tech Corp Inc."}
-                            value={company.companyName}
-                            error={company.companyNameError}
-                            onChange={(e) =>
-                              handleCompanyFields(
-                                index,
-                                "companyName",
-                                e.target.value
-                              )
-                            }
+                            value={companyName}
+                            error={companyNameError}
+                            onChange={(e) => {
+                              setCompanyName(e.target.value);
+                              setCompanyNameError(
+                                nameValidator(e.target.value)
+                              );
+                            }}
                           />
                         </div>
                         <div className="form-group">
@@ -986,15 +1058,14 @@ const ProfileDetails = () => {
                             label=" Designation"
                             mandotary={true}
                             placeholder={"Enter your designation"}
-                            value={company.designation}
-                            error={company.designationError}
-                            onChange={(e) =>
-                              handleCompanyFields(
-                                index,
-                                "designation",
-                                e.target.value
-                              )
-                            }
+                            value={designation}
+                            error={designationError}
+                            onChange={(e) => {
+                              setDesignation(e.target.value);
+                              setDesignationError(
+                                nameValidator(e.target.value)
+                              );
+                            }}
                           />
                         </div>
                       </div>
@@ -1003,21 +1074,23 @@ const ProfileDetails = () => {
                         <div className="from-group">
                           <CommonDatePicker
                             label="Start Date"
-                            value={company.startDate}
-                            error={company.startDateError}
-                            onChange={(value) =>
-                              handleCompanyFields(index, "startDate", value)
-                            }
+                            value={startDate}
+                            error={startDateError}
+                            onChange={(value) => {
+                              setStartDate(value);
+                              setStateError(selectValidator(value));
+                            }}
                           />
                         </div>
                         <div className="from-group">
                           <CommonDatePicker
                             label="End Date"
-                            value={company.endDate}
-                            error={company.endDateError}
-                            onChange={(value) =>
-                              handleCompanyFields(index, "endDate", value)
-                            }
+                            value={endDate}
+                            error={endDateError}
+                            onChange={(value) => {
+                              setEndDate(value);
+                              setendDateError(selectValidator(value));
+                            }}
                             disabled={
                               company.currentlyWorking === true ? true : false
                             }
@@ -1285,6 +1358,15 @@ const ProfileDetails = () => {
               Next Step
             </Button>
           ) : null}
+
+          <Button
+            type="primary"
+            size="large"
+            onClick={doneProfile}
+            className="nav-btn next-btn"
+          >
+            send profile
+          </Button>
         </div>
         <Modal
           title="Enter OTP"
