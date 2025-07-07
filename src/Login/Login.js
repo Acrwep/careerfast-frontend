@@ -87,6 +87,10 @@ const LoginPage = () => {
     onInput,
   };
 
+  const closeModal = () => {
+    setOpen(false);
+  };
+
   const handleModalClose = () => {
     setOpen(false);
     setStep(1);
