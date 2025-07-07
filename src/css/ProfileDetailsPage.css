@@ -374,6 +374,10 @@ body {
   height: 48px;
 }
 
+.dashboard-btn:hover {
+  background: linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%) !important;
+}
+
 .navigation-buttons {
   display: flex;
   justify-content: center;

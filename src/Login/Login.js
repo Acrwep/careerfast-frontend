@@ -61,6 +61,8 @@ const LoginPage = () => {
   }, [activeTab]);
 
   useEffect(() => {
+    localStorage.clear();
+    sessionStorage.clear();
     const storedEmail = localStorage.getItem("rememberedEmail");
     if (storedEmail) {
       console.log("remember me", storedEmail);
@@ -140,7 +142,7 @@ const LoginPage = () => {
       }, 1500);
     } catch (error) {
       console.log("login error", error);
-      message.error(error.response.data.details);
+      message.error(error?.response?.data?.details);
     }
   };
 
