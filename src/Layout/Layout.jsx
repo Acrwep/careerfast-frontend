@@ -1,4 +1,4 @@
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import Login from "../Login/Login";
 import About from "../About/About";
@@ -28,7 +28,9 @@ import RegistrationChart from "../AdminDashboard/RegistrationChart";
 import ManageNotification from "../AdminDashboard/ManageNotification";
 
 const Layout = () => {
+  const location = useLocation();
   const navigate = useNavigate();
+
   useEffect(() => {
     //handle navigate to login page when token expire
     const handleTokenExpire = () => {
@@ -44,6 +46,23 @@ const Layout = () => {
       window.removeEventListener("tokenExpireUpdated", handleTokenExpire);
     };
   }, []);
+
+  useEffect(() => {
+    const AccessToken = localStorage.getItem("AccessToken");
+    const pathName = location.pathname.split("/")[1];
+
+    console.log("pathname", pathName);
+    if (AccessToken) {
+      if (pathName === "" || pathName === "/") {
+        navigate("/job-portal");
+      } else {
+        navigate(`/${pathName}`);
+      }
+    } else {
+      navigate("/login");
+    }
+  }, [location.pathname]);
+
   return (
     <div>
       {" "}
