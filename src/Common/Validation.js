@@ -1,11 +1,11 @@
 const nameRegex = /^[a-zA-Z]+(?: [a-zA-Z]+)*$/;
 const orgNameRegex = /^[a-zA-Z]+(?: [a-zA-Z]+)*$/;
-const orgTypeRegex = /^[a-zA-Z]+(?: [a-zA-Z]+)*$/;
 const phoneRegex = /^[6-9]\d{9}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const officialEmailRegex =
+  /^[a-zA-Z0-9._%+-]+@(?!(gmail\.com$))[a-zA-Z0-9-]{2,}\.[a-zA-Z]{2,}$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,}$/;
 const pincodeRegex = /^[A-Za-z0-9\s\-]{3,10}$/;
-const countryRegex = /^[a-zA-Z ]+$/;
 
 export const nameValidator = (name) => {
   let error = "";
@@ -41,6 +41,13 @@ export const emailValidator = (email) => {
   let error = "";
   if (!email || email.trim() === "") return " is required.";
   if (!emailRegex.test(email)) return " is not valid";
+  return error;
+};
+
+export const officialEmailValidator = (officialEmail) => {
+  let error = "";
+  if (!officialEmail || officialEmail.trim() === "") return " is required.";
+  if (!officialEmailRegex.test(officialEmail)) return " is not valid";
   return error;
 };
 

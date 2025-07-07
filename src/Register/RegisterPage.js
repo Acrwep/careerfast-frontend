@@ -31,6 +31,7 @@ import {
   confirmPasswordValidation,
   orgNameValidation,
   orgTypeValidation,
+  officialEmailValidator,
 } from "../Common/Validation";
 import { CommonToaster } from "../Common/CommonToaster";
 import CommonInputField from "../Common/CommonInputField";
@@ -50,6 +51,8 @@ const RegisterPage = () => {
   const [phoneError, setPhoneError] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [officialEmail, setOfficialEmail] = useState("");
+  const [officialEmailError, setOfficialEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -81,7 +84,10 @@ const RegisterPage = () => {
     const fnameValidate = nameValidator(fname);
     const lnameValidate = nameValidator(lname);
     const phoneValidate = phoneValidation(phone);
-    const emailValidate = emailValidator(email);
+    const emailValidate =
+      activeTab === "recruiter"
+        ? officialEmailValidator(officialEmail)
+        : emailValidator(email);
     const passwordValidate = passwordValidator(password);
     const confirmPasswordValidate = confirmPasswordValidation(
       password,
@@ -96,6 +102,7 @@ const RegisterPage = () => {
     setLnameError(lnameValidate);
     setPhoneError(phoneValidate);
     setEmailError(emailValidate);
+    setOfficialEmailError(emailValidate);
     setPasswordError(passwordValidate);
     setConfirmPasswordError(confirmPasswordValidate);
     setOrgNameError(orgNameValidate);
@@ -118,12 +125,15 @@ const RegisterPage = () => {
       last_name: lname,
       phone_code: "+91",
       phone: phone,
-      email: email,
+      email: activeTab === "recruiter" ? officialEmail : email,
       password: password,
       organization: orgName,
       organization_type_id: orgType,
-      role_id: activeTab === "candidate" ? 2 : 3,
+      role_id:
+        activeTab === "candidate" ? 2 : activeTab === "recruiter" ? 2 : 3,
     };
+
+    console.log("registerload", registerload);
 
     try {
       const response = await register(registerload);
@@ -202,8 +212,10 @@ const RegisterPage = () => {
                 onChange={(value) => {
                   setActiveTab(value);
                   setEmailError("");
+                  setOfficialEmailError("");
                   setFnameError("");
                   setLnameError("");
+                  setOrgNameError("");
                   setConfirmPasswordError("");
                   setPhoneError("");
                   setPasswordError("");
@@ -277,25 +289,51 @@ const RegisterPage = () => {
                     />
                   </div>
 
-                  <div style={{ marginBottom: "0px" }}>
-                    <CommonInputField
-                      label="Email"
-                      name="email"
-                      mandotary={true}
-                      placeholder="Enter your email"
-                      prefix={
-                        <MailOutlined
-                          style={{ color: "rgba(0, 0, 0, 0.25)" }}
-                        />
-                      }
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setEmailError(emailValidator(e.target.value));
-                      }}
-                      error={emailError}
-                    />
-                  </div>
+                  {activeTab === "recruiter" && (
+                    <div style={{ marginBottom: "0px" }}>
+                      <CommonInputField
+                        label="Official Email"
+                        name="officialemail"
+                        mandotary={true}
+                        placeholder="Enter your official email"
+                        prefix={
+                          <MailOutlined
+                            style={{ color: "rgba(0, 0, 0, 0.25)" }}
+                          />
+                        }
+                        value={officialEmail}
+                        onChange={(e) => {
+                          setOfficialEmail(e.target.value);
+                          setOfficialEmailError(
+                            officialEmailValidator(e.target.value)
+                          );
+                        }}
+                        error={officialEmailError}
+                      />
+                    </div>
+                  )}
+
+                  {activeTab === "candidate" && (
+                    <div style={{ marginBottom: "0px" }}>
+                      <CommonInputField
+                        label="Email"
+                        name="email"
+                        mandotary={true}
+                        placeholder="Enter your email"
+                        prefix={
+                          <MailOutlined
+                            style={{ color: "rgba(0, 0, 0, 0.25)" }}
+                          />
+                        }
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          setEmailError(emailValidator(e.target.value));
+                        }}
+                        error={emailError}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {activeTab === "recruiter" && (

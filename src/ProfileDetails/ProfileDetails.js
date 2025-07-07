@@ -3,19 +3,16 @@ import {
   Form,
   Steps,
   Divider,
-  Input,
   Card,
   Typography,
   Button,
   Avatar,
   Progress,
   Modal,
-  Select,
-  Flex,
   Checkbox,
   message,
   DatePicker,
-  Space,
+  Input,
   Spin,
   Tag,
 } from "antd";
@@ -32,7 +29,6 @@ import { IoMdAdd } from "react-icons/io";
 import { Country, State, City } from "country-state-city";
 import { auth } from "../firebase/firebaseConfig";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import "../css/ProfileDetailsPage.css";
@@ -41,7 +37,6 @@ import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
 import CommonTextArea from "../Common/CommonTextArea";
 import {
-  countryValidator,
   emailValidator,
   nameValidator,
   pincodeValidator,
@@ -49,6 +44,11 @@ import {
 } from "../Common/Validation";
 import { phoneValidation } from "../Common/Validation";
 import CommonDatePicker from "../Common/CommonDatePicker";
+import {
+  insertProfileData,
+  verifyEmail,
+  verifyOtp,
+} from "../ApiService/action";
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -57,6 +57,7 @@ dayjs.extend(customParseFormat);
 
 const ProfileDetails = () => {
   const [form] = Form.useForm();
+
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(25);
   const [fname, setFname] = useState("");
@@ -73,23 +74,20 @@ const ProfileDetails = () => {
   const [pincodeError, setPincodeError] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [currentlyWorking, setCurrentlyWorking] = useState(false);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
   const [countryList, setCountryList] = useState([]);
   const [country, setCountry] = useState([]);
   const [countryError, setCountryError] = useState("");
   const [countryId, setCountryId] = useState(null);
   const [state, setState] = useState("");
   const [stateError, setStateError] = useState("");
-  const [stateId, setStateId] = useState(null);
-  const [countryIdError, setCountryIdError] = useState(null);
   const [stateList, setStateList] = useState([]);
   const [city, setCity] = useState("");
   const [cityError, setCityError] = useState("");
   const [cityList, setCityList] = useState([]);
   const [selectedState, setSelectedState] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
+  const [address, setAddress] = useState("");
+  const [open, setOpen] = useState(false);
 
   // 2
   const [selectExperienceType, setSelectExperienceType] = useState("");
@@ -104,7 +102,6 @@ const ProfileDetails = () => {
   const [jobTitle, setJobTitle] = useState("");
   const [jobTitleError, setJobTitleError] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [companyNameError, setCompanyNameError] = useState("");
   const [designation, setDesignation] = useState("");
   const [designationError, setDesignationError] = useState("");
 
@@ -121,6 +118,11 @@ const ProfileDetails = () => {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [customSkill, setCustomSkill] = useState("");
   const [skillsError, setSkillsError] = useState(null);
+  const [startDateError, setstartDateError] = useState("");
+  const [endDateError, setendDateError] = useState("");
+  const [loginUserId, setLoginUserId] = useState(null);
+  const [loading, setLoading] = React.useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
 
   const initializeRecaptcha = useCallback(async () => {
     try {
@@ -211,6 +213,22 @@ const ProfileDetails = () => {
     }
   }, []);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+        setFname(loginDetails.first_name);
+        setLname(loginDetails.last_name);
+        setEmail(loginDetails.email);
+        setNumber(loginDetails.phone);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, []);
+
   const handleCountryChange = (countryCode) => {
     const country = countryList.find((c) => c.isoCode === countryCode);
     setCountryId(country);
@@ -250,11 +268,19 @@ const ProfileDetails = () => {
     setSelectedCity(cityName);
     form.setFieldsValue({ city: cityName });
   };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+
     if (file) {
-      const imageURL = URL.createObjectURL(file);
-      setProfileImage(imageURL);
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setProfileImage(base64String);
+      };
+
+      reader.readAsDataURL(file);
     }
   };
 
@@ -272,103 +298,8 @@ const ProfileDetails = () => {
     setCompanies(updatedCompanies);
   };
 
-  const sendOtp = async () => {
-    try {
-      setOtpSending(true);
-      setOtpError(null);
-
-      // Ensure recaptcha is ready
-      if (!recaptchaVerifier) {
-        message.error("reCAPTCHA not initialized. Please wait...");
-        await initializeRecaptcha();
-        return;
-      }
-
-      let phoneNumber = form.getFieldValue("number");
-      if (!phoneNumber) {
-        message.error("Please enter a phone number");
-        return;
-      }
-
-      // Clean and validate phone number
-      phoneNumber = phoneNumber.replace(/\D/g, ""); // Remove all non-digit characters
-
-      // Check for valid Indian mobile number
-      if (phoneNumber.length !== 10 || !phoneNumber.match(/^[6-9]\d{9}$/)) {
-        message.error("Please enter a valid 10-digit Indian mobile number");
-        return;
-      }
-
-      // Format for Firebase (India country code)
-      const formattedPhoneNumber = `+91${phoneNumber}`;
-
-      message.loading("Sending OTP...", 0);
-
-      try {
-        // Verify recaptcha is ready
-        await recaptchaVerifier.verify();
-
-        const result = await signInWithPhoneNumber(
-          auth,
-          formattedPhoneNumber,
-          recaptchaVerifier
-        );
-
-        message.destroy();
-        setConfirmationResult(result);
-        setOtpModalOpen(true);
-        message.success("OTP sent successfully!");
-      } catch (error) {
-        console.error("OTP send error:", error);
-        message.destroy();
-
-        if (error.code === "auth/too-many-requests") {
-          message.error("Too many attempts. Please try again later.");
-        } else {
-          message.error(error.message || "Failed to send OTP");
-        }
-
-        // Reset recaptcha
-        if (window.recaptchaVerifier) {
-          window.recaptchaVerifier.clear();
-        }
-        setRecaptchaReady(false);
-        await initializeRecaptcha();
-      }
-    } catch (error) {
-      console.error("Unexpected error in sendOtp:", error);
-      message.error("An unexpected error occurred");
-    } finally {
-      setOtpSending(false);
-    }
-  };
-
-  const verifyOtp = async () => {
-    try {
-      setOtpError(null);
-      if (!otp || otp.length !== 6) {
-        setOtpError("Please enter a valid 6-digit OTP");
-        return;
-      }
-
-      message.loading("Verifying OTP...", 0);
-      await confirmationResult.confirm(otp);
-
-      message.destroy();
-      message.success("Phone number verified successfully.");
-      setNumberVerified("Verified");
-      setOtpModalOpen(false);
-
-      if (currentStep < stepItems.length - 1) {
-        setCurrentStep(currentStep + 1);
-        setProgress(progress + 25);
-      }
-    } catch (error) {
-      console.error("OTP verification failed:", error);
-      message.destroy();
-      setOtpError("Invalid OTP. Please try again.");
-      setOtp("");
-    }
+  const handleModalClose = () => {
+    setOpen(false);
   };
 
   const nextStep = (e) => {
@@ -377,111 +308,212 @@ const ProfileDetails = () => {
     // Run validators again
 
     if (currentStep === 0) {
-      const fnameValidate = nameValidator(fname);
-      const lnameValidate = nameValidator(lname);
-      const emailValidate = emailValidator(email);
-      const phoneValidate = phoneValidation(number);
-      const pincodeValidate = pincodeValidator(pincode);
-      const countryValidate = selectValidator(countryId);
-      const stateValidate = selectValidator(state);
-      const cityValidate = selectValidator(city);
+      ProfileInfoValidate();
+    } else if (currentStep === 1) {
+      ProfessionalInfoValidate();
+    }
+  };
 
-      setFnameError(fnameValidate);
-      setLnameError(lnameValidate);
-      setEmailError(emailValidate);
-      setNumberError(phoneValidate);
-      setPincodeError(pincodeValidate);
-      setCountryError(countryValidate);
-      setStateError(stateValidate);
-      setCityError(cityValidate);
+  const ProfileInfoValidate = () => {
+    const fnameValidate = nameValidator(fname);
+    const lnameValidate = nameValidator(lname);
+    const emailValidate = emailValidator(email);
+    const phoneValidate = phoneValidation(number);
+    const pincodeValidate = pincodeValidator(pincode);
+    const countryValidate = selectValidator(countryId);
+    const stateValidate = selectValidator(state);
+    const cityValidate = selectValidator(city);
+
+    setFnameError(fnameValidate);
+    setLnameError(lnameValidate);
+    setEmailError(emailValidate);
+    setNumberError(phoneValidate);
+    setPincodeError(pincodeValidate);
+    setCountryError(countryValidate);
+    setStateError(stateValidate);
+    setCityError(cityValidate);
+
+    if (
+      // fnameValidate ||
+      // lnameValidate ||
+      // emailValidate ||
+      // phoneValidate ||
+      // pincodeValidate ||
+      // countryValidate ||
+      // stateValidate ||
+      // cityValidate
+      ""
+    ) {
+      message.error("Please fill all fields correctly before proceeding.");
+      return;
+    } else {
+      setCurrentStep(1);
+      setProgress(25);
+    }
+    setEmailVerified("Verified");
+  };
+
+  const ProfessionalInfoValidate = () => {
+    const selectExperienceTypeValidate = selectValidator(selectExperienceType);
+
+    let skillsValidate = "";
+    if (selectedSkills.length <= 0) {
+      skillsValidate = " is required";
+    } else {
+      skillsValidate = "";
+    }
+
+    setSelectExperienceTypeError(selectExperienceTypeValidate);
+    setSkillsError(skillsValidate);
+
+    let experienceErrors = false;
+    if (selectExperienceType === "Experience") {
+      const totalYearsExperienceValidate =
+        selectValidator(totalYearsExperience);
+      const totalMonthsExperienceValidate = selectValidator(
+        totalMonthsExperience
+      );
+      const jobTitleValidate = nameValidator(jobTitle);
+
+      setTotalYearsExperienceError(totalYearsExperienceValidate);
+      setTotalMonthsExperienceError(totalMonthsExperienceValidate);
+      setJobTitleError(jobTitleValidate);
+
+      const validateCompanyFields = companies.map((item, index) => {
+        return {
+          ...item,
+          companyNameError: nameValidator(item.companyName),
+          designationError: nameValidator(item.designation),
+          startDateError: selectValidator(item.startDate),
+          endDateError:
+            item.currentlyWorking === true ? "" : selectValidator(item.endDate),
+        };
+      });
+
+      console.log("valllllll", validateCompanyFields);
+      setCompanies(validateCompanyFields);
+
+      validateCompanyFields.map((err) => {
+        if (
+          err.companyNameError ||
+          err.designationError ||
+          err.startDateError ||
+          err.endDateError
+        ) {
+          experienceErrors = true;
+        }
+      });
 
       if (
-        fnameValidate ||
-        lnameValidate ||
-        emailValidate ||
-        phoneValidate ||
-        pincodeValidate ||
-        countryValidate ||
-        stateValidate ||
-        cityValidate
+        // selectExperienceTypeValidate ||
+        // totalYearsExperienceValidate ||
+        // totalMonthsExperienceValidate ||
+        // jobTitleValidate ||
+        // skillsValidate ||
+        // experienceErrors
+        ""
+      ) {
+        message.error("Please fill all fields correctly before proceeding.");
+        return;
+      }
+    } else {
+      if (
+        // selectExperienceTypeValidate || skillsValidate || experienceErrors
+        ""
       ) {
         message.error("Please fill all fields correctly before proceeding.");
         return;
       }
     }
 
-    if (currentStep === 1 || experienceType === "Experience") {
-      const selectExperienceTypeValidate =
-        selectValidator(selectExperienceType);
+    setCurrentStep(2);
+    setProgress(50);
+  };
 
-      setSelectExperienceTypeError(selectExperienceTypeValidate);
+  const doneProfile = async () => {
+    const professional = companies.map((company) => ({
+      experience_type: selectExperienceType,
+      total_years: totalYearsExperience,
+      total_months: totalMonthsExperience,
+      job_title: company.designation,
+      company_name: company.companyName,
+      designation: company.designation,
+      start_date: company.startDate,
+      end_date: company.endDate,
+      currently_working: company.currentlyWorking,
+      skills: selectedSkills,
+    }));
 
-      let experienceErrors = false;
-      if (selectExperienceType === "Experience") {
-        const totalYearsExperienceValidate =
-          selectValidator(totalYearsExperience);
-        const totalMonthsExperienceValidate = selectValidator(
-          totalMonthsExperience
-        );
-        const jobTitleValidate = nameValidator(jobTitle);
-        // const companyNameValidate = nameValidator(companyName);
-        // const designationValidate = nameValidator(designation);
+    const payload = {
+      profile_image: profileImage,
+      user_id: loginUserId,
+      country: country,
+      state: state,
+      city: city,
+      pincode: pincode,
+      address: address,
+      professional,
+      is_email_verified: "verified",
+    };
 
-        setTotalYearsExperienceError(totalYearsExperienceValidate);
-        setTotalMonthsExperienceError(totalMonthsExperienceValidate);
-        setJobTitleError(jobTitleValidate);
-
-        let companyErrors = [];
-        const validateCompanyFields = companies.map((item, index) => {
-          return {
-            ...item,
-            companyNameError: nameValidator(item.companyName),
-            designationError: nameValidator(item.designation),
-            startDateError: selectValidator(item.startDate),
-            endDateError:
-              item.currentlyWorking === true
-                ? ""
-                : selectValidator(item.endDate),
-          };
-        });
-
-        console.log("valllllll", validateCompanyFields);
-        setCompanies(validateCompanyFields);
-
-        companyErrors = validateCompanyFields.filter(
-          (f) =>
-            f.companyNameError !== "" ||
-            f.designationError !== "" ||
-            f.startDateError !== "" ||
-            f.endDateError !== ""
-        );
-        console.log("errrrrr", companyErrors);
-
-        if (
-          selectExperienceTypeValidate ||
-          totalYearsExperienceValidate ||
-          totalMonthsExperienceValidate ||
-          jobTitleValidate ||
-          companyErrors.length >= 1
-        ) {
-          message.error("Please fill all fields correctly before proceeding.");
-          return;
-        }
-      }
-
-      // Validate skills (required for both fresher and experience)
-      const skillsError =
-        selectedSkills.length === 0 ? "Please add at least one skill" : null;
-
-      if (selectExperienceTypeValidate || experienceErrors || skillsError) {
-        message.error("Please add at least one skill");
-        return;
-      }
+    try {
+      const response = await insertProfileData(payload);
+      console.log("my profile", response);
+      message.success("Profile inserted successfully!");
+    } catch (error) {
+      console.log("my profile error", error);
+      message.error("Fill all the required fields");
     }
+  };
 
-    if (currentStep < stepItems.length - 1) {
-      setCurrentStep(currentStep + 1);
-      setProgress(progress + 25);
+  // verify email
+
+  const verifyEmailData = async () => {
+    const verifyEmailLoad = {
+      email: email,
+    };
+
+    try {
+      setOtpSending(true);
+      setOtpError(null);
+      setOtp("");
+      const response = await verifyEmail(verifyEmailLoad);
+      console.log("verify email", response);
+      message.success(response?.data?.message);
+      setProgress(50);
+    } catch (error) {
+      console.log("verify email error", error);
+      message.error(error?.data?.message);
+    } finally {
+      setOtpSending(false);
+      setOpen(true);
+    }
+  };
+
+  // Step 2: Verify OTP
+  const handleVerifyOtp = async () => {
+    try {
+      const payload = {
+        email: email,
+        otp: otp,
+      };
+      setLoading(true);
+      const res = await verifyOtp(payload);
+      if (res?.data?.message) {
+        message.success("OTP verified");
+        setTimeout(() => {
+          setOpen(false);
+        }, 500);
+        setProgress(75);
+        // setCurrentStep(3);
+      } else {
+        message.error(res?.data?.message || "Invalid OTP");
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Error verifying OTP");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -621,16 +653,18 @@ const ProfileDetails = () => {
               <div className="form-row">
                 <div className="form-group">
                   <CommonInputField
-                    name={"First Name"}
+                    name="firstName"
                     label="First Name"
                     mandotary={true}
-                    placeholder={"Enter your first name"}
-                    type={"text"}
+                    placeholder="Enter your first name"
+                    type="text"
                     value={fname}
                     onChange={(e) => {
                       setFname(e.target.value);
                       setFnameError(nameValidator(e.target.value));
                     }}
+                    readOnly={true}
+                    disabled={true}
                     error={fnameError}
                   />
                 </div>
@@ -646,6 +680,8 @@ const ProfileDetails = () => {
                       setLname(e.target.value);
                       setLnameError(nameValidator(e.target.value));
                     }}
+                    readOnly={true}
+                    disabled={true}
                     error={lnameError}
                   />
                 </div>
@@ -662,6 +698,8 @@ const ProfileDetails = () => {
                     setEmail(e.target.value);
                     setEmailError(emailValidator(e.target.value));
                   }}
+                  readOnly={true}
+                  disabled={true}
                   error={emailError}
                 />
               </div>
@@ -677,6 +715,8 @@ const ProfileDetails = () => {
                     setNumber(e.target.value);
                     setNumberError(phoneValidation(e.target.value));
                   }}
+                  readOnly={true}
+                  disabled={true}
                   error={numberError}
                 />
               </div>
@@ -759,6 +799,10 @@ const ProfileDetails = () => {
                 <CommonTextArea
                   label={"Address"}
                   name={"address"}
+                  value={address}
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                  }}
                   placeholder={"Enter Your Address"}
                 />
               </div>
@@ -800,7 +844,7 @@ const ProfileDetails = () => {
                   error={selectExperienceTypeError}
                 />
               </div>
-              {(experienceType === "Experience" || experienceType === null) && (
+              {experienceType === "Experience" && (
                 <div className="forexprience">
                   <div className="form-row">
                     <div className="form-group">
@@ -1030,7 +1074,6 @@ const ProfileDetails = () => {
                       >
                         <Checkbox
                           checked={company.currentlyWorking}
-                          // onChange={(e) => handleCheckboxChange(index, e)}
                           onChange={(e) =>
                             handleCompanyFields(
                               index,
@@ -1083,7 +1126,10 @@ const ProfileDetails = () => {
                   onPressEnter={handleCustomSkillAdd}
                   value={customSkill}
                   name={"skills"}
-                  onChange={(e) => setCustomSkill(e.target.value)}
+                  onChange={(e) => {
+                    setCustomSkill(e.target.value);
+                    setSkillsError(selectValidator(e.target.value));
+                  }}
                   mandotary={true}
                   placeholder={
                     "List your skills here, showcasing what you excel at."
@@ -1121,21 +1167,18 @@ const ProfileDetails = () => {
                   />
                 )}
                 <Text strong>Email Verification</Text>
-                <Text
-                  type={
-                    emailVerified === "Verified"
-                      ? "success"
-                      : emailVerified
-                      ? "danger"
-                      : "secondary"
-                  }
-                  style={{ marginLeft: "auto" }}
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={verifyEmailData}
+                  className="nav-btn next-btn"
+                  loading={otpSending}
                 >
-                  {emailVerified || "Not Checked"}
-                </Text>
+                  Verify Email
+                </Button>
               </div>
               <Divider />
-              <div
+              {/* <div
                 className="verification-item"
                 style={{ display: "flex", alignItems: "center", gap: 12 }}
               >
@@ -1170,12 +1213,7 @@ const ProfileDetails = () => {
                 >
                   {numberVerified || "Not Checked"}
                 </Text>
-              </div>
-              <div
-                id="recaptcha-container"
-                ref={recaptchaContainerRef}
-                style={{ display: "none" }}
-              ></div>
+              </div> */}
             </div>
           </Card>
         </div>
@@ -1252,29 +1290,7 @@ const ProfileDetails = () => {
           )}
 
           {currentStep === 2 ? (
-            <Button
-              type="primary"
-              size="large"
-              onClick={sendOtp}
-              className="nav-btn next-btn"
-              disabled={
-                numberVerified === "Verified" || !recaptchaReady || otpSending
-              }
-              loading={otpSending}
-            >
-              {numberVerified === "Verified" ? (
-                "Verified"
-              ) : otpSending ? (
-                "Sending OTP..."
-              ) : recaptchaReady ? (
-                "Send OTP"
-              ) : (
-                <>
-                  <Spin size="small" style={{ marginRight: 8 }} />
-                  Preparing verification...
-                </>
-              )}
-            </Button>
+            ""
           ) : currentStep < stepItems.length - 1 ? (
             <Button
               type="primary"
@@ -1285,44 +1301,38 @@ const ProfileDetails = () => {
               Next Step
             </Button>
           ) : null}
+
+          {/* <Button
+            type="primary"
+            size="large"
+            onClick={doneProfile}
+            className="nav-btn next-btn"
+          >
+            send profile
+          </Button> */}
         </div>
         <Modal
-          title="Enter OTP"
-          open={otpModalOpen}
-          onCancel={() => {
-            setOtpModalOpen(false);
-            setOtp("");
-          }}
-          footer={[
-            <Button
-              key="back"
-              onClick={() => {
-                setOtpModalOpen(false);
-                setOtp("");
-              }}
-            >
-              Cancel
-            </Button>,
-            <Button
-              key="submit"
-              type="primary"
-              onClick={verifyOtp}
-              disabled={otp.length !== 6}
-            >
-              Verify OTP
-            </Button>,
-          ]}
+          title="Forgot Password"
+          open={open}
+          onCancel={handleModalClose}
+          footer={null}
         >
-          <Input.OTP
-            value={otp}
-            onChange={setOtp}
-            length={6}
-            inputType="number"
-            style={{ justifyContent: "center" }}
-          />
-          {otpError && (
-            <div style={{ color: "red", marginTop: 10 }}>{otpError}</div>
-          )}
+          <>
+            <Typography.Title level={5}>Enter OTP</Typography.Title>
+            <Input.OTP value={otp} onChange={(val) => setOtp(val)} />
+            <br></br>
+            <div style={{ textAlign: "start" }}>
+              <Button
+                style={{ marginTop: 20 }}
+                className="sendOtp"
+                type="primary"
+                loading={loading}
+                onClick={handleVerifyOtp}
+              >
+                Verify OTP
+              </Button>
+            </div>
+          </>
         </Modal>
       </Form>
     </div>

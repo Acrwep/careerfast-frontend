@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Modal } from "antd";
+import { PauseCircleFilled } from "@ant-design/icons";
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
@@ -12,12 +13,8 @@ let modalInstance = null;
 api.interceptors.request.use(
   (config) => {
     const AccessToken = localStorage.getItem("AccessToken");
-    const expired = isTokenExpired(AccessToken);
-    console.log("my token", AccessToken);
-    if (expired === true) {
-      ShowModal();
-      return Promise.reject(new Error("Token is expired"));
-    }
+    // console.log("my token", AccessToken);
+
     // const loginDetails = localStorage.getItem("loginDetails");
     // console.log("login details", loginDetails);
 
@@ -27,6 +24,11 @@ api.interceptors.request.use(
     // }
 
     if (AccessToken) {
+      const expired = isTokenExpired(AccessToken);
+      if (expired === true) {
+        ShowModal();
+        return Promise.reject(new Error("Token is expired"));
+      }
       config.headers.Authorization = `Bearer ${AccessToken}`;
     }
     return config;
@@ -258,6 +260,60 @@ export const closeRegistration = async (token) => {
         },
       }
     );
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// forgot pass
+
+// Step 1: Send OTP
+export const sendOtp = async (payload) => {
+  try {
+    const response = await api.post("/api/sendOTP", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Step 2: Verify OTP
+export const verifyOtp = async (payload) => {
+  try {
+    const response = await api.post("/api/verifyOTP", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Step 3: Reset Password
+export const forgotPassword = async (payload) => {
+  try {
+    const response = await api.put("/api/forgotPassword", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// insert profile
+
+export const insertProfileData = async (payload) => {
+  try {
+    const response = await api.post("/api/insertProfile", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// verify email
+
+export const verifyEmail = async (payload) => {
+  try {
+    const response = await api.post("/api/VerifyEmail", payload);
     return response;
   } catch (error) {
     throw error;
