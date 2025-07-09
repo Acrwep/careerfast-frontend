@@ -94,7 +94,7 @@ export const genderValidator = (genderValue) => {
 };
 
 export const userTypeValidator = (userTypeValue) => {
-  if (!userTypeValue || userTypeValue.trim().length === 0) {
+  if (!userTypeValue || userTypeValue.length <= 0) {
     return "User type is required.";
   }
   return "";

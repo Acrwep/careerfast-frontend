@@ -1,6 +1,5 @@
 import axios from "axios";
 import { Modal } from "antd";
-import { PauseCircleFilled } from "@ant-design/icons";
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
@@ -99,6 +98,17 @@ const handleSessionModal = () => {
     modalInstance = null;
   }
   isModalVisible = false;
+};
+
+// getRoles
+
+export const getRoles = async () => {
+  try {
+    const response = await api.get("/api/getRoles");
+    return response;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const login = async (payload) => {
@@ -314,6 +324,74 @@ export const insertProfileData = async (payload) => {
 export const verifyEmail = async (payload) => {
   try {
     const response = await api.post("/api/VerifyEmail", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getJobPostByUserId
+
+export const getJobPostByUserId = async (payload) => {
+  try {
+    const response = await api.get("/api/getJobPostByUserId", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getUserType
+
+export const getUserTypeData = async () => {
+  try {
+    const response = await api.get("api/getUserType");
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// updateResume
+
+export const updateResume = async (payload) => {
+  try {
+    const response = await api.put("api/updateResume", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// updateAbout
+
+export const updateAbout = async (payload) => {
+  try {
+    const response = await api.put("api/updateAbout", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// updateSkills
+
+export const updateSkills = async (payload) => {
+  try {
+    const response = await api.put("api/updateSkills", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// insertProjects
+
+export const insertProjects = async (payload) => {
+  try {
+    const response = await api.post("/api/insertProjects", payload);
     return response;
   } catch (error) {
     throw error;

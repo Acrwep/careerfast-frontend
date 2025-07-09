@@ -130,7 +130,7 @@ const RegisterPage = () => {
       organization: orgName,
       organization_type_id: orgType,
       role_id:
-        activeTab === "candidate" ? 2 : activeTab === "recruiter" ? 2 : 3,
+        activeTab === "candidate" ? 2 : activeTab === "recruiter" ? 3 : 1,
     };
 
     console.log("registerload", registerload);

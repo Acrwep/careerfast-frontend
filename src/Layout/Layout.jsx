@@ -59,7 +59,11 @@ const Layout = () => {
         navigate(`/${pathName}`);
       }
     } else {
-      navigate("/login");
+      if (pathName === "register") {
+        navigate("/register");
+      } else {
+        navigate("/login");
+      }
     }
   }, [location.pathname]);
 

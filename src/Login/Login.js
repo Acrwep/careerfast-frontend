@@ -27,8 +27,12 @@ import {
 import CommonInputField from "../Common/CommonInputField";
 import CommonPasswordField from "../Common/CommonPasswordField";
 import { login } from "../ApiService/action";
-import { verifyOtp, forgotPassword, sendOtp } from "../ApiService/action";
-
+import {
+  verifyOtp,
+  forgotPassword,
+  sendOtp,
+  getRoles,
+} from "../ApiService/action";
 const { Title, Text, Link } = Typography;
 
 const LoginPage = () => {
@@ -54,6 +58,7 @@ const LoginPage = () => {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [rememberMe, setRememberMe] = useState(false);
+  const [roleId, setRoleId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -69,6 +74,10 @@ const LoginPage = () => {
       setEmail(storedEmail);
       setRememberMe(true);
     }
+  }, []);
+
+  useEffect(() => {
+    getRoleSData();
   }, []);
 
   const showLoading = () => {
@@ -100,6 +109,23 @@ const LoginPage = () => {
     setNewPasswordError("");
   };
 
+  const getRoleSData = async () => {
+    try {
+      const response = await getRoles();
+      const roles = response.data.data || [];
+      console.log("role id", roles);
+
+      const candidate = roles.find((role) => role.name === "CANDIDATE");
+      const recruiter = roles.find((role) => role.name === "RECRUITER");
+      if (activeTab === "candidate" && candidate) setRoleId(candidate.id);
+      else if (activeTab === "recruiter" && recruiter) {
+        setRoleId(recruiter.id);
+      }
+    } catch (error) {
+      console.log("Role id error", error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -124,6 +150,7 @@ const LoginPage = () => {
     const payload = {
       email: activeTab === "recruiter" ? officialEmail : email,
       password: password,
+      role_id: roleId,
     };
     try {
       const response = await login(payload);
@@ -290,6 +317,7 @@ const LoginPage = () => {
                   setActiveTab(value);
                   setEmail("");
                   setEmailError("");
+                  setOfficialEmail("");
                   setOfficialEmailError("");
                   setPassword("");
                   setPasswordError("");

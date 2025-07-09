@@ -7,10 +7,8 @@ export default function CommonTextArea({
   name,
   mandatory,
   value,
-  errormessage,
   label,
   error,
-  message,
   onChange,
   clasname = "premium-input",
   text,
@@ -22,11 +20,7 @@ export default function CommonTextArea({
         layout="vertical"
         label={<span style={{ fontWeight: 500 }}>{label}</span>}
         name={name}
-        rules={[
-          {
-            required: { mandatory },
-          },
-        ]}
+        mandatory={mandatory}
       >
         <TextArea
           style={style}

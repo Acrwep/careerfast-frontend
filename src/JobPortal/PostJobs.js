@@ -16,6 +16,8 @@ import {
   Divider,
   Card,
   message,
+  Drawer,
+  Checkbox,
 } from "antd";
 import {
   UserOutlined,
@@ -26,7 +28,10 @@ import {
   CoffeeOutlined,
 } from "@ant-design/icons";
 import { HiMiniComputerDesktop } from "react-icons/hi2";
+import { IoMdAdd } from "react-icons/io";
+import { QuestionCircleOutlined } from "@ant-design/icons";
 import { MdOutlineEventNote } from "react-icons/md";
+import { MdDeleteForever } from "react-icons/md";
 import { TbContract } from "react-icons/tb";
 import { PiOfficeChairLight } from "react-icons/pi";
 import { FaPersonCircleExclamation } from "react-icons/fa6";
@@ -41,7 +46,11 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
-import { nameValidator, selectValidator } from "../Common/Validation";
+import {
+  nameValidator,
+  selectValidator,
+  userTypeValidator,
+} from "../Common/Validation";
 import { useNavigate } from "react-router-dom"; // For navigation
 import { State, City } from "country-state-city";
 import {
@@ -57,6 +66,7 @@ import {
   getYears,
   getSkillsData,
   getJobCategoryData,
+  createJobPost,
 } from "../ApiService/action";
 const { Option } = Select;
 const { Group: InputGroup } = Input;
@@ -75,7 +85,7 @@ export default function PostJobs() {
   const [experienceRequired, setExperienceRequired] = useState("");
   const [salaryTypeActiveButton, setSalaryTypeActiveButton] = useState(null);
   const [diversityenabled, setDiversityEnabled] = useState(true);
-  const [genderselected, setGenderSelected] = useState("All");
+  const [genderselected, setGenderSelected] = useState([]);
   const [showMore, setShowMore] = useState(false);
   const [selectedBenefits, setSelectedBenefits] = useState([]);
   //
@@ -132,7 +142,18 @@ export default function PostJobs() {
   const [jobDescription, setJobDescription] = useState("");
 
   const [workLocationOption, setWorkLocationOption] = useState([]);
+  const [openQuestionModal, setOpenQuestionModal] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [openDrawer, setOpenDrawer] = useState(false);
+  const [questions, setQuestions] = useState([
+    {
+      id: Date.now(),
+      question: "",
+      error: "",
+      isrequired: false,
+    },
+  ]);
 
   const [touched, setTouched] = useState(false); // to control initial error
 
@@ -149,15 +170,6 @@ export default function PostJobs() {
   ];
 
   const indianStates = State.getStatesOfCountry("IN");
-
-  const allIndianCities = indianStates.flatMap((state) =>
-    City.getCitiesOfState("IN", state.isoCode)
-  );
-
-  const formattedCities = allIndianCities.map((city) => ({
-    label: city.name,
-    value: city.name,
-  }));
 
   useEffect(() => {
     getJobNatureData();
@@ -361,16 +373,22 @@ export default function PostJobs() {
     setIsModalVisible(true);
   };
 
-  const handleTagClick = (tag) => {
-    setGenderSelected(tag);
-  };
-
   const toggleBenefitSelection = (key) => {
     setSelectedBenefits((prevSelected) =>
       prevSelected.includes(key)
         ? prevSelected.filter((item) => item !== key)
         : [...prevSelected, key]
     );
+  };
+
+  const handleTagClick = (id) => {
+    setGenderSelected((prevSelected) => {
+      if (prevSelected.includes(id)) {
+        return prevSelected.filter((gid) => gid !== id); // remove if already selected
+      } else {
+        return [...prevSelected, id]; // add if not selected
+      }
+    });
   };
 
   const visibleBenefits = showMore ? otherBenifits : otherBenifits.slice(0, 4);
@@ -416,7 +434,7 @@ export default function PostJobs() {
     setValue(aiContent);
   };
 
-  const handlePublishPost = (e) => {
+  const handleCheckValidation = async (e) => {
     e.preventDefault();
     // setIsLoading(true);
 
@@ -468,16 +486,11 @@ export default function PostJobs() {
     if (hasPostJobError) {
       console.log("error publish the post");
       message.error("Please fill all fields correctly before proceeding.");
+      setOpenQuestionModal(false);
       return;
+    } else {
+      setOpenQuestionModal(true);
     }
-
-    console.log("All validations passed");
-    const getUserDetails = JSON.parse(localStorage.getItem("loginDetails"));
-    console.log("user details", getUserDetails);
-
-    const getDurationName = internShipDuration.find(
-      (f) => f.id === selectedDurationId
-    );
 
     if (salaryDetails === 2) {
       if (!salaryMin || !salaryMax) {
@@ -490,12 +503,68 @@ export default function PostJobs() {
         return;
       }
     }
+  };
+
+  const handleOk = () => {
+    setConfirmLoading(true);
+    setTimeout(() => {
+      setOpenQuestionModal(false);
+      setConfirmLoading(false);
+      setOpenDrawer(true);
+    }, 2000);
+  };
+
+  const onClose = () => {
+    setOpenQuestionModal(false);
+    setOpenDrawer(false);
+  };
+
+  const handleAddQuestions = () => {
+    setQuestions([
+      ...questions,
+      {
+        id: Date.now(),
+        question: "",
+        isrequired: false,
+        error: "",
+      },
+    ]);
+  };
+
+  const handleQuestionChange = (index, fieldName, value) => {
+    const updated = [...questions];
+    updated[index][fieldName] = value;
+
+    if (fieldName === "question" && value.trim() !== "") {
+      updated[index].error = "";
+    }
+
+    setQuestions(updated);
+  };
+
+  const handleRemoveQuestion = (id) => {
+    if (questions.length === 1) return;
+    setQuestions((prevQuestions) => prevQuestions.filter((q) => q.id !== id));
+  };
+
+  const generatePayload = () => {
+    const getUserDetails = JSON.parse(localStorage.getItem("loginDetails"));
+
+    const getDurationName = internShipDuration.find(
+      (f) => f.id === selectedDurationId
+    );
 
     const allBenefitsData = otherBenifits
       .filter((b) => selectedBenefits.includes(b.id))
       .map((b) => b.name);
 
-    const payload = {
+    const allDiversity = gender
+      .filter((d) => genderselected.includes(d.id))
+      .map((d) => d.name);
+
+    console.log(allDiversity);
+
+    return {
       user_id: getUserDetails.id,
       company_name: companyName,
       company_logo: profileImage,
@@ -524,7 +593,6 @@ export default function PostJobs() {
           : workplaceType === 3
           ? "On Field"
           : "",
-
       work_location:
         workLocation === 1
           ? specificLocation
@@ -554,47 +622,67 @@ export default function PostJobs() {
               min: salaryMin,
               max: salaryMax,
             },
-      diversity_hiring:
-        genderData === 1
-          ? "Male"
-          : genderData === 2
-          ? "Female"
-          : genderData === 3
-          ? "Transgender"
-          : genderData === 4
-          ? "Intersex"
-          : genderData === 5
-          ? "Non-binary"
-          : genderData === 6
-          ? "Others"
-          : "",
+      diversity_hiring: allDiversity,
       benefits: allBenefitsData,
       created_at: fetchDateTime,
       openings: jobOpenings,
       working_days: workingDaysName,
       job_description: jobDescription,
     };
+  };
 
-    // Prepare final payload
-    // const postJobData = {
-    //   companyName,
-    //   jobTitle,
-    //   jobNatureId,
-    //   workplaceType,
-    //   jobCategory,
-    //   skillsRequired,
-    //   salaryDetails,
-    //   ...(jobNatureId === "Internship" && {
-    //     jobInternshipDuration,
-    //   }),
-    //   eligibility,
-    //   workLocation,
-    // };
+  const validateQuestions = () => {
+    const updated = questions.map((q) => {
+      if (!q.question.trim()) {
+        return { ...q, error: "This question is invalid." };
+      }
+      return { ...q, error: "" };
+    });
 
-    setTimeout(() => {
-      message.success("Job Posted Successfully.");
-      navigate("/job-portal");
-    }, 1000);
+    setQuestions(updated);
+
+    // Return true if all are valid
+    return updated.every((q) => !q.error);
+  };
+
+  const handlePublishPostWithQuestions = async () => {
+    const isValid = validateQuestions();
+    if (!isValid) {
+      message.error("Please fix all question errors before publishing.");
+      return;
+    }
+
+    const payload = {
+      ...generatePayload(),
+      questions: questions,
+    };
+
+    await publish(payload);
+  };
+
+  const handlePublishPostWithoutQuestions = async () => {
+    const payload = {
+      ...generatePayload(),
+      questions: [],
+    };
+
+    await publish(payload);
+  };
+
+  const publish = async (payload) => {
+    try {
+      const response = await createJobPost(payload);
+      console.log("posted job", response);
+
+      setIsLoading(true);
+      setTimeout(() => {
+        message.success("Job Posted Successfully.");
+        navigate("/job-portal");
+        setIsLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error("Error posting job", error);
+    }
   };
 
   const handleFresherPassClick = (item) => {
@@ -1051,7 +1139,7 @@ export default function PostJobs() {
                       onClick={() => {
                         setExperienceRequiredActiveButton(item.id);
                         setEligibility(item.id);
-                        setWorkLocationError("");
+                        setEligibilityError("");
                       }}
                     >
                       <FaPersonCircleExclamation /> {item.name}
@@ -1276,11 +1364,9 @@ export default function PostJobs() {
               <Space wrap>
                 {gender.map((item) => (
                   <Tag.CheckableTag
-                    checked={genderselected === item.id}
-                    onChange={() => {
-                      handleTagClick(item.id);
-                      setGenderData(item.id);
-                    }}
+                    key={item.id}
+                    checked={genderselected.includes(item.id)}
+                    onChange={() => handleTagClick(item.id)}
                     style={{
                       border: "1px dashed #ccc",
                       borderRadius: 8,
@@ -1416,27 +1502,9 @@ export default function PostJobs() {
           </div>
 
           <div className="job_posting_submit">
-            <div className="button-group">
-              <button className="secondary-btn">
-                <span>Save as Draft</span>
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 5V19M5 12H19"
-                    stroke="#6900ad"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              <button onClick={handlePublishPost} className="primary-btn">
-                <span>Publish</span>
+            <div style={{ justifyContent: "end" }} className="button-group">
+              <button onClick={handleCheckValidation} className="primary-btn">
+                <span>Save</span>
                 <svg
                   width="24"
                   height="24"
@@ -1453,6 +1521,242 @@ export default function PostJobs() {
                   />
                 </svg>
               </button>
+
+              <Modal
+                className="premium-question-modal"
+                open={openQuestionModal}
+                title={
+                  <div className="premium-modal-header">
+                    <div className="header-icon-container">
+                      <QuestionCircleOutlined className="header-icon" />
+                    </div>
+                    <span className="header-title">
+                      Want to add questions on your post
+                    </span>
+                  </div>
+                }
+                onOk={handleOk}
+                closable={false}
+                confirmLoading={confirmLoading}
+                onCancel={handlePublishPostWithoutQuestions}
+                okText="Yes, Add Questions"
+                cancelText="Publish Without Questions"
+                maskClosable={false}
+                width={560}
+                centered
+                footer={
+                  <div className="premium-modal-footer">
+                    <Button
+                      key="publish"
+                      onClick={handlePublishPostWithoutQuestions}
+                      className="premium-cancel-btn"
+                      size="large"
+                    >
+                      Publish Without Questions
+                    </Button>
+                    <Button
+                      key="add"
+                      type="primary"
+                      onClick={handleOk}
+                      loading={confirmLoading}
+                      className="premium-confirm-btn"
+                      size="large"
+                    >
+                      {confirmLoading ? (
+                        <>
+                          <span className="btn-loading-text">Adding</span>
+                          <span className="btn-loading-dots"></span>
+                        </>
+                      ) : (
+                        "Yes, Add Questions"
+                      )}
+                    </Button>
+                  </div>
+                }
+              >
+                <div className="premium-modal-content">
+                  <p className="premium-modal-description">
+                    Adding interactive questions can increase engagement by up
+                    to 300%. Would you like to include some questions with your
+                    post?
+                  </p>
+                </div>
+              </Modal>
+
+              <Drawer
+                title="Question Manager"
+                closable={{ "aria-label": "Close Button" }}
+                onClose={onClose}
+                open={openDrawer}
+                width={600}
+                headerStyle={{
+                  borderBottom: "1px solid #f0f0f0",
+                  padding: "24px",
+                  fontSize: "18px",
+                  fontWeight: 600,
+                  background: "#fafafa",
+                }}
+                bodyStyle={{ padding: "24px" }}
+                maskStyle={{ background: "rgba(0, 0, 0, 0.45)" }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "24px",
+                  }}
+                >
+                  {questions.map((q, index) => (
+                    <div
+                      key={q.id}
+                      style={{
+                        position: "relative",
+                        padding: "12px 20px 10px 20px",
+                        borderRadius: "8px",
+                        border: "1px solid #f0f0f0",
+                        boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)",
+                        transition: "all 0.3s ease",
+                        background: "#fff",
+                        ":hover": {
+                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                        },
+                      }}
+                    >
+                      <CommonInputField
+                        name={"question" + index}
+                        label={`Question ${index + 1}`}
+                        placeholder="e.g. What is your current location?"
+                        type="text"
+                        value={q.question}
+                        onChange={(e) => {
+                          handleQuestionChange(
+                            index,
+                            "question",
+                            e.target.value
+                          );
+                        }}
+                        inputStyle={{
+                          padding: "12px 16px",
+                          borderRadius: "6px",
+                          border: "1px solid #d9d9d9",
+                        }}
+                        labelStyle={{
+                          fontWeight: 500,
+                          marginBottom: "8px",
+                          color: "#1d1d1d",
+                        }}
+                      />
+                      {q.error && (
+                        <div
+                          style={{
+                            color: "#ff4d4f",
+                            marginTop: "6px",
+                            fontSize: "13px",
+                          }}
+                        >
+                          {q.error}
+                        </div>
+                      )}
+
+                      <Checkbox
+                        style={{ marginTop: 10 }}
+                        checked={q.isrequired}
+                        onChange={(e) =>
+                          handleQuestionChange(
+                            index,
+                            "isrequired",
+                            e.target.checked
+                          )
+                        }
+                      >
+                        Is Required
+                      </Checkbox>
+
+                      {index !== 0 && (
+                        <Button
+                          type="text"
+                          danger
+                          icon={
+                            <MdDeleteForever style={{ fontSize: "18px" }} />
+                          }
+                          onClick={() => handleRemoveQuestion(q.id)}
+                          style={{
+                            position: "absolute",
+                            top: "16px",
+                            right: "16px",
+                            padding: "4px",
+                            color: "#ff4d4f",
+                            ":hover": {
+                              background: "#fff2f0",
+                            },
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
+
+                  <Button
+                    onClick={handleAddQuestions}
+                    type="primary"
+                    className=""
+                    ghost
+                    icon={<IoMdAdd style={{ fontSize: "18px" }} />}
+                    style={{
+                      alignSelf: "flex-end",
+                      padding: "8px 16px",
+                      height: "auto",
+                      borderStyle: "dashed",
+                      borderWidth: "1.5px",
+                      borderRadius: "6px",
+                      fontWeight: 500,
+                      color: "#6a00ff",
+                      borderColor: "#6a00ff",
+                    }}
+                  >
+                    Add New Question
+                  </Button>
+                </div>
+                <Button
+                  onClick={handlePublishPostWithQuestions}
+                  style={{
+                    padding: "10px 15px",
+                    backgroundColor: "#6900ad",
+                    border: "none",
+                    color: "#fff",
+                    fontSize: 16,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  className="add_question"
+                  loading={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="btn-loading-text">Publishing</span>
+                      <span className="btn-loading-dots"></span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Publish</span>
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M5 12H19M19 12L12 5M19 12L12 19"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        ></path>
+                      </svg>
+                    </>
+                  )}
+                </Button>
+              </Drawer>
             </div>
           </div>
         </Col>
@@ -1574,7 +1878,9 @@ export default function PostJobs() {
               </li>
               <li>
                 {" "}
-                <a href="">Get in touch with us here</a>
+                <a style={{ color: "#6a00ff" }} href="">
+                  Get in touch with us here
+                </a>
               </li>
             </ul>
           </div>

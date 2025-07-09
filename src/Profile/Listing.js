@@ -11,9 +11,8 @@ import {
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoMdCloseCircleOutline } from "react-icons/io";
-import { Menu, Dropdown, message } from "antd";
-import axios from "axios";
-import { closeRegistration } from "../ApiService/action";
+import { Menu, Dropdown } from "antd";
+import { getJobPostByUserId } from "../ApiService/action";
 
 export default function ListingDashboard() {
   const [activeTab, setActiveTab] = useState("All");
@@ -21,57 +20,34 @@ export default function ListingDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [edit, setEdit] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      setListings([
-        {
-          id: 1,
-          title: "HR Analyst",
-          company: "Markerz Global Solution",
-          startDate: "2025-05-19",
-          endDate: "2025-05-26",
-          type: "Jobs",
-          status: "Approved",
-          visibility: "Private",
-          expired: true,
-          impressions: 120,
-          registrations: 45,
-          logo: "https://randomuser.me/api/portraits/lego/1.jpg",
-        },
-        {
-          id: 2,
-          title: "Tech Hackathon 2025",
-          company: "Innovate Inc.",
-          startDate: "2025-06-10",
-          endDate: "2025-06-12",
-          type: "Hackathons",
-          status: "Live",
-          visibility: "Public",
-          expired: false,
-          impressions: 320,
-          registrations: 128,
-          logo: "https://randomuser.me/api/portraits/lego/2.jpg",
-        },
-        {
-          id: 3,
-          title: "Data Science Scholarship",
-          company: "AI Foundation",
-          startDate: "2025-04-01",
-          endDate: "2025-05-15",
-          type: "Scholarships",
-          status: "Rejected",
-          visibility: "Public",
-          expired: true,
-          impressions: 85,
-          registrations: 32,
-          logo: "https://randomuser.me/api/portraits/lego/3.jpg",
-        },
-      ]);
-      setLoading(false);
-    }, 1000);
+    getJobPostByUserIdData();
   }, []);
+
+  const getJobPostByUserIdData = async () => {
+    const getUserDetails = JSON.parse(localStorage.getItem("loginDetails"));
+
+    if (!getUserDetails || !getUserDetails.id) {
+      console.error("User not logged in or ID missing.");
+      return;
+    }
+
+    const payload = { user_id: getUserDetails.id };
+
+    try {
+      const response = await getJobPostByUserId(payload);
+      console.log("getJobPostByUserId", response);
+
+      setListings(response?.data?.data || []);
+    } catch (error) {
+      console.error("Error fetching job posts:", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 300); // Optional delay for smooth UI
+    }
+  };
 
   const moreOptions = (
     <Menu
@@ -87,12 +63,12 @@ export default function ListingDashboard() {
   );
 
   const filteredListings = listings.filter((listing) => {
-    const matchesTab = activeTab === "All" || listing.type === activeTab;
+    const matchesTab = activeTab === "All" || listing.job_nature === activeTab;
     const matchesFilter =
       activeFilter === "All" || listing.status === activeFilter;
     const matchesSearch =
-      listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.company.toLowerCase().includes(searchQuery.toLowerCase());
+      listing.job_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      listing.company_name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesFilter && matchesSearch;
   });
 
@@ -105,22 +81,18 @@ export default function ListingDashboard() {
     0
   );
 
-  const tabs = ["All", "Scholarships", "Internships", "Jobs"];
-  const filters = ["All", "Live", "Incomplete", "Rejected", "Approved"];
+  const tabs = ["All", "Internships", "Jobs"];
+  const filters = ["All", "Live", "Expired"];
 
   const formatDate = (dateString) => {
     const options = { day: "numeric", month: "short", year: "numeric" };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case "Jobs":
+  const getTypeIcon = (job_nature) => {
+    switch (job_nature) {
+      case "Job":
         return <FiBriefcase className="icon-blue" />;
-      case "Hackathons":
-        return <FiAward className="icon-purple" />;
-      case "Scholarships":
-        return <FiBook className="icon-green" />;
       default:
         return <FiCalendar className="icon-gray" />;
     }
@@ -161,7 +133,7 @@ export default function ListingDashboard() {
             bgColor="blue"
           />
           <StatCard
-            title="Total Registrations"
+            title="Total View"
             value={totalRegistrations}
             change="+8% from last month"
             icon={<FiBook />}
@@ -211,37 +183,33 @@ export default function ListingDashboard() {
                   >
                     <div className="card-inner">
                       <img
-                        src={listing.logo}
-                        alt={listing.company}
+                        src={listing.company_logo}
+                        alt={listing.company_name}
                         className="company-logo"
                       />
                       <div className="listing-info">
                         <div className="listing-header">
                           <div style={{ textAlign: "left" }}>
-                            <h3>{listing.title}</h3>
-                            <p>{listing.company}</p>
+                            <h3>{listing.job_title}</h3>
+                            <p>{listing.company_name}</p>
                           </div>
                           <div className="listing-type">
-                            {getTypeIcon(listing.type)}
-                            <span>{listing.type}</span>
+                            {getTypeIcon(listing.job_nature)}
+                            <span>{listing.job_nature}</span>
                           </div>
                         </div>
                         <div className="listing-meta">
                           <span>
-                            {formatDate(listing.startDate)} -{" "}
-                            {formatDate(listing.endDate)}
+                            {formatDate(listing.created_at)} -{" "}
+                            {formatDate("Jul 27, 2025")}
                             {listing.expired && (
                               <span className="expired"> (Expired)</span>
                             )}
                           </span>
-                          <span
-                            className={`badge ${listing.visibility.toLowerCase()}`}
-                          >
-                            {listing.visibility}
+                          <span className={`badge ${listing.visibility}`}>
+                            {listing.duration_period}
                           </span>
-                          <span
-                            className={`badge ${listing.status.toLowerCase()}`}
-                          >
+                          <span className={`badge ${listing.status}`}>
                             {listing.status}
                           </span>
                         </div>

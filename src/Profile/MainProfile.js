@@ -35,7 +35,6 @@ import {
 import { IoIosMale } from "react-icons/io";
 import { IoMdAdd } from "react-icons/io";
 import { IoFemaleOutline } from "react-icons/io5";
-import { MdOutlineNotInterested } from "react-icons/md";
 import { LuGraduationCap } from "react-icons/lu";
 import { GiOfficeChair } from "react-icons/gi";
 import { PiStudent } from "react-icons/pi";
@@ -47,6 +46,11 @@ import { FaInstagram } from "react-icons/fa";
 import { FaBehance } from "react-icons/fa";
 import { FaLinkedinIn } from "react-icons/fa";
 import { FaDribbble } from "react-icons/fa";
+import { PiGenderTransgender } from "react-icons/pi";
+import { PiGenderIntersex } from "react-icons/pi";
+import { PiGenderNonbinary } from "react-icons/pi";
+import { MdNotInterested } from "react-icons/md";
+
 import { FaFigma } from "react-icons/fa6";
 import { IoMdLink } from "react-icons/io";
 import { LiaSchoolSolid } from "react-icons/lia";
@@ -62,10 +66,8 @@ import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
 import { addDays, subDays, format, parseISO, setDate } from "date-fns";
 import { motion } from "framer-motion";
-import TextArea from "antd/es/input/TextArea";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
-import { label } from "framer-motion/client";
 import CommonTextArea from "../Common/CommonTextArea";
 import {
   emailValidator,
@@ -76,6 +78,15 @@ import {
   userTypeValidator,
 } from "../Common/Validation";
 import CommonDatePicker from "../Common/CommonDatePicker";
+import {
+  getGenderData,
+  getUserTypeData,
+  insertProjects,
+  updateAbout,
+  updateResume,
+  updateSkills,
+} from "../ApiService/action";
+
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
 
@@ -93,8 +104,6 @@ const items = [
   { key: "skills", label: "Skills" },
   { key: "education", label: "Education" },
   { key: "experience", label: "Work Experience" },
-  // { key: "initiatives", label: "Accomplishments & Initiatives" },
-  // { key: "responsibilities", label: "Responsibilities" },
   { key: "certification", label: "Certifications" },
   { key: "projects", label: "Projects" },
   // { key: "personalDetails", label: "Personal Details" },
@@ -114,25 +123,13 @@ const suggestions = [
   "Substance Designer",
 ];
 
-const drawerContentStyle = {
-  display: "flex",
-  gap: "24px",
-};
-
-const onChangeDate = (date, dateString) => {
-  console.log(date, dateString); // date is a moment object, dateString is formatted string
-};
-
 export default function MainProfile() {
-  const [collapsed, setCollapsed] = useState(false);
   const [certifications, setCertification] = useState([]);
   const [activeTab, setActiveTab] = useState("basic");
-  const [sideBar, setSideBar] = useState("watchlist");
   const [aboutText, setAboutText] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [customSkill, setCustomSkill] = useState("");
   const [activeButton, setActiveButton] = useState(null);
-  const [fileName, setFileName] = useState("");
   const [userTypeactiveButton, setUserTypeActiveButton] = useState(null);
   const defaultAvatar =
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
@@ -145,15 +142,15 @@ export default function MainProfile() {
   const [fnameError, setFnameError] = useState("");
   const [lname, setLname] = useState("");
   const [lnameError, setLnameError] = useState("");
-  const [userName, setUserName] = useState("");
-  const [userNameError, setUserNameError] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneNumberError, setPhoneNumberError] = useState("");
   const [gender, setGender] = useState("");
+  const [genderOptions, setGenderOptions] = useState([]);
   const [genderError, setGenderError] = useState("");
   const [userType, setUserType] = useState("");
+  const [userTypeName, setUserTypeName] = useState([]);
   const [userTypeError, setUserTypeError] = useState("");
   const [course, setCourse] = useState(null);
   const [courseError, setCourseError] = useState("");
@@ -169,6 +166,10 @@ export default function MainProfile() {
   const [fresherStartDateError, setFresherStartDateError] = useState("");
   const [fresherEndtDate, setFresherEndDate] = useState("");
   const [fresherEndDateError, setFresherEndDateError] = useState("");
+  const [loginUserId, setLoginUserId] = useState(null);
+  const [organizationName, setOrganisationName] = useState("");
+  const [organizationNameType, setOrganizationType] = useState("");
+  const [resumeError, setResumeError] = useState("");
 
   //
 
@@ -183,9 +184,7 @@ export default function MainProfile() {
   const [courseType, setCourseType] = useState("");
   const [courseTypeError, setCourseTypeError] = useState("");
   const [percentage, setPercentage] = useState("");
-  const [percentageError, setPercentageError] = useState("");
   const [cgpa, setCgpa] = useState("");
-  const [cgpaError, setCgpaError] = useState("");
   const [educationStartDate, setEducationStartDate] = useState("");
   const [educationStartDateError, setEducationStartDateError] = useState("");
   const [educationEndDate, setEducationEndDate] = useState("");
@@ -207,6 +206,8 @@ export default function MainProfile() {
   const [workExpLocationError, setWorkExpLocationError] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
   //
+  const [companyName, setCompanyName] = useState("");
+  const [companyNameError, setCompanyNameError] = useState("");
   const [project, setProject] = useState("");
   const [projectError, setProjectError] = useState("");
   const [projectType, setProjectType] = useState("");
@@ -218,27 +219,52 @@ export default function MainProfile() {
   const [projectDescription, setProjectDescription] = useState("");
   const [projectDescriptionError, setProjectDescriptionError] = useState("");
   //
-
-  const [customSkills, setCustomSkills] = useState("");
   const [customSkillError, setCustomSkillError] = useState("");
+
+  useEffect(() => {
+    getGenderDataType();
+  }, []);
+
+  const getGenderDataType = async () => {
+    try {
+      const response = await getGenderData();
+      setGenderOptions(response?.data?.data || []);
+      console.log("gender", response);
+    } catch (error) {
+      console.log("gender error", error);
+    } finally {
+      setTimeout(() => {
+        getUserTypeDataOptions();
+      }, 300);
+    }
+  };
+
+  const getUserTypeDataOptions = async () => {
+    try {
+      const response = await getUserTypeData();
+      setUserTypeName(response?.data?.data || []);
+      console.log("userType", response);
+    } catch (error) {
+      console.log("usertype", error);
+    }
+  };
 
   const handleSave = (e) => {
     e.preventDefault();
 
     const fnameValidate = nameValidator(fname);
     const lnameValidate = nameValidator(lname);
-    const userNameValidate = nameValidator(userName);
     const emailValidate = emailValidator(email);
     const phoneValidate = phoneValidation(phoneNumber);
     const genderValidate = genderValidator(gender);
     const userTypeValidate = userTypeValidator(userType);
     const locationValidate = nameValidator(location);
     const courseValidate =
-      userType === "Collage Student" ? selectValidator(course) : "";
+      userType === "College Student" ? selectValidator(course) : "";
     const startDateValidate =
-      userType === "Collage Student" ? selectValidator(startDate) : "";
+      userType === "College Student" ? selectValidator(startDate) : "";
     const endDateValidate =
-      userType === "Collage Student" ? selectValidator(endDate) : "";
+      userType === "College Student" ? selectValidator(endDate) : "";
 
     const fresherCourseValidate =
       userType === "Fresher" ? selectValidator(fresherCourse) : "";
@@ -249,7 +275,6 @@ export default function MainProfile() {
 
     setFnameError(fnameValidate);
     setLnameError(lnameValidate);
-    setUserNameError(userNameValidate);
     setEmailError(emailValidate);
     setPhoneNumberError(phoneValidate);
     setGenderError(genderValidate);
@@ -265,13 +290,12 @@ export default function MainProfile() {
     const hasErrors = [
       fnameValidate,
       lnameValidate,
-      userNameValidate,
       emailValidate,
       phoneValidate,
       genderValidate,
       userTypeValidate,
       locationValidate,
-      ...(userType === "Collage Student"
+      ...(userType === "College Student"
         ? [courseValidate, startDateValidate, endDateValidate]
         : []),
       ...(userType === "Fresher"
@@ -294,13 +318,12 @@ export default function MainProfile() {
     const userData = {
       firstName: fname,
       lastName: lname,
-      userName: userName,
       email: email,
       phoneNumber: phoneNumber,
       gender: gender,
       userType: userType,
       location: location,
-      ...(userType === "Collage Student" && {
+      ...(userType === "College Student" && {
         course: course,
         startDate: startDate,
         endDate: endDate,
@@ -410,15 +433,16 @@ export default function MainProfile() {
     resetFormFields();
   };
 
-  const handleProjectSave = (e) => {
+  const handleProjectSave = async (e) => {
     e.preventDefault();
-
+    const projectCompanyNameValidate = nameValidator(companyName);
     const projectValidate = nameValidator(project);
     const projectTypeValidate = selectValidator(projectType);
     const projectStartDateValidate = selectValidator(projectStartDate);
     const projectEndDateValidate = selectValidator(projectEndDate);
     const projectDescriptionValidate = nameValidator(projectDescription);
 
+    setCompanyNameError(projectCompanyNameValidate);
     setProjectError(projectValidate);
     setProjectTypeError(projectTypeValidate);
     setProjectStartDateError(projectStartDateValidate);
@@ -426,6 +450,7 @@ export default function MainProfile() {
     setProjectDescriptionError(projectDescriptionValidate);
 
     const hasProjectError = [
+      projectCompanyNameValidate,
       projectValidate,
       projectTypeValidate,
       projectStartDateValidate,
@@ -446,19 +471,26 @@ export default function MainProfile() {
       return;
     }
 
-    const projectUserData = {
-      project: project,
-      projectType: projectType,
-      projectStartDate: projectStartDate,
-      projectEndDate: projectEndDate,
-      projectDescription: projectDescription,
+    const payload = {
+      user_id: loginUserId,
+      company_name: companyName,
+      project_title: project,
+      project_type: projectType,
+      start_date: projectStartDate,
+      end_date: projectEndDate,
+      description: projectDescription,
     };
-    console.log("Saving user data:", projectUserData);
-    message.success("Education details saved successfully.");
-    resetFormFields();
+
+    try {
+      const response = await insertProjects(payload);
+      console.log("project", response);
+    } catch (error) {
+      console.log("project", error);
+    }
+    // resetFormFields();
   };
 
-  const handleAboutSave = (e) => {
+  const handleAboutSave = async (e) => {
     e.preventDefault();
 
     const aboutTextValidate = nameValidator(aboutTextNew);
@@ -469,8 +501,19 @@ export default function MainProfile() {
 
     if (hasAboutError) {
       console.log("Validation errors found");
-      message.error("Please fill all fields correctly before proceeding.");
       return;
+    }
+
+    const payload = {
+      about: aboutText,
+      id: loginUserId,
+    };
+
+    try {
+      const response = await updateAbout(payload);
+      setAboutText(response?.data?.data || []);
+    } catch (error) {
+      setAboutTextError(aboutTextValidate);
     }
 
     const aboutUserData = {
@@ -498,12 +541,12 @@ export default function MainProfile() {
       message.error("File must be smaller than 10MB!");
       return Upload.LIST_IGNORE;
     }
-
-    setResumeFile(file); // Store the file in state
-    return false; // Prevent auto-upload
+    setResumeError("");
+    setResumeFile(file);
+    return false;
   };
 
-  const handleSkillsSave = (e) => {
+  const handleSkillsSave = async (e) => {
     e.preventDefault();
 
     const customskillValidate = nameValidator(customSkill);
@@ -525,6 +568,20 @@ export default function MainProfile() {
       ],
     };
 
+    const payload = {
+      skills: selectedSkills,
+      user_id: loginUserId,
+    };
+
+    try {
+      const response = await updateSkills(payload);
+      console.log("skilssss", response);
+
+      setSelectedSkills(response?.data?.data || []);
+    } catch (error) {
+      setCustomSkillError(customskillValidate);
+    }
+
     console.log("Saving skills data:", customSkillUserData);
     message.success("Skills saved successfully.");
     resetFormFields();
@@ -535,15 +592,38 @@ export default function MainProfile() {
     setCustomSkillError("");
   };
 
-  const handleFileSave = () => {
+  const getBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file); // Reads file as Base64
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleFileSave = async () => {
     if (!resumeFile) {
-      message.error("Please upload a valid resume before saving.");
+      setResumeError("Please upload a valid resume before saving.");
       return;
     }
 
-    resetFormFields();
-    console.log("Saving file:", resumeFile);
-    message.success("Resume saved successfully!");
+    try {
+      const base64Resume = await getBase64(resumeFile);
+      const payload = {
+        resume: base64Resume,
+        id: loginUserId,
+      };
+
+      const response = await updateResume(payload);
+      console.log("updateResume", response);
+
+      resetFormFields();
+      setResumeError("");
+      message.success("Resume saved successfully!");
+    } catch (error) {
+      console.error("Base64 conversion or upload failed:", error);
+      setResumeError("Something went wrong while saving resume.");
+    }
   };
 
   const [socialLinks, setSocialLinks] = useState({
@@ -657,6 +737,24 @@ export default function MainProfile() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+        setFname(loginDetails.first_name);
+        setLname(loginDetails.last_name);
+        setEmail(loginDetails.email);
+        setPhoneNumber(loginDetails.phone);
+        setOrganisationName(loginDetails.organization);
+        setOrganizationType(loginDetails.organization_type);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, []);
+
   const streakData = [
     { date: "2025-05-08", count: 4 },
     { date: "2025-05-18", count: 1 },
@@ -678,17 +776,10 @@ export default function MainProfile() {
     setOpen(true);
   };
 
-  const [resetTrigger, setResetTrigger] = useState(false);
-
   const resetFormFields = () => {
     // Basic Details
     console.log("resetttt");
 
-    setFname("");
-    setLname("");
-    setUserName("");
-    setEmail("");
-    setPhoneNumber("");
     setGender("");
     setUserType("");
     setLocation("");
@@ -751,7 +842,6 @@ export default function MainProfile() {
     // Errors
     setFnameError("");
     setLnameError("");
-    setUserNameError("");
     setEmailError("");
     setPhoneNumberError("");
     setGenderError("");
@@ -896,6 +986,8 @@ export default function MainProfile() {
                   setFname(e.target.value);
                   setFnameError(nameValidator(e.target.value));
                 }}
+                readOnly={true}
+                disabled={true}
                 error={fnameError}
               />
             </div>
@@ -910,23 +1002,11 @@ export default function MainProfile() {
                   setLname(e.target.value);
                   setLnameError(nameValidator(e.target.value));
                 }}
+                readOnly={true}
+                disabled={true}
                 error={lnameError}
               />
             </div>
-          </div>
-
-          <div className="form-group">
-            <CommonInputField
-              label="Username"
-              mandotary={true}
-              value={userName}
-              placeholder="Enter your Username"
-              onChange={(e) => {
-                setUserName(e.target.value);
-                setUserNameError(nameValidator(e.target.value));
-              }}
-              error={userNameError}
-            />
           </div>
 
           <div className="form-row">
@@ -941,6 +1021,8 @@ export default function MainProfile() {
                   setEmail(e.target.value);
                   setEmailError(emailValidator(e.target.value));
                 }}
+                readOnly={true}
+                disabled={true}
                 error={emailError}
               />
             </div>
@@ -955,6 +1037,8 @@ export default function MainProfile() {
                   setPhoneNumber(e.target.value);
                   setPhoneNumberError(phoneValidation(e.target.value));
                 }}
+                readOnly={true}
+                disabled={true}
                 error={phoneNumberError}
               />
             </div>
@@ -967,53 +1051,40 @@ export default function MainProfile() {
               required
             >
               <div className="job_nature">
-                <button
-                  type="button"
-                  className={
-                    activeButton === "Male"
-                      ? "job_nature_button_active"
-                      : "job_nature_button"
-                  }
-                  onClick={() => {
-                    handleButtonClick("Male");
-                    setGender("Male");
-                    setGenderError("");
-                  }}
-                >
-                  <IoIosMale /> Male
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    activeButton === "Female"
-                      ? "job_nature_button_active"
-                      : "job_nature_button"
-                  }
-                  onClick={() => {
-                    handleButtonClick("Female");
-                    setGender("Female");
-                    setGenderError("");
-                  }}
-                >
-                  <IoFemaleOutline /> Female
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    activeButton === "Others"
-                      ? "job_nature_button_active"
-                      : "job_nature_button"
-                  }
-                  onClick={() => {
-                    handleButtonClick("Others");
-                    setGender("Others");
-                    setGenderError("");
-                  }}
-                >
-                  <MdOutlineNotInterested /> Others
-                </button>
+                {genderOptions.map((item) => {
+                  return (
+                    <button
+                      type="button"
+                      className={
+                        activeButton === item.name
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => {
+                        handleButtonClick(item.name);
+                        setGender(item.name);
+                        setGenderError("");
+                      }}
+                    >
+                      {item.name === "Male" ? (
+                        <IoIosMale />
+                      ) : item.name === "Female" ? (
+                        <IoFemaleOutline />
+                      ) : item.name === "Transgender" ? (
+                        <PiGenderTransgender />
+                      ) : item.name === "Intersex" ? (
+                        <PiGenderIntersex />
+                      ) : item.name === "Non-binary" ? (
+                        <PiGenderNonbinary />
+                      ) : item.name === "Others" ? (
+                        <MdNotInterested />
+                      ) : (
+                        ""
+                      )}{" "}
+                      {item.name}
+                    </button>
+                  );
+                })}
               </div>
 
               {genderError && (
@@ -1037,69 +1108,36 @@ export default function MainProfile() {
               ]}
             >
               <div className="job_nature">
-                <button
-                  type="button"
-                  className={
-                    userTypeactiveButton === "Collage Student"
-                      ? "job_nature_button_active"
-                      : "job_nature_button"
-                  }
-                  onClick={() => {
-                    handleUserTypeClick("Collage Student");
-                    setUserType("Collage Student");
-                    setUserTypeError("");
-                  }}
-                >
-                  <LuGraduationCap /> Collage Student
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    userTypeactiveButton === "Professional"
-                      ? "job_nature_button_active"
-                      : "job_nature_button"
-                  }
-                  onClick={() => {
-                    handleUserTypeClick("Professional");
-                    setUserType("Professional");
-                    setUserTypeError("");
-                  }}
-                >
-                  <GiOfficeChair /> Professional
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    userTypeactiveButton === "School Student"
-                      ? "job_nature_button_active"
-                      : "job_nature_button"
-                  }
-                  onClick={() => {
-                    handleUserTypeClick("School Student");
-                    setUserType("School Student");
-                    setUserTypeError("");
-                  }}
-                >
-                  <PiStudent /> School Student
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    userTypeactiveButton === "Fresher"
-                      ? "job_nature_button_active"
-                      : "job_nature_button"
-                  }
-                  onClick={() => {
-                    handleUserTypeClick("Fresher");
-                    setUserType("Fresher");
-                    setUserTypeError("");
-                  }}
-                >
-                  <GiNewShoot /> Fresher
-                </button>
+                {userTypeName.map((item) => {
+                  return (
+                    <button
+                      type="button"
+                      className={
+                        userTypeactiveButton === item.name
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => {
+                        handleUserTypeClick(item.name);
+                        setUserType(item.name);
+                        setUserTypeError("");
+                      }}
+                    >
+                      {item.name === "College Student" ? (
+                        <LuGraduationCap />
+                      ) : item.name === "Professional" ? (
+                        <GiOfficeChair />
+                      ) : item.name === "School Student" ? (
+                        <PiStudent />
+                      ) : item.name === "Fresher" ? (
+                        <GiNewShoot />
+                      ) : (
+                        ""
+                      )}
+                      {item.name}
+                    </button>
+                  );
+                })}
               </div>
               {userTypeError && (
                 <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
@@ -1110,7 +1148,7 @@ export default function MainProfile() {
           </div>
 
           <div className="">
-            {userTypeactiveButton === "Collage Student" && (
+            {userTypeactiveButton === "College Student" && (
               <>
                 <div style={{ marginTop: 15 }} className="form-group">
                   <CommonSelectField
@@ -1477,6 +1515,14 @@ export default function MainProfile() {
             </div>
           )}
 
+          {resumeError && (
+            <div style={{ marginTop: 8 }}>
+              <Text type="danger" style={{ color: "red" }}>
+                {resumeError}
+              </Text>
+            </div>
+          )}
+
           <div style={{ textAlign: "right", marginTop: 24 }}>
             <Button
               type="primary"
@@ -1529,7 +1575,7 @@ export default function MainProfile() {
           error={aboutTextError}
         />
 
-        <Button
+        {/* <Button
           icon={
             <img
               src="https://cdn-icons-png.flaticon.com/512/4712/4712106.png"
@@ -1552,7 +1598,7 @@ export default function MainProfile() {
           }}
         >
           Generate with AI
-        </Button>
+        </Button> */}
 
         <div style={{ textAlign: "-webkit-right" }} className="save_btn">
           <Button
@@ -1635,7 +1681,7 @@ export default function MainProfile() {
             label={"Skills"}
             onPressEnter={handleCustomSkillAdd}
             value={customSkill}
-            name={"Job title"}
+            name={"Skills"}
             onChange={(e) => {
               setCustomSkill(e.target.value);
               if (customSkillError) setCustomSkillError("");
@@ -2148,6 +2194,22 @@ export default function MainProfile() {
       <div>
         <div className="form-group">
           <CommonInputField
+            name="companyName"
+            label="Company Name"
+            mandotary={true}
+            placeholder="Company Name"
+            type="text"
+            value={companyName}
+            onChange={(e) => {
+              setCompanyName(e.target.value);
+              setCompanyNameError(nameValidator(e.target.value));
+            }}
+            error={companyNameError}
+          />
+        </div>
+
+        <div className="form-group">
+          <CommonInputField
             name="projectname"
             label="Project Name"
             mandotary={true}
@@ -2269,8 +2331,6 @@ export default function MainProfile() {
           </div>
         </div>
 
-        {/*  */}
-
         <div className="form-group">
           <CommonTextArea
             label={"Project Description"}
@@ -2292,8 +2352,8 @@ export default function MainProfile() {
             onClick={handleProjectSave}
             className="nav-btn next-btn"
           >
-            <MdFileDownloadDone style={{ fontSize: 22 }} />
-            Save
+            <IoMdAdd style={{ fontSize: 22 }} />
+            Add Project
           </Button>
         </div>
       </div>
@@ -2402,11 +2462,11 @@ export default function MainProfile() {
               </div>
 
               <div style={{ marginLeft: 16, textAlign: "left" }}>
-                <h2 style={{ marginBottom: 4 }}>Santhosh Kathirvel</h2>
-                <p style={{ marginBottom: 6, color: "#666" }}>@santhkat7778</p>
+                <h2 style={{ marginBottom: 0 }}>{`${fname} ${lname}`}</h2>
+                <p style={{ marginBottom: 10, color: "#666" }}>{email}</p>
                 <div>
-                  <Tag color="blue">Markerz Global Solution</Tag>
-                  <Tag color="purple">Accountant</Tag>
+                  <Tag color="blue">{organizationName}</Tag>
+                  <Tag color="purple">{organizationNameType}</Tag>
                 </div>
               </div>
             </div>

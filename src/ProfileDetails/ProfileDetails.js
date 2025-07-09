@@ -11,9 +11,7 @@ import {
   Modal,
   Checkbox,
   message,
-  DatePicker,
   Input,
-  Spin,
   Tag,
 } from "antd";
 import {
@@ -27,8 +25,6 @@ import {
 } from "@ant-design/icons";
 import { IoMdAdd } from "react-icons/io";
 import { Country, State, City } from "country-state-city";
-import { auth } from "../firebase/firebaseConfig";
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import "../css/ProfileDetailsPage.css";
@@ -36,27 +32,40 @@ import { MdDeleteForever } from "react-icons/md";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
 import CommonTextArea from "../Common/CommonTextArea";
+import { IoIosMale } from "react-icons/io";
+import { IoFemaleOutline } from "react-icons/io5";
+import { MdOutlineNotInterested } from "react-icons/md";
+import { FaBuildingUser } from "react-icons/fa6";
+import { LuGraduationCap } from "react-icons/lu";
+import { GiOfficeChair } from "react-icons/gi";
+import { PiStudent } from "react-icons/pi";
+import { GiNewShoot } from "react-icons/gi";
+import { LiaSchoolSolid } from "react-icons/lia";
+import { useNavigate } from "react-router-dom";
 import {
   emailValidator,
   nameValidator,
   pincodeValidator,
   selectValidator,
+  userTypeValidator,
+  phoneValidation,
+  genderValidator,
 } from "../Common/Validation";
-import { phoneValidation } from "../Common/Validation";
 import CommonDatePicker from "../Common/CommonDatePicker";
 import {
+  getUserTypeData,
   insertProfileData,
   verifyEmail,
   verifyOtp,
 } from "../ApiService/action";
 
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 
 dayjs.extend(customParseFormat);
 
 const ProfileDetails = () => {
   const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(25);
@@ -88,6 +97,25 @@ const ProfileDetails = () => {
   const [selectedCity, setSelectedCity] = useState(null);
   const [address, setAddress] = useState("");
   const [open, setOpen] = useState(false);
+  const [editPhoto, setEditPhoto] = useState("");
+  const [editPhotoError, setEditPhotoError] = useState("");
+  const [activeButton, setActiveButton] = useState(null);
+  const [gender, setGender] = useState("");
+  const [genderError, setGenderError] = useState("");
+  const [userTypeactiveButton, setUserTypeActiveButton] = useState(null);
+  const [userType, setUserType] = useState("");
+  const [userTypeData, setUserTypeData] = useState([]);
+  const [userTypeError, setUserTypeError] = useState("");
+  const [course, setCourse] = useState(null);
+  const [courseError, setCourseError] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [fresherCourse, setFresherCourse] = useState("");
+  const [fresherCourseError, setFresherCourseError] = useState("");
+  const [fresherStartDate, setFresherStartDate] = useState("");
+  const [fresherStartDateError, setFresherStartDateError] = useState("");
+  const [fresherEndtDate, setFresherEndDate] = useState("");
+  const [fresherEndDateError, setFresherEndDateError] = useState("");
 
   // 2
   const [selectExperienceType, setSelectExperienceType] = useState("");
@@ -101,116 +129,23 @@ const ProfileDetails = () => {
     useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [jobTitleError, setJobTitleError] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [designation, setDesignation] = useState("");
-  const [designationError, setDesignationError] = useState("");
 
   const [experienceType, setExperienceType] = useState(null);
-  const [confirmationResult, setConfirmationResult] = useState(null);
-  const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [otpSending, setOtpSending] = useState(false);
   const [otpError, setOtpError] = useState(null);
-  const [recaptchaReady, setRecaptchaReady] = useState(false);
-  const recaptchaContainerRef = useRef(null);
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState(null);
-  const [recaptchaInitAttempts, setRecaptchaInitAttempts] = useState(0);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [customSkill, setCustomSkill] = useState("");
   const [skillsError, setSkillsError] = useState(null);
-  const [startDateError, setstartDateError] = useState("");
-  const [endDateError, setendDateError] = useState("");
+  const [startDateError, setStartDateError] = useState("");
+  const [endDateError, setEndDateError] = useState("");
   const [loginUserId, setLoginUserId] = useState(null);
   const [loading, setLoading] = React.useState(false);
-  const [otpEmail, setOtpEmail] = useState("");
 
-  const initializeRecaptcha = useCallback(async () => {
-    try {
-      // Check if Firebase auth is available
-      if (!auth) {
-        console.error("Firebase auth not initialized");
-        return;
-      }
-
-      // Clear existing verifier
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        delete window.recaptchaVerifier;
-      }
-
-      // Wait for grecaptcha to be available
-      if (!window.grecaptcha || !window.grecaptcha.enterprise) {
-        console.log("Waiting for grecaptcha to load...");
-        await new Promise((resolve) => {
-          const checkInterval = setInterval(() => {
-            if (window.grecaptcha?.enterprise) {
-              clearInterval(checkInterval);
-              resolve();
-            }
-          }, 100);
-        });
-      }
-
-      const verifier = new RecaptchaVerifier(
-        "recaptcha-container",
-        {
-          size: "invisible",
-          callback: () => {
-            console.log("reCAPTCHA solved");
-            setRecaptchaReady(true);
-          },
-          "expired-callback": () => {
-            console.log("reCAPTCHA expired");
-            setRecaptchaReady(false);
-          },
-        },
-        auth
-      );
-
-      // Verify the verifier was created
-      if (!verifier) {
-        throw new Error("Failed to create verifier");
-      }
-
-      window.recaptchaVerifier = verifier;
-      setRecaptchaVerifier(verifier);
-
-      // Force verification
-      await verifier.verify();
-      setRecaptchaReady(true);
-      console.log("reCAPTCHA initialized successfully");
-    } catch (error) {
-      console.error("reCAPTCHA initialization failed:", error);
-      setRecaptchaReady(false);
-      // Retry with exponential backoff
-      const delay = Math.min(1000 * Math.pow(2, recaptchaInitAttempts), 10000);
-      setTimeout(initializeRecaptcha, delay);
-    }
-  }, [auth, recaptchaInitAttempts]);
   //
 
   useEffect(() => {
     setCountryList(Country.getAllCountries());
-    initializeRecaptcha();
-
-    return () => {
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-      }
-    };
-  }, [initializeRecaptcha]);
-
-  useEffect(() => {
-    if (!window.recaptchaVerifier) {
-      const script = document.createElement("script");
-      script.src = "https://www.google.com/recaptcha/api.js?render=explicit";
-      script.async = true;
-      script.defer = true;
-      script.onload = () => initializeRecaptcha();
-      document.body.appendChild(script);
-    } else {
-      initializeRecaptcha();
-    }
   }, []);
 
   useEffect(() => {
@@ -228,6 +163,20 @@ const ProfileDetails = () => {
       console.error("Invalid JSON in localStorage", error);
     }
   }, []);
+
+  useEffect(() => {
+    getUserTypeDataType();
+  }, []);
+
+  const getUserTypeDataType = async () => {
+    try {
+      const response = await getUserTypeData();
+      setUserTypeData(response?.data?.data || []);
+      console.log("getUserTypeData", response);
+    } catch (error) {
+      console.log("getUserTypeData", error);
+    }
+  };
 
   const handleCountryChange = (countryCode) => {
     const country = countryList.find((c) => c.isoCode === countryCode);
@@ -277,11 +226,17 @@ const ProfileDetails = () => {
 
       reader.onloadend = () => {
         const base64String = reader.result;
-        setProfileImage(base64String);
+        setProfileImage(base64String); // This could be used for preview or sending to backend
       };
 
       reader.readAsDataURL(file);
     }
+  };
+
+  const fileValidator = (file) => {
+    if (!file) return "Photo is required";
+    if (!file.type.startsWith("image/")) return "Only image files are allowed";
+    return "";
   };
 
   const handAvatarClick = () => {
@@ -289,23 +244,28 @@ const ProfileDetails = () => {
   };
 
   const handleExperienceTypeChange = (value) => setExperienceType(value);
-  const handleCheckboxChange = (index, e) => {
-    const updatedCompanies = [...companies];
-    updatedCompanies[index].currentlyWorking = e.target.checked;
-    if (e.target.checked) {
-      updatedCompanies[index].endDate = null;
-    }
-    setCompanies(updatedCompanies);
-  };
 
   const handleModalClose = () => {
     setOpen(false);
   };
 
+  const handleButtonClick = (buttonId) => {
+    setActiveButton(buttonId);
+    setGender(buttonId);
+    setGenderError("");
+  };
+
+  const handleUserTypeClick = (buttonId) => {
+    setUserTypeActiveButton((prev) => buttonId);
+  };
+
+  const [Class, setClass] = useState(null);
+  const handleClassClick = (buttonId) => {
+    setClass((prev) => buttonId);
+  };
+
   const nextStep = (e) => {
     e.preventDefault();
-
-    // Run validators again
 
     if (currentStep === 0) {
       ProfileInfoValidate();
@@ -323,6 +283,22 @@ const ProfileDetails = () => {
     const countryValidate = selectValidator(countryId);
     const stateValidate = selectValidator(state);
     const cityValidate = selectValidator(city);
+    const editPhotoValidate = fileValidator(editPhoto);
+    const genderValidate = genderValidator(gender);
+    const userTypeValidate = userTypeValidator(userType);
+    const courseValidate =
+      userType === "College Student" ? selectValidator(course) : "";
+    const startDateValidate =
+      userType === "College Student" ? selectValidator(startDate) : "";
+    const endDateValidate =
+      userType === "College Student" ? selectValidator(endDate) : "";
+
+    const fresherCourseValidate =
+      userType === "Fresher" ? selectValidator(fresherCourse) : "";
+    const fresherStartDateValidate =
+      userType === "Fresher" ? selectValidator(fresherStartDate) : "";
+    const fresherEndtDateValidate =
+      userType === "Fresher" ? selectValidator(fresherEndtDate) : "";
 
     setFnameError(fnameValidate);
     setLnameError(lnameValidate);
@@ -332,17 +308,36 @@ const ProfileDetails = () => {
     setCountryError(countryValidate);
     setStateError(stateValidate);
     setCityError(cityValidate);
+    setEditPhotoError(editPhotoValidate);
+    setUserTypeError(userTypeValidate);
+    setGenderError(genderValidate);
+    setCourseError(courseValidate);
+    setStartDateError(startDateValidate);
+    setEndDateError(endDateValidate);
+    setFresherCourseError(fresherCourseValidate);
+    setFresherStartDateError(fresherStartDateValidate);
+    setFresherEndDateError(fresherEndtDateValidate);
+
+    console.log(userType);
 
     if (
-      // fnameValidate ||
-      // lnameValidate ||
-      // emailValidate ||
-      // phoneValidate ||
-      // pincodeValidate ||
-      // countryValidate ||
-      // stateValidate ||
-      // cityValidate
-      ""
+      fnameValidate ||
+      lnameValidate ||
+      emailValidate ||
+      phoneValidate ||
+      pincodeValidate ||
+      countryValidate ||
+      stateValidate ||
+      cityValidate ||
+      genderValidate ||
+      editPhotoValidate ||
+      userTypeValidate ||
+      courseValidate ||
+      startDateValidate ||
+      endDateValidate ||
+      fresherCourseValidate ||
+      fresherStartDateValidate ||
+      fresherEndtDateValidate
     ) {
       message.error("Please fill all fields correctly before proceeding.");
       return;
@@ -350,7 +345,6 @@ const ProfileDetails = () => {
       setCurrentStep(1);
       setProgress(25);
     }
-    setEmailVerified("Verified");
   };
 
   const ProfessionalInfoValidate = () => {
@@ -405,23 +399,19 @@ const ProfileDetails = () => {
       });
 
       if (
-        // selectExperienceTypeValidate ||
-        // totalYearsExperienceValidate ||
-        // totalMonthsExperienceValidate ||
-        // jobTitleValidate ||
-        // skillsValidate ||
-        // experienceErrors
-        ""
+        selectExperienceTypeValidate ||
+        totalYearsExperienceValidate ||
+        totalMonthsExperienceValidate ||
+        jobTitleValidate ||
+        skillsValidate ||
+        experienceErrors
       ) {
         message.error("Please fill all fields correctly before proceeding.");
         return;
       }
     } else {
-      if (
-        // selectExperienceTypeValidate || skillsValidate || experienceErrors
-        ""
-      ) {
-        message.error("Please fill all fields correctly before proceeding.");
+      if (selectExperienceTypeValidate || skillsValidate || experienceErrors) {
+        message.error("Please fill all fieldsss correctly before proceeding.");
         return;
       }
     }
@@ -453,13 +443,26 @@ const ProfileDetails = () => {
       pincode: pincode,
       address: address,
       professional,
+      user_type:
+        userType === 1
+          ? "College Student"
+          : userType === 2
+          ? "Professional"
+          : userType === 3
+          ? "School Student"
+          : userType === 4
+          ? "Fresher"
+          : "",
       is_email_verified: "verified",
     };
 
     try {
       const response = await insertProfileData(payload);
       console.log("my profile", response);
+      // const profileDetails = response.data.data[0];
+      // console.log("profileDetails", profileDetails);
       message.success("Profile inserted successfully!");
+      setCurrentStep(3);
     } catch (error) {
       console.log("my profile error", error);
       message.error("Fill all the required fields");
@@ -505,12 +508,14 @@ const ProfileDetails = () => {
           setOpen(false);
         }, 500);
         setProgress(75);
+        setEmailVerified("Verified");
         // setCurrentStep(3);
       } else {
         message.error(res?.data?.message || "Invalid OTP");
       }
     } catch (err) {
       console.error(err);
+      setEmailVerified("Not Verified");
       message.error("Error verifying OTP");
     } finally {
       setLoading(false);
@@ -586,7 +591,6 @@ const ProfileDetails = () => {
     data.splice(index, 1);
     setCompanies(data);
   };
-  //
 
   const handleRemoveSkill = (skillToRemove) => {
     setSelectedSkills(
@@ -624,17 +628,42 @@ const ProfileDetails = () => {
                   type="file"
                   accept="image/*"
                   style={{ display: "block" }}
-                  onChange={handleImageChange}
-                ></input>
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      handleImageChange(e);
+                      setEditPhoto(file);
+                      setEditPhotoError("");
+                    } else {
+                      setEditPhoto(null);
+                      setEditPhotoError(e);
+                    }
+                  }}
+                />
               </label>
-              <Button
-                type="primary"
-                shape="round"
-                icon={<EditOutlined />}
-                className="edit-btn"
-              >
-                Edit Photo
-              </Button>
+              <div style={{ position: "relative" }}>
+                <Button
+                  type="primary"
+                  shape="round"
+                  icon={<EditOutlined />}
+                  className="edit-btn"
+                >
+                  Edit Photo
+                </Button>
+                {editPhotoError && (
+                  <div
+                    className="error-message"
+                    style={{
+                      color: "red",
+                      marginTop: "8px",
+                      position: "absolute",
+                    }}
+                  >
+                    {editPhotoError}
+                  </div>
+                )}
+              </div>
+
               <Modal
                 open={isModalVisible}
                 footer={null}
@@ -720,7 +749,418 @@ const ProfileDetails = () => {
                   error={numberError}
                 />
               </div>
-              <div className="form-row">
+
+              <div className="form-group">
+                <Form.Item
+                  layout="vertical"
+                  label={<span style={{ fontWeight: 500 }}>Gender</span>}
+                  required
+                >
+                  <div className="job_nature">
+                    <button
+                      type="button"
+                      className={
+                        activeButton === "Male"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={(e) => {
+                        handleButtonClick("Male");
+                        setGender("Male");
+                        setGenderError("");
+                      }}
+                    >
+                      <IoIosMale /> Male
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        activeButton === "Female"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => {
+                        handleButtonClick("Female");
+                        setGender("Female");
+                        setGenderError("");
+                      }}
+                    >
+                      <IoFemaleOutline /> Female
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        activeButton === "Others"
+                          ? "job_nature_button_active"
+                          : "job_nature_button"
+                      }
+                      onClick={() => {
+                        handleButtonClick("Others");
+                        setGender("Others");
+                        setGenderError("");
+                      }}
+                    >
+                      <MdOutlineNotInterested /> Others
+                    </button>
+                  </div>
+
+                  {genderError && (
+                    <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+                      {genderError}
+                    </div>
+                  )}
+                </Form.Item>
+              </div>
+
+              <div style={{ marginTop: 15 }} className="form-group">
+                <Form.Item
+                  layout="vertical"
+                  label={<span style={{ fontWeight: 500 }}>User Type </span>}
+                  name="usertype"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please Select your User Type ",
+                    },
+                  ]}
+                >
+                  <div className="job_nature">
+                    {userTypeData.map((item) => {
+                      return (
+                        <button
+                          type="button"
+                          className={
+                            userTypeactiveButton === item.id
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => {
+                            handleUserTypeClick(item.id);
+                            setUserType(item.id);
+                            // setUserTypeData(item.id);
+                            setUserTypeError(selectValidator(item.name));
+                          }}
+                        >
+                          {item.id === 1 ? (
+                            <LuGraduationCap />
+                          ) : item.id === 2 ? (
+                            <GiOfficeChair />
+                          ) : item.id === 3 ? (
+                            <FaBuildingUser />
+                          ) : item.id === 4 ? (
+                            <GiNewShoot />
+                          ) : (
+                            ""
+                          )}{" "}
+                          {item.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {userTypeError && (
+                    <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+                      {userTypeError}
+                    </div>
+                  )}
+                </Form.Item>
+              </div>
+
+              <div className="">
+                {userTypeactiveButton === 1 && (
+                  <>
+                    <div style={{ marginTop: 15 }} className="form-group">
+                      <CommonSelectField
+                        label="Course"
+                        disabled={false}
+                        name="course"
+                        mandatory={true}
+                        placeholder="Select Course"
+                        showSearch={true}
+                        options={[
+                          { value: "MBA", label: "MBA" },
+                          { value: "BSC", label: "BSC" },
+                        ]}
+                        onChange={(value) => {
+                          setCourse(value);
+                          setCourseError(selectValidator(value));
+                        }}
+                        error={courseError}
+                      />
+                    </div>
+
+                    <div style={{ alignItems: "center" }} className="form-row">
+                      <div className="form-group">
+                        <CommonDatePicker
+                          value={startDate}
+                          label="Start Year"
+                          name="startyear"
+                          placeholder="Start Year"
+                          onChange={(value) => {
+                            setStartDate(value);
+
+                            if (!value || value.trim() === "") {
+                              setStartDateError(" is required");
+                            } else {
+                              setStartDateError("");
+                            }
+                          }}
+                          error={startDateError}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <CommonDatePicker
+                          value={endDate}
+                          label="End Year"
+                          name="endyear"
+                          placeholder="End Year"
+                          onChange={(value) => {
+                            setEndDate(value);
+
+                            if (!value || value.trim() === "") {
+                              setEndDateError(" is required");
+                            } else {
+                              setEndDateError("");
+                            }
+                          }}
+                          error={endDateError}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {userTypeactiveButton === 4 && (
+                  <>
+                    <div style={{ marginTop: 15 }} className="form-group">
+                      <CommonSelectField
+                        label="Course"
+                        disabled={false}
+                        name="course1"
+                        mandatory={true}
+                        placeholder="Select Course"
+                        showSearch={true}
+                        options={[
+                          { value: "MBA", label: "MBA" },
+                          { value: "BSC", label: "BSC" },
+                        ]}
+                        onChange={(value) => {
+                          setFresherCourse(value);
+                          setFresherCourseError(selectValidator(value));
+                        }}
+                        error={fresherCourseError}
+                      />
+                    </div>
+
+                    <div style={{ alignItems: "center" }} className="form-row">
+                      <div className="form-group">
+                        <CommonDatePicker
+                          value={fresherStartDate}
+                          label="Start Year"
+                          name="startyear"
+                          placeholder="Start Year"
+                          onChange={(value) => {
+                            setFresherStartDate(value);
+
+                            if (!value || value.trim() === "") {
+                              setFresherStartDateError(" is required");
+                            } else {
+                              setFresherStartDateError("");
+                            }
+                          }}
+                          error={fresherStartDateError}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <CommonDatePicker
+                          value={fresherEndtDate}
+                          label="End Year"
+                          name="endyear"
+                          placeholder="End Year"
+                          onChange={(value) => {
+                            setFresherEndDate(value);
+
+                            if (!value || value.trim() === "") {
+                              setFresherEndDateError(" is required");
+                            } else {
+                              setFresherEndDateError("");
+                            }
+                          }}
+                          error={fresherEndDateError}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {userTypeactiveButton === 3 && (
+                  <>
+                    <Form.Item
+                      style={{ marginTop: 15 }}
+                      layout="vertical"
+                      label={<span style={{ fontWeight: 500 }}>Class</span>}
+                      name="usertype"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please Select your Class",
+                        },
+                      ]}
+                    >
+                      <div className="job_nature">
+                        <button
+                          type="button"
+                          className={
+                            Class === "1"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("1")}
+                        >
+                          <LiaSchoolSolid /> 1
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "2"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("2")}
+                        >
+                          <LiaSchoolSolid /> 2
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "3"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("3")}
+                        >
+                          <LiaSchoolSolid /> 3
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "4"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("4")}
+                        >
+                          <LiaSchoolSolid /> 4
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "5"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("5")}
+                        >
+                          <LiaSchoolSolid /> 5
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "6"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("6")}
+                        >
+                          <LiaSchoolSolid /> 6
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "7"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("7")}
+                        >
+                          <LiaSchoolSolid /> 7
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "8"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("8")}
+                        >
+                          <LiaSchoolSolid /> 8
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "9"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("9")}
+                        >
+                          <LiaSchoolSolid /> 9
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "10"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("10")}
+                        >
+                          <LiaSchoolSolid /> 10
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "11"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("11")}
+                        >
+                          <LiaSchoolSolid /> 11
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            Class === "12"
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => handleClassClick("12")}
+                        >
+                          <LiaSchoolSolid /> 12
+                        </button>
+                      </div>
+                    </Form.Item>
+                  </>
+                )}
+              </div>
+
+              <div style={{ marginTop: 15 }} className="form-row">
                 <div className="form-group">
                   <CommonSelectField
                     label="Country"
@@ -1167,15 +1607,39 @@ const ProfileDetails = () => {
                   />
                 )}
                 <Text strong>Email Verification</Text>
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={verifyEmailData}
-                  className="nav-btn next-btn"
-                  loading={otpSending}
+                <Text
+                  type={
+                    emailVerified === "Verified"
+                      ? "success"
+                      : emailVerified
+                      ? "danger"
+                      : "secondary"
+                  }
+                  style={{ marginLeft: "auto" }}
                 >
-                  Verify Email
-                </Button>
+                  {emailVerified || "Not Verified"}
+                </Text>
+                {emailVerified === "Verified" ? (
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={doneProfile}
+                    className="nav-btn next-btn"
+                    loading={otpSending}
+                  >
+                    Update Profile
+                  </Button>
+                ) : (
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={verifyEmailData}
+                    className="nav-btn next-btn"
+                    loading={otpSending}
+                  >
+                    Verify Email
+                  </Button>
+                )}
               </div>
               <Divider />
               {/* <div
@@ -1233,7 +1697,14 @@ const ProfileDetails = () => {
                 Your profile has been successfully set up. You can now access
                 all features.
               </Text>
-              <Button type="primary" size="large" className="dashboard-btn">
+              <Button
+                onClick={() => {
+                  navigate("/admin-profile");
+                }}
+                type="primary"
+                size="large"
+                className="dashboard-btn"
+              >
                 Go to Dashboard <ArrowRightOutlined />
               </Button>
             </div>
@@ -1279,7 +1750,7 @@ const ProfileDetails = () => {
         </div>
 
         <div className="navigation-buttons">
-          {currentStep > 0 && (
+          {currentStep === 1 && (
             <Button
               size="large"
               onClick={prevStep}
@@ -1301,15 +1772,6 @@ const ProfileDetails = () => {
               Next Step
             </Button>
           ) : null}
-
-          {/* <Button
-            type="primary"
-            size="large"
-            onClick={doneProfile}
-            className="nav-btn next-btn"
-          >
-            send profile
-          </Button> */}
         </div>
         <Modal
           title="Forgot Password"
