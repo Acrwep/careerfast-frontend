@@ -58,6 +58,7 @@ const LoginPage = () => {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [rememberMe, setRememberMe] = useState(false);
+  const [roleOptions, setRoleOptions] = useState([]);
   const [roleId, setRoleId] = useState(null);
   const navigate = useNavigate();
 
@@ -79,6 +80,10 @@ const LoginPage = () => {
   useEffect(() => {
     getRoleSData();
   }, []);
+
+  useEffect(() => {
+    getRoleId();
+  }, [activeTab]);
 
   const showLoading = () => {
     setOpen(true);
@@ -114,15 +119,28 @@ const LoginPage = () => {
       const response = await getRoles();
       const roles = response.data.data || [];
       console.log("role id", roles);
-
+      setRoleOptions(roles);
       const candidate = roles.find((role) => role.name === "CANDIDATE");
       const recruiter = roles.find((role) => role.name === "RECRUITER");
+      console.log("recruiter", recruiter);
       if (activeTab === "candidate" && candidate) setRoleId(candidate.id);
       else if (activeTab === "recruiter" && recruiter) {
         setRoleId(recruiter.id);
       }
     } catch (error) {
       console.log("Role id error", error);
+    }
+  };
+
+  const getRoleId = () => {
+    if (roleOptions.length >= 1) {
+      const candidate = roleOptions.find((role) => role.name === "CANDIDATE");
+      const recruiter = roleOptions.find((role) => role.name === "RECRUITER");
+      console.log("recruiter", recruiter);
+      if (activeTab === "candidate" && candidate) setRoleId(candidate.id);
+      else if (activeTab === "recruiter" && recruiter) {
+        setRoleId(recruiter.id);
+      }
     }
   };
 

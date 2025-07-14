@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Form,
   Steps,
@@ -34,14 +34,16 @@ import CommonSelectField from "../Common/CommonSelectField";
 import CommonTextArea from "../Common/CommonTextArea";
 import { IoIosMale } from "react-icons/io";
 import { IoFemaleOutline } from "react-icons/io5";
-import { MdOutlineNotInterested } from "react-icons/md";
 import { FaBuildingUser } from "react-icons/fa6";
 import { LuGraduationCap } from "react-icons/lu";
 import { GiOfficeChair } from "react-icons/gi";
-import { PiStudent } from "react-icons/pi";
 import { GiNewShoot } from "react-icons/gi";
 import { LiaSchoolSolid } from "react-icons/lia";
 import { useNavigate } from "react-router-dom";
+import { PiGenderTransgender } from "react-icons/pi";
+import { PiGenderIntersex } from "react-icons/pi";
+import { PiGenderNonbinary } from "react-icons/pi";
+import { MdNotInterested } from "react-icons/md";
 import {
   emailValidator,
   nameValidator,
@@ -51,8 +53,8 @@ import {
   phoneValidation,
   genderValidator,
 } from "../Common/Validation";
-import CommonDatePicker from "../Common/CommonDatePicker";
 import {
+  getGenderData,
   getUserTypeData,
   insertProfileData,
   verifyEmail,
@@ -135,12 +137,120 @@ const ProfileDetails = () => {
   const [otpSending, setOtpSending] = useState(false);
   const [otpError, setOtpError] = useState(null);
   const [selectedSkills, setSelectedSkills] = useState([]);
-  const [customSkill, setCustomSkill] = useState("");
   const [skillsError, setSkillsError] = useState(null);
   const [startDateError, setStartDateError] = useState("");
   const [endDateError, setEndDateError] = useState("");
   const [loginUserId, setLoginUserId] = useState(null);
   const [loading, setLoading] = React.useState(false);
+  const [genderOptions, setGenderOptions] = useState([]);
+
+  // add company
+  const [companies, setCompanies] = useState([
+    {
+      id: Date.now(),
+      jobTitle: "",
+      companyName: "",
+      designation: "",
+      workingStartDate: "",
+      workingEndDate: "",
+      customSkill: "",
+      skills: [],
+      currentlyWorking: false,
+      jobTitleError: "",
+      companyNameError: "",
+      designationError: "",
+      workingStartDateError: "",
+      workingEndDateError: "",
+      skillsError: "", // 👈 New
+    },
+  ]);
+
+  const handleAddCompany = () => {
+    setCompanies([
+      ...companies,
+      {
+        id: Date.now(),
+        jobTitle: "",
+        companyName: "",
+        designation: "",
+        workingStartDate: "",
+        workingEndDate: "",
+        customSkill: "",
+        currentlyWorking: false,
+      },
+    ]);
+  };
+
+  const handleCompanyFields = (index, fieldName, value) => {
+    const updateDatas = [...companies];
+
+    // For skills, we need to handle both direct value setting (from onChange) and event objects
+    if (fieldName === "customSkill") {
+      updateDatas[index][fieldName] = value.target ? value.target.value : value;
+    } else {
+      updateDatas[index][fieldName] = value;
+    }
+
+    // Rest of your validation logic...
+    if (fieldName === "jobTitle") {
+      updateDatas[index].jobTitleError = nameValidator(value);
+    }
+
+    if (fieldName === "companyName") {
+      updateDatas[index].companyNameError = nameValidator(value);
+    }
+
+    if (fieldName === "designation") {
+      updateDatas[index].designationError = nameValidator(value);
+    }
+
+    if (fieldName === "workingStartDate") {
+      updateDatas[index].workingStartDateError = selectValidator(value);
+    }
+
+    if (fieldName === "workingEndDate") {
+      updateDatas[index].workingEndDateError = selectValidator(value);
+    }
+
+    if (fieldName === "currentlyWorking") {
+      if (updateDatas[index].currentlyWorking === true) {
+        updateDatas[index].workingEndDate = "";
+        updateDatas[index].workingEndDateError = "";
+      }
+    }
+
+    setCompanies(updateDatas);
+  };
+
+  const handleDeleteCompany = (index) => {
+    if (companies.length === 1) return;
+    let data = [...companies];
+    data.splice(index, 1);
+    setCompanies(data);
+  };
+
+  const handleRemoveSkill = (skillToRemove) => {
+    setSelectedSkills(
+      selectedSkills.filter((skill) => skill !== skillToRemove)
+    );
+  };
+
+  const handleCustomSkillAdd = (index) => {
+    const trimmed = companies[index].customSkill?.trim();
+    if (
+      trimmed &&
+      !selectedSkills.some(
+        (skill) => skill.toLowerCase() === trimmed.toLowerCase()
+      )
+    ) {
+      setSelectedSkills([...selectedSkills, trimmed]);
+    }
+
+    // Clear the input field
+    const updatedCompanies = [...companies];
+    updatedCompanies[index].customSkill = "";
+    setCompanies(updatedCompanies);
+  };
 
   //
 
@@ -175,6 +285,20 @@ const ProfileDetails = () => {
       console.log("getUserTypeData", response);
     } catch (error) {
       console.log("getUserTypeData", error);
+    } finally {
+      setTimeout(() => {
+        getGenderDataType();
+      }, 300);
+    }
+  };
+
+  const getGenderDataType = async () => {
+    try {
+      const response = await getGenderData();
+      setGenderOptions(response?.data?.data || []);
+      console.log("gender", response);
+    } catch (error) {
+      console.log("gender error", error);
     }
   };
 
@@ -194,6 +318,33 @@ const ProfileDetails = () => {
       city: undefined,
     });
   };
+
+  const yearOptions = Array.from({ length: 2025 - 1990 + 1 }, (_, i) => {
+    const year = (1990 + i).toString();
+    return { label: year, value: year };
+  });
+
+  const FresherYearOptions = Array.from({ length: 2025 - 1990 + 1 }, (_, i) => {
+    const FreshYear = (1990 + i).toString();
+    return { label: FreshYear, value: FreshYear };
+  });
+
+  const workingComapanyYearOptions = Array.from(
+    { length: 2025 - 1990 + 1 },
+    (_, i) => {
+      const FreshYear = (1990 + i).toString();
+      return { label: FreshYear, value: FreshYear };
+    }
+  );
+
+  const startYearOptions = yearOptions;
+  const endYearOptions = yearOptions;
+
+  const FresherStartYearOptions = FresherYearOptions;
+  const fresherEndYearOptions = FresherYearOptions;
+
+  const workingStartYearOptions = workingComapanyYearOptions;
+  const workingEndYearOptions = workingComapanyYearOptions;
 
   const handleStateChange = (stateName) => {
     const state = stateList.find((s) => s.name === stateName);
@@ -376,11 +527,14 @@ const ProfileDetails = () => {
       const validateCompanyFields = companies.map((item, index) => {
         return {
           ...item,
+          jobTitleError: nameValidator(item.jobTitle),
           companyNameError: nameValidator(item.companyName),
           designationError: nameValidator(item.designation),
-          startDateError: selectValidator(item.startDate),
-          endDateError:
-            item.currentlyWorking === true ? "" : selectValidator(item.endDate),
+          workingStartDateError: selectValidator(item.workingStartDate),
+          workingEndDateError:
+            item.currentlyWorking === true
+              ? ""
+              : selectValidator(item.workingEndDate),
         };
       });
 
@@ -389,10 +543,11 @@ const ProfileDetails = () => {
 
       validateCompanyFields.map((err) => {
         if (
+          err.jobTitleError ||
           err.companyNameError ||
           err.designationError ||
-          err.startDateError ||
-          err.endDateError
+          err.workingStartDateError ||
+          err.workingEndDateError
         ) {
           experienceErrors = true;
         }
@@ -402,11 +557,10 @@ const ProfileDetails = () => {
         selectExperienceTypeValidate ||
         totalYearsExperienceValidate ||
         totalMonthsExperienceValidate ||
-        jobTitleValidate ||
-        skillsValidate ||
-        experienceErrors
+        // customSkillValidate ||
+        skillsValidate
       ) {
-        message.error("Please fill all fields correctly before proceeding.");
+        message.error("Please fill all fields correctly before proceedinggg.");
         return;
       }
     } else {
@@ -422,14 +576,11 @@ const ProfileDetails = () => {
 
   const doneProfile = async () => {
     const professional = companies.map((company) => ({
-      experience_type: selectExperienceType,
-      total_years: totalYearsExperience,
-      total_months: totalMonthsExperience,
-      job_title: company.designation,
+      job_title: company.jobTitle,
       company_name: company.companyName,
       designation: company.designation,
-      start_date: company.startDate,
-      end_date: company.endDate,
+      start_date: company.workingStartDate,
+      end_date: company.workingEndDate,
       currently_working: company.currentlyWorking,
       skills: selectedSkills,
     }));
@@ -442,6 +593,10 @@ const ProfileDetails = () => {
       city: city,
       pincode: pincode,
       address: address,
+      experince_type: selectExperienceType,
+      total_years: totalYearsExperience,
+      total_months: totalMonthsExperience,
+      gender: gender,
       professional,
       user_type:
         userType === 1
@@ -454,6 +609,20 @@ const ProfileDetails = () => {
           ? "Fresher"
           : "",
       is_email_verified: "verified",
+      ...(userType === 1 && {
+        course: course,
+        start_year: startDate,
+        end_year: endDate,
+      }),
+      ...(userType === 4 && {
+        course: fresherCourse,
+        start_year: fresherStartDate,
+        end_year: fresherEndtDate,
+      }),
+
+      ...(userType === 3 && {
+        classes: Class,
+      }),
     };
 
     try {
@@ -526,83 +695,6 @@ const ProfileDetails = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
       setProgress(progress - 25);
-    }
-  };
-
-  // add company
-  const [companies, setCompanies] = useState([
-    {
-      id: Date.now(),
-      companyName: "",
-      designation: "",
-      startDate: "",
-      endDate: "",
-      currentlyWorking: false,
-    },
-  ]);
-
-  const handleAddCompany = () => {
-    setCompanies([
-      ...companies,
-      {
-        id: Date.now(),
-        companyName: "",
-        designation: "",
-        startDate: "",
-        endDate: "",
-        currentlyWorking: false,
-      },
-    ]);
-  };
-
-  const handleCompanyFields = (index, fieldName, value) => {
-    const updateDatas = [...companies];
-    updateDatas[index][fieldName] = value;
-
-    if (fieldName === "companyName") {
-      updateDatas[index].companyNameError = nameValidator(value);
-    }
-
-    if (fieldName === "designation") {
-      updateDatas[index].designationError = nameValidator(value);
-    }
-
-    if (fieldName === "startDate") {
-      updateDatas[index].startDateError = selectValidator(value);
-    }
-
-    if (fieldName === "endDate") {
-      updateDatas[index].endDateError = selectValidator(value);
-    }
-
-    if (fieldName === "currentlyWorking") {
-      if (updateDatas[index].currentlyWorking === true) {
-        updateDatas[index].endDate = "";
-        updateDatas[index].endDateError = "";
-      }
-    }
-
-    setCompanies(updateDatas);
-  };
-
-  const handleDeleteCompany = (index) => {
-    if (companies.length === 1) return;
-    let data = [...companies];
-    data.splice(index, 1);
-    setCompanies(data);
-  };
-
-  const handleRemoveSkill = (skillToRemove) => {
-    setSelectedSkills(
-      selectedSkills.filter((skill) => skill !== skillToRemove)
-    );
-  };
-
-  const handleCustomSkillAdd = () => {
-    const trimmed = customSkill.trim();
-    if (trimmed && !selectedSkills.includes(trimmed)) {
-      setSelectedSkills([...selectedSkills, trimmed]);
-      setCustomSkill("");
     }
   };
 
@@ -757,53 +849,40 @@ const ProfileDetails = () => {
                   required
                 >
                   <div className="job_nature">
-                    <button
-                      type="button"
-                      className={
-                        activeButton === "Male"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={(e) => {
-                        handleButtonClick("Male");
-                        setGender("Male");
-                        setGenderError("");
-                      }}
-                    >
-                      <IoIosMale /> Male
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        activeButton === "Female"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => {
-                        handleButtonClick("Female");
-                        setGender("Female");
-                        setGenderError("");
-                      }}
-                    >
-                      <IoFemaleOutline /> Female
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        activeButton === "Others"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => {
-                        handleButtonClick("Others");
-                        setGender("Others");
-                        setGenderError("");
-                      }}
-                    >
-                      <MdOutlineNotInterested /> Others
-                    </button>
+                    {genderOptions.map((item) => {
+                      return (
+                        <button
+                          type="button"
+                          className={
+                            activeButton === item.name
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
+                          }
+                          onClick={() => {
+                            handleButtonClick(item.name);
+                            setGender(item.name);
+                            setGenderError("");
+                          }}
+                        >
+                          {item.name === "Male" ? (
+                            <IoIosMale />
+                          ) : item.name === "Female" ? (
+                            <IoFemaleOutline />
+                          ) : item.name === "Transgender" ? (
+                            <PiGenderTransgender />
+                          ) : item.name === "Intersex" ? (
+                            <PiGenderIntersex />
+                          ) : item.name === "Non-binary" ? (
+                            <PiGenderNonbinary />
+                          ) : item.name === "Others" ? (
+                            <MdNotInterested />
+                          ) : (
+                            ""
+                          )}{" "}
+                          {item.name}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {genderError && (
@@ -892,8 +971,9 @@ const ProfileDetails = () => {
 
                     <div style={{ alignItems: "center" }} className="form-row">
                       <div className="form-group">
-                        <CommonDatePicker
+                        <CommonSelectField
                           value={startDate}
+                          options={startYearOptions}
                           label="Start Year"
                           name="startyear"
                           placeholder="Start Year"
@@ -911,8 +991,9 @@ const ProfileDetails = () => {
                       </div>
 
                       <div className="form-group">
-                        <CommonDatePicker
+                        <CommonSelectField
                           value={endDate}
+                          options={endYearOptions}
                           label="End Year"
                           name="endyear"
                           placeholder="End Year"
@@ -956,8 +1037,9 @@ const ProfileDetails = () => {
 
                     <div style={{ alignItems: "center" }} className="form-row">
                       <div className="form-group">
-                        <CommonDatePicker
+                        <CommonSelectField
                           value={fresherStartDate}
+                          options={FresherStartYearOptions}
                           label="Start Year"
                           name="startyear"
                           placeholder="Start Year"
@@ -975,8 +1057,9 @@ const ProfileDetails = () => {
                       </div>
 
                       <div className="form-group">
-                        <CommonDatePicker
+                        <CommonSelectField
                           value={fresherEndtDate}
+                          options={fresherEndYearOptions}
                           label="End Year"
                           name="endyear"
                           placeholder="End Year"
@@ -1420,21 +1503,6 @@ const ProfileDetails = () => {
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <CommonInputField
-                      name={"Job title"}
-                      label="Job Title"
-                      mandotary={true}
-                      value={jobTitle}
-                      placeholder={"Software Engineer"}
-                      type={"text"}
-                      onChange={(e) => {
-                        setJobTitle(e.target.value);
-                        setJobTitleError(nameValidator(e.target.value));
-                      }}
-                      error={jobTitleError}
-                    />
-                  </div>
                   {companies.map((company, index) => (
                     <div className="add-company-section" key={index}>
                       <div style={{ display: "flex", justifyContent: "end" }}>
@@ -1447,6 +1515,25 @@ const ProfileDetails = () => {
                             className="job-delete"
                           />
                         )}
+                      </div>
+
+                      <div className="form-group">
+                        <CommonInputField
+                          name={"Job title"}
+                          label="Job Title"
+                          mandotary={true}
+                          value={company.jobTitle}
+                          placeholder={"Software Engineer"}
+                          type={"text"}
+                          onChange={(e) =>
+                            handleCompanyFields(
+                              index,
+                              "jobTitle",
+                              e.target.value
+                            )
+                          }
+                          error={company.jobTitleError}
+                        />
                       </div>
                       <div className="form-row">
                         <div className="form-group">
@@ -1485,22 +1572,32 @@ const ProfileDetails = () => {
 
                       <div className="form-row">
                         <div className="from-group">
-                          <CommonDatePicker
+                          <CommonSelectField
                             label="Start Date"
-                            value={company.startDate}
-                            error={company.startDateError}
+                            options={workingStartYearOptions}
+                            value={company.workingStartDate}
+                            error={company.workingStartDateError}
                             onChange={(value) =>
-                              handleCompanyFields(index, "startDate", value)
+                              handleCompanyFields(
+                                index,
+                                "workingStartDate",
+                                value
+                              )
                             }
                           />
                         </div>
                         <div className="from-group">
-                          <CommonDatePicker
+                          <CommonSelectField
                             label="End Date"
-                            value={company.endDate}
-                            error={company.endDateError}
+                            options={workingEndYearOptions}
+                            value={company.workingEndDate}
+                            error={company.workingEndDateError}
                             onChange={(value) =>
-                              handleCompanyFields(index, "endDate", value)
+                              handleCompanyFields(
+                                index,
+                                "workingEndDate",
+                                value
+                              )
                             }
                             disabled={
                               company.currentlyWorking === true ? true : false
@@ -1525,6 +1622,44 @@ const ProfileDetails = () => {
                           Currently Working?
                         </Checkbox>
                       </div>
+
+                      <div className="form-group">
+                        <div style={{ marginTop: 8, marginBottom: 0 }}>
+                          {selectedSkills.map((skill) => (
+                            <Tag
+                              key={skill}
+                              closable
+                              onClose={() => handleRemoveSkill(skill)}
+                              style={{
+                                marginBottom: 15,
+                                fontSize: 14,
+                                padding: "5px 10px",
+                                border: "none",
+                                backgroundColor: "#e9e0fe",
+                                color: "#5f2eea",
+                                borderRadius: 50,
+                              }}
+                            >
+                              {skill}
+                            </Tag>
+                          ))}
+                        </div>
+
+                        <CommonInputField
+                          label={"Skills"}
+                          onPressEnter={() => handleCustomSkillAdd(index)}
+                          value={company.customSkill || ""}
+                          name={"customSkill"}
+                          onChange={(e) =>
+                            handleCompanyFields(index, "customSkill", e)
+                          }
+                          mandotary={true}
+                          placeholder={
+                            "List your skills here, showcasing what you excel at."
+                          }
+                          error={skillsError}
+                        />
+                      </div>
                     </div>
                   ))}
 
@@ -1538,45 +1673,6 @@ const ProfileDetails = () => {
                   </div>
                 </div>
               )}
-
-              <div className="form-group">
-                <div style={{ marginTop: 8, marginBottom: 0 }}>
-                  {selectedSkills.map((skill) => (
-                    <Tag
-                      key={skill}
-                      closable
-                      onClose={() => handleRemoveSkill(skill)}
-                      style={{
-                        marginBottom: 15,
-                        fontSize: 14,
-                        padding: "5px 10px",
-                        border: "none",
-                        backgroundColor: "#e9e0fe",
-                        color: "#5f2eea",
-                        borderRadius: 50,
-                      }}
-                    >
-                      {skill}
-                    </Tag>
-                  ))}
-                </div>
-
-                <CommonInputField
-                  label={"Skills"}
-                  onPressEnter={handleCustomSkillAdd}
-                  value={customSkill}
-                  name={"skills"}
-                  onChange={(e) => {
-                    setCustomSkill(e.target.value);
-                    setSkillsError(selectValidator(e.target.value));
-                  }}
-                  mandotary={true}
-                  placeholder={
-                    "List your skills here, showcasing what you excel at."
-                  }
-                  error={skillsError}
-                />
-              </div>
             </div>
           </Card>
         </div>

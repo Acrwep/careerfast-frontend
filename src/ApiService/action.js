@@ -14,13 +14,13 @@ api.interceptors.request.use(
     const AccessToken = localStorage.getItem("AccessToken");
     // console.log("my token", AccessToken);
 
-    // const loginDetails = localStorage.getItem("loginDetails");
+    const loginDetails = localStorage.getItem("loginDetails");
     // console.log("login details", loginDetails);
 
-    // if (loginDetails) {
-    //   const convertJson = JSON.parse(loginDetails);
-    //   console.log(convertJson);
-    // }
+    if (loginDetails) {
+      const convertJson = JSON.parse(loginDetails);
+      // console.log(convertJson);
+    }
 
     if (AccessToken) {
       const expired = isTokenExpired(AccessToken);
@@ -392,6 +392,85 @@ export const updateSkills = async (payload) => {
 export const insertProjects = async (payload) => {
   try {
     const response = await api.post("/api/insertProjects", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// insertProjects
+
+export const updateSocialLinks = async (payload) => {
+  try {
+    const response = await api.put("/api/updateSocialLinks", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// insertProjects
+
+export const updateBasicDetails = async (payload) => {
+  try {
+    const response = await api.put("/api/updateBasicDetails", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// updateEducation
+
+export const updateEducation = async (payload) => {
+  try {
+    const response = await api.put("/api/updateEducation", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// insertEducation
+
+export const insertEducation = async (payload) => {
+  try {
+    const response = await api.post("/api/insertEducation", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// deleteEducation
+
+export const deleteEducation = async (payload) => {
+  try {
+    const response = await api.post("/api/deleteEducation", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// insertExperience
+
+export const insertExperience = async (payload) => {
+  try {
+    const response = await api.post("/api/insertExperience", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getUserProfile
+
+export const getUserProfile = async (payload) => {
+  try {
+    const response = await api.get("/api/getUserProfile", {
+      params: payload,
+    });
     return response;
   } catch (error) {
     throw error;

@@ -11,8 +11,9 @@ import {
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoMdCloseCircleOutline } from "react-icons/io";
-import { Menu, Dropdown } from "antd";
-import { getJobPostByUserId } from "../ApiService/action";
+import { Menu, Dropdown, message, Button } from "antd";
+import { closeRegistration, getJobPostByUserId } from "../ApiService/action";
+import moment from "moment/moment";
 
 export default function ListingDashboard() {
   const [activeTab, setActiveTab] = useState("All");
@@ -20,9 +21,22 @@ export default function ListingDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loginUserId, setLoginUserId] = useState(null);
 
   useEffect(() => {
     getJobPostByUserIdData();
+  }, []);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
   }, []);
 
   const getJobPostByUserIdData = async () => {
@@ -45,22 +59,24 @@ export default function ListingDashboard() {
     } finally {
       setTimeout(() => {
         setLoading(false);
-      }, 300); // Optional delay for smooth UI
+      }, 300);
     }
   };
 
-  const moreOptions = (
-    <Menu
-      items={[
-        {
-          key: "1",
-          label: "Close Registration",
-          danger: true,
-          icon: <IoMdCloseCircleOutline />,
-        },
-      ]}
-    />
-  );
+  const handleCloseRegistration = async (jobId) => {
+    const payload = {
+      id: jobId,
+      status: "Expired", // set status explicitly
+    };
+    try {
+      const response = await closeRegistration(payload); // backend should handle the update
+      message.success("Job marked as expired.");
+      getJobPostByUserIdData(); // Refresh listing
+    } catch (error) {
+      message.error("Failed to close registration.");
+      console.error("Close Registration Error:", error);
+    }
+  };
 
   const filteredListings = listings.filter((listing) => {
     const matchesTab = activeTab === "All" || listing.job_nature === activeTab;
@@ -84,17 +100,16 @@ export default function ListingDashboard() {
   const tabs = ["All", "Internships", "Jobs"];
   const filters = ["All", "Live", "Expired"];
 
-  const formatDate = (dateString) => {
-    const options = { day: "numeric", month: "short", year: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-US", options);
-  };
-
   const getTypeIcon = (job_nature) => {
     switch (job_nature) {
       case "Job":
         return <FiBriefcase className="icon-blue" />;
+      case "Contract":
+        return <FiBriefcase className="icon-purple" />;
+      case "Internship":
+        return <FiBriefcase className="icon-orange" />;
       default:
-        return <FiCalendar className="icon-gray" />;
+        return <FiCalendar className="icon-green" />;
     }
   };
 
@@ -172,77 +187,108 @@ export default function ListingDashboard() {
           <div className="listing-list">
             {filteredListings.length > 0 ? (
               <AnimatePresence>
-                {filteredListings.map((listing) => (
-                  <motion.div
-                    key={listing.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="listing-card"
-                  >
-                    <div className="card-inner">
-                      <img
-                        src={listing.company_logo}
-                        alt={listing.company_name}
-                        className="company-logo"
-                      />
-                      <div className="listing-info">
-                        <div className="listing-header">
-                          <div style={{ textAlign: "left" }}>
-                            <h3>{listing.job_title}</h3>
-                            <p>{listing.company_name}</p>
-                          </div>
-                          <div className="listing-type">
-                            {getTypeIcon(listing.job_nature)}
-                            <span>{listing.job_nature}</span>
-                          </div>
-                        </div>
-                        <div className="listing-meta">
-                          <span>
-                            {formatDate(listing.created_at)} -{" "}
-                            {formatDate("Jul 27, 2025")}
-                            {listing.expired && (
-                              <span className="expired"> (Expired)</span>
-                            )}
-                          </span>
-                          <span className={`badge ${listing.visibility}`}>
-                            {listing.duration_period}
-                          </span>
-                          <span className={`badge ${listing.status}`}>
-                            {listing.status}
-                          </span>
-                        </div>
-                        <div className="listing-footer">
-                          <div>
-                            <span>
-                              <strong>{listing.impressions}</strong> Impressions
-                            </span>
-                            <span>
-                              <strong>{listing.registrations}</strong>{" "}
-                              Registrations
-                            </span>
-                          </div>
-                          <div className="listing-actions">
-                            <a href="/admin-dashboard">
-                              <FiEdit style={{ cursor: "pointer" }} />
-                            </a>
-
-                            <FiSettings />
-                            <Dropdown
-                              placement="bottomRight"
-                              overlay={moreOptions}
+                {filteredListings.map((listing) => {
+                  const isClosed =
+                    moment().diff(moment(listing.created_at), "days") > 10;
+                  const moreOptions = (
+                    <Menu
+                      items={[
+                        {
+                          key: "1",
+                          label: (
+                            <span
+                              onClick={() =>
+                                handleCloseRegistration(listing.id)
+                              }
                             >
-                              <FiMoreVertical
-                              // onClick={handleCloseRegistration}
-                              />
-                            </Dropdown>
+                              Close Registration
+                            </span>
+                          ),
+                          danger: true,
+                          icon: <IoMdCloseCircleOutline />,
+                        },
+                      ]}
+                    />
+                  );
+                  return (
+                    <motion.div
+                      key={listing.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="listing-card"
+                    >
+                      <div className="card-inner">
+                        <img
+                          src={listing.company_logo}
+                          alt={listing.company_name}
+                          className="company-logo"
+                        />
+                        <div className="listing-info">
+                          <div className="listing-header">
+                            <div style={{ textAlign: "left" }}>
+                              <h3>{listing.job_title}</h3>
+                              <p>{listing.company_name}</p>
+                            </div>
+                            <div className="listing-type">
+                              {getTypeIcon(listing.job_nature)}
+                              <span>{listing.job_nature}</span>
+                            </div>
+                          </div>
+
+                          <div className="activeClosed">
+                            <button className={isClosed ? "clo" : "act"}>
+                              {isClosed ? "Closed" : "Active"}
+                            </button>
+                          </div>
+
+                          <div className="listing-meta">
+                            <span>
+                              <span
+                                style={{ color: isClosed ? "red" : "green" }}
+                              >
+                                Posted on:{" "}
+                              </span>
+                              <b>
+                                {moment(listing.created_at).format(
+                                  "DD MMM YYYY"
+                                )}
+                              </b>
+                            </span>
+                          </div>
+
+                          <div className="listing-footer">
+                            <div>
+                              <span>
+                                <strong>{listing.impressions}</strong>{" "}
+                                Impressions
+                              </span>
+                              <span>
+                                <strong>{listing.registrations}</strong>{" "}
+                                Registrations
+                              </span>
+                            </div>
+                            <div className="listing-actions">
+                              <a href="/admin-dashboard">
+                                <FiEdit style={{ cursor: "pointer" }} />
+                              </a>
+
+                              <FiSettings />
+                              <Dropdown
+                                placement="bottomRight"
+                                overlay={moreOptions}
+                                trigger={["click"]}
+                              >
+                                <FiMoreVertical style={{ cursor: "pointer" }} />
+                              </Dropdown>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             ) : (
               <div className="no-data">No opportunities found</div>

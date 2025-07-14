@@ -611,17 +611,8 @@ export default function PostJobs() {
           : "",
       salary_type:
         salaryDetails === 1 ? "Fixed" : salaryDetails === 2 ? "Range" : "",
-      salary_figure:
-        salaryDetails === 1
-          ? {
-              currency: currency,
-              amount: fixedSalary,
-            }
-          : {
-              currency: currency,
-              min: salaryMin,
-              max: salaryMax,
-            },
+      min_salary: salaryDetails === 1 ? fixedSalary : salaryMin,
+      max_salary: salaryDetails === 2 ? salaryMax : null,
       diversity_hiring: allDiversity,
       benefits: allBenefitsData,
       created_at: fetchDateTime,
@@ -640,8 +631,6 @@ export default function PostJobs() {
     });
 
     setQuestions(updated);
-
-    // Return true if all are valid
     return updated.every((q) => !q.error);
   };
 
@@ -665,7 +654,7 @@ export default function PostJobs() {
       ...generatePayload(),
       questions: [],
     };
-
+    console.log("job posted", payload);
     await publish(payload);
   };
 
