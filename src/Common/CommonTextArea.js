@@ -18,14 +18,19 @@ export default function CommonTextArea({
     <div className="commontextarea">
       <Form.Item
         layout="vertical"
-        label={<span style={{ fontWeight: 500 }}>{label}</span>}
-        name={name}
-        mandatory={mandatory}
+        label={
+          <span>
+            {mandatory ? <span style={{ color: "red" }}>* </span> : ""}
+            {label}
+          </span>
+        }
       >
         <TextArea
           style={style}
+          name={name}
           onChange={onChange}
           placeholder={placeholder}
+          mandatory={mandatory}
           value={value}
           className="premium-input"
         />

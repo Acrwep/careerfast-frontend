@@ -14,6 +14,21 @@ export const nameValidator = (name) => {
   return error;
 };
 
+export const descriptionValidator = (text) => {
+  let error = "";
+  const trimmed = text?.trim();
+
+  if (!trimmed || trimmed.length === 0) {
+    error = "Description is required.";
+  } else if (trimmed.length < 10) {
+    error = "Description must be at least 10 characters.";
+  } else if (/^\d+$/.test(trimmed)) {
+    error = "Description cannot be only numbers.";
+  }
+
+  return error;
+};
+
 export const orgTypeValidation = (orgType) => {
   if (!orgType || orgType.length <= 0) {
     return " is required ";

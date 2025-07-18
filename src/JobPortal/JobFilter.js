@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Row,
   Col,
@@ -43,73 +43,20 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import "../css/JobFilter.css";
-import { FaLocationDot } from "react-icons/fa6";
+import { FaLocationDot, FaTransgender } from "react-icons/fa6";
 import { FaRegCalendarAlt } from "react-icons/fa";
 import CommonSelectField from "../Common/CommonSelectField";
 import { style } from "framer-motion/client";
+import { getJobPosts } from "../ApiService/action";
+import { DollarOutlined } from "@ant-design/icons";
+import { BsDot } from "react-icons/bs";
+import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
+import { CommonToaster } from "../Common/CommonToaster";
+import { FaHeart, FaRegHeart } from "react-icons/fa6";
+import { IoMdCalendar } from "react-icons/io";
+import { IoIosShareAlt } from "react-icons/io";
 
 const { Title, Text, Link } = Typography;
-const jobs = [
-  {
-    id: 1,
-    title: "Senior Software Engineer (Full Stack)",
-    company: "Trellix",
-    daysLeft: "13 days left",
-    level: "Experienced Professionals",
-    logo: "https://cdn.worldvectorlogo.com/logos/trellix.svg",
-    salary: "$120K - $150K",
-    location: "Remote • San Francisco, CA",
-    type: "Full-time",
-    premium: true,
-    urgent: true,
-    skills: ["React", "Node.js", "AWS", "TypeScript"],
-    eligibility: "Fresher • Graduate • Postgraduate",
-  },
-  {
-    id: 2,
-    title: "Lead Frontend Developer",
-    company: "Meta",
-    daysLeft: "5 days left",
-    level: "Senior Level",
-    logo: "https://cdn.worldvectorlogo.com/logos/meta-3.svg",
-    salary: "$140K - $180K",
-    location: "Menlo Park, CA",
-    type: "Full-time",
-    premium: true,
-    skills: ["React", "GraphQL", "Next.js", "WebGL"],
-    eligibility: "Fresher • Graduate • Postgraduate",
-  },
-  {
-    id: 3,
-    title: "Technical Product Manager",
-    company: "Google",
-    daysLeft: "10 days left",
-    level: "Leadership",
-    logo: "https://cdn.worldvectorlogo.com/logos/google-g-2015.svg",
-    salary: "$130K - $170K",
-    location: "Mountain View, CA",
-    type: "Full-time",
-    premium: true,
-    urgent: false,
-    skills: ["Product Strategy", "Agile", "Data Analysis", "Go-to-Market"],
-    eligibility: "Fresher • Graduate • Postgraduate",
-  },
-  {
-    id: 4,
-    title: "Technical Product Manager",
-    company: "Facebook",
-    daysLeft: "10 days left",
-    level: "Leadership",
-    logo: "https://cdn.worldvectorlogo.com/logos/facebook-2020-2-1.svg",
-    salary: "$130K - $170K",
-    location: "Mountain View, CA",
-    type: "Full-time",
-    premium: true,
-    urgent: false,
-    skills: ["Product Strategy", "Agile", "Data Analysis", "Go-to-Market"],
-    eligibility: "Fresher • Graduate • Postgraduate",
-  },
-];
 
 const FILTER_SECTIONS = [
   { key: "status", label: "Status", count: 1 },
@@ -138,218 +85,6 @@ const category = [
   "College Students",
 ];
 
-const dropdownItems = () => (
-  <Menu style={{ minWidth: 220, padding: "0.5rem 0" }}>
-    <Menu.Item key="internships" icon={<LaptopOutlined />}>
-      Internships
-    </Menu.Item>
-    <Menu.Item
-      key="jobs"
-      icon={<ReadOutlined />}
-      style={{ background: "#f0f7ff" }}
-    >
-      Jobs
-    </Menu.Item>
-    <Menu.SubMenu
-      key="competitions"
-      title="Competitions"
-      icon={<TrophyOutlined />}
-    >
-      <Menu.Item key="comp-1">Online</Menu.Item>
-      <Menu.Item key="comp-2">Onsite</Menu.Item>
-    </Menu.SubMenu>
-    <Menu.Item key="mentorship" icon={<UserOutlined />}>
-      Mentorship
-    </Menu.Item>
-    <Menu.SubMenu key="courses" title="Courses" icon={<BookOutlined />}>
-      <Menu.Item key="course-1">Tech</Menu.Item>
-      <Menu.Item key="course-2">Design</Menu.Item>
-    </Menu.SubMenu>
-    <Menu.SubMenu key="practice" title="Practice" icon={<CodeOutlined />}>
-      <Menu.Item key="practice-1">DSA</Menu.Item>
-      <Menu.Item key="practice-2">System Design</Menu.Item>
-    </Menu.SubMenu>
-    <Menu.Item key="scholarships" icon={<ReadOutlined />}>
-      Scholarships
-    </Menu.Item>
-    <Menu.Item key="articles" icon={<FileTextOutlined />}>
-      Articles
-    </Menu.Item>
-    <Menu.Item key="conferences" icon={<CalendarOutlined />}>
-      Conferences
-    </Menu.Item>
-    <Menu.Item key="workshops" icon={<ToolOutlined />}>
-      Workshops
-    </Menu.Item>
-  </Menu>
-);
-
-const locationsData = [
-  { name: "Pune", detail: "Pune, Maharashtra, India" },
-  { name: "Gurgaon", detail: "Gurgaon, Haryana, India" },
-  { name: "Delhi", detail: "Delhi, Delhi, India" },
-  { name: "Bangalore Urban", detail: "Bangalore Urban, Karnataka, India" },
-  { name: "Bangalore Rural", detail: "Bangalore Rural, Karnataka, India" },
-];
-
-// Create dropdown menu for reusability
-const getDropdownMenu = (label) => (
-  <Menu
-    items={[
-      { label: `${label} Option 1`, key: "1" },
-      { label: `${label} Option 2`, key: "2" },
-    ]}
-  />
-);
-
-const JobCard = ({ job }) => (
-  <Card
-    hoverable
-    className={`custom-job-card ${job.premium ? "premium-job-card" : ""} ${
-      job.urgent ? "urgent-job-card" : ""
-    }`}
-    bodyStyle={{ padding: 0 }}
-  >
-    <div className="job-card-content">
-      {job.premium && <div className="premium-border" />}
-      {job.urgent && <div className="urgent-tag">URGENT</div>}
-      <div className="job-card-inner">
-        <div style={{ padding: "24px 24px 16px" }}>
-          <Space
-            direction="vertical"
-            size={16}
-            style={{ width: "100%", gap: 10 }}
-          >
-            <Space
-              align="start"
-              style={{
-                justifyContent: "space-between",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <img
-                src={job.logo}
-                alt={job.company}
-                style={{
-                  width: 50,
-                  height: 50,
-                  objectFit: "contain",
-                  borderRadius: 8,
-                  border: "1px solid #f0f0f0",
-                  padding: 4,
-                  background: "#fff",
-                }}
-              />
-              <Space>
-                {job.premium && (
-                  <Tag
-                    icon={<StarFilled />}
-                    color="gold"
-                    style={{ fontWeight: 600 }}
-                  >
-                    Premium
-                  </Tag>
-                )}
-                <Tag
-                  bordered={false}
-                  color={job.type === "Full-time" ? "blue" : "purple"}
-                  style={{ fontWeight: 500 }}
-                >
-                  {job.type}
-                </Tag>
-              </Space>
-            </Space>
-
-            <Space
-              direction="vertical"
-              size={4}
-              style={{ width: "100%", textAlign: "left", gap: 0 }}
-            >
-              <Link
-                strong
-                style={{
-                  fontSize: "18px",
-                  fontWeight: 600,
-                  textAlign: "left",
-                  color: "#1f1f1f",
-                  lineHeight: 1.3,
-                }}
-              >
-                {job.title}
-              </Link>
-              <Text style={{ fontSize: "16px", fontWeight: 500 }}>
-                {job.company}
-              </Text>
-            </Space>
-
-            <Text
-              type="secondary"
-              style={{
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <ClockCircleOutlined style={{ marginRight: 6 }} />
-              {job.daysLeft} • {job.location}
-            </Text>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {job.skills.map((skill, index) => (
-                <Tag
-                  className="job_skills"
-                  key={index}
-                  style={{ borderRadius: 4, padding: "4px 8px" }}
-                >
-                  {skill}
-                </Tag>
-              ))}
-            </div>
-          </Space>
-        </div>
-
-        <div
-          style={{
-            borderTop: "1px solid #f0f0f0",
-            padding: "10px 24px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Tag
-            icon={
-              job.level.includes("Leadership") ? (
-                <CrownFilled />
-              ) : (
-                <ThunderboltFilled />
-              )
-            }
-            color={job.level.includes("Leadership") ? "gold" : "geekblue"}
-            style={{
-              borderRadius: "999px",
-              fontWeight: 500,
-              padding: "4px 12px",
-              margin: 0,
-            }}
-          >
-            {job.level}
-          </Tag>
-          <Button
-            className="apply_now"
-            type="primary"
-            shape="round"
-            size="middle"
-          >
-            Apply Now
-          </Button>
-        </div>
-      </div>
-    </div>
-  </Card>
-);
-
 export default function JobFilter() {
   const [open, setOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("status");
@@ -360,14 +95,308 @@ export default function JobFilter() {
   const [radius, setRadius] = useState(50); // default 50km
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState([]);
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [workTypevisible, setWorkTypeVisible] = useState(false);
+  const [selectedType, setSelectedType] = useState(null);
+  const [userTypevisible, setUserTypeVisible] = useState(false);
+  const [selectedCatergory, setSelectedCatergory] = useState(null);
+  const [userCatergoryvisible, setUserCatergoryVisible] = useState(false);
+  const [selectedSort, setSelectedSort] = useState(null);
+  const [backendJobs, setBackendJobs] = useState([]);
+  const [postDetails, setPostDetails] = useState([]);
+  const [wishlisted, setWishlisted] = useState(false);
 
-  const handleToggle = (checked) => setRadiusSearch(checked);
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  useEffect(() => {
+    if (backendJobs.length > 0 && !postDetails.length) {
+      setPostDetails([transformJob(backendJobs[0])]);
+    }
+  }, [backendJobs]);
+
+  const fetchJobs = async () => {
+    const payload = {
+      job_categories: "jobCategories",
+      workplace_type: "workTypes",
+      work_location: "locationsData",
+      working_days: "category",
+      start_date: "2025-07-01",
+      end_date: "2025-07-30",
+      salary_sort: "desc",
+    };
+
+    try {
+      const response = await getJobPosts(payload);
+      console.log("getJobPosts", response);
+
+      const jobs = response?.data?.data?.data;
+      if (Array.isArray(jobs)) {
+        setBackendJobs(jobs);
+      } else {
+        console.warn("Unexpected job data format", response);
+      }
+    } catch (error) {
+      console.error("getJobPosts error", error);
+    }
+  };
 
   const handleCheck = (location) => {
     setSelected((prev) =>
       prev.includes(location)
         ? prev.filter((item) => item !== location)
         : [...prev, location]
+    );
+  };
+
+  const dropdownItems = () => (
+    <Menu style={{ minWidth: 220, padding: "0.5rem 0" }}>
+      <Menu.Item key="internships" icon={<LaptopOutlined />}>
+        Internships
+      </Menu.Item>
+      <Menu.Item
+        key="jobs"
+        icon={<ReadOutlined />}
+        style={{ background: "#f0f7ff" }}
+      >
+        Jobs
+      </Menu.Item>
+      <Menu.SubMenu
+        key="competitions"
+        title="Competitions"
+        icon={<TrophyOutlined />}
+      >
+        <Menu.Item key="comp-1">Online</Menu.Item>
+        <Menu.Item key="comp-2">Onsite</Menu.Item>
+      </Menu.SubMenu>
+      <Menu.Item key="mentorship" icon={<UserOutlined />}>
+        Mentorship
+      </Menu.Item>
+      <Menu.SubMenu key="courses" title="Courses" icon={<BookOutlined />}>
+        <Menu.Item key="course-1">Tech</Menu.Item>
+        <Menu.Item key="course-2">Design</Menu.Item>
+      </Menu.SubMenu>
+    </Menu>
+  );
+
+  const locationsData = [
+    { name: "Pune", detail: "Pune, Maharashtra, India" },
+    { name: "Gurgaon", detail: "Gurgaon, Haryana, India" },
+    { name: "Delhi", detail: "Delhi, Delhi, India" },
+    { name: "Bangalore Urban", detail: "Bangalore Urban, Karnataka, India" },
+    { name: "Bangalore Rural", detail: "Bangalore Rural, Karnataka, India" },
+  ];
+
+  // Create dropdown menu for reusability
+  const getDropdownMenu = (label) => (
+    <Menu
+      items={[
+        { label: `${label} Option 1`, key: "1" },
+        { label: `${label} Option 2`, key: "2" },
+      ]}
+    />
+  );
+  const transformJob = (job) => {
+    const postedDate = new Date(job.created_at);
+    const today = new Date();
+    const timeDiff = today - postedDate;
+    const daysPassed = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+    const totalActiveDays = 5;
+    const daysLeft = totalActiveDays - daysPassed;
+
+    return {
+      id: job.id,
+      title: job.job_title,
+      company: job.company_name,
+      logo: job.company_logo,
+      created_date: job.created_at,
+      job_description: job.job_description,
+      postedDate,
+      working_days: job.working_days,
+      daysLeft: daysLeft > 0 ? `${daysLeft} days left` : "Expired",
+      level: job.experience_type,
+      salary:
+        job.salary_type === "Fixed"
+          ? "$" + (job.min_salary || "N/A")
+          : job.salary_type === "Range"
+          ? `${job.min_salary || "N/A"} - ${job.max_salary || "N/A"}`
+          : "Negotiable",
+      location: `${job.workplace_type}${
+        job.work_location ? ` • ${job.work_location}` : ""
+      }`,
+      diversity_hiring: job.diversity_hiring,
+      type: job.job_nature,
+      premium: true,
+      urgent: false,
+      skills: job.skills,
+      eligibility: job.experience_required?.join(", "),
+      status: daysLeft > 0 ? "Active" : "Expired",
+    };
+  };
+
+  const JobCard = ({ job }) => (
+    <Card
+      className="premium-job-card"
+      bodyStyle={{ padding: 0 }}
+      onClick={() => handleClickedjob(job)}
+    >
+      <div className="premium-content">
+        <div className="premium-headers">
+          <img src={job.logo} alt={job.company} className="premium-logo" />
+          <div className="premium-title-section">
+            <div className="premium-job-titles">
+              <h3 className="premium-titles">{job.title}</h3>
+              <span
+                className={
+                  job.type === "Job"
+                    ? "premium-badges"
+                    : job.type === "Internship"
+                    ? "regular-badge"
+                    : "urgent-badge"
+                }
+              >
+                {job.type}
+              </span>
+            </div>
+
+            <div className="premium-company">({job.company})</div>
+          </div>
+        </div>
+
+        <div className="premium-details">
+          <span className="premium-detail-item">
+            <ClockCircleOutlined />
+            {job.daysLeft}
+          </span>
+          <span className="premium-detail-item">
+            <EnvironmentOutlined />
+            {job.location}
+          </span>
+          <span className="premium-detail-item">Salary: {job.salary}</span>
+          <span
+            className={
+              job.status === "Active"
+                ? "status-badge"
+                : job.status === "Expired"
+                ? "status-badge-red"
+                : ""
+            }
+          >
+            {job.status}
+          </span>
+        </div>
+
+        <div className="premium-skills">
+          {job.skills.map((skill, index) => (
+            <span key={index} className="premium-skill">
+              {skill}
+            </span>
+          ))}
+        </div>
+
+        <div className="premium-footer">
+          <span className="premium-level">
+            {job.level.includes("Leadership") ? (
+              <CrownFilled />
+            ) : (
+              <ThunderboltFilled />
+            )}
+            {job.level}
+          </span>
+          <Button
+            className={
+              job.status === "Active"
+                ? "premium-apply"
+                : job.status === "Expired"
+                ? "premium-apply-disabel"
+                : ""
+            }
+          >
+            Apply Now
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+
+  const handleClickedjob = (item) => {
+    let arr = [];
+    arr.push(item);
+    setPostDetails(arr);
+  };
+
+  const JobDetails = ({ job }) => {
+    console.log("jobbbb", job);
+    return (
+      <>
+        <div className="job-header">
+          <div className="job-header-content">
+            <img
+              className="job-logo"
+              src={job.logo}
+              alt={`${job.company} logo`}
+            />
+            <div className="job-title-section">
+              <h1 className="job-title">{job.title}</h1>
+              <p className="job-company">{job.company}</p>
+            </div>
+          </div>
+
+          <div className="job-meta">
+            <div className="job-location">
+              <p className="job-meta-item">
+                <FaLocationDot /> {job.location}
+              </p>
+              <p className="job-meta-item">
+                <FaRegCalendarAlt /> Updated: {job.created_date}
+              </p>
+            </div>
+            <Button type="primary" className="apply-button" size="large">
+              Apply Now
+            </Button>
+          </div>
+        </div>
+
+        <div className="section-card">
+          <div className="job-eligibility">
+            <h2 className="section-title">Eligibility</h2>
+            <p>{job.eligibility}</p>
+          </div>
+        </div>
+
+        <div className="section-card job-description">
+          <h2 className="section-title">Job Description</h2>
+          <h6>Xerox is hiring for the role of Python Developer!</h6>
+          <ul>
+            Responsibilities of the Candidate:
+            <li>
+              Builds knowledge of the organization, processes and customers.
+            </li>
+            <li>
+              Requires knowledge and experience in own discipline; still
+              acquiring higher level knowledge and skills.
+            </li>
+            <li>Receives a moderate level of guidance and direction.</li>
+            <li>
+              Moderate decision-making authority guided by policies, procedures,
+              and business operations protocol.
+            </li>
+          </ul>
+
+          <ul>
+            Requirements:
+            <li>Will need to be strong on ML pipelines, modern tech stack.</li>
+            <li>Proven experience with MLOPs with Azure and MLFlow etc.</li>
+            <li>Experience with scripting and coding using Python.</li>
+            <li>
+              Working Experience with container technologies (Docker,
+              Kubernetes).
+            </li>
+          </ul>
+        </div>
+      </>
     );
   };
 
@@ -472,9 +501,6 @@ export default function JobFilter() {
     );
   };
 
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [workTypevisible, setWorkTypeVisible] = useState(false);
-
   const handleCheckboxChange = (checkedValue) => {
     setSelectedTypes((prev) =>
       prev.includes(checkedValue)
@@ -533,9 +559,6 @@ export default function JobFilter() {
 
   // user types
 
-  const [selectedType, setSelectedType] = useState(null);
-  const [userTypevisible, setUserTypeVisible] = useState(false);
-
   const handleUserTypeClear = () => {
     setSelectedType(null);
   };
@@ -583,11 +606,6 @@ export default function JobFilter() {
       </Button>
     </div>
   );
-
-  // category
-
-  const [selectedCatergory, setSelectedCatergory] = useState(null);
-  const [userCatergoryvisible, setUserCatergoryVisible] = useState(false);
 
   const handleUserCatergoryClear = () => {
     setSelectedCatergory(null);
@@ -644,7 +662,6 @@ export default function JobFilter() {
   );
 
   // filter
-  const [selectedSort, setSelectedSort] = useState(null);
 
   const handleChange = (value) => {
     setSelectedSort(value);
@@ -652,6 +669,16 @@ export default function JobFilter() {
 
   const clearSort = () => {
     setSelectedSort(null);
+  };
+
+  const handleWishlistToggle = () => {
+    setWishlisted(!wishlisted);
+    // Show toast notification
+    if (wishlisted === false) {
+      CommonToaster("Added to wishlist ❤️", "success");
+    } else {
+      CommonToaster("Removed from wishlist 💔", "error");
+    }
   };
 
   return (
@@ -664,7 +691,7 @@ export default function JobFilter() {
       }}
     >
       <div
-      className="job-filter-topbar"
+        className="job-filter-topbar"
         style={{
           display: "flex",
           alignItems: "center",
@@ -689,11 +716,7 @@ export default function JobFilter() {
             padding: "8px 0",
           }}
         >
-          <Button
-          className="job-filter-job"
-            shape="round"
-            type="primary"
-          >
+          <Button className="job-filter-job" shape="round" type="primary">
             <Space>
               <span style={{ fontWeight: 500 }}>Jobs</span>
               <DownOutlined style={{ fontSize: 12 }} />
@@ -1103,150 +1126,163 @@ export default function JobFilter() {
         <Row gutter={32}>
           <Col className="job_filter_left" lg={7} xs={24} md={8}>
             <Space direction="vertical" size={24} style={{ width: "100%" }}>
-              {jobs.map((job) => (
-                <JobCard key={job.id} job={job} />
+              {backendJobs.map((job) => (
+                <JobCard key={job.id} job={transformJob(job)} />
               ))}
             </Space>
           </Col>
           <Col className="job_filter_left" lg={17} xs={24} md={16}>
-            <div className="job-header">
-              <div className="job-header-content">
-                <img
-                  className="job-logo"
-                  src={jobs[0].logo}
-                  alt={`${jobs[0].company} logo`}
-                />
-                <div className="job-title-section">
-                  <h1 className="job-title">{jobs[0].title}</h1>
-                  <p className="job-company">{jobs[0].company}</p>
+            {postDetails.map((job) => (
+              <>
+                <div className="job-header">
+                  <div className="job-header-content">
+                    <img
+                      className="job-logo"
+                      src={job.logo}
+                      alt={`${job.company} logo`}
+                    />
+                    <div className="job-title-section">
+                      <h1 className="job-title">{job.title}</h1>
+                      <p className="job-company">{job.company}</p>
+                    </div>
+
+                    <div className="quick_apply_btn">
+                      <>
+                        <div className="icons">
+                          <span className="icon" onClick={handleWishlistToggle}>
+                            {wishlisted ? (
+                              <FaHeart className="icon heart active" />
+                            ) : (
+                              <FaRegHeart className="icon heart" />
+                            )}
+                          </span>
+                          <span className="icon">
+                            {" "}
+                            <IoMdCalendar className="icon calendar" />
+                          </span>
+                        </div>
+                      </>
+                    </div>
+                  </div>
+
+                  <div className="job-meta">
+                    <div className="job-location">
+                      <p className="job-meta-item">
+                        <FaLocationDot /> {job.location}
+                      </p>
+                      <p className="job-meta-item">
+                        <FaRegCalendarAlt /> Updated: {job.created_date}
+                      </p>
+                    </div>
+                    <Button
+                      type="primary"
+                      className="apply-button"
+                      size="large"
+                    >
+                      Apply Now
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="job-meta">
-                <div className="job-location">
-                  <p className="job-meta-item">
-                    <FaLocationDot /> {jobs[0].location}
-                  </p>
-                  <p className="job-meta-item">
-                    <FaRegCalendarAlt /> Updated: May 26, 2025
-                  </p>
+                <div className="section-card">
+                  <div className="job-eligibility">
+                    <h2 className="section-title">Eligibility</h2>
+                    <p>
+                      <MdOutlineSchool /> {job.level}
+                      <b> • </b> <MdOutlineWorkOutline /> {job.eligibility}{" "}
+                      <b> • </b>
+                      <FaTransgender />{" "}
+                      {job.diversity_hiring.map((diversity_hiring, index) => (
+                        <span key={index}>
+                          {diversity_hiring}
+                          {index < job.diversity_hiring.length - 1 && ", "}
+                        </span>
+                      ))}
+                    </p>
+                  </div>
                 </div>
-                <Button type="primary" className="apply-button" size="large">
-                  Apply Now
-                </Button>
-              </div>
-            </div>
 
-            <div className="section-card">
-              <div className="job-eligibility">
-                <h2 className="section-title">Eligibility</h2>
-                <p>{jobs[0].eligibility}</p>
-              </div>
-            </div>
-
-            <div className="section-card job-description">
-              <h2 className="section-title">Job Description</h2>
-              <h6>Xerox is hiring for the role of Python Developer!</h6>
-              <ul>
-                Responsibilities of the Candidate:
-                <li>
-                  Builds knowledge of the organization, processes and customers.
-                </li>
-                <li>
-                  Requires knowledge and experience in own discipline; still
-                  acquiring higher level knowledge and skills.
-                </li>
-                <li>Receives a moderate level of guidance and direction.</li>
-                <li>
-                  Moderate decision-making authority guided by policies,
-                  procedures, and business operations protocol.
-                </li>
-              </ul>
-
-              <ul>
-                Requirements:
-                <li>
-                  Will need to be strong on ML pipelines, modern tech stack.
-                </li>
-                <li>Proven experience with MLOPs with Azure and MLFlow etc.</li>
-                <li>Experience with scripting and coding using Python.</li>
-                <li>
-                  Working Experience with container technologies (Docker,
-                  Kubernetes).
-                </li>
-              </ul>
-            </div>
-
-            <div className="section-card">
-              <h2 className="section-title">Additional Information</h2>
-
-              <div className="info-card">
-                <div className="info-card-content">
-                  <h4>Job Location(s)</h4>
-                  <p>Pan India</p>
+                <div className="section-card job-description">
+                  <h2 className="section-title">Job Description</h2>
+                  <h6>Xerox is hiring for the role of Python Developer!</h6>
+                  <div
+                    className="job-description-content"
+                    dangerouslySetInnerHTML={{ __html: job.job_description }}
+                  />
                 </div>
-                <img
-                  className="info-card-image"
-                  src="https://d8it4huxumps7.cloudfront.net/uploads/images/66702737c9e5c_location.png"
-                  alt="Location"
-                />
-              </div>
 
-              <div className="info-card">
-                <div className="info-card-content">
-                  <h4>Experience</h4>
-                  <p>No prior experience required</p>
-                </div>
-                <img
-                  className="info-card-image"
-                  src="https://d8it4huxumps7.cloudfront.net/uploads/images/66710a39d5851_experience.png"
-                  alt="Experience"
-                />
-              </div>
+                <div className="section-card">
+                  <h2 className="section-title">Additional Information</h2>
 
-              <div className="info-card">
-                <div className="info-card-content">
-                  <h4>Salary</h4>
-                  <p>Competitive compensation package</p>
-                </div>
-                <img
-                  className="info-card-image"
-                  src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109f58b243_salary.png"
-                  alt="Salary"
-                />
-              </div>
+                  <div className="info-card">
+                    <div className="info-card-content">
+                      <h4>Job Location(s)</h4>
+                      <p>{job.location}</p>
+                    </div>
+                    <img
+                      className="info-card-image"
+                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/66702737c9e5c_location.png"
+                      alt="Location"
+                    />
+                  </div>
 
-              <div className="info-card">
-                <div className="info-card-content">
-                  <h4>Work Schedule</h4>
-                  <p>
-                    <b>Working Days</b>: 5 Days
-                  </p>
-                </div>
-                <img
-                  className="info-card-image"
-                  src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109d710a09_work_detail.png"
-                  alt="Work Details"
-                />
-              </div>
+                  <div className="info-card">
+                    <div className="info-card-content">
+                      <h4>Experience</h4>
+                      <p>{job.eligibility}</p>
+                    </div>
+                    <img
+                      className="info-card-image"
+                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/66710a39d5851_experience.png"
+                      alt="Experience"
+                    />
+                  </div>
 
-              <div className="info-card">
-                <div className="info-card-content">
-                  <h4>Job Type/Timing</h4>
-                  <p>
-                    <b>Job Type</b>: Work From Home
-                  </p>
-                  <p>
-                    <b>Job Timing</b>: Full Time
-                  </p>
+                  <div className="info-card">
+                    <div className="info-card-content">
+                      <h4>Salary</h4>
+                      <p>{job.salary}</p>
+                    </div>
+                    <img
+                      className="info-card-image"
+                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109f58b243_salary.png"
+                      alt="Salary"
+                    />
+                  </div>
+
+                  <div className="info-card">
+                    <div className="info-card-content">
+                      <h4>Work Schedule</h4>
+                      <p>
+                        <b>Working Days</b>: {job.working_days}
+                      </p>
+                    </div>
+                    <img
+                      className="info-card-image"
+                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109d710a09_work_detail.png"
+                      alt="Work Details"
+                    />
+                  </div>
+
+                  <div className="info-card">
+                    <div className="info-card-content">
+                      <h4>Job Type / Natute</h4>
+                      <p>
+                        <b>Job Type</b>: {job.location}
+                      </p>
+                      <p>
+                        <b>Job Nature</b>: {job.type}
+                      </p>
+                    </div>
+                    <img
+                      className="info-card-image"
+                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109c430518_job_typetiming.png?d=240x172"
+                      alt="Work Details"
+                    />
+                  </div>
                 </div>
-                <img
-                  className="info-card-image"
-                  src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109c430518_job_typetiming.png?d=240x172"
-                  alt="Work Details"
-                />
-              </div>
-            </div>
+              </>
+            ))}
           </Col>
         </Row>
       </div>

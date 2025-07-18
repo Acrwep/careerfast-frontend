@@ -398,7 +398,31 @@ export const insertProjects = async (payload) => {
   }
 };
 
-// insertProjects
+// updateProject
+
+export const updateProject = async (payload) => {
+  try {
+    const response = await api.put("/api/updateProject", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// deleteProject
+
+export const deleteProject = async (payload) => {
+  try {
+    const response = await api.delete("/api/deleteProject", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// updateSocialLinks
 
 export const updateSocialLinks = async (payload) => {
   try {
@@ -409,7 +433,7 @@ export const updateSocialLinks = async (payload) => {
   }
 };
 
-// insertProjects
+// updateBasicDetails
 
 export const updateBasicDetails = async (payload) => {
   try {
@@ -446,7 +470,9 @@ export const insertEducation = async (payload) => {
 
 export const deleteEducation = async (payload) => {
   try {
-    const response = await api.post("/api/deleteEducation", payload);
+    const response = await api.delete("/api/deleteEducation", {
+      params: payload,
+    });
     return response;
   } catch (error) {
     throw error;
@@ -464,6 +490,30 @@ export const insertExperience = async (payload) => {
   }
 };
 
+// updateExperience
+
+export const updateExperience = async (payload) => {
+  try {
+    const response = await api.put("/api/updateExperience", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// deleteExperience
+
+export const deleteExperience = async (payload) => {
+  try {
+    const response = await api.delete("/api/deleteExperience", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // getUserProfile
 
 export const getUserProfile = async (payload) => {
@@ -471,6 +521,72 @@ export const getUserProfile = async (payload) => {
     const response = await api.get("/api/getUserProfile", {
       params: payload,
     });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getQualification
+
+export const getQualification = async () => {
+  try {
+    const response = await api.get("api/getQualification");
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getCourses
+
+export const getCourses = async () => {
+  try {
+    const response = await api.get("api/getCourses");
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getSpecialization
+
+export const getSpecialization = async () => {
+  try {
+    const response = await api.get("api/getSpecialization");
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getColleges
+
+export const getColleges = async () => {
+  try {
+    const response = await api.get("api/getColleges");
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getCourseType
+
+export const getCourseType = async () => {
+  try {
+    const response = await api.get("api/getCourseType");
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getJobPosts
+
+export const getJobPosts = async (payload) => {
+  try {
+    const response = await api.post("api/getJobPosts", { params: payload });
     return response;
   } catch (error) {
     throw error;

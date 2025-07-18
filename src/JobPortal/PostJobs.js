@@ -946,7 +946,7 @@ export default function PostJobs() {
                             : "work_type_button"
                         }
                         onClick={() => {
-                          if (item.id === 2) {
+                          if (item.id === 3 || item.id === 1) {
                             getWorkPlaceLocationData();
                           } else {
                             setWorkplaceLocation([]);
@@ -974,7 +974,7 @@ export default function PostJobs() {
           </div>
 
           <div style={{ marginTop: 15 }} className="form-group">
-            {workTypeActiveButton === 2 ? (
+            {workTypeActiveButton === 3 || workTypeActiveButton === 1 ? (
               <Form.Item
                 layout="vertical"
                 label={<span style={{ fontWeight: 500 }}>Work Location</span>}

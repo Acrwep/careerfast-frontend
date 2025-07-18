@@ -21,6 +21,7 @@ import {
   DatePicker,
   message,
   Checkbox,
+  Popconfirm,
 } from "antd";
 import {
   StarOutlined,
@@ -39,9 +40,16 @@ import { LuGraduationCap } from "react-icons/lu";
 import { GiOfficeChair } from "react-icons/gi";
 import { PiStudent } from "react-icons/pi";
 import { GiNewShoot } from "react-icons/gi";
+import { FiEdit } from "react-icons/fi";
+
 import "../css/Profile.css";
 import { FaFacebookF } from "react-icons/fa";
-import { FiBriefcase, FiCalendar, FiArrowRight } from "react-icons/fi";
+import {
+  FiBriefcase,
+  FiCalendar,
+  FiArrowRight,
+  FiPlusCircle,
+} from "react-icons/fi";
 import { BsThreads } from "react-icons/bs";
 import { FaInstagram } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
@@ -52,6 +60,9 @@ import { PiGenderTransgender } from "react-icons/pi";
 import { PiGenderIntersex } from "react-icons/pi";
 import { PiGenderNonbinary } from "react-icons/pi";
 import { MdNotInterested } from "react-icons/md";
+import { HiMiniXMark } from "react-icons/hi2";
+import { MdEdit } from "react-icons/md";
+import { IoLocationSharp } from "react-icons/io5";
 
 import { FaFigma } from "react-icons/fa6";
 import { IoMdLink } from "react-icons/io";
@@ -60,7 +71,6 @@ import { MdFileDownloadDone } from "react-icons/md";
 import profile1 from "../images/profile1.webp";
 import profile2 from "../images/profile2.webp";
 import profile3 from "../images/profile3.webp";
-import profile5 from "../images/profile5.webp";
 import profile6 from "../images/profile6.webp";
 import profile7 from "../images/profile7.webp";
 
@@ -70,8 +80,25 @@ import { addDays, subDays, format, parseISO, setDate } from "date-fns";
 import { motion } from "framer-motion";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
+import {
+  MdSchool,
+  MdOutlineSchool,
+  MdMenuBook,
+  MdStarOutline,
+  MdLocationCity,
+  MdDateRange,
+  MdEventAvailable,
+  MdCategory,
+  MdPercent,
+  MdOutlineCalculate,
+  MdConfirmationNumber,
+  MdSwapHoriz,
+  MdOutlineWork,
+  MdOutlineWorkHistory,
+} from "react-icons/md";
 import CommonTextArea from "../Common/CommonTextArea";
 import {
+  descriptionValidator,
   emailValidator,
   genderValidator,
   nameValidator,
@@ -81,7 +108,15 @@ import {
 } from "../Common/Validation";
 import CommonDatePicker from "../Common/CommonDatePicker";
 import {
+  deleteEducation,
+  deleteExperience,
+  deleteProject,
+  getColleges,
+  getCourses,
+  getCourseType,
   getGenderData,
+  getQualification,
+  getSpecialization,
   getUserProfile,
   getUserTypeData,
   insertEducation,
@@ -90,6 +125,8 @@ import {
   updateAbout,
   updateBasicDetails,
   updateEducation,
+  updateExperience,
+  updateProject,
   updateResume,
   updateSkills,
   updateSocialLinks,
@@ -204,16 +241,21 @@ export default function MainProfile() {
   const [resumeError, setResumeError] = useState("");
 
   //
-
+  const [showEducationForm, setShowEducationForm] = useState(true);
   const [qualificaton, setQualification] = useState("");
+  const [qualificationOptions, setQualificationOptions] = useState([]);
   const [qualificatonError, setQualificationError] = useState("");
   const [educationCourse, setEducationCourse] = useState("");
+  const [educationCourseOptions, setEducationCourseOptions] = useState([]);
   const [educationCourseError, setEducationCourseError] = useState("");
   const [specialization, setSpecialization] = useState("");
+  const [specializationOptions, setSpecializationOptions] = useState([]);
   const [specializationError, setSpecializationError] = useState("");
-  const [collage, setCollage] = useState("");
+  const [educationCollege, setEducationCollege] = useState("");
+  const [collageOptions, setCollageOptions] = useState([]);
   const [collageError, setCollageError] = useState("");
   const [courseType, setCourseType] = useState("");
+  const [courseTypeOptions, setCourseTypeOptions] = useState([]);
   const [courseTypeError, setCourseTypeError] = useState("");
   const [percentage, setPercentage] = useState("");
   const [cgpa, setCgpa] = useState("");
@@ -224,12 +266,9 @@ export default function MainProfile() {
   const [aboutTextNew, setAboutTextNew] = useState("");
   const [aboutTextError, setAboutTextError] = useState("");
   //
-  const [designation, setDesignation] = useState("");
   const [designationError, setDesignationError] = useState("");
   const [employmentTypeError, setEmploymentTypeError] = useState("");
-  const [workExpStartDate, setWorkExpStartDate] = useState("");
   const [workExpStartDateError, setWorkExpStartDateError] = useState("");
-  const [workExpEndDate, setWorkExpEndDate] = useState("");
   const [workExpEndDateError, setWorkExpEndDateError] = useState("");
   const [workExpLocation, setWorkExpLocation] = useState("");
   const [workExpLocationError, setWorkExpLocationError] = useState("");
@@ -237,10 +276,10 @@ export default function MainProfile() {
 
   // work exp
   const [selectExperienceType, setSelectExperienceType] = useState("");
-  const [workingCompanyName, setWorkingCompanyName] = useState("");
-  const [workingCompanyNameError, setWorkingCompanyNameError] = useState("");
   const [selectExperienceTypeError, setSelectExperienceTypeError] =
     useState("");
+  const [experienceData, setExperienceData] = useState(null);
+  const [showWorkExpForm, setShowWorkExpForm] = useState(true);
   const [experienceType, setExperienceType] = useState(null);
   const [totalYearsExperience, setTotalYearsExperience] = useState("");
   const [totalYearsExperienceError, setTotalYearsExperienceError] =
@@ -250,10 +289,6 @@ export default function MainProfile() {
     useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [jobTitleError, setJobTitleError] = useState("");
-  const [workingStartDate, setWorkingStartDate] = useState("");
-  const [workingStartDateError, setWorkingStartDateError] = useState("");
-  const [workingEndDate, setWorkingEndDate] = useState("");
-  const [workingEndDateError, setWorkingEndDateError] = useState("");
   //
   const [companyName, setCompanyName] = useState("");
   const [companyNameError, setCompanyNameError] = useState("");
@@ -270,10 +305,14 @@ export default function MainProfile() {
   const [projectsList, setProjectsList] = useState([]);
   const [showForm, setShowForm] = useState(true);
   const [rollNumber, setRollNumber] = useState("");
-  const [educationId, setEducationId] = useState("");
+  const [educationData, setEducationData] = useState(null);
+  const [projectData, setProjectData] = useState(null);
+  const [aboutData, setAboutData] = useState(null);
+  const [skillData, setSkillData] = useState(null);
   const [companies, setCompanies] = useState([
     {
       id: Date.now(),
+      jobTitle: "",
       workingCompanyName: "",
       designation: "",
       workingStartDate: "",
@@ -290,20 +329,227 @@ export default function MainProfile() {
   }, []);
 
   useEffect(() => {
+    console.log("loginUserId updated", loginUserId);
     if (loginUserId) {
       getUserProfileData();
     }
   }, [loginUserId]);
 
+  // QUALIFICATION
+  useEffect(() => {
+    getQualificationData();
+  }, []);
+
+  const getQualificationData = async () => {
+    try {
+      const response = await getQualification();
+      console.log("getQualification", response);
+      setQualificationOptions(response?.data?.data || []);
+    } catch (error) {
+      console.log("getQualification error", error);
+    } finally {
+      setTimeout(() => {
+        getCourseData();
+      }, 300);
+    }
+  };
+  //
+
+  // EDUCATION COURSE
+  const getCourseData = async () => {
+    try {
+      const response = await getCourses();
+      setEducationCourseOptions(response?.data?.data || []);
+    } catch (error) {
+      console.log("getCourseData error", error);
+    } finally {
+      getSpecializationData();
+    }
+  };
+
+  // SPECIFICATION
+
+  const getSpecializationData = async () => {
+    try {
+      const response = await getSpecialization();
+      setSpecializationOptions(response?.data?.data || []);
+      console.log("getSpecializationData", response);
+    } catch (error) {
+      console.log("getSpecializationData error", error);
+    } finally {
+      getCollegesData();
+    }
+  };
+
+  // EDUCATION COLLAGES
+  const getCollegesData = async () => {
+    try {
+      const response = await getColleges();
+      setCollageOptions(response?.data?.data || []);
+    } catch (error) {
+      console.log("getCollegesData error", error);
+    } finally {
+      setTimeout(() => {
+        getCourseTypeData();
+      }, 300);
+    }
+  };
+
+  // COURSE TYPE
+  const getCourseTypeData = async () => {
+    try {
+      const response = await getCourseType();
+      const courseTypes = response?.data?.data || [];
+
+      const mappedOptions = courseTypes.map((item) => ({
+        label: item,
+        value: item,
+      }));
+
+      setCourseTypeOptions(mappedOptions);
+    } catch (error) {
+      console.log("getCourseTypeData error", error);
+    }
+  };
+
+  // DELETE EDUCATION
+  const handleDeleteEducation = async () => {
+    if (!educationData) {
+      message.error("No education data to delete.");
+      return;
+    }
+
+    const payload = {
+      id: educationData.id,
+      user_id: loginUserId,
+    };
+
+    try {
+      const response = await deleteEducation(payload);
+      console.log("deleteEducation", response);
+      message.success("Education deleted successfully.");
+      setShowEducationForm(true);
+      setQualification("");
+      setEducationCourse("");
+      setSpecialization("");
+      setEducationCollege("");
+      setEducationStartDate("");
+      setEducationEndDate("");
+      setCourseType("");
+      setPercentage("");
+      setCgpa("");
+      setRollNumber("");
+      setLateral(false);
+      getUserProfileData();
+    } catch (error) {
+      console.error("Error deleting education:", error);
+      message.error("Failed to delete education.");
+    }
+  };
+
   const getUserProfileData = async () => {
     const payload = {
       user_id: loginUserId,
     };
+
     try {
       const response = await getUserProfile(payload);
-      console.log("getuserprofile", response);
+      console.log("fetchedProfile", response);
+
+      if (response?.data?.data) {
+        const profile = response.data.data;
+
+        // Handle education
+        if (profile.education && profile.education.length > 0) {
+          const edu = profile.education[0];
+          setEducationData(edu);
+          setQualification(edu.qualification || "");
+          setEducationCourse(edu.course || "");
+          setSpecialization(edu.specialization || "");
+          setEducationCollege(edu.college || "");
+          setEducationStartDate(edu.start_date);
+          setEducationEndDate(edu.end_date);
+          setCourseType(edu.course_type);
+          setPercentage(edu.percentage);
+          setCgpa(edu.cgpa);
+          setRollNumber(edu.roll_number);
+          setLateral(edu.lateral_entry);
+          setShowEducationForm(false);
+        } else {
+          setEducationData(null);
+          setShowEducationForm(true);
+        }
+
+        // Handle about
+        if (profile.about) {
+          setAboutTextNew(profile.about || "");
+          setAboutData(profile.about);
+        } else {
+          setAboutData(null);
+        }
+
+        // if (profile.skills) {
+        //   setSkillData(profile.skills);
+        //   setSelectedSkills(
+        //     Array.isArray(profile.skills) ? profile.skills : []
+        //   );
+        // }
+
+        // Handle projects
+        if (profile.projects && profile.projects.length > 0) {
+          const proj = profile.projects[0];
+          setProjectData(proj);
+          setCompanyName(proj.company_name || "");
+          setProject(proj.project_title || "");
+          setProjectType(proj.project_type || "");
+          setProjectStartDate(proj.start_date || "");
+          setProjectEndDate(proj.end_date || "");
+          setProjectDescription(proj.description);
+          setProjectsList(profile.projects);
+          setShowForm(false);
+        } else {
+          setProjectData(null);
+          setProjectsList([]);
+          setShowForm(true);
+        }
+
+        // Handle experience
+        if (profile.professional && profile.professional.length > 0) {
+          const proff = profile.professional[0];
+          setExperienceData(proff);
+          setExperienceType(profile.experince_type || "");
+          setTotalYearsExperience(profile.total_years || "");
+          setTotalMonthsExperience(profile.total_months || "");
+          setJobTitle(proff.job_title || "");
+          setLocation(profile.location || "");
+
+          const company = {
+            jobTitle: proff.job_title || "",
+            workingCompanyName: proff.company_name || "",
+            designation: proff.designation || "",
+            workingStartDate: proff.start_date || "",
+            workingEndDate: proff.end_date || "",
+            currentlyWorking: !!proff.currently_working,
+            jobTitleError: "",
+            workingCompanyNameError: "",
+            designationError: "",
+            workingStartDateError: "",
+            workingEndDateError: "",
+          };
+
+          setCompanies([company]);
+          setShowWorkExpForm(false);
+        } else {
+          setExperienceData(null);
+          // setCompanies([]);
+          setShowWorkExpForm(true);
+        }
+      }
     } catch (error) {
-      console.log("getuserprofile", error);
+      console.log("getuserprofile error", error);
+      setShowEducationForm(true);
+      setShowWorkExpForm(true);
+      setShowForm(true);
     }
   };
 
@@ -355,6 +601,19 @@ export default function MainProfile() {
     const fresherEndtDateValidate =
       userType === "Fresher" ? selectValidator(fresherEndtDate) : "";
 
+    const selectExperienceTypeValidate = selectValidator(selectExperienceType);
+
+    setSelectExperienceTypeError(selectExperienceTypeValidate);
+
+    let totalYearsExperienceValidate = "";
+    let totalMonthsExperienceValidate = "";
+
+    totalYearsExperienceValidate = selectValidator(totalYearsExperience);
+    totalMonthsExperienceValidate = selectValidator(totalMonthsExperience);
+
+    setTotalYearsExperienceError(totalYearsExperienceValidate);
+    setTotalMonthsExperienceError(totalMonthsExperienceValidate);
+
     setFnameError(fnameValidate);
     setLnameError(lnameValidate);
     setEmailError(emailValidate);
@@ -377,6 +636,10 @@ export default function MainProfile() {
       genderValidate,
       userTypeValidate,
       locationValidate,
+      totalMonthsExperienceValidate,
+      totalYearsExperienceValidate,
+      selectExperienceTypeValidate,
+
       ...(userType === "College Student"
         ? [courseValidate, startDateValidate, endDateValidate]
         : []),
@@ -399,7 +662,6 @@ export default function MainProfile() {
       last_name: lname,
       gender: gender,
       user_type: userType,
-      location: location,
       ...(userType === "College Student" && {
         course: course,
         start_year: startDate,
@@ -410,10 +672,14 @@ export default function MainProfile() {
         start_year: fresherStartDate,
         end_year: fresherEndtDate,
       }),
-
+      location: location,
+      experince_type: selectExperienceType,
+      total_years: totalYearsExperience,
+      total_months: totalMonthsExperience,
       ...(userType === "School Student" && {
         classes: Class,
       }),
+
       user_id: loginUserId,
     };
     try {
@@ -440,6 +706,10 @@ export default function MainProfile() {
   const handleCompanyFields = (index, fieldName, value) => {
     const updateDatas = [...companies];
     updateDatas[index][fieldName] = value;
+
+    if (fieldName === "jobTitle") {
+      updateDatas[index].jobTitleError = nameValidator(value);
+    }
 
     if (fieldName === "workingCompanyName") {
       updateDatas[index].workingCompanyNameError = nameValidator(value);
@@ -472,6 +742,7 @@ export default function MainProfile() {
       ...companies,
       {
         id: Date.now(),
+        jobTitle: "",
         workingCompanyName: "",
         designation: "",
         workingStartDate: "",
@@ -481,13 +752,17 @@ export default function MainProfile() {
     ]);
   };
 
+  const handleEducationDiscard = () => {
+    setShowEducationForm(false);
+  };
+
   const handleEducationSave = async (e) => {
     e.preventDefault();
 
     const qualificatonValidate = selectValidator(qualificaton);
     const educationCourseValidate = selectValidator(educationCourse);
     const specializationValidate = selectValidator(specialization);
-    const collageValidate = nameValidator(collage);
+    const collageValidate = selectValidator(educationCollege);
     const courseTypeValidate = selectValidator(courseType);
     const educationStartDateValidate = selectValidator(educationStartDate);
     const educationEndDateValidate = selectValidator(educationEndDate);
@@ -516,11 +791,19 @@ export default function MainProfile() {
     }
 
     const payload = {
+      id: educationData?.id,
       user_id: loginUserId,
-      qualification: qualificaton,
-      course: educationCourse,
-      specialization: specialization,
-      college: collage,
+      qualification:
+        qualificationOptions.find((item) => item.id === qualificaton)?.name ||
+        "",
+      course:
+        educationCourseOptions.find((item) => item.id === educationCourse)
+          ?.name || "",
+      specialization:
+        specializationOptions.find((item) => item.id === specialization)
+          ?.name || "",
+      college:
+        collageOptions.find((item) => item.id === educationCollege)?.name || "",
       start_date: educationStartDate,
       end_date: educationEndDate,
       course_type: courseType,
@@ -531,16 +814,15 @@ export default function MainProfile() {
     };
 
     try {
-      if (educationId) {
-        const response = await updateEducation({ ...payload, id: educationId });
-        console.log("Education updated:", response);
+      if (educationData) {
+        const response = await updateEducation(payload);
         message.success("Education updated successfully.");
       } else {
         const response = await insertEducation(payload);
-        console.log("Education inserted:", response);
         message.success("Education added successfully.");
-        resetFormFields();
       }
+      setShowEducationForm(false);
+      getUserProfileData();
     } catch (error) {
       console.error("Education save/update failed:", error);
       message.error("Failed to save education data.");
@@ -554,55 +836,68 @@ export default function MainProfile() {
     setCompanies(data);
   };
 
+  const handleWorkDiscard = () => {
+    setShowWorkExpForm(false);
+  };
+
+  const handleDeleteExperience = async () => {
+    if (!experienceData) {
+      message.error("No experience data to delete.");
+      return;
+    }
+    const payload = {
+      id: experienceData.id,
+      user_id: loginUserId,
+    };
+
+    try {
+      const response = await deleteExperience(payload);
+      console.log("deleteExperience", response);
+      message.success("Experience deleted successfully.");
+      setCompanies([
+        {
+          jobTitle: "",
+          workingCompanyName: "",
+          designation: "",
+          workingStartDate: "",
+          workingEndDate: "",
+        },
+      ]);
+      setShowWorkExpForm(true);
+      getUserProfileData();
+    } catch (error) {
+      console.error("Error deleting experience:", error);
+      message.error("Failed to delete experience.");
+    }
+  };
+
   const handleWorkExpSave = async (e) => {
     e.preventDefault();
-
-    const selectExperienceTypeValidate = selectValidator(selectExperienceType);
-
-    setSelectExperienceTypeError(selectExperienceTypeValidate);
-
     let experienceErrors = false;
 
-    let totalYearsExperienceValidate = "";
-    let totalMonthsExperienceValidate = "";
-    let jobTitleValidate = "";
+    const validateCompanyFields = companies.map((item) => ({
+      ...item,
+      jobTitleError: nameValidator(item.jobTitle),
+      workingCompanyNameError: nameValidator(item.workingCompanyName),
+      designationError: nameValidator(item.designation),
+      workingStartDateError: selectValidator(item.workingStartDate),
+      workingEndDateError: item.currentlyWorking
+        ? ""
+        : selectValidator(item.workingEndDate),
+    }));
 
-    if (selectExperienceType === "Experience") {
-      totalYearsExperienceValidate = selectValidator(totalYearsExperience);
-      totalMonthsExperienceValidate = selectValidator(totalMonthsExperience);
-      jobTitleValidate = nameValidator(jobTitle);
+    setCompanies(validateCompanyFields);
 
-      setTotalYearsExperienceError(totalYearsExperienceValidate);
-      setTotalMonthsExperienceError(totalMonthsExperienceValidate);
-      setJobTitleError(jobTitleValidate);
+    experienceErrors = validateCompanyFields.some(
+      (err) =>
+        err.jobTitleError ||
+        err.workingCompanyNameError ||
+        err.designationError ||
+        err.workingStartDateError ||
+        err.workingEndDateError
+    );
 
-      const validateCompanyFields = companies.map((item) => ({
-        ...item,
-        workingCompanyNameError: nameValidator(item.workingCompanyName),
-        designationError: nameValidator(item.designation),
-        workingStartDateError: selectValidator(item.workingStartDate),
-        workingEndDateError: item.currentlyWorking
-          ? ""
-          : selectValidator(item.workingEndDate),
-      }));
-
-      setCompanies(validateCompanyFields);
-
-      experienceErrors = validateCompanyFields.some(
-        (err) =>
-          err.workingCompanyNameError ||
-          err.designationError ||
-          err.workingStartDateError ||
-          err.workingEndDateError
-      );
-    }
-
-    const hasAnyError =
-      selectExperienceTypeValidate ||
-      totalYearsExperienceValidate ||
-      totalMonthsExperienceValidate ||
-      jobTitleValidate ||
-      experienceErrors;
+    const hasAnyError = experienceErrors;
 
     if (hasAnyError) {
       message.error("Please fill all fields correctly before proceeding.");
@@ -617,36 +912,48 @@ export default function MainProfile() {
       start_date: company.workingStartDate,
       end_date: company.workingEndDate,
       currently_working: company.currentlyWorking,
-      experince_type: selectExperienceType,
-      total_years: totalYearsExperience,
-      total_months: totalMonthsExperience,
-      job_title: jobTitle,
+      job_title: company.jobTitle,
     }));
 
     const payload = {
+      id: experienceData?.id,
       user_id: loginUserId,
       experiences,
     };
 
     try {
-      const response = await insertExperience(payload);
-      console.log("workexp", response);
-      message.success("Experience inserted successfully");
-      // resetFormFields();
+      if (experienceData) {
+        const response = await updateExperience(payload);
+        console.log("workexp", response);
+        message.success("Experience updated successfully");
+        // resetFormFields();
+      } else {
+        const response = await insertExperience(payload);
+        getUserProfileData();
+        message.success("Experience inserted successfully.");
+      }
+      setShowWorkExpForm(false);
     } catch (error) {
       console.log("experience insert error", error);
     }
   };
 
+  const handleProjectDiscard = () => {
+    setShowForm(false);
+  };
+
   const handleProjectSave = async (e) => {
     e.preventDefault();
+
+    // 🔍 Run validations
     const projectCompanyNameValidate = nameValidator(companyName);
     const projectValidate = nameValidator(project);
     const projectTypeValidate = selectValidator(projectType);
     const projectStartDateValidate = selectValidator(projectStartDate);
     const projectEndDateValidate = selectValidator(projectEndDate);
-    const projectDescriptionValidate = nameValidator(projectDescription);
+    const projectDescriptionValidate = descriptionValidator(projectDescription);
 
+    // 🔁 Set validation errors to state
     setCompanyNameError(projectCompanyNameValidate);
     setProjectError(projectValidate);
     setProjectTypeError(projectTypeValidate);
@@ -668,9 +975,12 @@ export default function MainProfile() {
       return;
     }
 
+    // ✅ Construct payload
     const payload = {
+      ...(projectData?.id && { id: projectData.id }), // only include id if editing
       user_id: loginUserId,
       company_name: companyName,
+      job_title: jobTitle,
       project_title: project,
       project_type: projectType,
       start_date: formatDateTime(projectStartDate),
@@ -679,37 +989,92 @@ export default function MainProfile() {
     };
 
     try {
-      const response = await insertProjects(payload);
-      console.log("project", response);
+      if (projectData) {
+        const response = await updateProject(payload);
+        console.log("updateProjects", response);
+        message.success("Project updated successfully.");
 
-      setProjectsList([...projectsList, payload]);
+        const updatedList = projectsList.map((item) =>
+          item.id === projectData.id ? payload : item
+        );
+        setProjectsList(updatedList);
+      } else {
+        const response = await insertProjects(payload);
+        console.log("insertProjects", response);
+        message.success("Project added successfully.");
 
+        const newProject = response?.data?.data;
+
+        if (newProject?.id) {
+          setProjectsList([...projectsList, newProject]);
+        } else {
+          getUserProfileData();
+        }
+      }
+
+      // ✅ Reset state after save
+      setProjectData(null);
+      setCompanyName("");
+      setProject("");
+      setProjectType("");
+      setProjectStartDate("");
+      setProjectEndDate("");
+      setProjectDescription("");
+      setActiveButton(""); // clear active button style
       setShowForm(false);
     } catch (error) {
-      console.log("project error", error);
+      console.error("project error", error);
       message.error("Failed to save project");
     }
   };
 
   const handleAddNewProject = () => {
+    setProjectData(null);
     setShowForm(true);
     setCompanyName("");
     setProject("");
     setProjectStartDate("");
     setProjectEndDate("");
     setProjectType("");
+    setProjectDescription("");
+    setActiveButton("");
   };
 
-  const handleDeleteCompany = (idx) => {
-    let data = [...projectsList];
-    data.splice(idx, 1);
-    setProjectsList(data);
+  const handleDeleteCompany = async (id) => {
+    if (!id) {
+      message.error("No project ID to delete.");
+      return;
+    }
+
+    const payload = {
+      id,
+      user_id: loginUserId,
+    };
+
+    try {
+      const response = await deleteProject(payload);
+      console.log("deleteProject", response);
+      message.success("Project deleted successfully.");
+
+      const updatedList = projectsList.filter((item) => item.id !== id);
+      setProjectsList(updatedList);
+
+      if (updatedList.length === 0) {
+        // 👇 Automatically open the form to add new project
+        handleAddNewProject();
+      } else {
+        setShowForm(false);
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      message.error("Failed to delete project.");
+    }
   };
 
   const handleAboutSave = async (e) => {
     e.preventDefault();
 
-    const aboutTextValidate = nameValidator(aboutTextNew);
+    const aboutTextValidate = descriptionValidator(aboutTextNew);
 
     setAboutTextError(aboutTextValidate);
 
@@ -727,8 +1092,8 @@ export default function MainProfile() {
     try {
       const response = await updateAbout(payload);
       console.log("updateAbout", response);
-
       setAboutText(response?.data?.data || []);
+      resetFormFields();
       message.success("About details saved successfully.");
     } catch (error) {
       setAboutTextError(aboutTextValidate);
@@ -916,6 +1281,23 @@ export default function MainProfile() {
     try {
       const response = await updateSocialLinks(payload);
       console.log("social links", response);
+      resetFormFields();
+      setSocialLinks({
+        Linkedin: "",
+        facebook: "",
+        Instagram: "",
+        Twitter: "",
+        Dribbble: "",
+        Behance: "",
+      });
+      setSocialLinkErrors({
+        Linkedin: "",
+        Facebook: "",
+        Instagram: "",
+        Twitter: "",
+        Dribbble: "",
+        Behance: "",
+      });
       message.success("Social links saved successfully!");
     } catch (error) {
       message.error("Failed to save social links.");
@@ -1006,78 +1388,79 @@ export default function MainProfile() {
   };
 
   const resetFormFields = () => {
-    setGender("");
-    setUserType("");
-    setLocation("");
-    setCourse("");
-    setStartDate("");
-    setEndDate("");
-    setFresherCourse("");
-    setFresherStartDate("");
-    setFresherEndDate("");
-    setActiveButton(null);
-    setUserTypeActiveButton(null);
-    setClass(null);
+    // setGender("");
+    // setUserType("");
+    // setLocation("");
+    // setCourse("");
+    // setStartDate("");
+    // setEndDate("");
+    // setFresherCourse("");
+    // setFresherStartDate("");
+    // setFresherEndDate("");
+    // setActiveButton(null);
+    // setUserTypeActiveButton(null);
+    // setClass(null);
+    // setSelectExperienceType("");
+    // setSelectExperienceTypeError("");
+    // setTotalYearsExperience(null);
+    // setTotalYearsExperienceError("");
+    // setTotalMonthsExperience("");
+    // setTotalMonthsExperienceError("");
 
-    // Education
-    setQualification("");
-    setEducationCourse("");
-    setSpecialization("");
-    setCollage("");
-    setCourseType("");
-    setPercentage("");
-    setCgpa("");
-    setEducationStartDate("");
-    setEducationEndDate("");
-    setRollNumber("");
+    // // Education
+    // setQualification("");
+    // setEducationCourse("");
+    // setSpecialization("");
+    // setEducationCollege("");
+    // setCourseType("");
+    // setPercentage("");
+    // setCgpa("");
+    // setEducationStartDate("");
+    // setEducationEndDate("");
+    // setRollNumber("");
 
-    // Work Experience
-    setSelectExperienceType("");
-    setSelectExperienceTypeError("");
-    setTotalYearsExperience("");
-    setTotalYearsExperienceError("");
-    setTotalMonthsExperience("");
-    setTotalMonthsExperienceError("");
-    setJobTitle("");
-    setJobTitleError("");
-    setWorkExpLocation("");
-    setCompanies([
-      {
-        workingCompanyName: "",
-        designation: "",
-        workingStartDate: "",
-        workingEndDate: "",
-      },
-    ]);
+    // // Work Experience
 
-    // Projects
-    setProject("");
-    setCompanyName("");
-    setCompanyNameError("");
-    setProjectType("");
-    setProjectStartDate("");
-    setProjectEndDate("");
-    setProjectDescription("");
+    // setJobTitle("");
+    // setJobTitleError("");
+    // setWorkExpLocation("");
+    // setCompanies([
+    //   {
+    //     workingCompanyName: "",
+    //     designation: "",
+    //     workingStartDate: "",
+    //     workingEndDate: "",
+    //   },
+    // ]);
 
-    // Skills
-    setSelectedSkills([]);
-    setCustomSkill("");
+    // // Projects
+    // setProject("");
+    // setCompanyName("");
+    // setCompanyNameError("");
+    // setProjectType("");
+    // setProjectStartDate("");
+    // setProjectEndDate("");
+    // setProjectDescription("");
 
-    // About
-    setAboutTextNew("");
+    // // Skills
+    // setSelectedSkills([]);
+    // setCustomSkill("");
 
-    // Resume
-    setResumeFile(null);
+    // // About
+    // setAboutTextNew("");
 
-    // Social Links
-    setSocialLinks({
-      Linkedin: "",
-      Facebook: "",
-      Instagram: "",
-      Twitter: "",
-      Dribbble: "",
-      Behance: "",
-    });
+    // // Resume
+    // setResumeFile(null);
+
+    // // Social Links
+    // setSocialLinks({
+    //   Linkedin: "",
+    //   Facebook: "",
+    //   Instagram: "",
+    //   Twitter: "",
+    //   Dribbble: "",
+    //   Behance: "",
+    // });
 
     // Errors
     setFnameError("");
@@ -1097,11 +1480,16 @@ export default function MainProfile() {
     setEducationCourseError("");
     setSpecializationError("");
     setCollageError("");
+    setResumeError("");
     setCourseTypeError("");
     setEducationStartDateError("");
     setEducationEndDateError("");
     setDesignationError("");
     setEmploymentTypeError("");
+    setSelectExperienceTypeError("");
+    setTotalYearsExperienceError("");
+    setTotalMonthsExperienceError("");
+    setJobTitleError("");
     setWorkExpStartDateError("");
     setWorkExpEndDateError("");
     setWorkExpLocationError("");
@@ -1719,6 +2107,171 @@ export default function MainProfile() {
           </div>
 
           <div style={{ marginTop: 20 }} className="form-group">
+            <CommonSelectField
+              label="Fresher / Experience"
+              name="fresherexperience"
+              mandatory={true}
+              placeholder="Select Experience"
+              options={[
+                {
+                  value: "Fresher",
+                  label: "Fresher",
+                },
+                {
+                  value: "Experience",
+                  label: "Experience",
+                },
+              ]}
+              onChange={(value) => {
+                handleExperienceTypeChange(value);
+                setSelectExperienceType(value);
+                setSelectExperienceTypeError(selectValidator(value));
+              }}
+              showSearch={true}
+              error={selectExperienceTypeError}
+            />
+          </div>
+
+          <div className="form-row">
+            {experienceType === "Experience" && (
+              <>
+                <div className="form-group">
+                  <CommonSelectField
+                    label="Total Years of Experience"
+                    name="totalexperience"
+                    mandatory={true}
+                    placeholder="Select Experience"
+                    options={[
+                      {
+                        value: "0 Years",
+                        label: "0 Years",
+                      },
+                      {
+                        value: "1 Years",
+                        label: "1 Years",
+                      },
+                      {
+                        value: "2 Years",
+                        label: "2 Years",
+                      },
+                      {
+                        value: "3 Years",
+                        label: "3 Years",
+                      },
+                      {
+                        value: "4 Years",
+                        label: "4 Years",
+                      },
+                      {
+                        value: "5 Years",
+                        label: "5 Years",
+                      },
+                      {
+                        value: "6 Years",
+                        label: "6 Years",
+                      },
+                      {
+                        value: "7 Years",
+                        label: "7 Years",
+                      },
+                      {
+                        value: "8 Years",
+                        label: "8 Years",
+                      },
+                      {
+                        value: "9 Years",
+                        label: "9 Years",
+                      },
+                      {
+                        value: "10 Years",
+                        label: "10 Years",
+                      },
+                      {
+                        value: "11 Years",
+                        label: "11 Years",
+                      },
+                    ]}
+                    showSearch={true}
+                    onChange={(value) => {
+                      setTotalYearsExperience(value);
+                      setTotalYearsExperienceError(selectValidator(value));
+                    }}
+                    error={totalYearsExperienceError}
+                  />
+                </div>
+                <div className="form-group">
+                  <CommonSelectField
+                    label="Total Months of Experience"
+                    name="experiencemonth"
+                    mandatory={true}
+                    placeholder="Select Experience"
+                    options={[
+                      {
+                        value: "0 Month",
+                        label: "0 Month",
+                      },
+                      {
+                        value: "1 Month",
+                        label: "1 Month",
+                      },
+                      {
+                        value: "2 Months",
+                        label: "2 Months",
+                      },
+                      {
+                        value: "3 Months",
+                        label: "3 Months",
+                      },
+                      {
+                        value: "4 Months",
+                        label: "4 Months",
+                      },
+                      {
+                        value: "5 Months",
+                        label: "5 Months",
+                      },
+                      {
+                        value: "6 Months",
+                        label: "6 Months",
+                      },
+                      {
+                        value: "7 Months",
+                        label: "7 Months",
+                      },
+                      {
+                        value: "8 Months",
+                        label: "8 Months",
+                      },
+                      {
+                        value: "9 Months",
+                        label: "9 Months",
+                      },
+                      {
+                        value: "10 Months",
+                        label: "10 Months",
+                      },
+                      {
+                        value: "11 Months",
+                        label: "11 Months",
+                      },
+                      {
+                        value: "12 Months",
+                        label: "12 Months",
+                      },
+                    ]}
+                    onChange={(value) => {
+                      setTotalMonthsExperience(value);
+                      setTotalMonthsExperienceError(selectValidator(value));
+                    }}
+                    showSearch={true}
+                    error={totalMonthsExperienceError}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div style={{ marginTop: 0 }} className="form-group">
             <CommonInputField
               name="location"
               label="Location"
@@ -1741,7 +2294,7 @@ export default function MainProfile() {
               className="nav-btn next-btn"
             >
               <MdFileDownloadDone style={{ fontSize: 22 }} />
-              Save
+              Update
             </Button>
           </div>
         </div>
@@ -1822,9 +2375,7 @@ export default function MainProfile() {
           boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
         }}
       >
-        <div
-          style={{ display: "flex", alignItems: "center", marginBottom: 16 }}
-        >
+        <div style={{ display: "flex", alignItems: "center" }}>
           <CheckCircleFilled style={{ color: "#00c853", marginRight: 8 }} />
           <Title level={4} style={{ margin: 0 }}>
             About
@@ -1832,11 +2383,10 @@ export default function MainProfile() {
         </div>
 
         <div style={{ marginBottom: 8 }}>
-          <Text strong>
-            About Me <span style={{ color: "red" }}>*</span>
-          </Text>
           <div style={{ fontSize: 12, color: "#888" }}>
-            Maximum 1000 characters can be added
+            About gives you a chance to showcase your personality, skills, and
+            aspirations. Use this space to tell your story, highlight your
+            achievements, and share what makes you unique.
           </div>
         </div>
 
@@ -1848,35 +2398,10 @@ export default function MainProfile() {
           value={aboutTextNew}
           onChange={(e) => {
             setAboutTextNew(e.target.value);
-            setAboutTextError(nameValidator(e.target.value));
+            setAboutTextError(descriptionValidator(e.target.value));
           }}
           error={aboutTextError}
         />
-
-        {/* <Button
-          icon={
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/4712/4712106.png"
-              alt="AI"
-              width={18}
-              style={{ marginRight: 8 }}
-            />
-          }
-          onClick={() =>
-            setAboutText(
-              "I am a detail-oriented and results-driven professional with a passion for continuous learning and growth. With a proven track record in [Your Industry], I thrive in fast-paced environments and excel at problem-solving, teamwork, and communication. I’m eager to bring my unique strengths and dedication to a dynamic organization where I can make a meaningful impact."
-            )
-          }
-          style={{
-            marginTop: 16,
-            background: "#f0f2f5",
-            border: "1px solid #d9d9d9",
-            boxShadow: "none",
-            fontWeight: 500,
-          }}
-        >
-          Generate with AI
-        </Button> */}
 
         <div style={{ textAlign: "-webkit-right" }} className="save_btn">
           <Button
@@ -1886,7 +2411,7 @@ export default function MainProfile() {
             className="nav-btn next-btn"
           >
             <MdFileDownloadDone style={{ fontSize: 22 }} />
-            Save
+            {aboutData ? "Update" : "Save"}
           </Button>
         </div>
       </div>
@@ -1981,452 +2506,379 @@ export default function MainProfile() {
     ),
     education: () => (
       <div>
-        <div className="form-group">
-          <CommonSelectField
-            label={"Qualification"}
-            name={"qualificaton"}
-            placeholder={"Select Qualification"}
-            value={qualificaton}
-            mandatory={true}
-            showSearch={true}
-            optionFilterProp={"lable"}
-            options={[
-              {
-                value: "Fresher",
-                label: "Fresher",
-              },
-              {
-                value: "Experience",
-                label: "Experience",
-              },
-            ]}
-            onChange={(value) => {
-              setQualification(value);
-              setQualificationError(selectValidator(value));
-            }}
-            error={qualificatonError}
-          />
-        </div>
-
-        <div className="form-group">
-          <div className="form-group">
-            <CommonSelectField
-              label={"Course"}
-              name={"course"}
-              placeholder={"Select Course"}
-              mandatory={true}
-              showSearch={true}
-              optionFilterProp={"lable"}
-              value={educationCourse}
-              options={[
-                {
-                  value: "Fresher",
-                  label: "Fresher",
-                },
-                {
-                  value: "Experience",
-                  label: "Experience",
-                },
-              ]}
-              onChange={(value) => {
-                setEducationCourse(value);
-                setEducationCourseError(selectValidator(value));
-              }}
-              error={educationCourseError}
-            />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <CommonSelectField
-            label={"Specialization"}
-            name={"specialization"}
-            placeholder={"Select Specialization"}
-            mandatory={true}
-            value={specialization}
-            showSearch={true}
-            optionFilterProp={"lable"}
-            options={[
-              {
-                value: "Fresher",
-                label: "Fresher",
-              },
-              {
-                value: "Experience",
-                label: "Experience",
-              },
-            ]}
-            onChange={(value) => {
-              setSpecialization(value);
-              setSpecializationError(selectValidator(value));
-            }}
-            error={specializationError}
-          />
-        </div>
-
-        <div className="form-group">
-          <CommonInputField
-            name="collage"
-            label="Collage"
-            mandotary={true}
-            placeholder="Collage"
-            type="text"
-            value={collage}
-            onChange={(e) => {
-              setCollage(e.target.value);
-              setCollageError(nameValidator(e.target.value));
-            }}
-            error={collageError}
-          />
-        </div>
-
-        <div
-          style={{ alignItems: "center", marginTop: 10 }}
-          className="form-row"
-        >
-          <div className="form-group">
-            <CommonSelectField
-              value={educationStartDate}
-              options={educationStartDateOptions}
-              label="Start Year"
-              name="startyear"
-              mandatory={true}
-              placeholder="Start Year"
-              onChange={(value) => {
-                setEducationStartDate(value);
-
-                if (!value || value.trim() === "") {
-                  setEducationStartDateError(" is required");
-                } else {
-                  setEducationStartDateError("");
-                }
-              }}
-              error={educationStartDateError}
-            />
-          </div>
-
-          <div className="form-group">
-            <CommonSelectField
-              value={educationEndDate}
-              options={educationEndDateOptions}
-              mandatory={true}
-              label="End Year"
-              name="endyear"
-              placeholder="End Year"
-              onChange={(value) => {
-                setEducationEndDate(value);
-
-                if (!value || value.trim() === "") {
-                  setEducationEndDateError(" is required");
-                } else {
-                  setEducationEndDateError("");
-                }
-              }}
-              error={educationEndDateError}
-            />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <CommonSelectField
-            label={"Course type"}
-            name={"coursetype"}
-            placeholder={"Select Course type"}
-            mandatory={true}
-            showSearch={true}
-            optionFilterProp={"lable"}
-            value={courseType}
-            options={[
-              {
-                value: "Fresher",
-                label: "Fresher",
-              },
-              {
-                value: "Experience",
-                label: "Experience",
-              },
-            ]}
-            onChange={(value) => {
-              setCourseType(value);
-              setCourseTypeError(selectValidator(value));
-            }}
-            error={courseTypeError}
-          />
-        </div>
-
-        <Row style={{ alignItems: "end", gap: 20 }}>
-          <Col lg={11}>
-            <div className="form-group">
-              <CommonInputField
-                name="percentage"
-                label="Percentage"
-                placeholder="Percentage"
-                type="text"
-                value={percentage}
-                onChange={(e) => {
-                  setPercentage(e.target.value);
-                }}
-              />
-            </div>
-          </Col>
-          <Col lg={11}>
-            <div className="form-group">
-              <CommonInputField
-                name="cgpa"
-                label="CGPA"
-                placeholder="CGPA"
-                type="text"
-                value={cgpa}
-                onChange={(e) => {
-                  setCgpa(e.target.value);
-                }}
-              />
-            </div>
-          </Col>
-        </Row>
-
-        <Row style={{ gap: 20, marginTop: 30 }}>
-          <Col lg={11}>
-            <div className="form-group">
-              <CommonInputField
-                name="rollnumber"
-                label="Roll Number"
-                placeholder="Roll Number"
-                type="number"
-                value={rollNumber}
-                onChange={(e) => {
-                  setRollNumber(e.target.value);
-                }}
-              />
-            </div>
-          </Col>
-          <Col lg={11}>
+        {showEducationForm && (
+          <>
             <div className="form-group">
               <CommonSelectField
-                label="Are you a Lateral Entry Student?"
-                name="lateralstudent"
-                placeholder="Lateral Entry"
+                label={"Qualification"}
+                name={"qualificaton"}
+                placeholder={"Select Qualification"}
+                value={qualificaton}
+                mandatory={true}
                 showSearch={true}
-                options={[
-                  { value: "Yes", label: "Yes" },
-                  { value: "No", label: "No" },
-                ]}
-                value={lateral}
-                optionFilterProp="label"
-                onChange={handleLateralTypeChange}
+                optionFilterProp={"lable"}
+                options={qualificationOptions}
+                onChange={(value) => {
+                  setQualification(value);
+                  setQualificationError(selectValidator(value));
+                }}
+                error={qualificatonError}
               />
             </div>
-          </Col>
-        </Row>
-        <div
-          style={{ textAlign: "-webkit-right", marginTop: 25 }}
-          className="save_btn"
-        >
-          <Button
-            type="primary"
-            size="large"
-            onClick={handleEducationSave}
-            className="nav-btn next-btn"
-          >
-            <MdFileDownloadDone style={{ fontSize: 22, marginRight: 6 }} />
-            {educationId ? "Update" : "Save"}
-          </Button>
-        </div>
+
+            <div className="form-group">
+              <div className="form-group">
+                <CommonSelectField
+                  label={"Course"}
+                  name={"course"}
+                  placeholder={"Select Course"}
+                  mandatory={true}
+                  showSearch={true}
+                  optionFilterProp={"lable"}
+                  value={educationCourse}
+                  options={educationCourseOptions}
+                  onChange={(value) => {
+                    setEducationCourse(value);
+                    setEducationCourseError(selectValidator(value));
+                  }}
+                  error={educationCourseError}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <CommonSelectField
+                label={"Specialization"}
+                name={"specialization"}
+                placeholder={"Select Specialization"}
+                mandatory={true}
+                value={specialization}
+                showSearch={true}
+                optionFilterProp={"lable"}
+                options={specializationOptions}
+                onChange={(value) => {
+                  setSpecialization(value);
+                  setSpecializationError(selectValidator(value));
+                }}
+                error={specializationError}
+              />
+            </div>
+
+            <div className="form-group">
+              <CommonSelectField
+                label={"Collage"}
+                name={"Collage"}
+                placeholder={"Select Collage"}
+                mandatory={true}
+                value={educationCollege}
+                showSearch={true}
+                optionFilterProp={"lable"}
+                options={collageOptions}
+                onChange={(value) => {
+                  setEducationCollege(value);
+                  setCollageError(selectValidator(value));
+                }}
+                error={collageError}
+              />
+            </div>
+
+            <div
+              style={{ alignItems: "center", marginTop: 10 }}
+              className="form-row"
+            >
+              <div className="form-group">
+                <CommonSelectField
+                  value={educationStartDate}
+                  options={educationStartDateOptions}
+                  label="Start Year"
+                  name="startyear"
+                  mandatory={true}
+                  placeholder="Start Year"
+                  onChange={(value) => {
+                    setEducationStartDate(value);
+
+                    if (!value || value.trim() === "") {
+                      setEducationStartDateError(" is required");
+                    } else {
+                      setEducationStartDateError("");
+                    }
+                  }}
+                  error={educationStartDateError}
+                />
+              </div>
+
+              <div className="form-group">
+                <CommonSelectField
+                  value={educationEndDate}
+                  options={educationEndDateOptions}
+                  mandatory={true}
+                  label="End Year"
+                  name="endyear"
+                  placeholder="End Year"
+                  onChange={(value) => {
+                    setEducationEndDate(value);
+
+                    if (!value || value.trim() === "") {
+                      setEducationEndDateError(" is required");
+                    } else {
+                      setEducationEndDateError("");
+                    }
+                  }}
+                  error={educationEndDateError}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <CommonSelectField
+                label={"Course type"}
+                name={"coursetype"}
+                placeholder={"Select Course type"}
+                mandatory={true}
+                showSearch={true}
+                optionFilterProp={"lable"}
+                value={courseType}
+                options={courseTypeOptions}
+                onChange={(value) => {
+                  setCourseType(value);
+                  setCourseTypeError(selectValidator(value));
+                }}
+                error={courseTypeError}
+              />
+            </div>
+
+            <Row style={{ alignItems: "end", gap: 20 }}>
+              <Col lg={11}>
+                <div className="form-group">
+                  <CommonInputField
+                    name="percentage"
+                    label="Percentage"
+                    placeholder="Percentage"
+                    type="text"
+                    value={percentage}
+                    onChange={(e) => {
+                      setPercentage(e.target.value);
+                    }}
+                  />
+                </div>
+              </Col>
+              <Col lg={11}>
+                <div className="form-group">
+                  <CommonInputField
+                    name="cgpa"
+                    label="CGPA"
+                    placeholder="CGPA"
+                    type="text"
+                    value={cgpa}
+                    onChange={(e) => {
+                      setCgpa(e.target.value);
+                    }}
+                  />
+                </div>
+              </Col>
+            </Row>
+
+            <Row style={{ gap: 20, marginTop: 30 }}>
+              <Col lg={11}>
+                <div className="form-group">
+                  <CommonInputField
+                    name="rollnumber"
+                    label="Roll Number"
+                    placeholder="Roll Number"
+                    type="number"
+                    value={rollNumber}
+                    onChange={(e) => {
+                      setRollNumber(e.target.value);
+                    }}
+                  />
+                </div>
+              </Col>
+              <Col lg={11}>
+                <div className="form-group">
+                  <CommonSelectField
+                    label="Are you a Lateral Entry Student?"
+                    name="lateralstudent"
+                    placeholder="Lateral Entry"
+                    showSearch={true}
+                    options={[
+                      { value: "Yes", label: "Yes" },
+                      { value: "No", label: "No" },
+                    ]}
+                    value={lateral}
+                    optionFilterProp="label"
+                    onChange={handleLateralTypeChange}
+                  />
+                </div>
+              </Col>
+            </Row>
+            <div style={{ marginTop: 25 }} className="form-row">
+              <div style={{ textAlign: "left" }} className="save_btn">
+                {educationData ? (
+                  <Button
+                    type="danger"
+                    size="large"
+                    onClick={handleEducationDiscard}
+                    className="nav-btn discard-btn"
+                  >
+                    Discard
+                    <HiMiniXMark style={{ fontSize: 22 }} />
+                  </Button>
+                ) : null}
+              </div>
+
+              <div style={{ textAlign: "-webkit-right" }} className="save_btn">
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={handleEducationSave}
+                  className="nav-btn next-btn"
+                >
+                  <MdFileDownloadDone
+                    style={{ fontSize: 22, marginRight: 6 }}
+                  />
+                  {educationData ? "Update" : "Save"}
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {!showEducationForm && (
+          <div className="education-details-container">
+            <div className="education-header">
+              <div className="header-contents">
+                <div className="header-icons">
+                  <MdSchool className="icon" />
+                </div>
+                <h3 className="header-titles">Education Details</h3>
+              </div>
+            </div>
+
+            <div className="education-content">
+              <Row gutter={[24, 30]}>
+                {[
+                  {
+                    label: "Qualification",
+                    value: qualificaton,
+                    icon: <MdOutlineSchool />,
+                  },
+                  {
+                    label: "Course",
+                    value: educationCourse,
+                    icon: <MdMenuBook />,
+                  },
+                  {
+                    label: "Specialization",
+                    value: specialization,
+                    icon: <MdStarOutline />,
+                  },
+
+                  {
+                    label: "College/University",
+                    value: educationCollege,
+                    icon: <MdLocationCity />,
+                  },
+                  {
+                    label: "Start Year",
+                    value: educationStartDate,
+                    icon: <MdDateRange />,
+                  },
+                  {
+                    label: "End Year",
+                    value: educationEndDate,
+                    icon: <MdEventAvailable />,
+                  },
+                  {
+                    label: "Course Type",
+                    value: courseType,
+                    icon: <MdCategory />,
+                  },
+                  {
+                    label: "Percentage",
+                    value: percentage || "N/A",
+                    icon: <MdPercent />,
+                  },
+                  {
+                    label: "CGPA",
+                    value: cgpa || "N/A",
+                    icon: <MdOutlineCalculate />,
+                  },
+                  {
+                    label: "Roll Number",
+                    value: rollNumber || "N/A",
+                    icon: <MdConfirmationNumber />,
+                  },
+                  {
+                    label: "Lateral Entry",
+                    value: lateral || "N/A",
+                    icon: <MdSwapHoriz />,
+                  },
+                ].map((item, index) => (
+                  <Col xs={24} sm={12} key={index}>
+                    <div className="education-detail-item">
+                      <div className="detail-icons">{item.icon}</div>
+                      <div className="detail-content">
+                        <div className="detail-label">{item.label}</div>
+                        <div className="detail-value">{item.value || "-"}</div>
+                      </div>
+                    </div>
+                  </Col>
+                ))}
+              </Row>
+            </div>
+
+            {/* Premium footer */}
+            <div className="education-footer">
+              <Popconfirm
+                title="Are you sure you want to delete your Education?"
+                onConfirm={handleDeleteEducation}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button
+                  type="primary"
+                  danger
+                  icon={<MdDeleteForever className="button-icon" />}
+                  className="delete-button"
+                >
+                  Delete Education
+                </Button>
+              </Popconfirm>
+
+              <Button
+                type="primary"
+                icon={<MdEdit className="button-icon" />}
+                onClick={() => {
+                  setShowEducationForm(true);
+                }}
+                className="edit-button"
+              >
+                Edit Education
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     ),
+
     experience: () => (
       <div>
-        <div className="form-group">
-          <CommonSelectField
-            label="Fresher / Experience"
-            name="fresherexperience"
-            mandatory={true}
-            placeholder="Select Experience"
-            options={[
-              {
-                value: "Fresher",
-                label: "Fresher",
-              },
-              {
-                value: "Experience",
-                label: "Experience",
-              },
-            ]}
-            onChange={(value) => {
-              handleExperienceTypeChange(value);
-              setSelectExperienceType(value);
-              setSelectExperienceTypeError(selectValidator(value));
-            }}
-            showSearch={true}
-            error={selectExperienceTypeError}
-          />
-        </div>
-
-        {experienceType === "Experience" && (
-          <div className="forexprience">
-            <div className="form-row">
-              <div className="form-group">
-                <CommonSelectField
-                  label=" Total Years of Experience"
-                  name="totalexperience"
-                  mandatory={true}
-                  placeholder="Select Experience"
-                  options={[
-                    {
-                      value: "0 Years",
-                      label: "0 Years",
-                    },
-                    {
-                      value: "1 Years",
-                      label: "1 Years",
-                    },
-                    {
-                      value: "2 Years",
-                      label: "2 Years",
-                    },
-                    {
-                      value: "3 Years",
-                      label: "3 Years",
-                    },
-                    {
-                      value: "4 Years",
-                      label: "4 Years",
-                    },
-                    {
-                      value: "5 Years",
-                      label: "5 Years",
-                    },
-                    {
-                      value: "6 Years",
-                      label: "6 Years",
-                    },
-                    {
-                      value: "7 Years",
-                      label: "7 Years",
-                    },
-                    {
-                      value: "8 Years",
-                      label: "8 Years",
-                    },
-                    {
-                      value: "9 Years",
-                      label: "9 Years",
-                    },
-                    {
-                      value: "10 Years",
-                      label: "10 Years",
-                    },
-                    {
-                      value: "11 Years",
-                      label: "11 Years",
-                    },
-                  ]}
-                  showSearch={true}
-                  onChange={(value) => {
-                    setTotalYearsExperience(value);
-                    setTotalYearsExperienceError(selectValidator(value));
-                  }}
-                  error={totalYearsExperienceError}
-                />
-              </div>
-              <div className="form-group">
-                <CommonSelectField
-                  label="Total Months of Experience"
-                  name="experiencemonth"
-                  mandatory={true}
-                  placeholder="Select Experience"
-                  options={[
-                    {
-                      value: "0 Month",
-                      label: "0 Month",
-                    },
-                    {
-                      value: "1 Month",
-                      label: "1 Month",
-                    },
-                    {
-                      value: "2 Months",
-                      label: "2 Months",
-                    },
-                    {
-                      value: "3 Months",
-                      label: "3 Months",
-                    },
-                    {
-                      value: "4 Months",
-                      label: "4 Months",
-                    },
-                    {
-                      value: "5 Months",
-                      label: "5 Months",
-                    },
-                    {
-                      value: "6 Months",
-                      label: "6 Months",
-                    },
-                    {
-                      value: "7 Months",
-                      label: "7 Months",
-                    },
-                    {
-                      value: "8 Months",
-                      label: "8 Months",
-                    },
-                    {
-                      value: "9 Months",
-                      label: "9 Months",
-                    },
-                    {
-                      value: "10 Months",
-                      label: "10 Months",
-                    },
-                    {
-                      value: "11 Months",
-                      label: "11 Months",
-                    },
-                    {
-                      value: "12 Months",
-                      label: "12 Months",
-                    },
-                  ]}
-                  onChange={(value) => {
-                    setTotalMonthsExperience(value);
-                    setTotalMonthsExperienceError(selectValidator(value));
-                  }}
-                  showSearch={true}
-                  error={totalMonthsExperienceError}
-                />
-              </div>
-            </div>
-            <div className="form-group">
-              <CommonInputField
-                name={"Job title"}
-                label="Job Title"
-                mandotary={true}
-                value={jobTitle}
-                placeholder={"Software Engineer"}
-                type={"text"}
-                onChange={(e) => {
-                  setJobTitle(e.target.value);
-                  setJobTitleError(nameValidator(e.target.value));
-                }}
-                error={jobTitleError}
-              />
-            </div>
-            {companies.map((company, index) => (
-              <div className="add-company-section" key={index}>
-                <div style={{ display: "flex", justifyContent: "end" }}>
-                  {index == 0 ? (
-                    ""
-                  ) : (
-                    <MdDeleteForever
-                      onClick={() => handleDeleteCompanyWork(index)}
-                      name={["companies", index, "job-delete"]}
-                      className="job-delete"
-                    />
-                  )}
-                </div>
-                <div className="form-row">
+        {showWorkExpForm && (
+          <>
+            <div className="forexprience">
+              {companies.map((company, index) => (
+                <div className="add-company-section" key={index}>
+                  <div style={{ display: "flex", justifyContent: "end" }}>
+                    {index == 0 ? (
+                      ""
+                    ) : (
+                      <MdDeleteForever
+                        onClick={() => handleDeleteCompanyWork(index)}
+                        name={["companies", index, "job-delete"]}
+                        className="job-delete"
+                      />
+                    )}
+                  </div>
                   <div className="form-group">
                     <CommonInputField
                       label=" Company name"
@@ -2443,95 +2895,284 @@ export default function MainProfile() {
                       }
                     />
                   </div>
-                  <div className="form-group">
-                    <CommonInputField
-                      label="Designation"
-                      mandotary={true}
-                      placeholder={"Enter your designation"}
-                      value={company.designation}
-                      error={company.designationError}
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <CommonInputField
+                        name={"Job title"}
+                        label="Job Title"
+                        mandotary={true}
+                        value={company.jobTitle}
+                        placeholder={"Enter job title"}
+                        type={"text"}
+                        onChange={(e) =>
+                          handleCompanyFields(index, "jobTitle", e.target.value)
+                        }
+                        error={company.jobTitleError}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <CommonInputField
+                        label="Designation"
+                        mandotary={true}
+                        placeholder={"Enter your designation"}
+                        value={company.designation}
+                        error={company.designationError}
+                        onChange={(e) =>
+                          handleCompanyFields(
+                            index,
+                            "designation",
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="from-group">
+                      <CommonSelectField
+                        label="Start Date"
+                        name={"StartDate"}
+                        placeholder={"Select Start Date"}
+                        mandatory={true}
+                        value={company.workingStartDate}
+                        options={workingStartDateOptions}
+                        error={company.workingStartDateError}
+                        onChange={(value) =>
+                          handleCompanyFields(index, "workingStartDate", value)
+                        }
+                      />
+                    </div>
+                    <div className="from-group">
+                      <CommonSelectField
+                        label="End Date"
+                        name={"endDate"}
+                        mandatory={true}
+                        placeholder={"Select End Date"}
+                        value={company.workingEndDate}
+                        options={workingEndDateOptions}
+                        error={company.workingEndDateError}
+                        onChange={(value) =>
+                          handleCompanyFields(index, "workingEndDate", value)
+                        }
+                        disabled={
+                          company.currentlyWorking === true ? true : false
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div
+                    style={{ marginTop: 15 }}
+                    className="professional-checkbox"
+                  >
+                    <Checkbox
+                      checked={company.currentlyWorking}
                       onChange={(e) =>
                         handleCompanyFields(
                           index,
-                          "designation",
-                          e.target.value
+                          "currentlyWorking",
+                          e.target.checked
                         )
                       }
-                    />
+                    >
+                      Currently Working?
+                    </Checkbox>
                   </div>
                 </div>
+              ))}
 
-                <div className="form-row">
-                  <div className="from-group">
-                    <CommonSelectField
-                      label="Start Date"
-                      mandatory={true}
-                      value={company.workingStartDate}
-                      options={workingStartDateOptions}
-                      error={company.workingStartDateError}
-                      onChange={(value) =>
-                        handleCompanyFields(index, "workingStartDate", value)
-                      }
-                    />
-                  </div>
-                  <div className="from-group">
-                    <CommonSelectField
-                      label="End Date"
-                      mandatory={true}
-                      value={company.workingEndDate}
-                      options={workingEndDateOptions}
-                      error={company.workingEndDateError}
-                      onChange={(value) =>
-                        handleCompanyFields(index, "workingEndDate", value)
-                      }
-                      disabled={
-                        company.currentlyWorking === true ? true : false
-                      }
-                    />
-                  </div>
-                </div>
-                <div
-                  style={{ marginTop: 15 }}
-                  className="professional-checkbox"
-                >
-                  <Checkbox
-                    checked={company.currentlyWorking}
-                    onChange={(e) =>
-                      handleCompanyFields(
-                        index,
-                        "currentlyWorking",
-                        e.target.checked
-                      )
-                    }
-                  >
-                    Currently Working?
-                  </Checkbox>
-                </div>
+              <div
+                style={{ display: "flex", justifyContent: "end" }}
+                className=""
+              >
+                <Button onClick={handleAddCompany} className="add-btn">
+                  Add Company <IoMdAdd className="add-icon" />
+                </Button>
               </div>
-            ))}
-
-            <div
-              style={{ display: "flex", justifyContent: "end" }}
-              className=""
-            >
-              <Button onClick={handleAddCompany} className="add-btn">
-                Add Company <IoMdAdd className="add-icon" />
-              </Button>
             </div>
-          </div>
+
+            <div className="form-row">
+              <div style={{ textAlign: "left" }} className="save_btn">
+                {experienceData ? (
+                  <Button
+                    type="danger"
+                    size="large"
+                    onClick={handleWorkDiscard}
+                    className="nav-btn discard-btn"
+                  >
+                    Discard <HiMiniXMark style={{ fontSize: 22 }} />
+                  </Button>
+                ) : null}
+              </div>
+
+              <div style={{ textAlign: "-webkit-right" }} className="save_btn">
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={handleWorkExpSave}
+                  className="nav-btn next-btn"
+                >
+                  {experienceData ? "Update" : "Save"}
+                  <MdFileDownloadDone style={{ fontSize: 22, fill: "#fff" }} />
+                </Button>
+              </div>
+            </div>
+          </>
         )}
 
-        <div style={{ textAlign: "-webkit-right" }} className="save_btn">
-          <Button
-            type="primary"
-            size="large"
-            onClick={handleWorkExpSave}
-            className="nav-btn next-btn"
-          >
-            <MdFileDownloadDone style={{ fontSize: 22 }} />
-            Save
-          </Button>
-        </div>
+        {!showWorkExpForm && (
+          <div className="experience-preview">
+            <div className="experience-summary-card">
+              <div className="summary-header">
+                <h3>
+                  <GiOfficeChair /> Experience Summary
+                </h3>
+              </div>
+              <div className="summary-grid">
+                {[
+                  {
+                    label: "Experience Type",
+                    value: experienceType,
+                    icon: <MdOutlineSchool />,
+                  },
+                  {
+                    label: "Years of Experience",
+                    value: totalYearsExperience,
+                    icon: <MdMenuBook />,
+                  },
+                  {
+                    label: "Months of Experience",
+                    value: totalMonthsExperience,
+                    icon: <MdLocationCity />,
+                  },
+                  {
+                    label: "Location",
+                    value: location,
+                    icon: <IoLocationSharp />,
+                  },
+                ].map((item, index) => (
+                  <div className="summary-item" key={index}>
+                    <div className="icon-wrapper">{item.icon}</div>
+                    <div>
+                      <div className="item-label">{item.label}</div>
+                      <div className="item-value">{item.value || "-"}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {companies.map((company, index) => (
+              <motion.div
+                key={index}
+                className="project-card"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 0.6,
+                  delay: index * 0.05,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                whileHover={{
+                  y: -6,
+                  boxShadow: "0 24px 48px -12px rgba(0, 0, 0, 0.18)",
+                  transition: { duration: 0.3 },
+                }}
+              >
+                <div className="card-glow"></div>
+                <div className="card-content">
+                  <div className="card-header">
+                    <span
+                      className={
+                        company.currentlyWorking
+                          ? "currently-working-badge"
+                          : "project-type-badge"
+                      }
+                    >
+                      {company.currentlyWorking
+                        ? "Currently Working"
+                        : "Past Role"}
+                      <span className="badge-accent"></span>
+                    </span>
+
+                    <div className="card-actions">
+                      <button
+                        onClick={() => {
+                          setShowWorkExpForm(true);
+                        }}
+                        className="icon-btn edit-btn"
+                      >
+                        <FiEdit size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <h3 className="project-title">
+                    <span className="title-text">
+                      {company.jobTitle || "Job Title"}
+                    </span>
+                    <span className="title-underline"></span>
+                  </h3>
+
+                  <div className="project-meta">
+                    <div className="meta-item company">
+                      <FiBriefcase className="meta-icon" />
+                      <span>
+                        {company.workingCompanyName || "Company Name"}
+                      </span>
+                    </div>
+                    <div className="meta-item timeline">
+                      <MdOutlineWorkHistory
+                        style={{ fontSize: 15 }}
+                        className="meta-icon"
+                      />
+                      <span>
+                        {company.workingStartDate || "Start"} —{" "}
+                        {company.currentlyWorking
+                          ? "Present"
+                          : company.workingEndDate || "End"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="project-description">
+                    <p>
+                      <span style={{ color: "#5f2eea" }}>Designation:</span>{" "}
+                      {company.designation || "Designation"}
+                    </p>
+                  </div>
+
+                  <div className="card-footer">
+                    <Popconfirm
+                      title="Delete this experience?"
+                      onConfirm={() => handleDeleteExperience(company.id)}
+                      okText="Confirm"
+                      cancelText="Cancel"
+                      overlayClassName="popconfirm-overlay"
+                    >
+                      <button className="icon-btn delete-btn">
+                        <MdDeleteForever size={18} />
+                      </button>
+                    </Popconfirm>
+
+                    <button
+                      onClick={() => {
+                        setShowWorkExpForm(true);
+                      }}
+                      className="view-project-btn"
+                    >
+                      <span>Edit Experience</span>
+                      <div className="arrow-container">
+                        <FiArrowRight size={18} className="arrow-icon" />
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     ),
     sociallinks: () => (
@@ -2640,267 +3281,328 @@ export default function MainProfile() {
     projects: () => (
       <div>
         <div>
-          {/* Project Form */}
-          {showForm && (
-            <div>
-              {
-                <>
-                  <div className="form-group">
-                    <CommonInputField
-                      name="companyName"
-                      label="Company Name"
-                      mandotary={true}
-                      placeholder="Company Name"
-                      type="text"
-                      value={companyName}
-                      onChange={(e) => {
-                        setCompanyName(e.target.value);
-                        setCompanyNameError(nameValidator(e.target.value));
-                      }}
-                      error={companyNameError}
-                    />
-                  </div>
+          {projectsList.length > 0 && !showForm ? (
+            <>
+              <div className="projects-container">
+                <div className="projects-header">
+                  <Button
+                    type="text"
+                    onClick={handleAddNewProject}
+                    className="add-project-btn"
+                    icon={<FiPlusCircle />}
+                  >
+                    Add New Project
+                  </Button>
+                  <div className="projects-header-decoration"></div>
+                </div>
 
-                  <div className="form-group">
-                    <CommonInputField
-                      name="projectname"
-                      label="Project Name"
-                      mandotary={true}
-                      placeholder="Project Name"
-                      type="text"
-                      value={project}
-                      onChange={(e) => {
-                        setProject(e.target.value);
-                        setProjectError(nameValidator(e.target.value));
+                <div className="projects-mosaic">
+                  {projectsList.map((proj, idx) => (
+                    <motion.div
+                      key={idx}
+                      className="project-card"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        duration: 0.6,
+                        delay: idx * 0.05,
+                        ease: [0.22, 1, 0.36, 1],
                       }}
-                      error={projectError}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <Form.Item
-                      layout="vertical"
-                      label={
-                        <span style={{ fontWeight: 500 }}>Project Type</span>
-                      }
-                      name="projecttype"
-                      required
+                      whileHover={{
+                        y: -6,
+                        boxShadow: "0 24px 48px -12px rgba(0, 0, 0, 0.18)",
+                        transition: { duration: 0.3 },
+                      }}
                     >
-                      <div className="job_nature">
-                        <button
-                          type="button"
-                          className={
-                            activeButton === "Full Time"
-                              ? "job_nature_button_active"
-                              : "job_nature_button"
-                          }
-                          onClick={() => {
-                            handleProjectTypeClick("Full Time");
-                            setProjectType("Full Time");
-                            setProjectTypeError("");
-                          }}
-                        >
-                          Full Time
-                        </button>
-
-                        <button
-                          type="button"
-                          className={
-                            activeButton === "Part Time"
-                              ? "job_nature_button_active"
-                              : "job_nature_button"
-                          }
-                          onClick={() => {
-                            handleProjectTypeClick("Part Time");
-                            setProjectType("Part Time");
-                            setProjectTypeError("");
-                          }}
-                        >
-                          Part Time
-                        </button>
-
-                        <button
-                          type="button"
-                          className={
-                            activeButton === "Freelance"
-                              ? "job_nature_button_active"
-                              : "job_nature_button"
-                          }
-                          onClick={() => {
-                            handleProjectTypeClick("Freelance");
-                            setProjectType("Freelance");
-                            setProjectTypeError("");
-                          }}
-                        >
-                          Freelance
-                        </button>
-                      </div>
-                      {projectTypeError && (
-                        <div
-                          style={{ color: "red", marginTop: 6, fontSize: 13 }}
-                        >
-                          Project type {projectTypeError}
+                      <div className="card-glow"></div>
+                      <div className="card-content">
+                        <div className="card-header">
+                          <span className="project-type-badge">
+                            {proj.project_type}
+                            <span className="badge-accent"></span>
+                          </span>
+                          <div className="card-actions">
+                            <button
+                              className="icon-btn edit-btn"
+                              onClick={() => {
+                                setProjectData(proj);
+                                setCompanyName(proj.company_name || "");
+                                setProject(proj.project_title || "");
+                                setProjectType(proj.project_type || "");
+                                setProjectStartDate(proj.start_date || "");
+                                setProjectEndDate(proj.end_date || "");
+                                setProjectDescription(proj.description || "");
+                                setShowForm(true);
+                                setActiveButton(proj.project_type);
+                              }}
+                            >
+                              <FiEdit size={16} />
+                            </button>
+                          </div>
                         </div>
-                      )}
-                    </Form.Item>
-                  </div>
 
-                  <div
-                    style={{ alignItems: "center", marginTop: 15 }}
-                    className="form-row"
-                  >
-                    <div className="form-group">
-                      <CommonDatePicker
-                        value={projectStartDate}
-                        label="Start Date"
-                        name="enddate"
-                        placeholder="Start Date"
-                        onChange={(value) => {
-                          setProjectStartDate(value);
+                        <h3 className="project-title">
+                          <span className="title-text">
+                            {proj.project_title}
+                          </span>
+                          <span className="title-underline"></span>
+                        </h3>
 
-                          if (!value || value.trim() === "") {
-                            setProjectStartDateError(" is required");
-                          } else {
-                            setProjectStartDateError("");
+                        <div className="project-meta">
+                          <div className="meta-item company">
+                            <FiBriefcase className="meta-icon" />
+                            <span>{proj.company_name}</span>
+                          </div>
+                          <div className="meta-item timeline">
+                            <FiCalendar className="meta-icon" />
+                            <span>
+                              {proj.start_date} — {proj.end_date}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="project-description">
+                          <p>{proj.description}</p>
+                        </div>
+
+                        <div className="card-footer">
+                          <Popconfirm
+                            title="Delete this project?"
+                            onConfirm={() => handleDeleteCompany(proj.id)}
+                            okText="Confirm"
+                            cancelText="Cancel"
+                            overlayClassName="popconfirm-overlay"
+                          >
+                            <button className="icon-btn delete-btn">
+                              <MdDeleteForever size={18} />
+                            </button>
+                          </Popconfirm>
+
+                          <button className="view-project-btn">
+                            <span>Explore Project</span>
+                            <div className="arrow-container">
+                              <FiArrowRight size={18} className="arrow-icon" />
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            showForm && (
+              <div>
+                <div>
+                  {
+                    <>
+                      <div className="form-group">
+                        <CommonInputField
+                          name="companyName"
+                          label="Company Name"
+                          mandotary={true}
+                          placeholder="Company Name"
+                          type="text"
+                          value={companyName}
+                          onChange={(e) => {
+                            setCompanyName(e.target.value);
+                            setCompanyNameError(nameValidator(e.target.value));
+                          }}
+                          error={companyNameError}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <CommonInputField
+                          name="projectname"
+                          label="Project Name"
+                          mandotary={true}
+                          placeholder="Project Name"
+                          type="text"
+                          value={project}
+                          onChange={(e) => {
+                            setProject(e.target.value);
+                            setProjectError(nameValidator(e.target.value));
+                          }}
+                          error={projectError}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <Form.Item
+                          layout="vertical"
+                          label={
+                            <span style={{ fontWeight: 500 }}>
+                              Project Type
+                            </span>
                           }
-                        }}
-                        error={projectStartDateError}
-                      />
-                    </div>
+                          name="projecttype"
+                          required
+                        >
+                          <div className="job_nature">
+                            <button
+                              type="button"
+                              className={
+                                activeButton === "Full Time"
+                                  ? "job_nature_button_active"
+                                  : "job_nature_button"
+                              }
+                              onClick={() => {
+                                handleProjectTypeClick("Full Time");
+                                setProjectType("Full Time");
+                                setProjectTypeError("");
+                              }}
+                            >
+                              Full Time
+                            </button>
 
-                    <div className="form-group">
-                      <CommonDatePicker
-                        value={projectEndDate}
-                        label="End Date"
-                        name="enddate"
-                        placeholder="End Date"
-                        onChange={(value) => {
-                          setProjectEndDate(value);
+                            <button
+                              type="button"
+                              className={
+                                activeButton === "Part Time"
+                                  ? "job_nature_button_active"
+                                  : "job_nature_button"
+                              }
+                              onClick={() => {
+                                handleProjectTypeClick("Part Time");
+                                setProjectType("Part Time");
+                                setProjectTypeError("");
+                              }}
+                            >
+                              Part Time
+                            </button>
 
-                          if (!value || value.trim() === "") {
-                            setProjectEndDateError(" is required");
-                          } else {
-                            setProjectEndDateError("");
-                          }
-                        }}
-                        error={projectEndDateError}
-                      />
-                    </div>
-                  </div>
+                            <button
+                              type="button"
+                              className={
+                                activeButton === "Freelance"
+                                  ? "job_nature_button_active"
+                                  : "job_nature_button"
+                              }
+                              onClick={() => {
+                                handleProjectTypeClick("Freelance");
+                                setProjectType("Freelance");
+                                setProjectTypeError("");
+                              }}
+                            >
+                              Freelance
+                            </button>
+                          </div>
+                          {projectTypeError && (
+                            <div
+                              style={{
+                                color: "red",
+                                marginTop: 6,
+                                fontSize: 13,
+                              }}
+                            >
+                              Project type {projectTypeError}
+                            </div>
+                          )}
+                        </Form.Item>
+                      </div>
 
-                  <div className="form-group">
-                    <CommonTextArea
-                      label={"Project Description"}
-                      placeholder={"Enter your description"}
-                      mandatory={true}
-                      name={"description"}
-                      value={projectDescription}
-                      onChange={(e) => {
-                        setProjectDescription(e.target.value);
-                        setProjectDescriptionError(
-                          nameValidator(e.target.value)
-                        );
-                      }}
-                      error={projectDescriptionError}
-                    />
-                  </div>
-                  <div
-                    style={{ textAlign: "-webkit-right" }}
-                    className="save_btn"
-                  >
-                    <Button
-                      type="primary"
-                      size="large"
-                      onClick={handleProjectSave}
-                      className="nav-btn next-btn"
-                    >
-                      Save
-                    </Button>
-                  </div>
-                </>
-              }
-            </div>
+                      <div
+                        style={{ alignItems: "center", marginTop: 15 }}
+                        className="form-row"
+                      >
+                        <div className="form-group">
+                          <CommonDatePicker
+                            value={projectStartDate}
+                            label="Start Date"
+                            name="enddate"
+                            placeholder="Start Date"
+                            onChange={(value) => {
+                              setProjectStartDate(value);
+
+                              if (!value || value.trim() === "") {
+                                setProjectStartDateError(" is required");
+                              } else {
+                                setProjectStartDateError("");
+                              }
+                            }}
+                            error={projectStartDateError}
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <CommonDatePicker
+                            value={projectEndDate}
+                            label="End Date"
+                            name="enddate"
+                            placeholder="End Date"
+                            onChange={(value) => {
+                              setProjectEndDate(value);
+
+                              if (!value || value.trim() === "") {
+                                setProjectEndDateError(" is required");
+                              } else {
+                                setProjectEndDateError("");
+                              }
+                            }}
+                            error={projectEndDateError}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <CommonTextArea
+                          label={"Project Description"}
+                          placeholder={"Enter your description"}
+                          mandatory={true}
+                          name={"description"}
+                          value={projectDescription}
+                          onChange={(e) => {
+                            setProjectDescription(e.target.value);
+                            setProjectDescriptionError(
+                              descriptionValidator(e.target.value)
+                            );
+                          }}
+                          error={projectDescriptionError}
+                        />
+                      </div>
+                      <div className="form-row">
+                        <div style={{ textAlign: "left" }} className="save_btn">
+                          {projectData ? (
+                            <Button
+                              type="danger"
+                              size="large"
+                              onClick={handleProjectDiscard}
+                              className="nav-btn discard-btn"
+                            >
+                              Discard
+                              <HiMiniXMark style={{ fontSize: 22 }} />
+                            </Button>
+                          ) : null}
+                        </div>
+                        <div
+                          style={{ textAlign: "-webkit-right" }}
+                          className="save_btn"
+                        >
+                          <Button
+                            type="primary"
+                            size="large"
+                            onClick={handleProjectSave}
+                            className="nav-btn next-btn"
+                          >
+                            {projectData ? "Update" : "Save"}
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  }
+                </div>
+              </div>
+            )
           )}
 
-          {/* Show "Add Project" Button after saving */}
-          {!showForm && (
+          {/* ✅ When all projects are deleted, show this as fallback */}
+          {projectsList.length === 0 && !showForm && (
             <div style={{ marginTop: 20 }}>
               <Button type="dashed" onClick={handleAddNewProject}>
                 + Add Project
               </Button>
-            </div>
-          )}
-
-          {!showForm && (
-            <div style={{ marginTop: 30 }}>
-              {projectsList.map((proj, idx) => (
-                <motion.div
-                  key={idx}
-                  className="project-card"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.5,
-                    delay: idx * 0.1,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                  whileHover={{
-                    y: -4,
-                    boxShadow: "0 12px 32px rgba(0, 0, 0, 0.12)",
-                  }}
-                  custom={idx}
-                >
-                  <div className="project-card-inner">
-                    <div className="project-card-header">
-                      <div className="project-title-wrapper">
-                        <div className="project-type-tag">
-                          {proj.project_type}
-                        </div>
-                        <h3 className="project-title">{proj.project_title}</h3>
-                      </div>
-
-                      <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleDeleteCompany(idx)}
-                        className="delete-btn"
-                        aria-label="Delete project"
-                      >
-                        <MdDeleteForever className="delete-icon" />
-                      </motion.button>
-                    </div>
-
-                    <div className="project-meta">
-                      <div className="meta-item">
-                        <FiBriefcase className="meta-icon" />
-                        <span>{proj.company_name}</span>
-                      </div>
-                      <div className="meta-item">
-                        <FiCalendar className="meta-icon" />
-                        <span>
-                          {proj.start_date} - {proj.end_date}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="project-description">
-                      <p>{proj.description}</p>
-                    </div>
-
-                    <div className="project-footer">
-                      <div className="project-skills">
-                        {proj.skills?.map((skill, i) => (
-                          <span key={i} className="skill-tag">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                      <button className="view-project-btn">
-                        View Project <FiArrowRight />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
             </div>
           )}
         </div>
@@ -3013,7 +3715,6 @@ export default function MainProfile() {
                 icon={<EditOutlined />}
                 onClick={() => {
                   setActiveTab("basic");
-                  console.log("fffffffffffff", fname);
                   showDrawer();
                 }}
               >
@@ -3685,7 +4386,17 @@ export default function MainProfile() {
                 </div>
 
                 {/* Dynamic Content */}
-                <div style={{ flex: 1, padding: 5 }}>
+                <div
+                  style={{
+                    flex: 1,
+                    padding: 5,
+                    height: 700,
+                    overflowY: "scroll",
+                    scrollbarWidth: "none", // for Firefox
+                    msOverflowStyle: "none", // for IE/Edge
+                  }}
+                  className="hide-scrollbar"
+                >
                   {TabContent[activeTab] ? (
                     TabContent[activeTab]()
                   ) : (

@@ -499,20 +499,19 @@ const ProfileDetails = () => {
   };
 
   const ProfessionalInfoValidate = () => {
-    const selectExperienceTypeValidate = selectValidator(selectExperienceType);
-
     let skillsValidate = "";
-    if (selectedSkills.length <= 0) {
-      skillsValidate = " is required";
-    } else {
-      skillsValidate = "";
-    }
 
+    const selectExperienceTypeValidate = selectValidator(selectExperienceType);
     setSelectExperienceTypeError(selectExperienceTypeValidate);
-    setSkillsError(skillsValidate);
 
     let experienceErrors = false;
+
     if (selectExperienceType === "Experience") {
+      if (selectedSkills.length <= 0) {
+        skillsValidate = " is required";
+      }
+      setSkillsError(skillsValidate);
+
       const totalYearsExperienceValidate =
         selectValidator(totalYearsExperience);
       const totalMonthsExperienceValidate = selectValidator(
@@ -557,13 +556,15 @@ const ProfileDetails = () => {
         selectExperienceTypeValidate ||
         totalYearsExperienceValidate ||
         totalMonthsExperienceValidate ||
-        // customSkillValidate ||
-        skillsValidate
+        skillsValidate ||
+        experienceErrors
       ) {
         message.error("Please fill all fields correctly before proceedinggg.");
         return;
       }
     } else {
+      // ✅ Skip skill validation here
+      setSkillsError(""); // Clear any previous error
       if (selectExperienceTypeValidate || skillsValidate || experienceErrors) {
         message.error("Please fill all fieldsss correctly before proceeding.");
         return;
