@@ -3,7 +3,6 @@ import {
   Row,
   Col,
   Card,
-  Tag,
   Typography,
   Space,
   Button,
@@ -18,11 +17,11 @@ import {
   Input,
   Checkbox,
   Slider,
-  Select,
+  message,
+  Form,
 } from "antd";
 import {
   ClockCircleOutlined,
-  StarFilled,
   ThunderboltFilled,
   CrownFilled,
   FilterOutlined,
@@ -33,30 +32,27 @@ import {
   BookOutlined,
   ReadOutlined,
   UserOutlined,
-  CodeOutlined,
-  FileTextOutlined,
-  CalendarOutlined,
-  ToolOutlined,
   CloseOutlined,
   EnvironmentOutlined,
   DeleteOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import "../css/JobFilter.css";
-import { FaLocationDot, FaTransgender } from "react-icons/fa6";
-import { FaRegCalendarAlt } from "react-icons/fa";
+import { FaTransgender } from "react-icons/fa6";
+import {
+  FaRegCalendarAlt,
+  FaRegBuilding,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
 import CommonSelectField from "../Common/CommonSelectField";
-import { style } from "framer-motion/client";
 import { getJobPosts } from "../ApiService/action";
-import { DollarOutlined } from "@ant-design/icons";
-import { BsDot } from "react-icons/bs";
 import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
 import { CommonToaster } from "../Common/CommonToaster";
 import { FaHeart, FaRegHeart } from "react-icons/fa6";
 import { IoMdCalendar } from "react-icons/io";
 import { IoIosShareAlt } from "react-icons/io";
 
-const { Title, Text, Link } = Typography;
+const { Title, Text } = Typography;
 
 const FILTER_SECTIONS = [
   { key: "status", label: "Status", count: 1 },
@@ -87,6 +83,7 @@ const category = [
 
 export default function JobFilter() {
   const [open, setOpen] = useState(false);
+  const [openApplyNow, setOpenApplyNow] = useState(false);
   const [activeFilter, setActiveFilter] = useState("status");
   const [statusValue, setStatusValue] = useState("Live");
 
@@ -105,6 +102,10 @@ export default function JobFilter() {
   const [backendJobs, setBackendJobs] = useState([]);
   const [postDetails, setPostDetails] = useState([]);
   const [wishlisted, setWishlisted] = useState(false);
+  const [step, setStep] = useState("initial");
+  const [initialForm] = Form.useForm();
+  const [experienceForm] = Form.useForm();
+  const [userData, setUserData] = useState({});
 
   useEffect(() => {
     fetchJobs();
@@ -140,6 +141,84 @@ export default function JobFilter() {
     } catch (error) {
       console.error("getJobPosts error", error);
     }
+  };
+
+  // ✅ First: Define the function
+  const transformJob = (job) => {
+    const postedDate = new Date(job.created_at);
+    const today = new Date();
+    const timeDiff = today - postedDate;
+    const daysPassed = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+    const totalActiveDays = 5;
+    const daysLeft = totalActiveDays - daysPassed;
+
+    console.log(
+      "Questions:",
+      job.questions.map((q) => q.question)
+    );
+
+    return {
+      id: job.id,
+      title: job.job_title,
+      company: job.company_name,
+      logo: job.company_logo,
+      created_date: job.created_at,
+      job_description: job.job_description,
+      postedDate,
+      working_days: job.working_days,
+      daysLeft: daysLeft > 0 ? `${daysLeft} days left` : "Expired",
+      level: job.experience_type,
+      salary:
+        job.salary_type === "Fixed"
+          ? "$" + (job.min_salary || "N/A")
+          : job.salary_type === "Range"
+          ? `${job.min_salary || "N/A"} - ${job.max_salary || "N/A"}`
+          : "Negotiable",
+      location: `${job.workplace_type}${
+        job.work_location ? ` • ${job.work_location}` : ""
+      }`,
+      diversity_hiring: job.diversity_hiring,
+      type: job.job_nature,
+      premium: true,
+      urgent: false,
+      skills: job.skills,
+      eligibility: job.experience_required?.join(", "),
+      status: daysLeft > 0 ? "Active" : "Expired",
+      questions: job.questions?.map((q) => q.question) || [],
+    };
+  };
+
+  const handleExperienceSubmit = (values) => {
+    const questionAnswers = {};
+    if (postDetails[0]?.questions?.length) {
+      postDetails[0].questions.forEach((question, index) => {
+        questionAnswers[`question_${index}`] =
+          values[`question_${index}`] || "";
+      });
+    }
+
+    const finalData = {
+      ...userData,
+      ...values,
+      questionAnswers,
+    };
+
+    console.log("Final submitted data:", finalData);
+    message.success("Applied Successfully!");
+    // ... rest of the function ...
+  };
+
+  const handleInitialSubmit = (values) => {
+    setUserData(values);
+    setStep("experience");
+  };
+
+  const showDrawer = () => {
+    setOpenApplyNow(true);
+  };
+  const onClose = () => {
+    setOpenApplyNow(false);
   };
 
   const handleCheck = (location) => {
@@ -197,44 +276,6 @@ export default function JobFilter() {
       ]}
     />
   );
-  const transformJob = (job) => {
-    const postedDate = new Date(job.created_at);
-    const today = new Date();
-    const timeDiff = today - postedDate;
-    const daysPassed = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-
-    const totalActiveDays = 5;
-    const daysLeft = totalActiveDays - daysPassed;
-
-    return {
-      id: job.id,
-      title: job.job_title,
-      company: job.company_name,
-      logo: job.company_logo,
-      created_date: job.created_at,
-      job_description: job.job_description,
-      postedDate,
-      working_days: job.working_days,
-      daysLeft: daysLeft > 0 ? `${daysLeft} days left` : "Expired",
-      level: job.experience_type,
-      salary:
-        job.salary_type === "Fixed"
-          ? "$" + (job.min_salary || "N/A")
-          : job.salary_type === "Range"
-          ? `${job.min_salary || "N/A"} - ${job.max_salary || "N/A"}`
-          : "Negotiable",
-      location: `${job.workplace_type}${
-        job.work_location ? ` • ${job.work_location}` : ""
-      }`,
-      diversity_hiring: job.diversity_hiring,
-      type: job.job_nature,
-      premium: true,
-      urgent: false,
-      skills: job.skills,
-      eligibility: job.experience_required?.join(", "),
-      status: daysLeft > 0 ? "Active" : "Expired",
-    };
-  };
 
   const JobCard = ({ job }) => (
     <Card
@@ -306,11 +347,19 @@ export default function JobFilter() {
             {job.level}
           </span>
           <Button
+            onClick={showDrawer}
             className={
               job.status === "Active"
                 ? "premium-apply"
                 : job.status === "Expired"
                 ? "premium-apply-disabel"
+                : ""
+            }
+            disabled={
+              job.status === "Active"
+                ? false
+                : job.status === "Expired"
+                ? true
                 : ""
             }
           >
@@ -325,79 +374,6 @@ export default function JobFilter() {
     let arr = [];
     arr.push(item);
     setPostDetails(arr);
-  };
-
-  const JobDetails = ({ job }) => {
-    console.log("jobbbb", job);
-    return (
-      <>
-        <div className="job-header">
-          <div className="job-header-content">
-            <img
-              className="job-logo"
-              src={job.logo}
-              alt={`${job.company} logo`}
-            />
-            <div className="job-title-section">
-              <h1 className="job-title">{job.title}</h1>
-              <p className="job-company">{job.company}</p>
-            </div>
-          </div>
-
-          <div className="job-meta">
-            <div className="job-location">
-              <p className="job-meta-item">
-                <FaLocationDot /> {job.location}
-              </p>
-              <p className="job-meta-item">
-                <FaRegCalendarAlt /> Updated: {job.created_date}
-              </p>
-            </div>
-            <Button type="primary" className="apply-button" size="large">
-              Apply Now
-            </Button>
-          </div>
-        </div>
-
-        <div className="section-card">
-          <div className="job-eligibility">
-            <h2 className="section-title">Eligibility</h2>
-            <p>{job.eligibility}</p>
-          </div>
-        </div>
-
-        <div className="section-card job-description">
-          <h2 className="section-title">Job Description</h2>
-          <h6>Xerox is hiring for the role of Python Developer!</h6>
-          <ul>
-            Responsibilities of the Candidate:
-            <li>
-              Builds knowledge of the organization, processes and customers.
-            </li>
-            <li>
-              Requires knowledge and experience in own discipline; still
-              acquiring higher level knowledge and skills.
-            </li>
-            <li>Receives a moderate level of guidance and direction.</li>
-            <li>
-              Moderate decision-making authority guided by policies, procedures,
-              and business operations protocol.
-            </li>
-          </ul>
-
-          <ul>
-            Requirements:
-            <li>Will need to be strong on ML pipelines, modern tech stack.</li>
-            <li>Proven experience with MLOPs with Azure and MLFlow etc.</li>
-            <li>Experience with scripting and coding using Python.</li>
-            <li>
-              Working Experience with container technologies (Docker,
-              Kubernetes).
-            </li>
-          </ul>
-        </div>
-      </>
-    );
   };
 
   const renderLocation = () => {
@@ -1131,158 +1107,268 @@ export default function JobFilter() {
               ))}
             </Space>
           </Col>
-          <Col className="job_filter_left" lg={17} xs={24} md={16}>
-            {postDetails.map((job) => (
-              <>
-                <div className="job-header">
-                  <div className="job-header-content">
-                    <img
-                      className="job-logo"
-                      src={job.logo}
-                      alt={`${job.company} logo`}
-                    />
-                    <div className="job-title-section">
-                      <h1 className="job-title">{job.title}</h1>
-                      <p className="job-company">{job.company}</p>
-                    </div>
 
-                    <div className="quick_apply_btn">
-                      <>
-                        <div className="icons">
-                          <span className="icon" onClick={handleWishlistToggle}>
-                            {wishlisted ? (
-                              <FaHeart className="icon heart active" />
-                            ) : (
-                              <FaRegHeart className="icon heart" />
-                            )}
-                          </span>
-                          <span className="icon">
-                            {" "}
-                            <IoMdCalendar className="icon calendar" />
+          <Col className="job_filter_left" lg={17} xs={24} md={16}>
+            <section className="premium-job-details">
+              {postDetails.map((job) => (
+                <>
+                  <div className="premium-job-card">
+                    <div className="">
+                      <div className="premium-border"></div>
+                      <div className="premium-indicator">
+                        <span
+                          className={
+                            job.status === "Active"
+                              ? "status-badge"
+                              : job.status === "Expired"
+                              ? "status-badge-red"
+                              : ""
+                          }
+                        >
+                          {job.status}
+                        </span>
+                      </div>
+
+                      <div className="company-logo-wrapper">
+                        <img
+                          src={job.logo}
+                          alt="Company Logo"
+                          className="premium-logo"
+                        />
+                      </div>
+
+                      <div className="job-content">
+                        <h2 className="premium-job-title">{job.title}</h2>
+
+                        <div className="job-meta-item">
+                          <FaRegBuilding className="meta-icon premium-icon" />
+                          <span className="meta-text">{job.company}</span>
+                          <span className="verified-badge">Verified</span>
+                        </div>
+
+                        <div className="job-meta-item">
+                          <FaMapMarkerAlt className="meta-icon premium-icon" />
+                          <span className="meta-text">{job.location}</span>
+                        </div>
+
+                        <div className="job-meta-item">
+                          <FaRegCalendarAlt className="meta-icon premium-icon" />
+                          <span className="meta-text">
+                            Updated On: {job.created_date}
                           </span>
                         </div>
-                      </>
+
+                        <div className="job-tags">
+                          <span className="tag">{job.type}</span>
+                          <span className="tag">{job.working_days}</span>
+                          <span className="tag">{job.salary}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="job_card">
+                      <div className="quick_apply">
+                        <div className="quick_apply_btn">
+                          <>
+                            <div className="icons">
+                              <span
+                                className="icon"
+                                onClick={handleWishlistToggle}
+                              >
+                                {wishlisted ? (
+                                  <FaHeart className="icon heart active" />
+                                ) : (
+                                  <FaRegHeart className="icon heart" />
+                                )}
+                              </span>
+                              <span className="icon">
+                                <IoMdCalendar className="icon calendar" />
+                              </span>
+                            </div>
+                          </>
+                          <button className="share_btn">
+                            <IoIosShareAlt /> Share
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={showDrawer}
+                          disabled={
+                            job.status === "Active"
+                              ? false
+                              : job.status === "Expired"
+                              ? true
+                              : ""
+                          }
+                          className={
+                            job.status === "Active"
+                              ? "quick_apply_main_btn"
+                              : job.status === "Expired"
+                              ? "quick_apply_main_btn_disable"
+                              : ""
+                          }
+                        >
+                          Apply Now
+                        </button>
+                        <Drawer
+                          size="default"
+                          title="Apply Now"
+                          closable={{ "aria-label": "Close Button" }}
+                          onClose={onClose}
+                          open={openApplyNow}
+                        >
+                          <p>
+                            Hi Santhosh! We request you to take a couple of
+                            minutes to update your profile.
+                          </p>
+
+                          {postDetails[0]?.questions?.length > 0 && (
+                            <div className="job-questions-section">
+                              <h4>Application Questions</h4>
+                              {postDetails[0].questions.map(
+                                (question, index) => (
+                                  <div key={index} className="question-item">
+                                    <p>{question}</p>
+                                    <Input.TextArea
+                                      rows={3}
+                                      placeholder="Your answer..."
+                                      className="premium-input"
+                                    />
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          )}
+
+                          {step === "initial" && (
+                            <Form
+                              form={initialForm}
+                              name="initialForm"
+                              layout="vertical"
+                              onFinish={handleInitialSubmit}
+                              autoComplete="off"
+                            >
+                              {/* ... existing form items ... */}
+                            </Form>
+                          )}
+
+                          {step === "experience" && (
+                            <Form
+                              form={experienceForm}
+                              name="experienceForm"
+                              layout="vertical"
+                              onFinish={handleExperienceSubmit}
+                            >
+                              {/* ... existing form items ... */}
+                            </Form>
+                          )}
+                        </Drawer>
+                        <div className="eligibility_section">
+                          <strong>Eligibility</strong>
+                          <p>
+                            <MdOutlineSchool /> {job.level}
+                            <b> • </b> <MdOutlineWorkOutline />{" "}
+                            {job.eligibility} <b> • </b>
+                            <FaTransgender />{" "}
+                            {job.diversity_hiring.map(
+                              (diversity_hiring, index) => (
+                                <span key={index}>
+                                  {diversity_hiring}
+                                  {index < job.diversity_hiring.length - 1 &&
+                                    ", "}
+                                </span>
+                              )
+                            )}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="job-meta">
-                    <div className="job-location">
-                      <p className="job-meta-item">
-                        <FaLocationDot /> {job.location}
-                      </p>
-                      <p className="job-meta-item">
-                        <FaRegCalendarAlt /> Updated: {job.created_date}
-                      </p>
-                    </div>
-                    <Button
-                      type="primary"
-                      className="apply-button"
-                      size="large"
-                    >
-                      Apply Now
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="section-card">
-                  <div className="job-eligibility">
-                    <h2 className="section-title">Eligibility</h2>
-                    <p>
-                      <MdOutlineSchool /> {job.level}
-                      <b> • </b> <MdOutlineWorkOutline /> {job.eligibility}{" "}
-                      <b> • </b>
-                      <FaTransgender />{" "}
-                      {job.diversity_hiring.map((diversity_hiring, index) => (
-                        <span key={index}>
-                          {diversity_hiring}
-                          {index < job.diversity_hiring.length - 1 && ", "}
-                        </span>
-                      ))}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="section-card job-description">
-                  <h2 className="section-title">Job Description</h2>
-                  <h6>Xerox is hiring for the role of Python Developer!</h6>
-                  <div
-                    className="job-description-content"
-                    dangerouslySetInnerHTML={{ __html: job.job_description }}
-                  />
-                </div>
-
-                <div className="section-card">
-                  <h2 className="section-title">Additional Information</h2>
-
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Job Location(s)</h4>
-                      <p>{job.location}</p>
-                    </div>
-                    <img
-                      className="info-card-image"
-                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/66702737c9e5c_location.png"
-                      alt="Location"
+                  <div className="section-card job-description">
+                    <h2 className="section-title">Job Description</h2>
+                    <h6>
+                      {job.company} is hiring for the role of {job.title}!
+                    </h6>
+                    <div
+                      className="job-description-content"
+                      dangerouslySetInnerHTML={{ __html: job.job_description }}
                     />
                   </div>
 
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Experience</h4>
-                      <p>{job.eligibility}</p>
-                    </div>
-                    <img
-                      className="info-card-image"
-                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/66710a39d5851_experience.png"
-                      alt="Experience"
-                    />
-                  </div>
+                  <div className="section-card">
+                    <h2 className="section-title">Additional Information</h2>
 
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Salary</h4>
-                      <p>{job.salary}</p>
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Job Location(s)</h4>
+                        <p>{job.location}</p>
+                      </div>
+                      <img
+                        className="info-card-image"
+                        src="https://d8it4huxumps7.cloudfront.net/uploads/images/66702737c9e5c_location.png"
+                        alt="Location"
+                      />
                     </div>
-                    <img
-                      className="info-card-image"
-                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109f58b243_salary.png"
-                      alt="Salary"
-                    />
-                  </div>
 
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Work Schedule</h4>
-                      <p>
-                        <b>Working Days</b>: {job.working_days}
-                      </p>
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Experience</h4>
+                        <p>{job.eligibility}</p>
+                      </div>
+                      <img
+                        className="info-card-image"
+                        src="https://d8it4huxumps7.cloudfront.net/uploads/images/66710a39d5851_experience.png"
+                        alt="Experience"
+                      />
                     </div>
-                    <img
-                      className="info-card-image"
-                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109d710a09_work_detail.png"
-                      alt="Work Details"
-                    />
-                  </div>
 
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Job Type / Natute</h4>
-                      <p>
-                        <b>Job Type</b>: {job.location}
-                      </p>
-                      <p>
-                        <b>Job Nature</b>: {job.type}
-                      </p>
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Salary</h4>
+                        <p>{job.salary}</p>
+                      </div>
+                      <img
+                        className="info-card-image"
+                        src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109f58b243_salary.png"
+                        alt="Salary"
+                      />
                     </div>
-                    <img
-                      className="info-card-image"
-                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109c430518_job_typetiming.png?d=240x172"
-                      alt="Work Details"
-                    />
+
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Work Schedule</h4>
+                        <p>
+                          <b>Working Days</b>: {job.working_days}
+                        </p>
+                      </div>
+                      <img
+                        className="info-card-image"
+                        src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109d710a09_work_detail.png"
+                        alt="Work Details"
+                      />
+                    </div>
+
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Job Type / Natute</h4>
+                        <p>
+                          <b>Job Type</b>: {job.location}
+                        </p>
+                        <p>
+                          <b>Job Nature</b>: {job.type}
+                        </p>
+                      </div>
+                      <img
+                        className="info-card-image"
+                        src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109c430518_job_typetiming.png?d=240x172"
+                        alt="Work Details"
+                      />
+                    </div>
                   </div>
-                </div>
-              </>
-            ))}
+                </>
+              ))}
+            </section>
           </Col>
         </Row>
       </div>
