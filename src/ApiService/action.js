@@ -603,3 +603,42 @@ export const applyForJob = async (payload) => {
     throw error;
   }
 };
+
+// getJobAppliedCandidates
+
+export const getJobAppliedCandidates = async (payload) => {
+  try {
+    const response = await api.get("api/getJobAppliedCandidates", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// checkIsJobApplied
+
+export const checkIsJobApplied = async (payload) => {
+  try {
+    const response = await api.get("api/checkIsJobApplied", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// isProfileUpdated
+
+export const isProfileUpdated = async (payload) => {
+  try {
+    const response = await api.get("api/isProfileUpdated", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

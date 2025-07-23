@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import React from "react";
 import {
   IoQrCode,
@@ -54,6 +54,10 @@ export default function AdminDashboard() {
   const {
     token: { colorBgContainer, borderRadiusLG, colorPrimary },
   } = theme.useToken();
+
+  useEffect(() => {
+    document.title = "CareerFast | Admin Dashboard";
+  }, []);
 
   const menuItems = [
     {

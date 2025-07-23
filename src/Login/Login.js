@@ -26,7 +26,7 @@ import {
 } from "../Common/Validation";
 import CommonInputField from "../Common/CommonInputField";
 import CommonPasswordField from "../Common/CommonPasswordField";
-import { login } from "../ApiService/action";
+import { isProfileUpdated, login } from "../ApiService/action";
 import {
   verifyOtp,
   forgotPassword,
@@ -63,6 +63,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.title = "CareerFast | Login";
     setEmail("");
   }, [activeTab]);
 
@@ -88,17 +89,6 @@ const LoginPage = () => {
   const showLoading = () => {
     setOpen(true);
     setLoading(false);
-  };
-
-  const onChange = (text) => {
-    console.log("onChange:", text);
-  };
-  const onInput = (value) => {
-    console.log("onInput:", value);
-  };
-  const sharedProps = {
-    onChange,
-    onInput,
   };
 
   const closeModal = () => {
@@ -186,12 +176,31 @@ const LoginPage = () => {
             activeTab === "candidate" ? "Candidate" : "Recruiter"
           } Login successfully!`
         );
-
-        navigate("/profiledetails");
       }, 1500);
     } catch (error) {
       console.log("login error", error);
       message.error(error?.response?.data?.details);
+    } finally {
+      setTimeout(() => {
+        isProfileUpdatedData();
+      }, 1500);
+    }
+  };
+
+  const isProfileUpdatedData = async () => {
+    const payload = {
+      email: activeTab === "recruiter" ? officialEmail : email,
+    };
+    try {
+      const response = await isProfileUpdated(payload);
+      console.log("Redirecting", response);
+      if (response?.data?.data === true) {
+        navigate("/job-portal");
+      } else {
+        navigate("/profiledetails");
+      }
+    } catch (error) {
+      console.log("not directing", error);
     }
   };
 

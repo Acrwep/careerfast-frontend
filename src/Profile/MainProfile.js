@@ -325,6 +325,7 @@ export default function MainProfile() {
   const [customSkillError, setCustomSkillError] = useState("");
 
   useEffect(() => {
+    document.title = "CareerFast | Profile Details";
     getGenderDataType();
   }, []);
 

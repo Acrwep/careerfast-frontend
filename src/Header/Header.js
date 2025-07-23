@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
@@ -6,6 +6,7 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import logo from "../images/careerfast_logo.png";
+import { useNavigate } from "react-router-dom";
 import {
   Input,
   Avatar,
@@ -17,6 +18,8 @@ import {
   List,
   Typography,
   Progress,
+  Tooltip,
+  message,
 } from "antd";
 import { useLocation, Link } from "react-router-dom";
 
@@ -41,6 +44,7 @@ import {
   LogoutOutlined,
   RightOutlined,
 } from "@ant-design/icons";
+import { getUserProfile } from "../ApiService/action";
 const { Title, Text } = Typography;
 
 export default function Header() {
@@ -48,14 +52,69 @@ export default function Header() {
 
   const showDrawer = () => setOpen(true);
   const onClose = () => setOpen(false);
+  const [loginUserId, setLoginUserId] = useState(null);
+  const [roleId, setRoleId] = useState(null);
+  const [profileImage, setProfileImage] = useState("");
+  const [fname, setFname] = useState("");
+  const [lname, setLname] = useState("");
+  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+        setRoleId(loginDetails.role_id);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, []);
+
+  const handleLogOut = () => {
+    localStorage.removeItem("loginDetails");
+    setLoginUserId(null);
+    setRoleId(null);
+    navigate("/login");
+    message.error("Your'e logged out");
+  };
+
+  useEffect(() => {
+    console.log("loginUserId updated", loginUserId);
+    if (loginUserId) {
+      getUserProfileData();
+    }
+  }, [loginUserId]);
+
+  const getUserProfileData = async () => {
+    const payload = {
+      user_id: loginUserId,
+    };
+
+    try {
+      const response = await getUserProfile(payload);
+      console.log("getUserProfile", response);
+
+      setProfileImage(response?.data?.data?.profile_image || "");
+      setFname(response?.data?.data?.first_name || "");
+      setEmail(response?.data?.data?.email || "");
+      setLname(response?.data?.data?.last_name || "");
+    } catch (error) {
+      console.log("getuserprofile errorddd", error);
+    }
+  };
+
   const menuItems = [
+    { key: "jobs", label: "Jobs", icon: <UserOutlined />, path: "/job-portal" },
     {
       key: "internships",
       label: "Internships",
       icon: <BookOutlined />,
       path: "/internship",
     },
-    { key: "jobs", label: "Jobs", icon: <UserOutlined />, path: "/job-portal" },
+
     {
       key: "competitions",
       label: "Competitions",
@@ -153,19 +212,23 @@ export default function Header() {
                     onClick={showDrawer}
                     style={{ objectFit: "contain" }}
                     size="large"
-                    src="https://randomuser.me/api/portraits/men/32.jpg"
+                    src={profileImage}
                   />
-                  {/* <span className="user-name">Alex</span> */}
                 </div>
 
-                <a href="post-jobs">
-                  <Button className="host-button">
+                {roleId === 3 ? (
+                  <Tooltip title="You don't have permission to post jobs">
+                    <span>
+                      <Button href="post-jobs" className="host-button" disabled>
+                        <PlusOutlined /> Host
+                      </Button>
+                    </span>
+                  </Tooltip>
+                ) : (
+                  <Button href="post-jobs" className="host-button">
                     <PlusOutlined /> Host
                   </Button>
-                </a>
-                {/* <Button className="business-button" variant="outline-warning">
-                  For Business
-                </Button> */}
+                )}
               </div>
             </Offcanvas.Body>
           </Navbar.Offcanvas>
@@ -217,7 +280,7 @@ export default function Header() {
             <div style={{ position: "relative" }}>
               <Avatar
                 size={72}
-                src="https://i.pravatar.cc/150?img=8"
+                src={profileImage}
                 style={{ border: "3px solid white" }}
               />
               <Progress
@@ -247,28 +310,28 @@ export default function Header() {
 
             <div>
               <Title level={4} style={{ color: "white", margin: "4px 0" }}>
-                Santhosh Kathirvel
+                {fname} {""}
+                {lname}
               </Title>
               <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 13 }}>
-                santhoshkathirvel.s@actechnologies.com
+                {email}
               </Text>
               <div style={{ marginTop: 12 }}>
-                <a href="/user-profile">
-                  <Button
-                    type="text"
-                    style={{
-                      color: "#8d3ffb",
-                      padding: 6,
-                      height: "auto",
-                      fontWeight: 500,
-                      background: "#fff",
-                      border: "none",
-                    }}
-                    icon={<ArrowRightOutlined style={{ fontSize: 12 }} />}
-                  >
-                    View Profile
-                  </Button>
-                </a>
+                <Button
+                  onClick={() => navigate("/admin-profile")}
+                  type="text"
+                  style={{
+                    color: "#8d3ffb",
+                    padding: 6,
+                    height: "auto",
+                    fontWeight: 500,
+                    background: "#fff",
+                    border: "none",
+                  }}
+                  icon={<ArrowRightOutlined style={{ fontSize: 12 }} />}
+                >
+                  View Profile
+                </Button>
               </div>
             </div>
           </Space>
@@ -470,15 +533,17 @@ export default function Header() {
         >
           <Button
             type="text"
+            onClick={handleLogOut}
             danger
             icon={<LogoutOutlined />}
             style={{
               fontWeight: 500,
-              background: "linear-gradient(180deg, #4114fa 0%, #5d1cff 100%)",
+              background:
+                "linear-gradient(180deg, #fa1414e8 0%, #ff1c1cb0 100%)",
               border: "none",
             }}
           >
-            <LogoutOutlined /> Sign Out
+            <LogoutOutlined /> Log Out
           </Button>
         </div>
       </Drawer>

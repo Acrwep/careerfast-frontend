@@ -66,7 +66,6 @@ export default function UserProfile() {
   const [lname, setLname] = useState("");
   const [email, setEmail] = useState("");
 
-  const today = new Date();
   const [isLoading, setIsLoading] = useState(true);
 
   // Simulate data loading
@@ -89,8 +88,11 @@ export default function UserProfile() {
   }, []);
 
   useEffect(() => {
-    getUserProfileData();
-  }, []);
+    console.log("loginUserId updated", loginUserId);
+    if (loginUserId) {
+      getUserProfileData();
+    }
+  }, [loginUserId]);
 
   const getUserProfileData = async () => {
     const payload = {
@@ -100,10 +102,9 @@ export default function UserProfile() {
     try {
       const response = await getUserProfile(payload);
       console.log("getUserProfile", response);
-
       if (response?.data?.data) {
         const profile = response.data.data;
-        setAvatarUrl(profile.profile_image || "");
+        setAvatarUrl(response?.data?.data?.profile_image || "");
         setFname(profile.first_name || "");
         setEmail(profile.email || "");
         setLname(profile.last_name || "");

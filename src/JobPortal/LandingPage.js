@@ -711,8 +711,16 @@ export default function JobPortalLandingPage() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <ArrowRightOutlined className="elite-cta-icon" />
-                        <span>View Details</span>
+                        <ArrowRightOutlined
+                          style={{ color: "#5f2eea" }}
+                          className="elite-cta-icon"
+                        />
+                        <a
+                          href={`/job-details/${jobs.id}`}
+                          style={{ color: "#5f2eea" }}
+                        >
+                          <span>View Details</span>
+                        </a>
                       </motion.div>
                     </Card>
                   </motion.div>

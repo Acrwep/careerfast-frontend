@@ -159,6 +159,16 @@ button {
   ) !important;
 }
 
+.ant-tooltip .ant-tooltip-inner {
+  text-align: center;
+  background-color: rgb(216, 2, 2);
+  padding: 5px 30px;
+}
+
+.ant-tooltip .ant-tooltip-arrow:before {
+  background-color: rgb(216, 2, 2);
+}
+
 .ant-btn:not(:disabled):focus-visible {
   outline: 3px solid #ffffff !important;
 }

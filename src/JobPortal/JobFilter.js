@@ -20,6 +20,7 @@ import {
   message,
   Spin,
   Empty,
+  Tag,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -48,10 +49,12 @@ import {
 import CommonSelectField from "../Common/CommonSelectField";
 import {
   applyForJob,
+  checkIsJobApplied,
   getJobCategoryData,
   getJobPosts,
 } from "../ApiService/action";
 import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
+import { FaCheckCircle } from "react-icons/fa";
 import { CommonToaster } from "../Common/CommonToaster";
 import { FaHeart, FaRegHeart } from "react-icons/fa6";
 import { IoMdCalendar } from "react-icons/io";
@@ -97,8 +100,10 @@ export default function JobFilter() {
   const [answers, setAnswers] = useState("");
   const [loading, setLoading] = useState(false);
   const [workLocationOption, setWorkLocationOption] = useState([]);
+  const [isApplied, setIsApplied] = useState({});
 
   useEffect(() => {
+    document.title = "CareerFast | Find Jobs";
     const loadCities = () => {
       const states = State.getStatesOfCountry("IN");
       const cities = states.flatMap((state) =>
@@ -125,11 +130,14 @@ export default function JobFilter() {
     selectedWorkingDays,
     selectedStatus,
     jobNatureSelected,
+    isApplied,
   ]);
 
   useEffect(() => {
     if (backendJobs.length > 0 && !postDetails.length) {
-      setPostDetails([transformJob(backendJobs[0])]);
+      const firstJob = transformJob(backendJobs[0]);
+      setPostDetails([firstJob]);
+      checkIsJobAppliedData(firstJob.id);
     }
   }, [backendJobs]);
 
@@ -174,6 +182,32 @@ export default function JobFilter() {
       }
     } catch (error) {
       console.error("getJobPosts error", error);
+    } finally {
+      setTimeout(() => {
+        checkIsJobAppliedData();
+      }, 300);
+    }
+  };
+
+  const checkIsJobAppliedData = async (postId) => {
+    if (!loginUserId || !postId) return;
+
+    const payload = {
+      user_id: loginUserId,
+      job_post_id: postId,
+    };
+    try {
+      const response = await checkIsJobApplied(payload);
+      setIsApplied((prev) => ({
+        ...prev,
+        [postId]: response?.data?.data || false,
+      }));
+    } catch (error) {
+      console.log("is applied error", error);
+      setIsApplied((prev) => ({
+        ...prev,
+        [postId]: false,
+      }));
     }
   };
 
@@ -265,6 +299,10 @@ export default function JobFilter() {
       const response = await applyForJob(payload);
       console.log("apply jobs", response);
       message.success("Job applied successfully");
+      setIsApplied((prev) => ({
+        ...prev,
+        [jobId]: true,
+      }));
       setOpenApplyNow(false);
     } catch (error) {
       console.error("apply jobs error", error);
@@ -432,6 +470,7 @@ export default function JobFilter() {
     let arr = [];
     arr.push(item);
     setPostDetails(arr);
+    checkIsJobAppliedData(item.id);
   };
 
   const renderLocation = () => {
@@ -1172,50 +1211,49 @@ export default function JobFilter() {
                       </div>
                     </div>
 
-                    <div className="job_card">
-                      <div className="quick_apply">
-                        <div className="quick_apply_btn">
-                          <>
-                            <div className="icons">
-                              <span
-                                className="icon"
-                                onClick={handleWishlistToggle}
-                              >
-                                {wishlisted ? (
-                                  <FaHeart className="icon heart active" />
-                                ) : (
-                                  <FaRegHeart className="icon heart" />
-                                )}
-                              </span>
-                              <span className="icon">
-                                <IoMdCalendar className="icon calendar" />
-                              </span>
-                            </div>
-                          </>
-                          <button className="share_btn">
+                    <div className="side_job_details">
+                      <div className="side_job_actions">
+                        <div className="side_job_action_buttons">
+                          <div className="side_job_action_icons">
+                            <span
+                              className="side_job_action_icon"
+                              onClick={handleWishlistToggle}
+                            >
+                              {wishlisted ? (
+                                <FaHeart className="side_job_action_icon heart active" />
+                              ) : (
+                                <FaRegHeart className="side_job_action_icon heart" />
+                              )}
+                            </span>
+                            <span className="side_job_action_icon">
+                              <IoMdCalendar className="side_job_action_icon calendar" />
+                            </span>
+                          </div>
+                          <button className="side_job_share_button">
                             <IoIosShareAlt /> Share
                           </button>
                         </div>
-
-                        <button
-                          onClick={showDrawer}
-                          disabled={
-                            job.status === "Live"
-                              ? false
-                              : job.status === "Expired"
-                              ? true
-                              : ""
-                          }
-                          className={
-                            job.status === "Live"
-                              ? "quick_apply_main_btn"
-                              : job.status === "Expired"
-                              ? "quick_apply_main_btn_disable"
-                              : ""
-                          }
+                        <div
+                          style={{ display: "flex", justifyContent: "center" }}
                         >
-                          Apply Now
-                        </button>
+                          {isApplied[job.id] === true ? (
+                            <div className="side_job_applied_badge">
+                              <FaCheckCircle /> Applied
+                            </div>
+                          ) : (
+                            <button
+                              onClick={showDrawer}
+                              disabled={job.status !== "Live"}
+                              className={
+                                job.status === "Live"
+                                  ? "side_job_apply_button primary"
+                                  : "side_job_apply_button disabled"
+                              }
+                            >
+                              Apply Now
+                            </button>
+                          )}
+                        </div>
                         <Drawer
                           size="default"
                           title="Apply Now"
@@ -1260,12 +1298,20 @@ export default function JobFilter() {
                             </div>
                           )}
                         </Drawer>
-                        <div className="eligibility_section">
-                          <strong>Eligibility</strong>
-                          <p>
+                      </div>
+
+                      <div className="side_job_eligibility">
+                        <h4 className="side_job_eligibility_title">
+                          Eligibility
+                        </h4>
+                        <div className="side_job_eligibility_details">
+                          <span className="side_job_eligibility_item">
                             <MdOutlineSchool /> {job.level}
-                            <b> • </b> <MdOutlineWorkOutline />{" "}
-                            {job.eligibility} <b> • </b>
+                          </span>
+                          <span className="side_job_eligibility_item">
+                            <MdOutlineWorkOutline /> {job.eligibility}
+                          </span>
+                          <span className="side_job_eligibility_item">
                             <FaTransgender />{" "}
                             {job.diversity_hiring.map(
                               (diversity_hiring, index) => (
@@ -1276,7 +1322,7 @@ export default function JobFilter() {
                                 </span>
                               )
                             )}
-                          </p>
+                          </span>
                         </div>
                       </div>
                     </div>

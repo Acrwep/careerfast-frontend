@@ -175,6 +175,7 @@ const RegisterPage = () => {
   ];
 
   useEffect(() => {
+    document.title = "CareerFast | Register";
     setEmail("");
     setPassword("");
     setFname("");

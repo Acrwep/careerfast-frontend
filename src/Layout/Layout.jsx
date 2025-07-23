@@ -55,6 +55,8 @@ const Layout = () => {
     if (AccessToken) {
       if (pathName === "" || pathName === "/") {
         navigate("/job-portal");
+      } else if (pathName.includes("job-details")) {
+        return;
       } else {
         navigate(`/${pathName}`);
       }
@@ -80,7 +82,7 @@ const Layout = () => {
         <Route path="/header" element={<Header />} />
         <Route path="/post-jobs" element={<PostJobs />} />
         <Route path="/job-filter" element={<JobFilter />} />
-        <Route path="/job-details" element={<JobDetails />} />
+        <Route path="/job-details/:id" element={<JobDetails />} />
         <Route path="/admin-profile" element={<AdminProfile />} />
         <Route path="/main-profile" element={<MainProfile />} />
         <Route path="*" element={<NotFound />} />
