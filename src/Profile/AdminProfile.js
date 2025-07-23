@@ -21,8 +21,7 @@ import TextArea from "antd/es/input/TextArea";
 import BookMark from "./BookMark";
 import Listing from "./Listing";
 import AccountSettings from "./AccountSettings";
-const { Title, Text } = Typography;
-const { Dragger } = Upload;
+import { getUserProfile } from "../ApiService/action";
 
 const { Header, Sider, Content } = Layout;
 
@@ -58,49 +57,14 @@ const siderStyle = {
   msOverflowStyle: "none",
 };
 
-const items = [
-  { key: "basic", label: "Basic Details" },
-  { key: "resume", label: "Resume" },
-  { key: "about", label: "About" },
-  { key: "skills", label: "Skills" },
-  { key: "education", label: "Education" },
-  { key: "experience", label: "Work Experience" },
-  { key: "certification", label: "Certifications" },
-  { key: "projects", label: "Projects" },
-  { key: "sociallinks", label: "Social Links" },
-];
-
-const suggestions = [
-  "Deep Learning",
-  "Tone of Voice",
-  "CRM Proficiency",
-  "E-Discovery",
-  "Embedded Programming",
-  "GDPR Compliance",
-  "Medical Malpractice",
-  "Remote Access",
-  "Education Law",
-  "Substance Designer",
-];
-
-const drawerContentStyle = {
-  display: "flex",
-  gap: "24px",
-};
-
-const onChangeDate = (date, dateString) => {
-  console.log(date, dateString);
-};
-
 export default function UserProfile() {
   const [collapsed, setCollapsed] = useState(false);
-  const [certifications, setCertification] = useState([]);
   const [sideBar, setSideBar] = useState("mainprofile");
-  const [selectedSkills, setSelectedSkills] = useState([]);
-  const [customSkill, setCustomSkill] = useState("");
-  const [activeButton, setActiveButton] = useState(null);
-  const [fileName, setFileName] = useState("");
-  const [userTypeactiveButton, setUserTypeActiveButton] = useState(null);
+  const [loginUserId, setLoginUserId] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [fname, setFname] = useState("");
+  const [lname, setLname] = useState("");
+  const [email, setEmail] = useState("");
 
   const today = new Date();
   const [isLoading, setIsLoading] = useState(true);
@@ -111,72 +75,42 @@ export default function UserProfile() {
     return () => clearTimeout(timer);
   }, []);
 
-  const [open, setOpen] = useState(false);
-  const showDrawer = () => {
-    setOpen(true);
-  };
-
-  const onCloseDrawer = () => {
-    setOpen(false);
-  };
-
-  const handleAddSkill = (skill) => {
-    if (!selectedSkills.includes(skill)) {
-      setSelectedSkills([...selectedSkills, skill]);
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+      }
+      console.log("stored", stored);
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
     }
-  };
+  }, []);
 
-  const handleRemoveSkill = (skillToRemove) => {
-    setSelectedSkills(
-      selectedSkills.filter((skill) => skill !== skillToRemove)
-    );
-  };
+  useEffect(() => {
+    getUserProfileData();
+  }, []);
 
-  const handleCustomSkillAdd = () => {
-    const trimmed = customSkill.trim();
-    if (trimmed && !selectedSkills.includes(trimmed)) {
-      setSelectedSkills([...selectedSkills, trimmed]);
-      setCustomSkill("");
+  const getUserProfileData = async () => {
+    const payload = {
+      user_id: loginUserId,
+    };
+
+    try {
+      const response = await getUserProfile(payload);
+      console.log("getUserProfile", response);
+
+      if (response?.data?.data) {
+        const profile = response.data.data;
+        setAvatarUrl(profile.profile_image || "");
+        setFname(profile.first_name || "");
+        setEmail(profile.email || "");
+        setLname(profile.last_name || "");
+      }
+    } catch (error) {
+      console.log("getuserprofile errorddd", error);
     }
-  };
-
-  const handleButtonClick = (buttonId) => {
-    setActiveButton((prev) => buttonId);
-  };
-
-  const handleUserTypeClick = (buttonId) => {
-    setUserTypeActiveButton((prev) => buttonId);
-  };
-
-  const [purpose, setPurpose] = useState(null);
-  const handlePurposeClick = (buttonId) => {
-    setPurpose((prev) => buttonId);
-  };
-
-  const [Class, setClass] = useState(null);
-  const handleClassClick = (buttonId) => {
-    setClass((prev) => buttonId);
-  };
-
-  const handleCertification = ({ file }) => {
-    console.log("fileee", file);
-
-    setCertification([file]);
-  };
-
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setFileName(file.name);
-    } else {
-      setFileName("");
-    }
-  };
-
-  const SidebarContent = {
-    mainprofile: () => <MainProfile />,
-    watchlist: () => <WatchList />,
-    bookmarked: () => <div>hello Ladki</div>,
   };
 
   return (
@@ -192,15 +126,12 @@ export default function UserProfile() {
         breakpoint="lg"
       >
         <div className="profile-card-sidebar">
-          <Avatar
-            size={80}
-            src="https://i.imgur.com/your-avatar.png"
-            className="profile-avatar"
-          />
-          <h3 className="profile-name">Santhosh Kathirvel</h3>
-          <p className="profile-email">
-            santhoshkathirvel.s@actetechnologies.com
-          </p>
+          <Avatar size={80} src={avatarUrl} className="profile-avatar" />
+          <h3 className="profile-name">
+            {fname} {""}
+            {lname}
+          </h3>
+          <p className="profile-email">{email}</p>
 
           <div className="profile-completion">
             <div className="progress-header">

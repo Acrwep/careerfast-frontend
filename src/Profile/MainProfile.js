@@ -202,7 +202,7 @@ export default function MainProfile() {
   const [userTypeactiveButton, setUserTypeActiveButton] = useState(null);
   const defaultAvatar =
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-  const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [lateral, setLateral] = useState(null);
 
   //
@@ -458,7 +458,7 @@ export default function MainProfile() {
 
       if (response?.data?.data) {
         const profile = response.data.data;
-
+        setAvatarUrl(profile.profile_image || "");
         // Handle education
         if (profile.education && profile.education.length > 0) {
           const edu = profile.education[0];
@@ -3649,7 +3649,8 @@ export default function MainProfile() {
                   padding: "7px",
                 }}
               >
-                <Avatar size={90} src={avatarUrl} />
+                <Avatar size={90} src={avatarUrl || defaultAvatar} />
+
                 <Upload
                   showUploadList={false}
                   beforeUpload={() => false}

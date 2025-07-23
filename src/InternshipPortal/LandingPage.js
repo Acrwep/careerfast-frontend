@@ -1,10 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Tabs,
-  Form,
-  Input,
-  Button,
-  Checkbox,
   Typography,
   Card,
   Divider,
@@ -12,6 +7,7 @@ import {
   Col,
   Carousel,
   Row,
+  Empty,
 } from "antd";
 
 import {
@@ -59,6 +55,8 @@ import Header from "../Header/Header";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
+import { getJobPosts } from "../ApiService/action";
+import { PiCurrencyDollarDuotone } from "react-icons/pi";
 
 const { Title, Text } = Typography;
 
@@ -91,55 +89,17 @@ const tabItems = [
   },
 ];
 
-const recommendedJobs = [
-  {
-    id: 1,
-    title: "Customer Service Representative",
-    company: "Neelam",
-    applicants: 1159,
-    salary: "₹ 2.4 LPA - 2.6 LPA",
-    logo: logo1,
-    bgColor: "linear-gradient(to right, #666600, #999966)",
-    tag: "In Office",
-    location: "Bangalore",
-    experience: "0-2 years",
-  },
-  {
-    id: 2,
-    title: "Full Stack Developer",
-    company: "VOCSO Technologies Pvt. Ltd",
-    applicants: 124,
-    salary: "₹ 3 LPA - 6 LPA",
-    logo: logo2,
-    bgColor: "linear-gradient(90deg, #0575E6 0%, #021B79 100%)",
-    tag: "In Office",
-    location: "Hyderabad",
-    experience: "1-3 years",
-  },
-  {
-    id: 3,
-    title: "Digital Marketing Associate",
-    company: "Indofit Solutions Private Limited",
-    applicants: 6,
-    salary: "₹ 2.4 LPA",
-    logo: logo3,
-    bgColor: "linear-gradient(90deg, #20002c 0%, #cbb4d4 100%)",
-    tag: "In Office",
-    location: "Delhi",
-    experience: "0-1 year",
-  },
-  {
-    id: 4,
-    title: "Telesales Executive",
-    company: "Genius Labs",
-    applicants: 89,
-    salary: "₹ 2.5 LPA - 4 LPA",
-    logo: logo4,
-    bgColor: "linear-gradient(90deg, #16222A 0%, #3A6073 100%)",
-    tag: "In Office",
-    location: "Mumbai",
-    experience: "0-1 year",
-  },
+const gradientColors = [
+  "linear-gradient(to right, #0f3443, #34e89e)", // Teal-Blue
+  "linear-gradient(to right, #666600, #999966)",
+  "linear-gradient(90deg, #0575E6 0%, #021B79 100%)",
+  "linear-gradient(90deg, #20002c 0%, #cbb4d4 100%)",
+  "linear-gradient(to right, #000000, #434343)", // Charcoal Grey
+  "linear-gradient(to right, #4b79a1, #283e51)", // Slate Blue
+  "linear-gradient(90deg, #16222A 0%, #3A6073 100%)",
+  "linear-gradient(to right, #1e3c72, #2a5298)", // Cool Royal Blue
+  "linear-gradient(to right, #0f2027, #203a43, #2c5364)", // Deep Space
+  "linear-gradient(to right, #141e30, #243b55)", // Moody Blue
 ];
 
 const jobs = [
@@ -321,39 +281,6 @@ const companies = [
     id: 20,
     logo: logo6,
   },
-  // {
-  //   id: 21,
-  //   logo: logo7,
-  // },
-
-  // {
-  //   id: 22,
-  //   logo: logo1,
-  // },
-  // {
-  //   id: 23,
-  //   logo: logo2,
-  // },
-  // {
-  //   id: 24,
-  //   logo: logo3,
-  // },
-  // {
-  //   id: 25,
-  //   logo: logo4,
-  // },
-  // {
-  //   id: 26,
-  //   logo: logo5,
-  // },
-  // {
-  //   id: 27,
-  //   logo: logo6,
-  // },
-  // {
-  //   id: 28,
-  //   logo: logo7,
-  // },
 ];
 
 const PrevArrow = ({ onClick }) => (
@@ -374,7 +301,7 @@ const settings = {
   arrows: true,
   autoplay: true,
   autoplaySpeed: 4000,
-  slidesToShow: 4,
+  slidesToShow: 3.8,
   prevArrow: <PrevArrow />,
   nextArrow: <NextArrow />,
   responsive: [
@@ -442,6 +369,30 @@ const companiesSettings = {
 };
 
 export default function JobPortalLandingPage() {
+  const [backendJobs, setBackendJobs] = useState([]);
+
+  useEffect(() => {
+    document.title = "CareerFast | Internship Portal";
+    getJobPostsData();
+  }, []);
+
+  const getJobPostsData = async () => {
+    const payload = {};
+    try {
+      const response = await getJobPosts(payload);
+      const jobs = response?.data?.data?.data;
+      console.log("get job posttt", jobs);
+      if (Array.isArray(jobs)) {
+        setBackendJobs(jobs);
+      } else {
+        console.warn("Unexpected job data format", response);
+      }
+    } catch (error) {
+      message.error("Failed to fetch");
+      console.log("get job post error", error);
+    }
+  };
+
   return (
     <div className="">
       <Header />
@@ -451,10 +402,12 @@ export default function JobPortalLandingPage() {
           <div className="left-content">
             <div className="header-content">
               <h1>
-                <span className="highlight">Elevate</span> Your Career Journey
+                <span className="highlight">Elevate</span> Your Career<br></br>{" "}
+                Journey
               </h1>
               <p className="subtitle">
                 Apply to a plethora of hiring opportunities & work with your
+                <br></br>
                 dream companies!
               </p>
               <div className="button-group">
@@ -720,82 +673,102 @@ export default function JobPortalLandingPage() {
           </div>
         </div>
 
-        <Slider {...settings} className="elite-job-carousel">
-          {recommendedJobs.map((recommendedJobs, index) => (
-            <motion.div
-              key={recommendedJobs.id}
-              className="elite-job-slide"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <Card
-                className="elite-job-card"
-                style={{
-                  background: recommendedJobs.bgColor,
-                }}
-                bordered={false}
-              >
-                <div className="elite-job-tag">{recommendedJobs.tag}</div>
+        {backendJobs.length > 0 ? (
+          <Slider {...settings} className="elite-job-carousel">
+            {backendJobs
+              .filter((jobs) => jobs.job_nature === "Internship")
+              .map((jobs, index) => {
+                const randomGradient =
+                  gradientColors[
+                    Math.floor(Math.random() * gradientColors.length)
+                  ];
+                return (
+                  <motion.div
+                    key={jobs.id}
+                    className="elite-job-slide"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <Card
+                      className="elite-job-card"
+                      style={{ background: randomGradient }}
+                      bordered={false}
+                    >
+                      <div className="elite-job-tag">{jobs.job_nature}</div>
 
-                <div className="elite-logo-wrapper">
-                  <img
-                    src={recommendedJobs.logo}
-                    alt={recommendedJobs.company}
-                    className="elite-company-logo"
-                  />
-                  <div className="elite-logo-backdrop"></div>
-                </div>
-
-                <div className="elite-job-content">
-                  <Title level={4} className="elite-job-title">
-                    {recommendedJobs.title}
-                  </Title>
-                  <Text className="elite-company-name">
-                    {recommendedJobs.company}
-                  </Text>
-
-                  <div className="elite-job-details">
-                    <div className="elite-detail-item">
-                      <EnvironmentOutlined className="elite-detail-icon" />
-                      <div>
-                        <span className="elite-detail-label">Location</span>
-                        <span>{recommendedJobs.location}</span>
+                      <div className="elite-logo-wrapper">
+                        <img
+                          src={jobs.company_logo}
+                          alt={jobs.company_name}
+                          className="elite-company-logo"
+                        />
+                        <div className="elite-logo-backdrop"></div>
                       </div>
-                    </div>
-                    <div className="elite-detail-item">
-                      <StarOutlined className="elite-detail-icon" />
-                      <div>
-                        <span className="elite-detail-label">Level</span>
-                        <span>{recommendedJobs.experience}</span>
+
+                      <div className="elite-job-content">
+                        <Title level={4} className="elite-job-title">
+                          {jobs.job_title}
+                        </Title>
+                        <Text className="elite-company-name">
+                          {jobs.company_name}
+                        </Text>
+
+                        <div className="elite-job-details">
+                          <div className="elite-detail-item">
+                            <EnvironmentOutlined className="elite-detail-icon" />
+                            <div>
+                              <span className="elite-detail-label">
+                                Location
+                              </span>
+                              <span>{jobs.work_location}</span>
+                            </div>
+                          </div>
+                          <div className="elite-detail-item">
+                            <StarOutlined className="elite-detail-icon" />
+                            <div>
+                              <span className="elite-detail-label">Level</span>
+                              <span>{jobs.experience_type}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="elite-job-meta">
+                          <div className="elite-meta-item">
+                            <TeamOutlined />
+                            <span>543+ applicants</span>
+                          </div>
+                          <div className="elite-meta-item elite-salary">
+                            <PiCurrencyDollarDuotone />
+                            <span>
+                              {jobs.salary_type === "Range"
+                                ? `${jobs.min_salary} - ${jobs.max_salary}`
+                                : jobs.salary_type === "Fixed"
+                                ? jobs.min_salary
+                                : ""}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="elite-job-meta">
-                    <div className="elite-meta-item">
-                      <TeamOutlined />
-                      <span>{recommendedJobs.applicants}+ applicants</span>
-                    </div>
-                    <div className="elite-meta-item elite-salary">
-                      <DollarOutlined />
-                      <span>{recommendedJobs.salary}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <motion.div
-                  className="elite-job-cta"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <ArrowRightOutlined className="elite-cta-icon" />
-                  <span>View Details</span>
-                </motion.div>
-              </Card>
-            </motion.div>
-          ))}
-        </Slider>
+                      <motion.div
+                        className="elite-job-cta"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <ArrowRightOutlined className="elite-cta-icon" />
+                        <span>View Details</span>
+                      </motion.div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+          </Slider>
+        ) : (
+          <div className="no-jobs-found">
+            <Empty />
+          </div>
+        )}
       </div>
       {/*  */}
 
@@ -889,7 +862,7 @@ export default function JobPortalLandingPage() {
       {/*  */}
 
       {/* Jobs */}
-      <div className="elite-carousel-container">
+      {/* <div className="elite-carousel-container">
         <div className="elite-carousel-header">
           <div className="elite-title-wrapper">
             <Title level={2} className="elite-title">
@@ -990,7 +963,7 @@ export default function JobPortalLandingPage() {
             </motion.div>
           ))}
         </Slider>
-      </div>
+      </div> */}
       {/*  */}
 
       {/* Need Guidence */}

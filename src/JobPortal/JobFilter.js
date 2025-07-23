@@ -18,7 +18,8 @@ import {
   Checkbox,
   Slider,
   message,
-  Form,
+  Spin,
+  Empty,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -45,71 +46,86 @@ import {
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import CommonSelectField from "../Common/CommonSelectField";
-import { getJobPosts } from "../ApiService/action";
+import {
+  applyForJob,
+  getJobCategoryData,
+  getJobPosts,
+} from "../ApiService/action";
 import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
 import { CommonToaster } from "../Common/CommonToaster";
 import { FaHeart, FaRegHeart } from "react-icons/fa6";
 import { IoMdCalendar } from "react-icons/io";
 import { IoIosShareAlt } from "react-icons/io";
+import { LuCalendarDays } from "react-icons/lu";
+import { State, City } from "country-state-city";
+import { HiOutlineStatusOnline } from "react-icons/hi";
+import { GrLocation } from "react-icons/gr";
+import { CgWorkAlt } from "react-icons/cg";
+import { BiCategoryAlt } from "react-icons/bi";
 
 const { Title, Text } = Typography;
 
-const FILTER_SECTIONS = [
-  { key: "status", label: "Status", count: 1 },
-  { key: "type", label: "Type" },
-  { key: "timing", label: "Timing" },
-  { key: "workdays", label: "Work Days" },
-  { key: "usertype", label: "User Type" },
-  { key: "category", label: "Category", count: 5 },
-  { key: "location", label: "Location" },
-];
-
-const workTypes = ["In Office", "Remote", "Field Work", "Hybrid"];
+const workTypes = ["In Office", "On Field", "Work From Home"];
+const jobNature = ["Job", "Internship", "Contract"];
 const userTypes = ["Fresher", "Professionals", "College Students"];
-const category = [
-  "Backend Development",
-  "Frontend Development",
-  "College Students",
-  "Backend Development",
-  "Frontend Development",
-  "College Students",
-  "Backend Development",
-  "Frontend Development",
-  "College Students",
-  "Backend Development",
-  "Frontend Development",
-  "College Students",
-];
 
 export default function JobFilter() {
-  const [open, setOpen] = useState(false);
   const [openApplyNow, setOpenApplyNow] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("status");
-  const [statusValue, setStatusValue] = useState("Live");
+
+  const [jobNatureVisible, setJobNatureVisible] = useState(false);
+  const [jobNatureSelected, setJobNatureSelected] = useState("");
 
   const [visible, setVisible] = useState(false);
-  const [radiusSearch, setRadiusSearch] = useState(false);
-  const [radius, setRadius] = useState(50); // default 50km
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [workTypevisible, setWorkTypeVisible] = useState(false);
+  const [statusVisible, setStatusVisible] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedType, setSelectedType] = useState(null);
+  const [workingDaysVisible, setWorkingDaysVisible] = useState(false);
+  const [selectedWorkingDays, setSelectedWorkingDays] = useState("");
   const [userTypevisible, setUserTypeVisible] = useState(false);
-  const [selectedCatergory, setSelectedCatergory] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState("");
+  const [jobCategoryOptions, setJobCategoryOptions] = useState([]);
   const [userCatergoryvisible, setUserCatergoryVisible] = useState(false);
   const [selectedSort, setSelectedSort] = useState(null);
   const [backendJobs, setBackendJobs] = useState([]);
   const [postDetails, setPostDetails] = useState([]);
   const [wishlisted, setWishlisted] = useState(false);
-  const [step, setStep] = useState("initial");
-  const [initialForm] = Form.useForm();
-  const [experienceForm] = Form.useForm();
-  const [userData, setUserData] = useState({});
+  const [loginUserId, setLoginUserId] = useState(null);
+  const [answers, setAnswers] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [workLocationOption, setWorkLocationOption] = useState([]);
+
+  useEffect(() => {
+    const loadCities = () => {
+      const states = State.getStatesOfCountry("IN");
+      const cities = states.flatMap((state) =>
+        City.getCitiesOfState("IN", state.isoCode)
+      );
+      const formatted = cities.map((city) => ({
+        label: city.name,
+        value: city.name,
+      }));
+      setWorkLocationOption(formatted);
+    };
+
+    loadCities();
+  }, []);
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+    getJobCategoryDataTypes();
+  }, [
+    selectedSort,
+    selectedCategories,
+    selectedTypes,
+    selected,
+    selectedWorkingDays,
+    selectedStatus,
+    jobNatureSelected,
+  ]);
 
   useEffect(() => {
     if (backendJobs.length > 0 && !postDetails.length) {
@@ -117,22 +133,40 @@ export default function JobFilter() {
     }
   }, [backendJobs]);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, []);
+
   const fetchJobs = async () => {
     const payload = {
-      job_categories: "jobCategories",
-      workplace_type: "workTypes",
-      work_location: "locationsData",
-      working_days: "category",
-      start_date: "2025-07-01",
-      end_date: "2025-07-30",
-      salary_sort: "desc",
+      job_categories: selectedCategories || [],
+      workplace_type: selectedTypes || [],
+      work_location: selected || [],
+      working_days: selectedWorkingDays || "",
+      status: selectedStatus || [],
+      job_nature: jobNatureSelected || "",
+      salary_sort:
+        selectedSort === "highToLow"
+          ? "high_to_low"
+          : selectedSort === "lowToHigh"
+          ? "low_to_high"
+          : "",
     };
 
     try {
       const response = await getJobPosts(payload);
-      console.log("getJobPosts", response);
+      console.log("getJobPosts response", response);
 
       const jobs = response?.data?.data?.data;
+
       if (Array.isArray(jobs)) {
         setBackendJobs(jobs);
       } else {
@@ -143,7 +177,20 @@ export default function JobFilter() {
     }
   };
 
-  // ✅ First: Define the function
+  const getJobCategoryDataTypes = async () => {
+    try {
+      const response = await getJobCategoryData();
+      const jobCategoryFormatted =
+        response?.data?.data?.map((item) => ({
+          label: item.category_name,
+          value: item.category_name,
+        })) || [];
+      setJobCategoryOptions(jobCategoryFormatted);
+    } catch (error) {
+      console.log("job category error", error);
+    }
+  };
+
   const transformJob = (job) => {
     const postedDate = new Date(job.created_at);
     const today = new Date();
@@ -152,11 +199,6 @@ export default function JobFilter() {
 
     const totalActiveDays = 5;
     const daysLeft = totalActiveDays - daysPassed;
-
-    console.log(
-      "Questions:",
-      job.questions.map((q) => q.question)
-    );
 
     return {
       id: job.id,
@@ -171,9 +213,9 @@ export default function JobFilter() {
       level: job.experience_type,
       salary:
         job.salary_type === "Fixed"
-          ? "$" + (job.min_salary || "N/A")
+          ? `$${job.min_salary || "N/A"}`
           : job.salary_type === "Range"
-          ? `${job.min_salary || "N/A"} - ${job.max_salary || "N/A"}`
+          ? `$${job.min_salary || "N/A"} - $${job.max_salary || "N/A"}`
           : "Negotiable",
       location: `${job.workplace_type}${
         job.work_location ? ` • ${job.work_location}` : ""
@@ -184,105 +226,140 @@ export default function JobFilter() {
       urgent: false,
       skills: job.skills,
       eligibility: job.experience_required?.join(", "),
-      status: daysLeft > 0 ? "Active" : "Expired",
+      status: daysLeft > 0 ? "Live" : "Expired",
       questions: job.questions?.map((q) => q.question) || [],
+      questions_with_ids:
+        job.questions?.map((q) => ({
+          id: q.id,
+          question: q.question,
+          isrequired: q.isrequired,
+        })) || [],
     };
   };
 
-  const handleExperienceSubmit = (values) => {
-    const questionAnswers = {};
-    if (postDetails[0]?.questions?.length) {
-      postDetails[0].questions.forEach((question, index) => {
-        questionAnswers[`question_${index}`] =
-          values[`question_${index}`] || "";
-      });
+  const applyForJobData = async () => {
+    const jobId = postDetails[0]?.id;
+    const questionsWithIds = postDetails[0]?.questions_with_ids || [];
+
+    const missingRequired = questionsWithIds.some(
+      (q, index) => q.isrequired && !answers[index]?.trim()
+    );
+
+    if (missingRequired) {
+      message.warning("Please answer all required questions before applying.");
+      return;
     }
 
-    const finalData = {
-      ...userData,
-      ...values,
-      questionAnswers,
+    const structuredAnswers = questionsWithIds.map((q, index) => ({
+      questionId: q.id,
+      answer: answers[index] || "",
+    }));
+
+    const payload = {
+      postId: jobId,
+      userId: loginUserId,
+      answers: structuredAnswers,
     };
 
-    console.log("Final submitted data:", finalData);
-    message.success("Applied Successfully!");
-    // ... rest of the function ...
-  };
-
-  const handleInitialSubmit = (values) => {
-    setUserData(values);
-    setStep("experience");
+    try {
+      const response = await applyForJob(payload);
+      console.log("apply jobs", response);
+      message.success("Job applied successfully");
+      setOpenApplyNow(false);
+    } catch (error) {
+      console.error("apply jobs error", error);
+      message.error("Error while applying");
+    }
   };
 
   const showDrawer = () => {
-    setOpenApplyNow(true);
-  };
-  const onClose = () => {
-    setOpenApplyNow(false);
+    if (postDetails[0]?.questions?.length > 0) {
+      setOpenApplyNow(true);
+    } else {
+      applyForJobData();
+    }
   };
 
-  const handleCheck = (location) => {
+  const onClose = () => {
+    setOpenApplyNow(false);
+    setAnswers("");
+  };
+
+  const handleLocationCheck = (value) => {
     setSelected((prev) =>
-      prev.includes(location)
-        ? prev.filter((item) => item !== location)
-        : [...prev, location]
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
     );
   };
 
+  const applyLocationFilter = () => {
+    console.log("Selected Locations:", selected);
+    setVisible(false);
+    fetchJobs();
+    CommonToaster("Location filter applied", "success");
+  };
+
+  const handleJobNatureChange = (checkedValue) => {
+    setJobNatureSelected((prev) =>
+      prev.includes(checkedValue)
+        ? prev.filter((item) => item !== checkedValue)
+        : [...prev, checkedValue]
+    );
+  };
+
+  const handleJobNatureClear = () => {
+    setJobNatureSelected("");
+    fetchJobs();
+    setJobNatureVisible(false);
+    CommonToaster("Work type filter cleared", "info");
+  };
+
+  const handleJobNatureFilter = () => {
+    fetchJobs();
+    setJobNatureVisible(false);
+    CommonToaster("Work type filter applied", "success");
+  };
+
   const dropdownItems = () => (
-    <Menu style={{ minWidth: 220, padding: "0.5rem 0" }}>
-      <Menu.Item key="internships" icon={<LaptopOutlined />}>
-        Internships
-      </Menu.Item>
-      <Menu.Item
-        key="jobs"
-        icon={<ReadOutlined />}
-        style={{ background: "#f0f7ff" }}
+    <div style={{ padding: 16, width: 220, background: "#fff" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 8,
+        }}
       >
-        Jobs
-      </Menu.Item>
-      <Menu.SubMenu
-        key="competitions"
-        title="Competitions"
-        icon={<TrophyOutlined />}
+        <strong>Job Nature</strong>
+        <a onClick={handleJobNatureClear} style={{ color: "#f5222d" }}>
+          Clear
+        </a>
+      </div>
+      <div>
+        {jobNature.map((type) => (
+          <div key={type} style={{ marginBottom: 8 }}>
+            <Checkbox
+              checked={jobNatureSelected.includes(type)}
+              onChange={() => handleJobNatureChange(type)}
+            >
+              {type}
+            </Checkbox>
+          </div>
+        ))}
+      </div>
+      <Divider style={{ margin: "12px 0" }} />
+      <Button
+        className="apply_filter"
+        type="primary"
+        shape="round"
+        block
+        onClick={handleJobNatureFilter}
       >
-        <Menu.Item key="comp-1">Online</Menu.Item>
-        <Menu.Item key="comp-2">Onsite</Menu.Item>
-      </Menu.SubMenu>
-      <Menu.Item key="mentorship" icon={<UserOutlined />}>
-        Mentorship
-      </Menu.Item>
-      <Menu.SubMenu key="courses" title="Courses" icon={<BookOutlined />}>
-        <Menu.Item key="course-1">Tech</Menu.Item>
-        <Menu.Item key="course-2">Design</Menu.Item>
-      </Menu.SubMenu>
-    </Menu>
-  );
-
-  const locationsData = [
-    { name: "Pune", detail: "Pune, Maharashtra, India" },
-    { name: "Gurgaon", detail: "Gurgaon, Haryana, India" },
-    { name: "Delhi", detail: "Delhi, Delhi, India" },
-    { name: "Bangalore Urban", detail: "Bangalore Urban, Karnataka, India" },
-    { name: "Bangalore Rural", detail: "Bangalore Rural, Karnataka, India" },
-  ];
-
-  // Create dropdown menu for reusability
-  const getDropdownMenu = (label) => (
-    <Menu
-      items={[
-        { label: `${label} Option 1`, key: "1" },
-        { label: `${label} Option 2`, key: "2" },
-      ]}
-    />
+        Apply Filter
+      </Button>
+    </div>
   );
 
   const JobCard = ({ job }) => (
-    <Card
-      className="premium-job-card"
-      bodyStyle={{ padding: 0 }}
-      onClick={() => handleClickedjob(job)}
-    >
+    <Card className="premium-job-card" onClick={() => handleClickedjob(job)}>
       <div className="premium-content">
         <div className="premium-headers">
           <img src={job.logo} alt={job.company} className="premium-logo" />
@@ -316,17 +393,6 @@ export default function JobFilter() {
             {job.location}
           </span>
           <span className="premium-detail-item">Salary: {job.salary}</span>
-          <span
-            className={
-              job.status === "Active"
-                ? "status-badge"
-                : job.status === "Expired"
-                ? "status-badge-red"
-                : ""
-            }
-          >
-            {job.status}
-          </span>
         </div>
 
         <div className="premium-skills">
@@ -346,25 +412,17 @@ export default function JobFilter() {
             )}
             {job.level}
           </span>
-          <Button
-            onClick={showDrawer}
+          <span
             className={
-              job.status === "Active"
-                ? "premium-apply"
+              job.status === "Live"
+                ? "status-badge"
                 : job.status === "Expired"
-                ? "premium-apply-disabel"
-                : ""
-            }
-            disabled={
-              job.status === "Active"
-                ? false
-                : job.status === "Expired"
-                ? true
+                ? "status-badge-red"
                 : ""
             }
           >
-            Apply Now
-          </Button>
+            {job.status}
+          </span>
         </div>
       </div>
     </Card>
@@ -391,45 +449,18 @@ export default function JobFilter() {
             type="link"
             size="small"
             danger
-            onClick={() => setSelected([])}
+            onClick={() => {
+              fetchJobs();
+              setSelected([]);
+              setSearch("");
+              setVisible(false);
+              CommonToaster("Location filter cleared", "info");
+            }}
           >
             Clear
           </Button>
         </div>
 
-        {/* Toggle */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: 12,
-          }}
-        >
-          <div>
-            <Text strong>Use Radius Search</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Find nearby by Jobs
-            </Text>
-          </div>
-          <Switch checked={radiusSearch} onChange={setRadiusSearch} />
-        </div>
-
-        {/* Conditional Slider */}
-        {radiusSearch && (
-          <div style={{ marginBottom: 16 }}>
-            <Slider
-              min={5}
-              max={200}
-              step={5}
-              value={radius}
-              onChange={setRadius}
-              tooltip={{ formatter: (value) => `${value}km` }}
-            />
-          </div>
-        )}
-
-        {/* Search */}
         <Input
           placeholder="Search location"
           prefix={<SearchOutlined />}
@@ -438,28 +469,21 @@ export default function JobFilter() {
           style={{ marginBottom: 12 }}
         />
 
-        {/* Location list */}
         <List
-          dataSource={locationsData.filter((item) =>
-            item.name.toLowerCase().includes(search.toLowerCase())
+          dataSource={workLocationOption.filter((item) =>
+            item.label.toLowerCase().includes(search.toLowerCase())
           )}
           style={{ maxHeight: 200, overflowY: "auto" }}
           renderItem={(item) => (
-            <List.Item style={{ padding: "4px 0" }}>
+            <List.Item style={{ padding: "4px 0" }} key={item.value}>
               <Checkbox
-                checked={selected.includes(item.name)}
-                onChange={() => handleCheck(item.name)}
+                checked={selected.includes(item.value)}
+                onChange={() => handleLocationCheck(item.value)}
               >
-                <div>
-                  <Text>
-                    <EnvironmentOutlined style={{ marginRight: 6 }} />
-                    {item.name}
-                  </Text>
-                  <br />
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {item.detail}
-                  </Text>
-                </div>
+                <Text>
+                  <EnvironmentOutlined style={{ marginRight: 6 }} />
+                  {item.label}
+                </Text>
               </Checkbox>
             </List.Item>
           )}
@@ -467,12 +491,128 @@ export default function JobFilter() {
 
         <Divider style={{ margin: "12px 0" }} />
 
-        {/* Apply Button */}
         <div style={{ textAlign: "right" }}>
-          <Button type="primary" className="apply_filter" shape="round">
+          <Button
+            type="primary"
+            onClick={applyLocationFilter}
+            className="apply_filter"
+            shape="round"
+          >
             Apply Filter →
           </Button>
         </div>
+      </div>
+    );
+  };
+
+  const renderStatus = () => {
+    const handleClear = () => {
+      CommonToaster("Status filter cleared", "info");
+      setSelectedStatus("");
+      setTimeout(() => {
+        fetchJobs();
+        setStatusVisible(false);
+      }, 0);
+    };
+
+    const handleApply = () => {
+      fetchJobs();
+      setStatusVisible(false);
+      CommonToaster("Status filter applied", "success");
+    };
+
+    return (
+      <div style={{ padding: 16, width: 220, background: "#fff" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: 8,
+          }}
+        >
+          <strong>Status</strong>
+          <a onClick={handleClear} style={{ color: "#f5222d" }}>
+            Clear
+          </a>
+        </div>
+
+        <Radio.Group
+          className="custom-radio"
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          value={selectedStatus}
+          style={{ display: "flex", flexDirection: "column", gap: 8 }}
+        >
+          <Radio value="Live">Live</Radio>
+          <Radio value="Expired">Expired</Radio>
+        </Radio.Group>
+
+        <Divider style={{ margin: "12px 0" }} />
+
+        <Button
+          className="apply_filter"
+          type="primary"
+          shape="round"
+          block
+          onClick={handleApply}
+        >
+          Apply Filter
+        </Button>
+      </div>
+    );
+  };
+
+  const renderWorkingDays = () => {
+    const handleWorkingDaysClear = () => {
+      CommonToaster("Working Days filter cleared", "info");
+      setSelectedWorkingDays("");
+      setTimeout(() => {
+        fetchJobs();
+        setWorkingDaysVisible(false);
+      }, 0);
+    };
+
+    const handleWorkingDaysApply = () => {
+      setWorkingDaysVisible(false);
+      fetchJobs();
+      CommonToaster("Working days filter applied", "success");
+    };
+
+    return (
+      <div style={{ padding: 16, width: 220, background: "#fff" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: 8,
+          }}
+        >
+          <strong>Working Days</strong>
+          <a onClick={handleWorkingDaysClear} style={{ color: "#f5222d" }}>
+            Clear
+          </a>
+        </div>
+
+        <Radio.Group
+          className="custom-radio"
+          onChange={(e) => setSelectedWorkingDays(e.target.value)}
+          value={selectedWorkingDays}
+          style={{ display: "flex", flexDirection: "column", gap: 8 }}
+        >
+          <Radio value="5 Working days">5 Working days</Radio>
+          <Radio value="6 Working days">6 Working days</Radio>
+        </Radio.Group>
+
+        <Divider style={{ margin: "12px 0" }} />
+
+        <Button
+          className="apply_filter"
+          type="primary"
+          shape="round"
+          block
+          onClick={handleWorkingDaysApply}
+        >
+          Apply Filter
+        </Button>
       </div>
     );
   };
@@ -486,12 +626,29 @@ export default function JobFilter() {
   };
 
   const handleClear = () => {
+    fetchJobs();
     setSelectedTypes([]);
+    setWorkTypeVisible(false);
+    CommonToaster("Work type filter cleared", "info");
   };
 
-  const handleApply = () => {
-    console.log("Selected Work Types:", selectedTypes);
+  const handleWorkTypeFilter = async () => {
+    setLoading(true);
     setWorkTypeVisible(false);
+    CommonToaster("Work type filter applied", "success");
+    const startTime = Date.now();
+    try {
+      await fetchJobs();
+    } finally {
+      const elapsed = Date.now() - startTime;
+      const remainingTime = 3000 - elapsed;
+
+      if (remainingTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
+      }
+      setLoading(false);
+      setWorkTypeVisible(false);
+    }
   };
 
   const dropdownContent = () => (
@@ -526,7 +683,7 @@ export default function JobFilter() {
         type="primary"
         shape="round"
         block
-        onClick={handleApply}
+        onClick={handleWorkTypeFilter}
       >
         Apply Filter
       </Button>
@@ -541,6 +698,7 @@ export default function JobFilter() {
 
   const handleUserTypeApply = () => {
     console.log("Selected User Type:", selectedType);
+    fetchJobs();
     setUserTypeVisible(false);
   };
 
@@ -584,16 +742,21 @@ export default function JobFilter() {
   );
 
   const handleUserCatergoryClear = () => {
-    setSelectedCatergory(null);
+    setSelectedCategories(null);
+    fetchJobs();
+    setUserCatergoryVisible(false);
+    CommonToaster("Category filter cleared", "info");
   };
 
   const handleUserCatergoryApply = () => {
-    console.log("Selected Catergory:", selectedCatergory);
+    console.log("Selected Catergory:", selectedCategories);
+    fetchJobs();
     setUserCatergoryVisible(false);
+    CommonToaster("Category filter applied", "success");
   };
 
   const userCatergory = () => (
-    <div style={{ padding: 16, width: 220, background: "#fff" }}>
+    <div style={{ padding: 16, width: 260, background: "#fff" }}>
       <div
         style={{
           display: "flex",
@@ -606,24 +769,16 @@ export default function JobFilter() {
           Clear
         </a>
       </div>
-      <Radio.Group
-        onChange={(e) => setSelectedCatergory(e.target.value)}
-        value={selectedCatergory}
-        className="custom-radio"
+      <Checkbox.Group
+        options={jobCategoryOptions}
+        value={selectedCategories}
+        onChange={setSelectedCategories}
         style={{
-          display: "flex",
-          flexDirection: "column",
           gap: 8,
           maxHeight: "200px",
           overflowY: "scroll",
         }}
-      >
-        {category.map((Catergory) => (
-          <Radio key={Catergory} value={Catergory}>
-            {Catergory}
-          </Radio>
-        ))}
-      </Radio.Group>
+      />
       <Divider style={{ margin: "12px 0" }} />
       <Button
         type="primary"
@@ -638,18 +793,16 @@ export default function JobFilter() {
   );
 
   // filter
-
-  const handleChange = (value) => {
-    setSelectedSort(value);
-  };
-
   const clearSort = () => {
     setSelectedSort(null);
+    setTimeout(() => {
+      fetchJobs();
+    }, 0);
   };
 
   const handleWishlistToggle = () => {
     setWishlisted(!wishlisted);
-    // Show toast notification
+
     if (wishlisted === false) {
       CommonToaster("Added to wishlist ❤️", "success");
     } else {
@@ -685,6 +838,8 @@ export default function JobFilter() {
         <Dropdown
           popupRender={dropdownItems}
           trigger={["click"]}
+          open={jobNatureVisible}
+          onOpenChange={(visible) => setJobNatureVisible(visible)}
           placement="bottomLeft"
           overlayStyle={{
             borderRadius: 12,
@@ -692,7 +847,12 @@ export default function JobFilter() {
             padding: "8px 0",
           }}
         >
-          <Button className="job-filter-job" shape="round" type="primary">
+          <Button
+            className="job-filter-job"
+            shape="round"
+            type="primary"
+            onClick={() => setJobNatureVisible(!jobNatureVisible)}
+          >
             <Space>
               <span style={{ fontWeight: 500 }}>Jobs</span>
               <DownOutlined style={{ fontSize: 12 }} />
@@ -725,7 +885,6 @@ export default function JobFilter() {
             </Button>
           ) : (
             <CommonSelectField
-              // label={false}
               style={{
                 border: "1px solid rgba(0, 0, 0, 0.08)",
                 background: "#fff",
@@ -736,17 +895,18 @@ export default function JobFilter() {
                 fontWeight: 500,
                 marginBottom: 0,
               }}
-              name="experiencemonth"
-              onChange={handleChange}
+              onChange={(value) => setSelectedSort(value)}
               placeholder="Select Salary Filter"
               options={[
                 {
                   id: 1,
                   label: "Salary (High to Low)",
+                  value: "highToLow",
                 },
                 {
                   id: 2,
                   label: "Salary (Low to High)",
+                  value: "lowToHigh",
                 },
               ]}
               showSearch={true}
@@ -754,237 +914,69 @@ export default function JobFilter() {
           )}
         </>
 
-        {/* Main Filters Button */}
-        <Button
-          shape="round"
-          icon={<FilterOutlined style={{ fontSize: 14 }} />}
-          onClick={() => setOpen(true)}
-          style={{
-            border: "1px solid rgba(0, 0, 0, 0.08)",
-            background: "#fff",
-            padding: "0 16px",
-            height: 36,
-            color: "#2d3748",
-            fontWeight: 500,
+        {/* Status Filter */}
+        <Dropdown
+          popupRender={renderStatus}
+          trigger={["click"]}
+          open={statusVisible}
+          onOpenChange={(flag) => setStatusVisible(flag)}
+          overlayStyle={{
+            borderRadius: 12,
+            boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
+            padding: "8px 0",
           }}
         >
-          <Space>
-            Filters
-            <Badge
-              count={6}
-              offset={[-4, 0]}
-              style={{
-                backgroundColor: "#4f46e5",
-                boxShadow: "0 0 0 1px #fff",
-              }}
-            />
-          </Space>
-        </Button>
-
-        {/* Filters Drawer */}
-        <Drawer
-          title={
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <FilterOutlined style={{ color: "#4f46e5" }} />
-              <span style={{ fontWeight: 600 }}>Filters</span>
-            </div>
-          }
-          placement="right"
-          width={600}
-          onClose={() => setOpen(false)}
-          open={open}
-          closable={true}
-          closeIcon={<CloseOutlined style={{ color: "#64748b" }} />}
-          headerStyle={{ borderBottom: "1px solid rgba(0, 0, 0, 0.05)" }}
-          bodyStyle={{ padding: 0 }}
-          footerStyle={{ borderTop: "1px solid rgba(0, 0, 0, 0.05)" }}
-          footer={
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "16px 24px",
-              }}
-            >
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => {
-                  // Clear all filters logic
-                }}
-              >
-                Clear All
-              </Button>
-              <Button
-                type="primary"
-                shape="round"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
-                  border: "none",
-                  padding: "0 24px",
-                  height: 40,
-                  fontWeight: 500,
-                }}
-                onClick={() => setOpen(false)}
-              >
-                Show Results
-              </Button>
-            </div>
-          }
-        >
-          <div style={{ display: "flex", height: "100%" }}>
-            {/* Left Navigation */}
-            <div
-              style={{
-                width: 200,
-                borderRight: "1px solid rgba(0, 0, 0, 0.05)",
-                padding: "16px 0",
-              }}
-            >
-              <List
-                itemLayout="horizontal"
-                dataSource={FILTER_SECTIONS}
-                renderItem={(item) => (
-                  <List.Item
-                    style={{
-                      background:
-                        activeFilter === item.key
-                          ? "rgba(79, 70, 229, 0.05)"
-                          : "transparent",
-                      borderRadius: 6,
-                      margin: "0 12px 4px 12px",
-                      padding: "10px 12px",
-                      cursor: "pointer",
-                      borderLeft:
-                        activeFilter === item.key
-                          ? "3px solid #4f46e5"
-                          : "3px solid transparent",
-                    }}
-                    onClick={() => setActiveFilter(item.key)}
-                  >
-                    <div
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color:
-                            activeFilter === item.key ? "#4f46e5" : "#2d3748",
-                          fontWeight: activeFilter === item.key ? 500 : 400,
-                        }}
-                      >
-                        {item.label}
-                      </Text>
-                      {item.count && (
-                        <Badge
-                          count={item.count}
-                          size="small"
-                          style={{
-                            backgroundColor:
-                              activeFilter === item.key ? "#4f46e5" : "#e2e8f0",
-                            color:
-                              activeFilter === item.key ? "#fff" : "#2d3748",
-                          }}
-                        />
-                      )}
-                    </div>
-                  </List.Item>
-                )}
-              />
-            </div>
-
-            {/* Right Content */}
-            <div
-              style={{
-                flex: 1,
-                padding: "24px",
-                overflowY: "auto",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 24,
-                }}
-              >
-                <Title
-                  level={5}
-                  style={{
-                    margin: 0,
-                    color: "#1e293b",
-                    fontWeight: 600,
-                  }}
-                >
-                  {FILTER_SECTIONS.find((f) => f.key === activeFilter)?.label}
-                </Title>
-                <Button
-                  type="text"
-                  size="small"
-                  danger
-                  onClick={() => {
-                    // Clear current filter logic
-                  }}
-                >
-                  Clear
-                </Button>
+          <Button
+            shape="round"
+            style={{
+              border: "1px solid rgba(0, 0, 0, 0.08)",
+              background: "#fff",
+              padding: "0 16px",
+              height: 36,
+              color: "#2d3748",
+              fontWeight: 500,
+            }}
+          >
+            <Space>
+              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <HiOutlineStatusOnline /> Status
               </div>
+              <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
+            </Space>
+          </Button>
+        </Dropdown>
 
-              {activeFilter === "status" && (
-                <Radio.Group
-                  className="custom-radio"
-                  onChange={(e) => setStatusValue(e.target.value)}
-                  value={statusValue}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 16,
-                  }}
-                >
-                  {["Live", "Expired", "Registrations Closed", "Recent"].map(
-                    (option) => (
-                      <Radio
-                        key={option}
-                        value={option}
-                        style={{
-                          margin: 0,
-                          padding: "12px 16px",
-                          borderRadius: 8,
-                          border:
-                            statusValue === option
-                              ? "1px solid #4f46e5"
-                              : "1px solid rgba(0, 0, 0, 0.08)",
-                          backgroundColor:
-                            statusValue === option
-                              ? "rgba(79, 70, 229, 0.05)"
-                              : "#fff",
-                        }}
-                      >
-                        {option}
-                      </Radio>
-                    )
-                  )}
-                </Radio.Group>
-              )}
-
-              {/* Additional filter sections would go here */}
-            </div>
-          </div>
-        </Drawer>
+        {/* Status Filter */}
+        <Dropdown
+          popupRender={renderWorkingDays}
+          trigger={["click"]}
+          open={workingDaysVisible}
+          onOpenChange={(flag) => setWorkingDaysVisible(flag)}
+          overlayStyle={{
+            borderRadius: 12,
+            boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
+            padding: "8px 0",
+          }}
+        >
+          <Button
+            shape="round"
+            style={{
+              border: "1px solid rgba(0, 0, 0, 0.08)",
+              background: "#fff",
+              padding: "0 16px",
+              height: 36,
+              color: "#2d3748",
+              fontWeight: 500,
+            }}
+          >
+            <Space>
+              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <LuCalendarDays /> Working Days
+              </div>
+              <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
+            </Space>
+          </Button>
+        </Dropdown>
 
         {/* Location Filter */}
         <Dropdown
@@ -1010,7 +1002,10 @@ export default function JobFilter() {
             }}
           >
             <Space>
-              Location
+              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <GrLocation /> Location
+              </div>
+
               <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
             </Space>
           </Button>
@@ -1040,7 +1035,10 @@ export default function JobFilter() {
             }}
           >
             <Space>
-              Work Type
+              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <CgWorkAlt /> Work Type
+              </div>
+
               <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
             </Space>
           </Button>
@@ -1070,7 +1068,9 @@ export default function JobFilter() {
             }}
           >
             <Space>
-              Category
+              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <BiCategoryAlt /> Category
+              </div>
               <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
             </Space>
           </Button>
@@ -1101,11 +1101,17 @@ export default function JobFilter() {
       <div>
         <Row gutter={32}>
           <Col className="job_filter_left" lg={7} xs={24} md={8}>
-            <Space direction="vertical" size={24} style={{ width: "100%" }}>
-              {backendJobs.map((job) => (
-                <JobCard key={job.id} job={transformJob(job)} />
-              ))}
-            </Space>
+            {backendJobs.length === 0 ? (
+              <Empty description="No jobs found" />
+            ) : (
+              <Spin spinning={loading} size="large">
+                <Space direction="vertical" size={24} style={{ width: "100%" }}>
+                  {backendJobs.map((job) => (
+                    <JobCard key={job.id} job={transformJob(job)} />
+                  ))}
+                </Space>
+              </Spin>
+            )}
           </Col>
 
           <Col className="job_filter_left" lg={17} xs={24} md={16}>
@@ -1118,7 +1124,7 @@ export default function JobFilter() {
                       <div className="premium-indicator">
                         <span
                           className={
-                            job.status === "Active"
+                            job.status === "Live"
                               ? "status-badge"
                               : job.status === "Expired"
                               ? "status-badge-red"
@@ -1194,14 +1200,14 @@ export default function JobFilter() {
                         <button
                           onClick={showDrawer}
                           disabled={
-                            job.status === "Active"
+                            job.status === "Live"
                               ? false
                               : job.status === "Expired"
                               ? true
                               : ""
                           }
                           className={
-                            job.status === "Active"
+                            job.status === "Live"
                               ? "quick_apply_main_btn"
                               : job.status === "Expired"
                               ? "quick_apply_main_btn_disable"
@@ -1233,34 +1239,25 @@ export default function JobFilter() {
                                       rows={3}
                                       placeholder="Your answer..."
                                       className="premium-input"
+                                      value={answers[index] || ""}
+                                      onChange={(e) => {
+                                        const newAnswers = [...answers];
+                                        newAnswers[index] = e.target.value;
+                                        setAnswers(newAnswers);
+                                      }}
                                     />
                                   </div>
                                 )
                               )}
+                              <div>
+                                <button
+                                  className="premium-apply"
+                                  onClick={applyForJobData}
+                                >
+                                  Submit
+                                </button>
+                              </div>
                             </div>
-                          )}
-
-                          {step === "initial" && (
-                            <Form
-                              form={initialForm}
-                              name="initialForm"
-                              layout="vertical"
-                              onFinish={handleInitialSubmit}
-                              autoComplete="off"
-                            >
-                              {/* ... existing form items ... */}
-                            </Form>
-                          )}
-
-                          {step === "experience" && (
-                            <Form
-                              form={experienceForm}
-                              name="experienceForm"
-                              layout="vertical"
-                              onFinish={handleExperienceSubmit}
-                            >
-                              {/* ... existing form items ... */}
-                            </Form>
                           )}
                         </Drawer>
                         <div className="eligibility_section">

@@ -1,6 +1,6 @@
 /* Premium CSS Styling */
 :root {
-  --primary: #6900ad;
+  --primary: rgb(105, 0, 173);
   --primary-light: rgba(0, 74, 173, 0.1);
   --secondary: #2ecc71;
   --dark: #1a1a1a;
@@ -34,7 +34,7 @@
 
 .header-content .highlight {
   background: none;
-  -webkit-text-fill-color: var(--primary);
+  -webkit-text-fill-color: rgb(105, 0, 173);
 }
 
 .header-content .subtitle {
@@ -54,7 +54,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: var(--primary);
+  background-color: rgb(105, 0, 173);
   color: var(--white);
   border: none;
   padding: 14px 28px;
@@ -84,8 +84,8 @@
   align-items: center;
   gap: 8px;
   background-color: var(--white);
-  color: var(--primary);
-  border: 2px solid var(--primary);
+  color: rgb(105, 0, 173);
+  border: 2px solid rgb(105, 0, 173);
   padding: 12px 26px;
   border-radius: 8px;
   cursor: pointer;
@@ -380,11 +380,11 @@
 }
 
 .elite-carousel-container {
-  padding: 60px 0;
+  padding: 80px 0;
   background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   position: relative;
   overflow: hidden;
-  height: 780px;
+  height: fit-content;
 }
 
 .elite-carousel-container .custom-next {
@@ -572,7 +572,7 @@
 }
 
 .elite-job-carousel .slick-slide {
-  padding: 0 15px;
+  padding: 0 10px;
   outline: none;
 }
 
@@ -581,16 +581,23 @@
   position: relative;
 }
 
+.ant-empty .ant-empty-image {
+  height: 260px;
+  margin-bottom: 8px;
+  opacity: 1;
+}
+
 .elite-job-card {
   border-radius: 16px !important;
-  padding: 30px;
-  height: 380px;
+  padding: 13px;
+  height: 400px;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  justify-content: center;
 }
 
 .elite-job-card::before {
@@ -666,10 +673,10 @@
 }
 
 .elite-job-title {
-  font-size: 1.4rem !important;
+  font-size: 24px !important;
   font-weight: 600 !important;
   color: #fff !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 3px !important;
   line-height: 1.4 !important;
 }
 
@@ -685,8 +692,8 @@
 .elite-company-name::after {
   content: "";
   position: absolute;
-  bottom: -8px;
-  left: 43%;
+  bottom: -5px;
+  left: 0%;
   width: 40px;
   height: 2px;
   background: rgba(255, 255, 255, 0.5);
@@ -705,8 +712,8 @@
   border-radius: 10px;
   padding: 12px;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 5px;
 }
 
 .elite-detail-icon {

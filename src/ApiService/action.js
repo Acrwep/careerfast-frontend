@@ -586,7 +586,18 @@ export const getCourseType = async () => {
 
 export const getJobPosts = async (payload) => {
   try {
-    const response = await api.post("api/getJobPosts", { params: payload });
+    const response = await api.post("api/getJobPosts", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// applyForJob
+
+export const applyForJob = async (payload) => {
+  try {
+    const response = await api.post("api/applyForJob", payload);
     return response;
   } catch (error) {
     throw error;

@@ -62,12 +62,6 @@ export default function Header() {
       icon: <TrophyOutlined />,
       path: "#",
     },
-    {
-      key: "mentorships",
-      label: "Mentorships",
-      icon: <TeamOutlined />,
-      path: "#",
-    },
     { key: "practice", label: "Practice", icon: <CodeOutlined />, path: "#" },
   ];
 
@@ -93,7 +87,7 @@ export default function Header() {
         expand="md"
         className="bg-white shadow-sm py-3 premium-header"
       >
-        <Container fluid>
+        <Container>
           {/* Left: Logo + Search */}
           <div className="d-flex align-items-center gap-3">
             <Navbar.Brand href="#">
@@ -150,9 +144,6 @@ export default function Header() {
                     <BellOutlined />
                   </Button>
                 </Badge>
-                <Button className="icon-button" variant="light">
-                  <LockOutlined />
-                </Button>
 
                 <div
                   className="d-flex align-items-center gap-1 user-dropdown"
@@ -172,9 +163,9 @@ export default function Header() {
                     <PlusOutlined /> Host
                   </Button>
                 </a>
-                <Button className="business-button" variant="outline-warning">
+                {/* <Button className="business-button" variant="outline-warning">
                   For Business
-                </Button>
+                </Button> */}
               </div>
             </Offcanvas.Body>
           </Navbar.Offcanvas>
