@@ -679,3 +679,16 @@ export const removeSavedJobs = async (payload) => {
     throw error;
   }
 };
+
+// checkIsJobSaved
+
+export const checkIsJobSaved = async (payload) => {
+  try {
+    const response = await api.get("api/checkIsJobSaved", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

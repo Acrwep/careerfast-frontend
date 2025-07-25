@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
 import {
-  Tabs,
   Input,
   Button,
   Card,
@@ -15,50 +14,15 @@ import {
   SearchOutlined,
   CalendarOutlined,
   ShareAltOutlined,
-  WifiOutlined,
   EllipsisOutlined,
-  StarFilled,
-  StarOutlined,
   HeartOutlined,
   HeartFilled,
 } from "@ant-design/icons";
 import { debounce } from "lodash";
 import { CommonToaster } from "../Common/CommonToaster";
-import CommonSelectField from "../Common/CommonSelectField";
 import { getSavedJobs, removeSavedJobs } from "../ApiService/action";
 
 const { Title, Text } = Typography;
-
-const tabLabels = ["All Opportunities", "Internships", "Full-time Roles"];
-
-const statusOptions = [
-  { value: "live", label: "Live" },
-  { value: "closed", label: "Closed" },
-  { value: "upcoming", label: "Upcoming" },
-];
-
-const sortOptions = [
-  { value: "recent", label: "Most Recent" },
-  { value: "deadline", label: "Application Deadline" },
-  { value: "popular", label: "Most Popular" },
-];
-
-const getStatusTag = (status) => {
-  switch (status) {
-    case "live":
-      return (
-        <Tag color="green" icon={<WifiOutlined />}>
-          Live
-        </Tag>
-      );
-    case "closed":
-      return <Tag color="red">Closed</Tag>;
-    case "upcoming":
-      return <Tag color="orange">Upcoming</Tag>;
-    default:
-      return <Tag>{status}</Tag>;
-  }
-};
 
 const OpportunityCard = ({ opportunity, onSave }) => {
   const [saved, setSaved] = useState(() => opportunity.saved);
@@ -67,7 +31,6 @@ const OpportunityCard = ({ opportunity, onSave }) => {
   useEffect(() => {
     try {
       const stored = localStorage.getItem("loginDetails");
-      console.log("login details", stored);
       if (stored) {
         const loginDetails = JSON.parse(stored);
         setLoginUserId(loginDetails.id);
@@ -76,6 +39,14 @@ const OpportunityCard = ({ opportunity, onSave }) => {
       console.error("Invalid JSON in localStorage", error);
     }
   }, []);
+
+  const getSavedJobsData = async () => {
+    try {
+      const response = await getSavedJobs({ user_id: loginUserId });
+    } catch (error) {
+      console.error("Error fetching jobs", error);
+    }
+  };
 
   const handleSave = () => {
     if (!loginUserId) {
@@ -88,21 +59,20 @@ const OpportunityCard = ({ opportunity, onSave }) => {
     setSaved(newSavedState);
 
     CommonToaster(
-      newSavedState ? "Removed to favourites ❤️" : "Removed from favourites ❤️",
+      newSavedState ? "Removed from favourites ❤️" : "Added to favourites ❤️",
       newSavedState ? "error" : "success"
     );
 
     if (newSavedState) {
       removeSavedJobsData(opportunity);
-      getSavedJobs();
+      getSavedJobsData(opportunity);
     }
   };
 
   const removeSavedJobsData = async (opportunity) => {
-    const payload = { id: opportunity.id };
     try {
-      const response = await removeSavedJobs(payload);
-      console.log("Remove saved jobs", response);
+      await removeSavedJobs({ id: opportunity.id });
+      getSavedJobsData(opportunity);
     } catch (error) {
       console.error("Remove saved jobs error", error);
     }
@@ -129,7 +99,7 @@ const OpportunityCard = ({ opportunity, onSave }) => {
         border: "none",
       }}
     >
-      <div style={{ display: "flex", gap: 16 }}>
+      <div style={{ display: "flex", gap: 20 }}>
         <div style={{ flexShrink: 0 }}>
           <img
             src={opportunity.company_logo}
@@ -138,8 +108,7 @@ const OpportunityCard = ({ opportunity, onSave }) => {
               borderRadius: 8,
               width: 80,
               height: 80,
-              objectFit: "cover",
-              border: "1px solid #f0f0f0",
+              objectFit: "contain",
             }}
           />
         </div>
@@ -172,7 +141,7 @@ const OpportunityCard = ({ opportunity, onSave }) => {
             />
           </div>
 
-          <Text strong style={{ display: "block", marginBottom: 4 }}>
+          <Text strong style={{ display: "block", marginBottom: 8 }}>
             {opportunity.company_name}
           </Text>
 
@@ -184,21 +153,25 @@ const OpportunityCard = ({ opportunity, onSave }) => {
               flexWrap: "wrap",
             }}
           >
-            <Tag>{opportunity.type}</Tag>
-            <Tag>{opportunity.location}</Tag>
-            <Tag color="blue">{opportunity.salary}</Tag>
-            {getStatusTag(opportunity.status)}
+            <Tag color="green">{opportunity.work_location}</Tag>
+            <Tag color="blue">
+              {opportunity.salary_type === "Fixed"
+                ? `$${opportunity.min_salary}`
+                : opportunity.salary_type === "Range"
+                ? `$${opportunity.min_salary} - $${opportunity.max_salary}`
+                : ""}
+            </Tag>
           </div>
 
           <Text
             type="secondary"
             style={{ display: "flex", alignItems: "center", gap: 4 }}
           >
-            <CalendarOutlined /> Apply by {opportunity.deadline}
+            <CalendarOutlined /> Created at: {opportunity.created_date}
           </Text>
         </div>
 
-        <div
+        {/* <div
           style={{
             display: "flex",
             flexDirection: "column",
@@ -206,34 +179,29 @@ const OpportunityCard = ({ opportunity, onSave }) => {
           }}
         >
           <Dropdown overlay={menu} placement="bottomRight">
-            <Button
-              type="text"
-              icon={<EllipsisOutlined />}
-              aria-label="More actions"
-            />
+            <Button type="text" icon={<EllipsisOutlined />} />
           </Dropdown>
-        </div>
+        </div> */}
       </div>
     </Card>
   );
 };
 
 export default function WatchList() {
-  const [activeTab, setActiveTab] = useState("0");
   const [opportunities, setOpportunities] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [loginUserId, setLoginUserId] = useState(null);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("loginDetails");
-      if (stored) {
+    const stored = localStorage.getItem("loginDetails");
+    if (stored) {
+      try {
         const loginDetails = JSON.parse(stored);
         setLoginUserId(loginDetails.id);
+      } catch (error) {
+        console.error("Invalid JSON in localStorage", error);
       }
-    } catch (error) {
-      console.error("Invalid JSON in localStorage", error);
     }
   }, []);
 
@@ -271,99 +239,12 @@ export default function WatchList() {
 
   const filteredOpportunities = useMemo(() => {
     return opportunities.filter((opp) => {
-      if (activeTab === "1" && opp.type !== "Internship") return false;
-      if (activeTab === "2" && opp.type !== "Full-time") return false;
-
-      const target = `${opp.title} ${
-        opp.company || opp.company_name
+      const target = `${opp.job_title} ${
+        opp.company_name || opp.company
       }`.toLowerCase();
       return searchQuery ? target.includes(searchQuery.toLowerCase()) : true;
     });
-  }, [opportunities, searchQuery, activeTab]);
-
-  const tabItems = tabLabels.map((label, index) => ({
-    key: index.toString(),
-    label: (
-      <span style={{ padding: "0 16px" }}>
-        {label}
-        {index === 0 && (
-          <Badge
-            count={opportunities.length}
-            style={{ backgroundColor: "#5f2eea", marginLeft: 6 }}
-          />
-        )}
-      </span>
-    ),
-    children: (
-      <div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            marginBottom: 24,
-            marginTop: 15,
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <Input
-            placeholder="Search by role or company..."
-            prefix={<SearchOutlined />}
-            style={{
-              flex: "1 1 300px",
-              borderRadius: 8,
-              padding: "10px 16px",
-              maxWidth: 400,
-            }}
-            onChange={(e) => debouncedSearch(e.target.value)}
-            allowClear
-            aria-label="Search opportunities"
-          />
-
-          <CommonSelectField
-            defaultValue={["live"]}
-            name="watchlist"
-            className="custom-select"
-            options={statusOptions}
-            showSearch
-          />
-
-          <CommonSelectField
-            defaultValue={["recent"]}
-            name="watchlist"
-            className="custom-select"
-            options={sortOptions}
-            showSearch
-          />
-        </div>
-
-        <div style={{ marginTop: 16 }}>
-          {loading ? (
-            <div style={{ textAlign: "center", padding: 40 }}>
-              <Spin size="large" />
-            </div>
-          ) : filteredOpportunities.length > 0 ? (
-            filteredOpportunities.map((opp) => (
-              <OpportunityCard
-                key={opp.id}
-                opportunity={opp}
-                onSave={handleSave}
-              />
-            ))
-          ) : (
-            <Card style={{ textAlign: "center", padding: 40 }}>
-              <Title level={4} style={{ color: "#bfbfbf" }}>
-                No opportunities found
-              </Title>
-              <Text type="secondary">
-                Try adjusting your filters or search query
-              </Text>
-            </Card>
-          )}
-        </div>
-      </div>
-    ),
-  }));
+  }, [opportunities, searchQuery]);
 
   return (
     <section
@@ -386,19 +267,41 @@ export default function WatchList() {
         <Title level={3} style={{ margin: 0 }}>
           My Opportunity Watchlist
         </Title>
+        <Badge
+          count={opportunities.length}
+          style={{ backgroundColor: "#5f2eea" }}
+        />
       </div>
 
-      <Tabs
-        defaultActiveKey="0"
-        items={tabItems}
-        onChange={setActiveTab}
-        tabBarStyle={{ marginBottom: 0 }}
-        tabBarExtraContent={
-          <Text type="secondary">
-            {filteredOpportunities.length} opportunities
-          </Text>
-        }
+      <Input
+        placeholder="Search by role or company..."
+        prefix={<SearchOutlined />}
+        style={{
+          borderRadius: 8,
+          padding: "10px 16px",
+          maxWidth: 400,
+          marginBottom: 24,
+        }}
+        onChange={(e) => debouncedSearch(e.target.value)}
+        allowClear
       />
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 40 }}>
+          <Spin size="large" />
+        </div>
+      ) : filteredOpportunities.length > 0 ? (
+        filteredOpportunities.map((opp) => (
+          <OpportunityCard key={opp.id} opportunity={opp} onSave={handleSave} />
+        ))
+      ) : (
+        <Card style={{ textAlign: "center", padding: 40 }}>
+          <Title level={4} style={{ color: "#bfbfbf" }}>
+            No opportunities found
+          </Title>
+          <Text type="secondary">Try adjusting your search query</Text>
+        </Card>
+      )}
     </section>
   );
 }

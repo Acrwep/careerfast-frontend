@@ -35,6 +35,7 @@ import need_guidence1 from "../images/need_guidence1.png";
 import post_jobs from "../images/post_jobs.webp";
 import post_jobs1 from "../images/post_jobs1.png";
 import { PiCurrencyDollarDuotone } from "react-icons/pi";
+import { LockOutlined } from "@ant-design/icons";
 // header
 import Header from "../Header/Header";
 
@@ -56,57 +57,6 @@ const gradientColors = [
   "linear-gradient(to right, #1e3c72, #2a5298)", // Cool Royal Blue
   "linear-gradient(to right, #0f2027, #203a43, #2c5364)", // Deep Space
   "linear-gradient(to right, #141e30, #243b55)", // Moody Blue
-];
-
-const jobs = [
-  {
-    id: 1,
-    title: "Customer Service Representative",
-    company: "Neelam",
-    applicants: 1159,
-    salary: "₹ 2.4 LPA - 2.6 LPA",
-    logo: logo1,
-    bgColor: "linear-gradient(to right, #666600, #999966)",
-    tag: "In Office",
-    location: "Bangalore",
-    experience: "0-2 years",
-  },
-  {
-    id: 2,
-    title: "Full Stack Developer",
-    company: "VOCSO Technologies Pvt. Ltd",
-    applicants: 124,
-    salary: "₹ 3 LPA - 6 LPA",
-    logo: logo2,
-    bgColor: "linear-gradient(90deg, #0575E6 0%, #021B79 100%)",
-    tag: "In Office",
-    location: "Hyderabad",
-    experience: "1-3 years",
-  },
-  {
-    id: 3,
-    title: "Digital Marketing Associate",
-    company: "Indofit Solutions Private Limited",
-    applicants: 6,
-    salary: "₹ 2.4 LPA",
-    logo: logo3,
-    bgColor: "linear-gradient(90deg, #20002c 0%, #cbb4d4 100%)",
-    tag: "In Office",
-    location: "Delhi",
-    experience: "0-1 year",
-  },
-  {
-    id: 4,
-    title: "Telesales Executive",
-    company: "Genius Labs",
-    applicants: 89,
-    salary: "₹ 2.5 LPA - 4 LPA",
-    logo: logo4,
-    bgColor: "linear-gradient(90deg, #16222A 0%, #3A6073 100%)",
-    tag: "In Office",
-    location: "Mumbai",
-    experience: "0-1 year",
-  },
 ];
 
 const rightRole = [
@@ -326,10 +276,25 @@ const companiesSettings = {
 
 export default function JobPortalLandingPage() {
   const [backendJobs, setBackendJobs] = useState([]);
+  const [roleId, setRoleId] = useState(null);
+  const [loginUserId, setLoginUserId] = useState(null);
 
   useEffect(() => {
     document.title = "CareerFast | Job Portal";
     getJobPostsData();
+  }, []);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+        setRoleId(loginDetails.role_id);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
   }, []);
 
   const getJobPostsData = async () => {
@@ -387,24 +352,30 @@ export default function JobPortalLandingPage() {
                   </button>
                 </a>
                 <a href="post-jobs">
-                  <button className="secondary-btn">
-                    <span>Post Jobs</span>
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M12 5V19M5 12H19"
-                        stroke="#6900ad"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
+                  {roleId === 3 ? (
+                    <button className="secondary-btn">
+                      <>
+                        <span>Post Jobs</span>
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M12 5V19M5 12H19"
+                            stroke="#6900ad"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </>
+                    </button>
+                  ) : (
+                    ""
+                  )}
                 </a>
               </div>
             </div>
@@ -1112,7 +1083,9 @@ export default function JobPortalLandingPage() {
             md={24}
             xs={24}
           >
-            <div className="post_jobs_div">
+            <div
+              className={`post_jobs_glass ${roleId !== 3 ? "blur-access" : ""}`}
+            >
               <Title className="post_jobs_title">
                 Post Your{" "}
                 <span style={{ color: "#6900ad" }}>Jobs & Internships</span>
@@ -1122,7 +1095,7 @@ export default function JobPortalLandingPage() {
                 various domains. Whether you're hiring for full-time roles,
                 part-time positions, or internships.
               </Text>
-              <br></br>
+              <br />
               <Text className="post_jobs_text">
                 Tap into a diverse and dynamic talent pool of fresh graduates,
                 experienced professionals, and industry-ready interns. Post your
@@ -1131,28 +1104,54 @@ export default function JobPortalLandingPage() {
               </Text>
 
               <div className="post_jobs_btn">
-                <img src={post_jobs1}></img>
-                <a href="post-jobs">
-                  <button className="primary-btn">
-                    <span>Post Jobs Now</span>
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M5 12H19M19 12L12 5M19 12L12 19"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                <img src={post_jobs1} alt="icon" />
+                {roleId === 3 ? (
+                  <a href="post-jobs">
+                    <button className="primary-btn">
+                      <span>Post Jobs Now</span>
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M5 12H19M19 12L12 5M19 12L12 19"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </a>
+                ) : (
+                  <button className="primary-btn" disabled>
+                    <span>You cannot access</span>
                   </button>
-                </a>
+                )}
               </div>
+              {roleId !== 3 && (
+                <div className="access-restricted-overlay">
+                  <div className="access-restricted-content">
+                    <LockOutlined
+                      style={{
+                        fontSize: "32px",
+                        color: "#fff",
+                        marginBottom: "16px",
+                      }}
+                    />
+                    <h3 style={{ color: "#fff", marginBottom: "8px" }}>
+                      Access Restricted
+                    </h3>
+                    <p style={{ color: "#fff", textAlign: "center" }}>
+                      This feature is only available for employers. Please
+                      contact support if you believe this is an error.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </Col>
 
@@ -1163,12 +1162,18 @@ export default function JobPortalLandingPage() {
             md={24}
             xs={24}
           >
-            <div className="post_jobs_div1">
-              <img src={post_jobs}></img>
+            <div
+              className={`post_jobs_div1 ${roleId !== 3 ? "blur-access" : ""}`}
+            >
+              <img src={post_jobs} alt="Post Job Illustration" />
+              {roleId !== 3 && (
+                <div className="access-restricted-overlay"></div>
+              )}
             </div>
           </Col>
         </Row>
       </div>
+
       {/*  */}
     </div>
   );

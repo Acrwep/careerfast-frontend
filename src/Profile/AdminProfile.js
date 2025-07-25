@@ -25,26 +25,6 @@ import { getUserProfile } from "../ApiService/action";
 
 const { Header, Sider, Content } = Layout;
 
-const menuItems = [
-  { key: "mainprofile", icon: <FaUserPen />, label: "Your profile" },
-  { key: "watchlist", icon: <FaRegHeart />, label: "Watchlist" },
-  // { key: "bookmarked", icon: <FaRegBookmark />, label: "Bookmarked Jobs" },
-  // { key: "viewed", icon: <ClockCircleOutlined />, label: "Recently Viewed" },
-  // {
-  //   key: "certificates",
-  //   icon: <SafetyCertificateOutlined />,
-  //   label: "Certificates",
-  // },
-  { key: "settings", icon: <SettingOutlined />, label: "Settings" },
-  { key: "listing", icon: <FaListOl />, label: "Manage Listing" },
-  {
-    key: "accountsettings",
-    icon: <SettingOutlined />,
-    label: "Account Settings",
-  },
-  { key: "prosubscription", icon: <FcApproval />, label: "Pro Subscription" },
-];
-
 const siderStyle = {
   overflow: "auto",
   height: "100vh",
@@ -65,8 +45,23 @@ export default function UserProfile() {
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
   const [email, setEmail] = useState("");
-
   const [isLoading, setIsLoading] = useState(true);
+  const [roleId, setRoleId] = useState(null);
+
+  const menuItems = [
+    { key: "mainprofile", icon: <FaUserPen />, label: "Your profile" },
+    { key: "watchlist", icon: <FaRegHeart />, label: "Watchlist" },
+    { key: "settings", icon: <SettingOutlined />, label: "Settings" },
+    ...(roleId === 3
+      ? [{ key: "listing", icon: <FaListOl />, label: "Manage Listing" }]
+      : []),
+    {
+      key: "accountsettings",
+      icon: <SettingOutlined />,
+      label: "Account Settings",
+    },
+    { key: "prosubscription", icon: <FcApproval />, label: "Pro Subscription" },
+  ];
 
   // Simulate data loading
   useEffect(() => {
@@ -80,6 +75,7 @@ export default function UserProfile() {
       if (stored) {
         const loginDetails = JSON.parse(stored);
         setLoginUserId(loginDetails.id);
+        setRoleId(loginDetails.role_id);
       }
       console.log("stored", stored);
     } catch (error) {

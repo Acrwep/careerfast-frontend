@@ -54,6 +54,7 @@ import {
   genderValidator,
 } from "../Common/Validation";
 import {
+  getCourses,
   getGenderData,
   getUserTypeData,
   insertProfileData,
@@ -110,10 +111,12 @@ const ProfileDetails = () => {
   const [userTypeError, setUserTypeError] = useState("");
   const [course, setCourse] = useState(null);
   const [courseError, setCourseError] = useState("");
+  const [courseOptions, setCourseOptions] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [fresherCourse, setFresherCourse] = useState("");
   const [fresherCourseError, setFresherCourseError] = useState("");
+  const [fresherCourseOptions, setFresherCourseOptions] = useState([]);
   const [fresherStartDate, setFresherStartDate] = useState("");
   const [fresherStartDateError, setFresherStartDateError] = useState("");
   const [fresherEndtDate, setFresherEndDate] = useState("");
@@ -299,6 +302,20 @@ const ProfileDetails = () => {
       console.log("gender", response);
     } catch (error) {
       console.log("gender error", error);
+    } finally {
+      setTimeout(() => {
+        getCourseData();
+      }, 300);
+    }
+  };
+
+  const getCourseData = async () => {
+    try {
+      const response = await getCourses();
+      setCourseOptions(response?.data?.data || []);
+      setFresherCourse(response?.data?.data || []);
+    } catch (error) {
+      console.log("getCourses", error);
     }
   };
 
@@ -611,12 +628,14 @@ const ProfileDetails = () => {
           : "",
       is_email_verified: "verified",
       ...(userType === 1 && {
-        course: course,
+        course: courseOptions.find((item) => item.id === course)?.name || "",
         start_year: startDate,
         end_year: endDate,
       }),
       ...(userType === 4 && {
-        course: fresherCourse,
+        course:
+          FresherYearOptions.find((item) => item.id === fresherCourse)?.name ||
+          "",
         start_year: fresherStartDate,
         end_year: fresherEndtDate,
       }),
@@ -958,10 +977,8 @@ const ProfileDetails = () => {
                         mandatory={true}
                         placeholder="Select Course"
                         showSearch={true}
-                        options={[
-                          { value: "MBA", label: "MBA" },
-                          { value: "BSC", label: "BSC" },
-                        ]}
+                        value={course}
+                        options={courseOptions}
                         onChange={(value) => {
                           setCourse(value);
                           setCourseError(selectValidator(value));
@@ -1024,10 +1041,8 @@ const ProfileDetails = () => {
                         mandatory={true}
                         placeholder="Select Course"
                         showSearch={true}
-                        options={[
-                          { value: "MBA", label: "MBA" },
-                          { value: "BSC", label: "BSC" },
-                        ]}
+                        value={fresherCourse}
+                        options={fresherCourseOptions}
                         onChange={(value) => {
                           setFresherCourse(value);
                           setFresherCourseError(selectValidator(value));

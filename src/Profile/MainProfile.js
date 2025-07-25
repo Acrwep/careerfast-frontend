@@ -223,6 +223,7 @@ export default function MainProfile() {
   const [userTypeName, setUserTypeName] = useState([]);
   const [userTypeError, setUserTypeError] = useState("");
   const [course, setCourse] = useState(null);
+  const [courseOptions, setCourseOptions] = useState([]);
   const [courseError, setCourseError] = useState("");
   const [location, setLocation] = useState("");
   const [locationError, setLocationError] = useState("");
@@ -232,6 +233,7 @@ export default function MainProfile() {
   const [endDateError, setEndDateError] = useState("");
   const [fresherCourse, setFresherCourse] = useState("");
   const [fresherCourseError, setFresherCourseError] = useState("");
+  const [fresherCourseOptions, setFresherCourseOptions] = useState([]);
   const [fresherStartDate, setFresherStartDate] = useState("");
   const [fresherStartDateError, setFresherStartDateError] = useState("");
   const [fresherEndtDate, setFresherEndDate] = useState("");
@@ -271,7 +273,6 @@ export default function MainProfile() {
   const [employmentTypeError, setEmploymentTypeError] = useState("");
   const [workExpStartDateError, setWorkExpStartDateError] = useState("");
   const [workExpEndDateError, setWorkExpEndDateError] = useState("");
-  const [workExpLocation, setWorkExpLocation] = useState("");
   const [workExpLocationError, setWorkExpLocationError] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
 
@@ -309,7 +310,9 @@ export default function MainProfile() {
   const [educationData, setEducationData] = useState(null);
   const [projectData, setProjectData] = useState(null);
   const [aboutData, setAboutData] = useState(null);
-  const [skillData, setSkillData] = useState(null);
+  const [isResume, setIsResume] = useState("");
+  const [isSkills, setIsSkills] = useState([]);
+  const [isWorkExp, setIsWorkExp] = useState("");
   const [companies, setCompanies] = useState([
     {
       id: Date.now(),
@@ -362,6 +365,8 @@ export default function MainProfile() {
     try {
       const response = await getCourses();
       setEducationCourseOptions(response?.data?.data || []);
+      setCourseOptions(response?.data?.data || []);
+      setFresherCourseOptions(response?.data?.data || []);
     } catch (error) {
       console.log("getCourseData error", error);
     } finally {
@@ -457,6 +462,9 @@ export default function MainProfile() {
     try {
       const response = await getUserProfile(payload);
       console.log("fetchedProfile", response);
+      setIsResume(response?.data?.data?.resume || "");
+      setIsSkills(response?.data?.data?.skills || []);
+      setIsWorkExp(response?.data?.data?.experince_type || []);
 
       if (response?.data?.data) {
         const profile = response.data.data;
@@ -665,12 +673,14 @@ export default function MainProfile() {
       gender: gender,
       user_type: userType,
       ...(userType === "College Student" && {
-        course: course,
+        course: courseOptions.find((item) => item.id === course)?.name || "",
         start_year: startDate,
         end_year: endDate,
       }),
       ...(userType === "Fresher" && {
-        course: fresherCourse,
+        course: fresherCourseOptions.find(
+          (item) => item.id === fresherCourse?.name || ""
+        ),
         start_year: fresherStartDate,
         end_year: fresherEndtDate,
       }),
@@ -1785,11 +1795,9 @@ export default function MainProfile() {
                     name="course"
                     mandatory={true}
                     placeholder="Select Course"
+                    value={course}
                     showSearch={true}
-                    options={[
-                      { value: "MBA", label: "MBA" },
-                      { value: "BSC", label: "BSC" },
-                    ]}
+                    options={courseOptions}
                     onChange={(value) => {
                       setCourse(value);
                       setCourseError(selectValidator(value));
@@ -1868,10 +1876,8 @@ export default function MainProfile() {
                     mandatory={true}
                     placeholder="Select Course"
                     showSearch={true}
-                    options={[
-                      { value: "MBA", label: "MBA" },
-                      { value: "BSC", label: "BSC" },
-                    ]}
+                    value={fresherCourse}
+                    options={fresherCourseOptions}
                     onChange={(value) => {
                       setFresherCourse(value);
                       setFresherCourseError(selectValidator(value));
@@ -3765,30 +3771,6 @@ export default function MainProfile() {
                 Adding your Resume helps you to tell who you are and what makes
                 you different — to employers and recruiters.
               </p>
-              {/* <label
-                className="resume_upload"
-                htmlFor="upload-input"
-                style={{ cursor: "pointer" }}
-              >
-                Click me
-                <input
-                  id="upload-input"
-                  type="file"
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  onChange={handleFileChange}
-                />
-              </label> */}
-
-              {/* <Button type="primary" className="upload-resume-btn">
-                Upload Resume
-              </Button>
-
-              {fileName && (
-                <div style={{ marginTop: "15px", fontWeight: "bold" }}>
-                  Selected File: {fileName}
-                </div>
-              )} */}
             </Card>
           </Card>
 
@@ -3851,17 +3833,50 @@ export default function MainProfile() {
                   Adding your Resume helps you to tell who you are and what
                   makes you different to employers and recruiters.
                 </p>
-                <Button
-                  onClick={() => {
-                    setActiveTab("resume");
-                    showDrawer();
-                  }}
-                  style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                  type="link"
-                >
-                  <PlusOutlined />
-                  Add Resume
-                </Button>
+                {!isResume && (
+                  <Button
+                    onClick={() => {
+                      setActiveTab("resume");
+                      showDrawer();
+                    }}
+                    style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
+                    type="link"
+                  >
+                    <PlusOutlined />
+                    Add Resume
+                  </Button>
+                )}
+
+                {isResume && (
+                  <>
+                    {/* <div style={{ marginTop: 10 }}>
+                      <a
+                        href={isResume}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontWeight: "500", color: "#000" }}
+                      >
+                        {isResume.split("/").pop()}{" "}
+                      </a>
+                    </div> */}
+
+                    <Button
+                      onClick={() => {
+                        setActiveTab("resume");
+                        showDrawer();
+                      }}
+                      style={{
+                        color: "#5f2eea",
+                        paddingLeft: 0,
+                        paddingTop: 10,
+                      }}
+                      type="link"
+                    >
+                      <PlusOutlined />
+                      Replace Resume
+                    </Button>
+                  </>
+                )}
               </div>
               <div>
                 <img src={profile1}></img>
@@ -3881,17 +3896,54 @@ export default function MainProfile() {
                   Craft an engaging story in your bio and make meaningful
                   connections with peers and recruiters alike!
                 </p>
-                <Button
-                  onClick={() => {
-                    setActiveTab("skills");
-                    showDrawer();
-                  }}
-                  style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                  type="link"
-                >
-                  <PlusOutlined />
-                  Add Skills
-                </Button>
+                {isSkills && (
+                  <>
+                    <Tag
+                      style={{
+                        color: "#5f2eead4",
+                        background: "rgba(120, 51, 255, 0.1)",
+                        border: "1px solid rgba(120, 51, 255, 0.2)",
+                        fontSize: 12,
+                        fontWeight: "600",
+                        padding: "5px 10px",
+                        marginTop: 10,
+                      }}
+                    >
+                      {isSkills}
+                    </Tag>
+                    <br />
+
+                    <Button
+                      onClick={() => {
+                        setActiveTab("skills");
+                        showDrawer();
+                      }}
+                      style={{
+                        color: "#5f2eea",
+                        paddingLeft: 0,
+                        paddingTop: 10,
+                      }}
+                      type="link"
+                    >
+                      <PlusOutlined />
+                      Update Skills
+                    </Button>
+                  </>
+                )}
+
+                {!isSkills && (
+                  <Button
+                    onClick={() => {
+                      setActiveTab("skills");
+                      showDrawer();
+                    }}
+                    style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
+                    type="link"
+                  >
+                    <PlusOutlined />
+                    Add Skills
+                  </Button>
+                )}
               </div>
               <div>
                 <img src={profile1}></img>
@@ -3901,10 +3953,8 @@ export default function MainProfile() {
           </div>
         </div>
 
-        {/* Profile Sections */}
+        {/* workexperience Sections */}
         <div style={{ marginTop: 25 }} className="profile-sections">
-          {/* Skills Section */}
-
           <div className="profile-section-card userprofile_cards">
             <div className="skills_card">
               <div style={{ textAlign: "left" }}>
@@ -3913,6 +3963,118 @@ export default function MainProfile() {
                   Narrate your professional journey and fast-track your way to
                   new career heights!
                 </p>
+                {/* {isWorkExp && (
+                  <>
+                    {isWorkExp === "Fresher" ? (
+                      <p>Fresher</p>
+                    ) : (
+                      <table
+                        style={{
+                          width: "100%",
+                          borderCollapse: "collapse",
+                          marginTop: 10,
+                        }}
+                      >
+                        <thead>
+                          <tr
+                            style={{
+                              backgroundColor: "#f0f0f0",
+                              textAlign: "left",
+                            }}
+                          >
+                            <th
+                              style={{
+                                padding: "8px",
+                                border: "1px solid #ddd",
+                              }}
+                            >
+                              Years
+                            </th>
+                            <th
+                              style={{
+                                padding: "8px",
+                                border: "1px solid #ddd",
+                              }}
+                            >
+                              Months
+                            </th>
+                            <th
+                              style={{
+                                padding: "8px",
+                                border: "1px solid #ddd",
+                              }}
+                            >
+                              Start Date
+                            </th>
+                            <th
+                              style={{
+                                padding: "8px",
+                                border: "1px solid #ddd",
+                              }}
+                            >
+                              End Date
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Array.isArray(isWorkExp) &&
+                            isWorkExp.map((exp, index) => (
+                              <tr key={index}>
+                                <td
+                                  style={{
+                                    padding: "8px",
+                                    border: "1px solid #ddd",
+                                  }}
+                                >
+                                  {exp.years}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "8px",
+                                    border: "1px solid #ddd",
+                                  }}
+                                >
+                                  {exp.months}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "8px",
+                                    border: "1px solid #ddd",
+                                  }}
+                                >
+                                  {exp.startDate}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "8px",
+                                    border: "1px solid #ddd",
+                                  }}
+                                >
+                                  {exp.endDate}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    )}
+
+                    <Button
+                      onClick={() => {
+                        setActiveTab("experience");
+                        showDrawer();
+                      }}
+                      style={{
+                        color: "#5f2eea",
+                        paddingLeft: 0,
+                        paddingTop: 10,
+                      }}
+                      type="link"
+                    >
+                      <PlusOutlined />
+                      Add Work Experience
+                    </Button>
+                  </>
+                )} */}
                 <Button
                   onClick={() => {
                     setActiveTab("experience");
@@ -3924,6 +4086,19 @@ export default function MainProfile() {
                   <PlusOutlined />
                   Add Work Experience
                 </Button>
+                {/* {!isWorkExp && (
+                  <Button
+                    onClick={() => {
+                      setActiveTab("experience");
+                      showDrawer();
+                    }}
+                    style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
+                    type="link"
+                  >
+                    <PlusOutlined />
+                    Add Work Experience
+                  </Button>
+                )} */}
               </div>
               <div>
                 <img src={profile2}></img>

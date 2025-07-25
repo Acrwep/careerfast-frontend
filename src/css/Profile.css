@@ -81,6 +81,41 @@
   font-weight: 500;
 }
 
+/* Blur effect for restricted access */
+.blur-access {
+  filter: blur(0.7px);
+  position: relative;
+  cursor: no-drop;
+}
+
+.access-restricted-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+}
+
+.access-restricted-content {
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 80%;
+  text-align: center;
+}
+
+.post_jobs_glass {
+  position: relative;
+}
+
+.post_jobs_div1 {
+  position: relative;
+}
+
 /* Main Content Styles */
 .profile-content-layout {
   transition: all 0.2s;
