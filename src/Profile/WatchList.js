@@ -1,34 +1,33 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Tabs,
   Input,
   Button,
   Card,
   Tag,
-  Space,
   Typography,
   Dropdown,
   Menu,
   Badge,
-  Select,
+  Spin,
 } from "antd";
 import {
   SearchOutlined,
   CalendarOutlined,
-  HeartFilled,
   ShareAltOutlined,
   WifiOutlined,
   EllipsisOutlined,
-  FilterOutlined,
   StarFilled,
   StarOutlined,
-  DownOutlined,
+  HeartOutlined,
+  HeartFilled,
 } from "@ant-design/icons";
+import { debounce } from "lodash";
 import { CommonToaster } from "../Common/CommonToaster";
 import CommonSelectField from "../Common/CommonSelectField";
+import { getSavedJobs, removeSavedJobs } from "../ApiService/action";
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 const tabLabels = ["All Opportunities", "Internships", "Full-time Roles"];
 
@@ -42,45 +41,6 @@ const sortOptions = [
   { value: "recent", label: "Most Recent" },
   { value: "deadline", label: "Application Deadline" },
   { value: "popular", label: "Most Popular" },
-];
-
-const mockOpportunities = [
-  {
-    id: 1,
-    title: "Data Engineer",
-    company: "Komodo Health",
-    type: "Full-time",
-    location: "San Francisco, CA (Hybrid)",
-    salary: "$120,000 - $150,000",
-    deadline: "2023-11-15",
-    status: "live",
-    saved: true,
-    logo: "https://via.placeholder.com/80/4a90e2/ffffff?text=KH",
-  },
-  {
-    id: 2,
-    title: "Product Design Intern",
-    company: "Figma",
-    type: "Internship",
-    location: "Remote",
-    salary: "$45/hr",
-    deadline: "2023-10-30",
-    status: "live",
-    saved: false,
-    logo: "https://via.placeholder.com/80/ff7262/ffffff?text=FIG",
-  },
-  {
-    id: 3,
-    title: "Machine Learning Researcher",
-    company: "OpenAI",
-    type: "Full-time",
-    location: "San Francisco, CA",
-    salary: "$180,000 - $220,000",
-    deadline: "2023-11-05",
-    status: "upcoming",
-    saved: true,
-    logo: "https://via.placeholder.com/80/10a37f/ffffff?text=AI",
-  },
 ];
 
 const getStatusTag = (status) => {
@@ -101,16 +61,51 @@ const getStatusTag = (status) => {
 };
 
 const OpportunityCard = ({ opportunity, onSave }) => {
-  const [saved, setSaved] = useState(opportunity.saved);
+  const [saved, setSaved] = useState(() => opportunity.saved);
+  const [loginUserId, setLoginUserId] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      console.log("login details", stored);
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, []);
 
   const handleSave = () => {
-    setSaved(!saved);
-    if (saved === false) {
-      CommonToaster("Added to favourites ⭐", "success");
-    } else {
-      CommonToaster("Removed from favourites ☆", "error");
+    if (!loginUserId) {
+      CommonToaster("Please log in to save jobs.", "error");
+      return;
     }
-    onSave(opportunity.id, !saved);
+
+    const newSavedState = !saved;
+    onSave(opportunity.id, newSavedState);
+    setSaved(newSavedState);
+
+    CommonToaster(
+      newSavedState ? "Removed to favourites ❤️" : "Removed from favourites ❤️",
+      newSavedState ? "error" : "success"
+    );
+
+    if (newSavedState) {
+      removeSavedJobsData(opportunity);
+      getSavedJobs();
+    }
+  };
+
+  const removeSavedJobsData = async (opportunity) => {
+    const payload = { id: opportunity.id };
+    try {
+      const response = await removeSavedJobs(payload);
+      console.log("Remove saved jobs", response);
+    } catch (error) {
+      console.error("Remove saved jobs error", error);
+    }
   };
 
   const menu = (
@@ -137,8 +132,8 @@ const OpportunityCard = ({ opportunity, onSave }) => {
       <div style={{ display: "flex", gap: 16 }}>
         <div style={{ flexShrink: 0 }}>
           <img
-            src={opportunity.logo}
-            alt={opportunity.company}
+            src={opportunity.company_logo}
+            alt={`${opportunity.company_name || opportunity.company} logo`}
             style={{
               borderRadius: 8,
               width: 80,
@@ -154,30 +149,31 @@ const OpportunityCard = ({ opportunity, onSave }) => {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              marginBottom: 8,
+              alignItems: "center",
+              marginBottom: 0,
             }}
           >
             <Title level={5} style={{ margin: 0 }}>
-              {opportunity.title}
+              {opportunity.job_title}
             </Title>
+
             <Button
               type="text"
+              style={saved ? {} : { background: "rgba(255, 0, 0, 0.1)" }}
               icon={
                 saved ? (
-                  <StarFilled style={{ color: "#faad14" }} />
+                  <HeartOutlined style={{ color: "red" }} />
                 ) : (
-                  <StarOutlined />
+                  <HeartFilled style={{ color: "red" }} />
                 )
               }
               onClick={handleSave}
+              aria-label="Toggle favourite"
             />
           </div>
 
-          <Text
-            strong
-            style={{ display: "block", marginBottom: 4, textAlign: "left" }}
-          >
-            {opportunity.company}
+          <Text strong style={{ display: "block", marginBottom: 4 }}>
+            {opportunity.company_name}
           </Text>
 
           <div
@@ -210,15 +206,12 @@ const OpportunityCard = ({ opportunity, onSave }) => {
           }}
         >
           <Dropdown overlay={menu} placement="bottomRight">
-            <Button type="text" icon={<EllipsisOutlined />} />
+            <Button
+              type="text"
+              icon={<EllipsisOutlined />}
+              aria-label="More actions"
+            />
           </Dropdown>
-          <Button
-            type="primary"
-            size="large"
-            style={{ borderRadius: 8, background: "rgb(95, 46, 234)" }}
-          >
-            View Details
-          </Button>
         </div>
       </div>
     </Card>
@@ -227,43 +220,76 @@ const OpportunityCard = ({ opportunity, onSave }) => {
 
 export default function WatchList() {
   const [activeTab, setActiveTab] = useState("0");
-  const [opportunities, setOpportunities] = useState(mockOpportunities);
+  const [opportunities, setOpportunities] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [wishlisted, setWishlisted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loginUserId, setLoginUserId] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (loginUserId) {
+      getSavedJobsData();
+    }
+  }, [loginUserId]);
+
+  const getSavedJobsData = async () => {
+    setLoading(true);
+    try {
+      const response = await getSavedJobs({ user_id: loginUserId });
+      setOpportunities(response?.data?.data || []);
+    } catch (error) {
+      console.error("Error fetching jobs", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = (id, saved) => {
-    setOpportunities(
-      opportunities.map((opp) => (opp.id === id ? { ...opp, saved } : opp))
+    setOpportunities((prev) =>
+      prev.map((opp) => (opp.id === id ? { ...opp, saved } : opp))
     );
   };
 
-  const filteredOpportunities = opportunities.filter((opp) => {
-    // Filter by tab
-    if (activeTab === "1" && opp.type !== "Internship") return false;
-    if (activeTab === "2" && opp.type !== "Full-time") return false;
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((value) => {
+        setSearchQuery(value);
+      }, 300),
+    []
+  );
 
-    // Filter by search
-    if (
-      searchQuery &&
-      !`${opp.title} ${opp.company}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
-    ) {
-      return false;
-    }
+  const filteredOpportunities = useMemo(() => {
+    return opportunities.filter((opp) => {
+      if (activeTab === "1" && opp.type !== "Internship") return false;
+      if (activeTab === "2" && opp.type !== "Full-time") return false;
 
-    return true;
-  });
+      const target = `${opp.title} ${
+        opp.company || opp.company_name
+      }`.toLowerCase();
+      return searchQuery ? target.includes(searchQuery.toLowerCase()) : true;
+    });
+  }, [opportunities, searchQuery, activeTab]);
 
   const tabItems = tabLabels.map((label, index) => ({
     key: index.toString(),
     label: (
       <span style={{ padding: "0 16px" }}>
-        {label}{" "}
+        {label}
         {index === 0 && (
           <Badge
             count={opportunities.length}
-            style={{ backgroundColor: "#5f2eea" }}
+            style={{ backgroundColor: "#5f2eea", marginLeft: 6 }}
           />
         )}
       </span>
@@ -289,8 +315,9 @@ export default function WatchList() {
               padding: "10px 16px",
               maxWidth: 400,
             }}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => debouncedSearch(e.target.value)}
+            allowClear
+            aria-label="Search opportunities"
           />
 
           <CommonSelectField
@@ -298,7 +325,7 @@ export default function WatchList() {
             name="watchlist"
             className="custom-select"
             options={statusOptions}
-            showSearch={true}
+            showSearch
           />
 
           <CommonSelectField
@@ -306,12 +333,16 @@ export default function WatchList() {
             name="watchlist"
             className="custom-select"
             options={sortOptions}
-            showSearch={true}
+            showSearch
           />
         </div>
 
         <div style={{ marginTop: 16 }}>
-          {filteredOpportunities.length > 0 ? (
+          {loading ? (
+            <div style={{ textAlign: "center", padding: 40 }}>
+              <Spin size="large" />
+            </div>
+          ) : filteredOpportunities.length > 0 ? (
             filteredOpportunities.map((opp) => (
               <OpportunityCard
                 key={opp.id}

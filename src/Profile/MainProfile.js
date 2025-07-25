@@ -107,6 +107,7 @@ import {
   userTypeValidator,
 } from "../Common/Validation";
 import CommonDatePicker from "../Common/CommonDatePicker";
+import Header from "../Header/Header";
 import {
   deleteEducation,
   deleteExperience,
@@ -139,7 +140,7 @@ const { Dragger } = Upload;
 const currentStreak = 2;
 const maxStreak = 3;
 
-const { Header, Sider, Content } = Layout;
+const { Sider, Content } = Layout;
 const { Meta } = Card;
 
 const items = [
@@ -3613,7 +3614,8 @@ export default function MainProfile() {
   //////////////////////////////////////////////////
   return (
     <>
-      <Header className="profile-banner">
+      <Header />
+      <div className="profile-banner">
         <div className="banner-content">
           <Tooltip title="Edit Background">
             <Button
@@ -3624,7 +3626,7 @@ export default function MainProfile() {
             />
           </Tooltip>
         </div>
-      </Header>
+      </div>
 
       <Content className="profile-main-content">
         {/* Profile Header Card */}

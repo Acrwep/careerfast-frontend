@@ -642,3 +642,40 @@ export const isProfileUpdated = async (payload) => {
     throw error;
   }
 };
+
+// saveJobPost
+
+export const saveJobPost = async (payload) => {
+  try {
+    const response = await api.post("api/saveJobPost", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getSavedJobs
+
+export const getSavedJobs = async (payload) => {
+  try {
+    const response = await api.get("api/getSavedJobs", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// removeSavedJobs
+
+export const removeSavedJobs = async (payload) => {
+  try {
+    const response = await api.delete("/api/removeSavedJobs", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

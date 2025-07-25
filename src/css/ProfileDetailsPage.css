@@ -454,8 +454,8 @@ body {
 }
 
 .ant-avatar > img {
-  width: 100px;
-  height: 100px;
+  width: inherit;
+  height: auto;
   object-fit: cover;
   cursor: pointer;
 }

@@ -28,13 +28,13 @@ const { Header, Sider, Content } = Layout;
 const menuItems = [
   { key: "mainprofile", icon: <FaUserPen />, label: "Your profile" },
   { key: "watchlist", icon: <FaRegHeart />, label: "Watchlist" },
-  { key: "bookmarked", icon: <FaRegBookmark />, label: "Bookmarked Jobs" },
-  { key: "viewed", icon: <ClockCircleOutlined />, label: "Recently Viewed" },
-  {
-    key: "certificates",
-    icon: <SafetyCertificateOutlined />,
-    label: "Certificates",
-  },
+  // { key: "bookmarked", icon: <FaRegBookmark />, label: "Bookmarked Jobs" },
+  // { key: "viewed", icon: <ClockCircleOutlined />, label: "Recently Viewed" },
+  // {
+  //   key: "certificates",
+  //   icon: <SafetyCertificateOutlined />,
+  //   label: "Certificates",
+  // },
   { key: "settings", icon: <SettingOutlined />, label: "Settings" },
   { key: "listing", icon: <FaListOl />, label: "Manage Listing" },
   {

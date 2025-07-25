@@ -216,7 +216,7 @@ export default function Header() {
                   />
                 </div>
 
-                {roleId === 3 ? (
+                {roleId === 2 ? (
                   <Tooltip title="You don't have permission to post jobs">
                     <span>
                       <Button href="post-jobs" className="host-button" disabled>
