@@ -13,15 +13,13 @@ import {
   Drawer,
   Upload,
   Typography,
-  Input,
   Form,
-  Select,
   Row,
   Col,
-  DatePicker,
   message,
   Checkbox,
   Popconfirm,
+  Empty,
 } from "antd";
 import {
   StarOutlined,
@@ -32,9 +30,9 @@ import {
   PlusOutlined,
   UploadOutlined,
   DeleteOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import { IoIosMale } from "react-icons/io";
-import { IoMdAdd } from "react-icons/io";
 import { IoFemaleOutline } from "react-icons/io5";
 import { LuGraduationCap } from "react-icons/lu";
 import { GiOfficeChair } from "react-icons/gi";
@@ -44,13 +42,7 @@ import { FiEdit } from "react-icons/fi";
 
 import "../css/Profile.css";
 import { FaFacebookF } from "react-icons/fa";
-import {
-  FiBriefcase,
-  FiCalendar,
-  FiArrowRight,
-  FiPlusCircle,
-} from "react-icons/fi";
-import { BsThreads } from "react-icons/bs";
+import { FiBriefcase, FiCalendar, FiPlusCircle } from "react-icons/fi";
 import { FaInstagram } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import { FaBehance } from "react-icons/fa";
@@ -64,19 +56,12 @@ import { HiMiniXMark } from "react-icons/hi2";
 import { MdEdit } from "react-icons/md";
 import { IoLocationSharp } from "react-icons/io5";
 
-import { FaFigma } from "react-icons/fa6";
-import { IoMdLink } from "react-icons/io";
 import { LiaSchoolSolid } from "react-icons/lia";
 import { MdFileDownloadDone } from "react-icons/md";
-import profile1 from "../images/profile1.webp";
-import profile2 from "../images/profile2.webp";
-import profile3 from "../images/profile3.webp";
-import profile6 from "../images/profile6.webp";
-import profile7 from "../images/profile7.webp";
 
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
-import { addDays, subDays, format, parseISO, setDate } from "date-fns";
+import { addDays, subDays, format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
@@ -127,6 +112,7 @@ import {
   updateBasicDetails,
   updateEducation,
   updateExperience,
+  updateProfileImage,
   updateProject,
   updateResume,
   updateSkills,
@@ -150,9 +136,7 @@ const items = [
   { key: "skills", label: "Skills" },
   { key: "education", label: "Education" },
   { key: "experience", label: "Work Experience" },
-  // { key: "certification", label: "Certifications" },
   { key: "projects", label: "Projects" },
-  // { key: "personalDetails", label: "Personal Details" },
   { key: "sociallinks", label: "Social Links" },
 ];
 
@@ -239,6 +223,7 @@ export default function MainProfile() {
   const [fresherEndtDate, setFresherEndDate] = useState("");
   const [fresherEndDateError, setFresherEndDateError] = useState("");
   const [loginUserId, setLoginUserId] = useState(null);
+  const [roleId, setRoleId] = useState(null);
   const [organizationName, setOrganisationName] = useState("");
   const [organizationNameType, setOrganizationType] = useState("");
   const [resumeError, setResumeError] = useState("");
@@ -291,6 +276,8 @@ export default function MainProfile() {
     useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [jobTitleError, setJobTitleError] = useState("");
+  const [editingCompanyId, setEditingCompanyId] = useState(null);
+
   //
   const [companyName, setCompanyName] = useState("");
   const [companyNameError, setCompanyNameError] = useState("");
@@ -313,15 +300,26 @@ export default function MainProfile() {
   const [isResume, setIsResume] = useState("");
   const [isSkills, setIsSkills] = useState([]);
   const [isWorkExp, setIsWorkExp] = useState("");
+  const [isAbout, setIsAbout] = useState("");
+  const [isEducation, setIsEducation] = useState([]);
+  const [isProjects, setIsProjects] = useState([]);
+  const [isSocialLinks, setIsSocialLinks] = useState({});
+  const [expanded, setExpanded] = useState(false);
   const [companies, setCompanies] = useState([
     {
       id: Date.now(),
+      isNew: true,
       jobTitle: "",
       workingCompanyName: "",
       designation: "",
       workingStartDate: "",
       workingEndDate: "",
       currentlyWorking: false,
+      jobTitleError: "",
+      workingCompanyNameError: "",
+      designationError: "",
+      workingStartDateError: "",
+      workingEndDateError: "",
     },
   ]);
 
@@ -337,8 +335,24 @@ export default function MainProfile() {
     console.log("loginUserId updated", loginUserId);
     if (loginUserId) {
       getUserProfileData();
+      updateProfileImageData();
     }
   }, [loginUserId]);
+
+  // UPDATE PROFILE IMAGE
+  const updateProfileImageData = async () => {
+    const payload = {
+      user_id: loginUserId,
+      profile_image: avatarUrl,
+    };
+    try {
+      const response = await updateProfileImage(payload);
+      console.log("profile updated", response);
+      getUserProfileData();
+    } catch (error) {
+      console.log("did not update", error);
+    }
+  };
 
   // QUALIFICATION
   useEffect(() => {
@@ -465,6 +479,23 @@ export default function MainProfile() {
       setIsResume(response?.data?.data?.resume || "");
       setIsSkills(response?.data?.data?.skills || []);
       setIsWorkExp(response?.data?.data?.experince_type || []);
+      setIsAbout(response?.data?.data?.about || "");
+      setIsEducation(response?.data?.data?.education || []);
+      setIsProjects(response?.data?.data?.projects || []);
+      const fetchedLinks = response?.data?.data?.social_links || {};
+      setSocialLinks({
+        Linkedin: fetchedLinks.linkedin || "",
+        Facebook: fetchedLinks.facebook || "",
+        Instagram: fetchedLinks.instagram || "",
+        Twitter: fetchedLinks.twitter || "",
+        Dribbble: fetchedLinks.dribble || "",
+        Behance: fetchedLinks.behance || "",
+      });
+      setIsSocialLinks(fetchedLinks);
+
+      const fetchSkills = response?.data?.data?.skills || [];
+      setSelectedSkills(Array.isArray(fetchSkills) ? fetchSkills : []);
+      setIsSkills(fetchSkills);
 
       if (response?.data?.data) {
         const profile = response.data.data;
@@ -498,13 +529,6 @@ export default function MainProfile() {
           setAboutData(null);
         }
 
-        // if (profile.skills) {
-        //   setSkillData(profile.skills);
-        //   setSelectedSkills(
-        //     Array.isArray(profile.skills) ? profile.skills : []
-        //   );
-        // }
-
         // Handle projects
         if (profile.projects && profile.projects.length > 0) {
           const proj = profile.projects[0];
@@ -524,34 +548,45 @@ export default function MainProfile() {
         }
 
         // Handle experience
-        if (profile.professional && profile.professional.length > 0) {
-          const proff = profile.professional[0];
-          setExperienceData(proff);
+        if (
+          response?.data?.data?.professional &&
+          response.data.data.professional.length > 0
+        ) {
+          const professionalData = response.data.data.professional;
+          setExperienceData(professionalData);
           setExperienceType(profile.experince_type || "");
           setTotalYearsExperience(profile.total_years || "");
           setTotalMonthsExperience(profile.total_months || "");
-          setJobTitle(proff.job_title || "");
           setLocation(profile.location || "");
 
-          const company = {
-            jobTitle: proff.job_title || "",
-            workingCompanyName: proff.company_name || "",
-            designation: proff.designation || "",
-            workingStartDate: proff.start_date || "",
-            workingEndDate: proff.end_date || "",
-            currentlyWorking: !!proff.currently_working,
-            jobTitleError: "",
-            workingCompanyNameError: "",
-            designationError: "",
-            workingStartDateError: "",
-            workingEndDateError: "",
-          };
+          // Map all experiences to companies state
+          const mappedCompanies = professionalData.map((exp) => ({
+            id: exp.id,
+            jobTitle: exp.job_title || "",
+            workingCompanyName: exp.company_name || "",
+            designation: exp.designation || "",
+            workingStartDate: exp.start_date || "",
+            workingEndDate: exp.currently_working ? "" : exp.end_date || "",
+            currentlyWorking: !!exp.currently_working,
+            isNew: false,
+          }));
 
-          setCompanies([company]);
+          setCompanies(mappedCompanies);
           setShowWorkExpForm(false);
         } else {
           setExperienceData(null);
-          // setCompanies([]);
+          setCompanies([
+            {
+              id: Date.now(),
+              isNew: true,
+              jobTitle: "",
+              workingCompanyName: "",
+              designation: "",
+              workingStartDate: "",
+              workingEndDate: "",
+              currentlyWorking: false,
+            },
+          ]);
           setShowWorkExpForm(true);
         }
       }
@@ -750,16 +785,24 @@ export default function MainProfile() {
   };
 
   const handleAddCompany = () => {
+    setEditingCompanyId(null);
+    setShowWorkExpForm(true);
     setCompanies([
       ...companies,
       {
         id: Date.now(),
+        isNew: true,
         jobTitle: "",
         workingCompanyName: "",
         designation: "",
         workingStartDate: "",
         workingEndDate: "",
         currentlyWorking: false,
+        jobTitleError: "",
+        workingCompanyNameError: "",
+        designationError: "",
+        workingStartDateError: "",
+        workingEndDateError: "",
       },
     ]);
   };
@@ -841,113 +884,148 @@ export default function MainProfile() {
     }
   };
 
-  const handleDeleteCompanyWork = (index) => {
-    if (companies.length === 1) return;
-    let data = [...companies];
-    data.splice(index, 1);
-    setCompanies(data);
+  const handleDeleteCompanyWork = async (companyId) => {
+    try {
+      await deleteExperience({ id: companyId, user_id: loginUserId });
+
+      const updatedCompanies = companies.filter(
+        (company) => company.id !== companyId
+      );
+      setCompanies(updatedCompanies);
+      message.success("Experience deleted successfully");
+      getUserProfileData();
+
+      if (updatedCompanies.length === 0) {
+        setShowWorkExpForm(true);
+        setCompanies([
+          {
+            id: Date.now(),
+            isNew: true,
+            jobTitle: "",
+            workingCompanyName: "",
+            designation: "",
+            workingStartDate: "",
+            workingEndDate: "",
+            currentlyWorking: false,
+            jobTitleError: "",
+            workingCompanyNameError: "",
+            designationError: "",
+            workingStartDateError: "",
+            workingEndDateError: "",
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error deleting experience:", error);
+      message.error("Failed to delete experience");
+    }
   };
 
   const handleWorkDiscard = () => {
     setShowWorkExpForm(false);
-  };
+    setEditingCompanyId(null);
 
-  const handleDeleteExperience = async () => {
-    if (!experienceData) {
-      message.error("No experience data to delete.");
-      return;
-    }
-    const payload = {
-      id: experienceData.id,
-      user_id: loginUserId,
-    };
-
-    try {
-      const response = await deleteExperience(payload);
-      console.log("deleteExperience", response);
-      message.success("Experience deleted successfully.");
-      setCompanies([
-        {
-          jobTitle: "",
-          workingCompanyName: "",
-          designation: "",
-          workingStartDate: "",
-          workingEndDate: "",
-        },
-      ]);
-      setShowWorkExpForm(true);
-      getUserProfileData();
-    } catch (error) {
-      console.error("Error deleting experience:", error);
-      message.error("Failed to delete experience.");
-    }
+    // If discarding a newly added company (not an edit), remove the dummy
+    setCompanies((prev) => prev.filter((company) => !company.isNew));
   };
 
   const handleWorkExpSave = async (e) => {
     e.preventDefault();
+
     let experienceErrors = false;
+    const updatedCompanies = [...companies];
 
-    const validateCompanyFields = companies.map((item) => ({
-      ...item,
-      jobTitleError: nameValidator(item.jobTitle),
-      workingCompanyNameError: nameValidator(item.workingCompanyName),
-      designationError: nameValidator(item.designation),
-      workingStartDateError: selectValidator(item.workingStartDate),
-      workingEndDateError: item.currentlyWorking
+    updatedCompanies.forEach((company) => {
+      company.jobTitleError = nameValidator(company.jobTitle);
+      company.workingCompanyNameError = nameValidator(
+        company.workingCompanyName
+      );
+      company.designationError = nameValidator(company.designation);
+      company.workingStartDateError = selectValidator(company.workingStartDate);
+      company.workingEndDateError = company.currentlyWorking
         ? ""
-        : selectValidator(item.workingEndDate),
-    }));
+        : selectValidator(company.workingEndDate);
 
-    setCompanies(validateCompanyFields);
+      if (
+        company.jobTitleError ||
+        company.workingCompanyNameError ||
+        company.designationError ||
+        company.workingStartDateError ||
+        company.workingEndDateError
+      ) {
+        experienceErrors = true;
+      }
+    });
 
-    experienceErrors = validateCompanyFields.some(
-      (err) =>
-        err.jobTitleError ||
-        err.workingCompanyNameError ||
-        err.designationError ||
-        err.workingStartDateError ||
-        err.workingEndDateError
-    );
+    setCompanies(updatedCompanies);
 
-    const hasAnyError = experienceErrors;
-
-    if (hasAnyError) {
+    if (experienceErrors) {
       message.error("Please fill all fields correctly before proceeding.");
       return;
-    } else {
-      console.log("Exp Inserted");
     }
-
-    const experiences = companies.map((company) => ({
-      company_name: company.workingCompanyName,
-      designation: company.designation,
-      start_date: company.workingStartDate,
-      end_date: company.workingEndDate,
-      currently_working: company.currentlyWorking,
-      job_title: company.jobTitle,
-    }));
-
-    const payload = {
-      id: experienceData?.id,
-      user_id: loginUserId,
-      experiences,
-    };
 
     try {
-      if (experienceData) {
-        const response = await updateExperience(payload);
-        console.log("workexp", response);
-        message.success("Experience updated successfully");
-        // resetFormFields();
-      } else {
+      if (editingCompanyId === null) {
+        const newCompany = companies.find((c) => c.isNew);
+
+        const payload = {
+          user_id: loginUserId,
+          experiences: [
+            {
+              job_title: newCompany.jobTitle,
+              company_name: newCompany.workingCompanyName,
+              designation: newCompany.designation,
+              start_date: newCompany.workingStartDate,
+              end_date: newCompany.currentlyWorking
+                ? ""
+                : newCompany.workingEndDate,
+              currently_working: newCompany.currentlyWorking,
+            },
+          ],
+        };
+
         const response = await insertExperience(payload);
+
+        const finalCompanies = companies.map((c) =>
+          c.isNew ? { ...c, id: response.data.id, isNew: false } : c
+        );
+        setCompanies(finalCompanies);
+        message.success("Experience added successfully");
         getUserProfileData();
-        message.success("Experience inserted successfully.");
+      } else {
+        const companyToUpdate = companies.find(
+          (company) => company.id === editingCompanyId
+        );
+
+        const payload = {
+          id: editingCompanyId,
+          job_title: companyToUpdate.jobTitle,
+          company_name: companyToUpdate.workingCompanyName,
+          designation: companyToUpdate.designation,
+          start_date: companyToUpdate.workingStartDate,
+          end_date: companyToUpdate.currentlyWorking
+            ? ""
+            : companyToUpdate.workingEndDate,
+          currently_working: companyToUpdate.currentlyWorking,
+          user_id: loginUserId,
+        };
+
+        await updateExperience(payload);
+        message.success("Experience updated successfully");
+        getUserProfileData();
       }
+
       setShowWorkExpForm(false);
+      setEditingCompanyId(null);
     } catch (error) {
-      console.log("experience insert error", error);
+      console.error("Experience save error", error);
+      message.error("Failed to save experience");
     }
+  };
+
+  const handleDeleteProject = () => {
+    setShowForm(true);
+    getUserProfileData();
   };
 
   const handleProjectDiscard = () => {
@@ -1005,6 +1083,7 @@ export default function MainProfile() {
         const response = await updateProject(payload);
         console.log("updateProjects", response);
         message.success("Project updated successfully.");
+        getUserProfileData();
 
         const updatedList = projectsList.map((item) =>
           item.id === projectData.id ? payload : item
@@ -1014,6 +1093,7 @@ export default function MainProfile() {
         const response = await insertProjects(payload);
         console.log("insertProjects", response);
         message.success("Project added successfully.");
+        getUserProfileData();
 
         const newProject = response?.data?.data;
 
@@ -1067,6 +1147,7 @@ export default function MainProfile() {
       const response = await deleteProject(payload);
       console.log("deleteProject", response);
       message.success("Project deleted successfully.");
+      getUserProfileData();
 
       const updatedList = projectsList.filter((item) => item.id !== id);
       setProjectsList(updatedList);
@@ -1145,38 +1226,34 @@ export default function MainProfile() {
       return;
     }
 
-    if (customSkill.trim() !== "") {
-      setSelectedSkills((prev) => [...prev, customSkill.trim()]);
-    }
-
-    const customSkillUserData = {
-      skills: [
-        ...selectedSkills,
-        ...(customSkill.trim() ? [customSkill.trim()] : []),
-      ],
-    };
+    const finalSkills = [
+      ...selectedSkills,
+      ...(customSkill.trim() ? [customSkill.trim()] : []),
+    ];
 
     const payload = {
-      skills: selectedSkills,
+      skills: finalSkills,
       user_id: loginUserId,
     };
 
     try {
       const response = await updateSkills(payload);
-      console.log("skilssss", response);
+      console.log("Skills updated successfully", response);
 
-      setSelectedSkills(response?.data?.data || []);
+      const updatedSkills = response?.data?.data;
+      setSelectedSkills(
+        Array.isArray(updatedSkills) ? updatedSkills : finalSkills
+      );
+      message.success("Skills saved successfully.");
+      getUserProfileData();
     } catch (error) {
+      console.error("Error updating skills:", error);
       setCustomSkillError(customskillValidate);
+      return;
     }
 
-    console.log("Saving skills data:", customSkillUserData);
-    message.success("Skills saved successfully.");
     resetFormFields();
-
-    // Reset states
     setCustomSkill("");
-    setSelectedSkills([]);
     setCustomSkillError("");
   };
 
@@ -1214,6 +1291,14 @@ export default function MainProfile() {
     }
   };
 
+  const socialIcons = [
+    { key: "linkedin", icon: <FaLinkedinIn />, color: "#0077B5" },
+    { key: "facebook", icon: <FaFacebookF />, color: "#3b5998" },
+    { key: "instagram", icon: <FaInstagram />, color: "#E1306C" },
+    { key: "behance", icon: <FaBehance />, color: "#1769ff" },
+    { key: "dribble", icon: <FaDribbble />, color: "#ea4c89" },
+  ];
+
   const [socialLinks, setSocialLinks] = useState({
     Linkedin: "",
     Facebook: "",
@@ -1232,18 +1317,17 @@ export default function MainProfile() {
     Behance: "",
   });
 
-  const [savedLinks, setSavedLinks] = useState("");
   const urlPattern = /^(https?:\/\/)?([\w\d-]+\.)+[\w-]{2,}(\/.*)?$/;
-  const handleSocialLinksSave = (name, value) => {
+  const handleSocialLinksSave = (platform, value) => {
     setSocialLinks((prev) => ({
       ...prev,
-      [name]: value,
+      [platform]: value,
     }));
 
     // Validation on change
     setSocialLinkErrors((prev) => ({
       ...prev,
-      [name]:
+      [platform]:
         value.trim() === ""
           ? " field is required"
           : !urlPattern.test(value)
@@ -1293,46 +1377,11 @@ export default function MainProfile() {
     try {
       const response = await updateSocialLinks(payload);
       console.log("social links", response);
-      resetFormFields();
-      setSocialLinks({
-        Linkedin: "",
-        facebook: "",
-        Instagram: "",
-        Twitter: "",
-        Dribbble: "",
-        Behance: "",
-      });
-      setSocialLinkErrors({
-        Linkedin: "",
-        Facebook: "",
-        Instagram: "",
-        Twitter: "",
-        Dribbble: "",
-        Behance: "",
-      });
+      getUserProfileData();
       message.success("Social links saved successfully!");
     } catch (error) {
       message.error("Failed to save social links.");
     }
-
-    // Reset fields
-    setSocialLinks({
-      Linkedin: "",
-      Facebook: "",
-      Instagram: "",
-      Twitter: "",
-      Dribbble: "",
-      Behance: "",
-    });
-
-    setSocialLinkErrors({
-      Linkedin: "",
-      Facebook: "",
-      Instagram: "",
-      Twitter: "",
-      Dribbble: "",
-      Behance: "",
-    });
   };
 
   const handleLateralTypeChange = (value) => {
@@ -1364,6 +1413,7 @@ export default function MainProfile() {
       const stored = localStorage.getItem("loginDetails");
       if (stored) {
         const loginDetails = JSON.parse(stored);
+        setRoleId(loginDetails.role_id);
         setLoginUserId(loginDetails.id);
         setFname(loginDetails.first_name);
         setLname(loginDetails.last_name);
@@ -1400,80 +1450,6 @@ export default function MainProfile() {
   };
 
   const resetFormFields = () => {
-    // setGender("");
-    // setUserType("");
-    // setLocation("");
-    // setCourse("");
-    // setStartDate("");
-    // setEndDate("");
-    // setFresherCourse("");
-    // setFresherStartDate("");
-    // setFresherEndDate("");
-    // setActiveButton(null);
-    // setUserTypeActiveButton(null);
-    // setClass(null);
-    // setSelectExperienceType("");
-    // setSelectExperienceTypeError("");
-    // setTotalYearsExperience(null);
-    // setTotalYearsExperienceError("");
-    // setTotalMonthsExperience("");
-    // setTotalMonthsExperienceError("");
-
-    // // Education
-    // setQualification("");
-    // setEducationCourse("");
-    // setSpecialization("");
-    // setEducationCollege("");
-    // setCourseType("");
-    // setPercentage("");
-    // setCgpa("");
-    // setEducationStartDate("");
-    // setEducationEndDate("");
-    // setRollNumber("");
-
-    // // Work Experience
-
-    // setJobTitle("");
-    // setJobTitleError("");
-    // setWorkExpLocation("");
-    // setCompanies([
-    //   {
-    //     workingCompanyName: "",
-    //     designation: "",
-    //     workingStartDate: "",
-    //     workingEndDate: "",
-    //   },
-    // ]);
-
-    // // Projects
-    // setProject("");
-    // setCompanyName("");
-    // setCompanyNameError("");
-    // setProjectType("");
-    // setProjectStartDate("");
-    // setProjectEndDate("");
-    // setProjectDescription("");
-
-    // // Skills
-    // setSelectedSkills([]);
-    // setCustomSkill("");
-
-    // // About
-    // setAboutTextNew("");
-
-    // // Resume
-    // setResumeFile(null);
-
-    // // Social Links
-    // setSocialLinks({
-    //   Linkedin: "",
-    //   Facebook: "",
-    //   Instagram: "",
-    //   Twitter: "",
-    //   Dribbble: "",
-    //   Behance: "",
-    // });
-
     // Errors
     setFnameError("");
     setLnameError("");
@@ -2374,6 +2350,7 @@ export default function MainProfile() {
         </div>
       </>
     ),
+
     about: () => (
       <div
         style={{
@@ -2504,7 +2481,10 @@ export default function MainProfile() {
 
           <Button
             type="primary"
-            style={{ marginTop: 20, background: "#5f2eea" }}
+            style={{
+              marginTop: 20,
+              background: "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
+            }}
             onClick={handleSkillsSave}
           >
             Add Skill
@@ -2512,6 +2492,7 @@ export default function MainProfile() {
         </div>
       </div>
     ),
+
     education: () => (
       <div>
         {showEducationForm && (
@@ -2874,415 +2855,345 @@ export default function MainProfile() {
         {showWorkExpForm && (
           <>
             <div className="forexprience">
-              {companies.map((company, index) => (
-                <div className="add-company-section" key={index}>
-                  <div style={{ display: "flex", justifyContent: "end" }}>
-                    {index == 0 ? (
-                      ""
-                    ) : (
-                      <MdDeleteForever
-                        onClick={() => handleDeleteCompanyWork(index)}
-                        name={["companies", index, "job-delete"]}
-                        className="job-delete"
-                      />
-                    )}
-                  </div>
-                  <div className="form-group">
-                    <CommonInputField
-                      label=" Company name"
-                      mandotary={true}
-                      placeholder={"Tech Corp Inc."}
-                      value={company.workingCompanyName}
-                      error={company.workingCompanyNameError}
-                      onChange={(e) =>
-                        handleCompanyFields(
-                          index,
-                          "workingCompanyName",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
+              {companies.map(
+                (company, index) =>
+                  (editingCompanyId === null ||
+                    company.id === editingCompanyId) && (
+                    <div key={company.id} className="add-company-section">
+                      <div className="form-group">
+                        <CommonInputField
+                          label="Company name"
+                          mandotary={true}
+                          placeholder="Tech Corp Inc."
+                          value={company.workingCompanyName}
+                          error={company.workingCompanyNameError}
+                          onChange={(e) => {
+                            const updatedCompanies = [...companies];
+                            updatedCompanies[index].workingCompanyName =
+                              e.target.value;
+                            updatedCompanies[index].workingCompanyNameError =
+                              nameValidator(e.target.value);
+                            setCompanies(updatedCompanies);
+                          }}
+                        />
+                      </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <CommonInputField
-                        name={"Job title"}
-                        label="Job Title"
-                        mandotary={true}
-                        value={company.jobTitle}
-                        placeholder={"Enter job title"}
-                        type={"text"}
-                        onChange={(e) =>
-                          handleCompanyFields(index, "jobTitle", e.target.value)
-                        }
-                        error={company.jobTitleError}
-                      />
+                      <div className="form-row">
+                        <div className="form-group">
+                          <CommonInputField
+                            label="Job Title"
+                            mandotary={true}
+                            placeholder="Software Engineer"
+                            value={company.jobTitle}
+                            error={company.jobTitleError}
+                            onChange={(e) => {
+                              const updatedCompanies = [...companies];
+                              updatedCompanies[index].jobTitle = e.target.value;
+                              updatedCompanies[index].jobTitleError =
+                                nameValidator(e.target.value);
+                              setCompanies(updatedCompanies);
+                            }}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <CommonInputField
+                            label="Designation"
+                            mandotary={true}
+                            placeholder="Senior Developer"
+                            value={company.designation}
+                            error={company.designationError}
+                            onChange={(e) => {
+                              const updatedCompanies = [...companies];
+                              updatedCompanies[index].designation =
+                                e.target.value;
+                              updatedCompanies[index].designationError =
+                                nameValidator(e.target.value);
+                              setCompanies(updatedCompanies);
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <CommonSelectField
+                            label="Start Year"
+                            name="startYear"
+                            placeholder="Select Start Year"
+                            mandatory={true}
+                            value={company.workingStartDate}
+                            options={workingStartDateOptions}
+                            error={company.workingStartDateError}
+                            onChange={(value) => {
+                              const updatedCompanies = [...companies];
+                              updatedCompanies[index].workingStartDate = value;
+                              updatedCompanies[index].workingStartDateError =
+                                selectValidator(value);
+                              setCompanies(updatedCompanies);
+                            }}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <CommonSelectField
+                            label="End Year"
+                            name="endYear"
+                            placeholder="Select End Year"
+                            mandatory={true}
+                            value={company.workingEndDate}
+                            options={workingEndDateOptions}
+                            error={company.workingEndDateError}
+                            onChange={(value) => {
+                              const updatedCompanies = [...companies];
+                              updatedCompanies[index].workingEndDate = value;
+                              updatedCompanies[index].workingEndDateError =
+                                selectValidator(value);
+                              setCompanies(updatedCompanies);
+                            }}
+                            disabled={company.currentlyWorking}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-row">
+                        <Checkbox
+                          checked={company.currentlyWorking}
+                          onChange={(e) => {
+                            const updatedCompanies = [...companies];
+                            updatedCompanies[index].currentlyWorking =
+                              e.target.checked;
+                            if (e.target.checked) {
+                              updatedCompanies[index].workingEndDate = "";
+                              updatedCompanies[index].workingEndDateError = "";
+                            }
+                            setCompanies(updatedCompanies);
+                          }}
+                        >
+                          Currently Working Here
+                        </Checkbox>
+                      </div>
+
+                      <div
+                        style={{ marginTop: 15, marginBottom: 20 }}
+                        className="form-row"
+                      >
+                        <div style={{ textAlign: "left" }} className="save_btn">
+                          <Button
+                            type="danger"
+                            size="large"
+                            onClick={handleWorkDiscard}
+                            className="nav-btn discard-btn"
+                          >
+                            Discard
+                            <HiMiniXMark style={{ fontSize: 22 }} />
+                          </Button>
+                        </div>
+                        <div
+                          style={{ textAlign: "-webkit-right" }}
+                          className="save_btn"
+                        >
+                          <Button
+                            type="primary"
+                            size="large"
+                            onClick={handleWorkExpSave}
+                            className="nav-btn next-btn"
+                          >
+                            {company.isNew ? "Save" : "Update"}
+                            <MdFileDownloadDone style={{ fontSize: 22 }} />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="form-group">
-                      <CommonInputField
-                        label="Designation"
-                        mandotary={true}
-                        placeholder={"Enter your designation"}
-                        value={company.designation}
-                        error={company.designationError}
-                        onChange={(e) =>
-                          handleCompanyFields(
-                            index,
-                            "designation",
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="from-group">
-                      <CommonSelectField
-                        label="Start Date"
-                        name={"StartDate"}
-                        placeholder={"Select Start Date"}
-                        mandatory={true}
-                        value={company.workingStartDate}
-                        options={workingStartDateOptions}
-                        error={company.workingStartDateError}
-                        onChange={(value) =>
-                          handleCompanyFields(index, "workingStartDate", value)
-                        }
-                      />
-                    </div>
-                    <div className="from-group">
-                      <CommonSelectField
-                        label="End Date"
-                        name={"endDate"}
-                        mandatory={true}
-                        placeholder={"Select End Date"}
-                        value={company.workingEndDate}
-                        options={workingEndDateOptions}
-                        error={company.workingEndDateError}
-                        onChange={(value) =>
-                          handleCompanyFields(index, "workingEndDate", value)
-                        }
-                        disabled={
-                          company.currentlyWorking === true ? true : false
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div
-                    style={{ marginTop: 15 }}
-                    className="professional-checkbox"
-                  >
-                    <Checkbox
-                      checked={company.currentlyWorking}
-                      onChange={(e) =>
-                        handleCompanyFields(
-                          index,
-                          "currentlyWorking",
-                          e.target.checked
-                        )
-                      }
-                    >
-                      Currently Working?
-                    </Checkbox>
-                  </div>
-                </div>
-              ))}
-
-              <div
-                style={{ display: "flex", justifyContent: "end" }}
-                className=""
-              >
-                <Button onClick={handleAddCompany} className="add-btn">
-                  Add Company <IoMdAdd className="add-icon" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div style={{ textAlign: "left" }} className="save_btn">
-                {experienceData ? (
-                  <Button
-                    type="danger"
-                    size="large"
-                    onClick={handleWorkDiscard}
-                    className="nav-btn discard-btn"
-                  >
-                    Discard <HiMiniXMark style={{ fontSize: 22 }} />
-                  </Button>
-                ) : null}
-              </div>
-
-              <div style={{ textAlign: "-webkit-right" }} className="save_btn">
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={handleWorkExpSave}
-                  className="nav-btn next-btn"
-                >
-                  {experienceData ? "Update" : "Save"}
-                  <MdFileDownloadDone style={{ fontSize: 22, fill: "#fff" }} />
-                </Button>
-              </div>
+                  )
+              )}
             </div>
           </>
         )}
 
         {!showWorkExpForm && (
           <div className="experience-preview">
-            <div className="experience-summary-card">
-              <div className="summary-header">
-                <h3>
-                  <GiOfficeChair /> Experience Summary
-                </h3>
-              </div>
-              <div className="summary-grid">
-                {[
-                  {
-                    label: "Experience Type",
-                    value: experienceType,
-                    icon: <MdOutlineSchool />,
-                  },
-                  {
-                    label: "Years of Experience",
-                    value: totalYearsExperience,
-                    icon: <MdMenuBook />,
-                  },
-                  {
-                    label: "Months of Experience",
-                    value: totalMonthsExperience,
-                    icon: <MdLocationCity />,
-                  },
-                  {
-                    label: "Location",
-                    value: location,
-                    icon: <IoLocationSharp />,
-                  },
-                ].map((item, index) => (
-                  <div className="summary-item" key={index}>
-                    <div className="icon-wrapper">{item.icon}</div>
-                    <div>
-                      <div className="item-label">{item.label}</div>
-                      <div className="item-value">{item.value || "-"}</div>
-                    </div>
+            {companies.length > 0 ? (
+              <>
+                <div className="experience-summary-card">
+                  <div className="summary-header">
+                    <h3>
+                      <GiOfficeChair /> Experience Summary
+                    </h3>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {companies.map((company, index) => (
-              <motion.div
-                key={index}
-                className="project-card"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{
-                  duration: 0.6,
-                  delay: index * 0.05,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                whileHover={{
-                  y: -6,
-                  boxShadow: "0 24px 48px -12px rgba(0, 0, 0, 0.18)",
-                  transition: { duration: 0.3 },
-                }}
-              >
-                <div className="card-glow"></div>
-                <div className="card-content">
-                  <div className="card-header">
-                    <span
-                      className={
-                        company.currentlyWorking
-                          ? "currently-working-badge"
-                          : "project-type-badge"
-                      }
-                    >
-                      {company.currentlyWorking
-                        ? "Currently Working"
-                        : "Past Role"}
-                      <span className="badge-accent"></span>
-                    </span>
-
-                    <div className="card-actions">
-                      <button
-                        onClick={() => {
-                          setShowWorkExpForm(true);
-                        }}
-                        className="icon-btn edit-btn"
-                      >
-                        <FiEdit size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <h3 className="project-title">
-                    <span className="title-text">
-                      {company.jobTitle || "Job Title"}
-                    </span>
-                    <span className="title-underline"></span>
-                  </h3>
-
-                  <div className="project-meta">
-                    <div className="meta-item company">
-                      <FiBriefcase className="meta-icon" />
-                      <span>
-                        {company.workingCompanyName || "Company Name"}
-                      </span>
-                    </div>
-                    <div className="meta-item timeline">
-                      <MdOutlineWorkHistory
-                        style={{ fontSize: 15 }}
-                        className="meta-icon"
-                      />
-                      <span>
-                        {company.workingStartDate || "Start"} —{" "}
-                        {company.currentlyWorking
-                          ? "Present"
-                          : company.workingEndDate || "End"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="project-description">
-                    <p>
-                      <span style={{ color: "#5f2eea" }}>Designation:</span>{" "}
-                      {company.designation || "Designation"}
-                    </p>
-                  </div>
-
-                  <div className="card-footer">
-                    <Popconfirm
-                      title="Delete this experience?"
-                      onConfirm={() => handleDeleteExperience(company.id)}
-                      okText="Confirm"
-                      cancelText="Cancel"
-                      overlayClassName="popconfirm-overlay"
-                    >
-                      <button className="icon-btn delete-btn">
-                        <MdDeleteForever size={18} />
-                      </button>
-                    </Popconfirm>
-
-                    <button
-                      onClick={() => {
-                        setShowWorkExpForm(true);
-                      }}
-                      className="view-project-btn"
-                    >
-                      <span>Edit Experience</span>
-                      <div className="arrow-container">
-                        <FiArrowRight size={18} className="arrow-icon" />
+                  <div className="summary-grid">
+                    {[
+                      {
+                        label: "Experience Type",
+                        value: experienceType,
+                        icon: <MdOutlineSchool />,
+                      },
+                      {
+                        label: "Years of Experience",
+                        value: totalYearsExperience,
+                        icon: <MdMenuBook />,
+                      },
+                      {
+                        label: "Months of Experience",
+                        value: totalMonthsExperience,
+                        icon: <MdLocationCity />,
+                      },
+                      {
+                        label: "Location",
+                        value: location,
+                        icon: <IoLocationSharp />,
+                      },
+                    ].map((item, index) => (
+                      <div className="summary-item" key={index}>
+                        <div className="icon-wrapper">{item.icon}</div>
+                        <div>
+                          <div className="item-label">{item.label}</div>
+                          <div className="item-value">{item.value || "-"}</div>
+                        </div>
                       </div>
-                    </button>
+                    ))}
                   </div>
                 </div>
-              </motion.div>
-            ))}
+
+                {companies.map((company) => (
+                  <motion.div
+                    key={company.id}
+                    className="project-card"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      duration: 0.6,
+                      delay: 0.05,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    whileHover={{
+                      y: -6,
+                      transition: { duration: 0.3 },
+                    }}
+                  >
+                    <div className="card-content">
+                      <div className="card-header">
+                        <span
+                          className={
+                            company.currentlyWorking
+                              ? "currently-working-badge"
+                              : "project-type-badge"
+                          }
+                        >
+                          {company.currentlyWorking
+                            ? "Currently Working"
+                            : "Past Role"}
+                        </span>
+                        <div className="card-actions">
+                          <button
+                            onClick={() => {
+                              setEditingCompanyId(company.id);
+                              setShowWorkExpForm(true);
+                            }}
+                            className="icon-btn edit-btn"
+                          >
+                            <FiEdit size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <h3 className="project-title">
+                        {company.jobTitle || "Job Title"}
+                      </h3>
+
+                      <div className="project-meta">
+                        <div className="meta-item company">
+                          <FiBriefcase className="meta-icon" />
+                          <span>
+                            {company.workingCompanyName || "Company Name"}
+                          </span>
+                        </div>
+                        <div className="meta-item timeline">
+                          <MdOutlineWorkHistory className="meta-icon" />
+                          <span>
+                            {company.workingStartDate || "Start"} —{" "}
+                            {company.currentlyWorking
+                              ? "Present"
+                              : company.workingEndDate || "End"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="project-description">
+                        <p>
+                          <span style={{ color: "#5f2eea" }}>Designation:</span>{" "}
+                          {company.designation || "Designation"}
+                        </p>
+                      </div>
+
+                      <div className="card-footer">
+                        <Popconfirm
+                          title="Delete this experience?"
+                          onConfirm={() => handleDeleteCompanyWork(company.id)}
+                          okText="Yes"
+                          cancelText="No"
+                        >
+                          <button className="icon-btn delete-btn">
+                            <MdDeleteForever size={18} />
+                          </button>
+                        </Popconfirm>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </>
+            ) : (
+              <div className="empty-state">
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={
+                    <span style={{ color: "#666", fontSize: "1rem" }}>
+                      No work experience added yet
+                    </span>
+                  }
+                />
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    setShowWorkExpForm(true);
+                    setCompanies([
+                      {
+                        id: Date.now(),
+                        isNew: true,
+                        jobTitle: "",
+                        workingCompanyName: "",
+                        designation: "",
+                        workingStartDate: "",
+                        workingEndDate: "",
+                        currentlyWorking: false,
+                      },
+                    ]);
+                  }}
+                  style={{ marginTop: 16 }}
+                >
+                  Add Work Experience
+                </Button>
+              </div>
+            )}
+
+            {companies.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "end",
+                  marginTop: 20,
+                }}
+              >
+                <Button
+                  className="add-company-btn"
+                  type="primary"
+                  onClick={handleAddCompany}
+                  icon={<PlusOutlined />}
+                >
+                  Add Company
+                </Button>
+              </div>
+            )}
           </div>
         )}
-      </div>
-    ),
-    sociallinks: () => (
-      <div>
-        <div style={{ alignItems: "end" }} className="form-row">
-          <div className="form-group">
-            <CommonInputField
-              name="Linkedin"
-              label="Linkedin"
-              mandotary={true}
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Linkedin}
-              onChange={(e) =>
-                handleSocialLinksSave("Linkedin", e.target.value)
-              }
-              error={socialLinkErrors.Linkedin}
-            />
-          </div>
-          <div className="form-group">
-            <CommonInputField
-              name="Facebook"
-              label="Facebook"
-              mandotary={true}
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Facebook}
-              onChange={(e) =>
-                handleSocialLinksSave("Facebook", e.target.value)
-              }
-              error={socialLinkErrors.Facebook}
-            />
-          </div>
-        </div>
-
-        <div style={{ alignItems: "end" }} className="form-row">
-          <div className="form-group">
-            <CommonInputField
-              name="Instagram"
-              label="Instagram"
-              mandotary={true}
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Instagram}
-              onChange={(e) =>
-                handleSocialLinksSave("Instagram", e.target.value)
-              }
-              error={socialLinkErrors.Instagram}
-            />
-          </div>
-          <div className="form-group">
-            <CommonInputField
-              name="Twitter"
-              label="Twitter"
-              mandotary={true}
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Twitter}
-              error={socialLinkErrors.Twitter}
-              onChange={(e) => handleSocialLinksSave("Twitter", e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div style={{ alignItems: "end" }} className="form-row">
-          <div className="form-group">
-            <CommonInputField
-              name="Dribbble"
-              label="Dribbble"
-              mandotary={true}
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Dribbble}
-              error={socialLinkErrors.Dribbble}
-              onChange={(e) =>
-                handleSocialLinksSave("Dribbble", e.target.value)
-              }
-            />
-          </div>
-          <div className="form-group">
-            <CommonInputField
-              name="Behance"
-              label="Behance"
-              mandotary={true}
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Behance}
-              error={socialLinkErrors.Behance}
-              onChange={(e) => handleSocialLinksSave("Behance", e.target.value)}
-            />
-          </div>
-        </div>
-        <div style={{ textAlign: "-webkit-right" }} className="save_btn">
-          <Button
-            type="primary"
-            size="large"
-            className="nav-btn next-btn"
-            onClick={handleAddSocialLinks}
-          >
-            Save Links
-          </Button>
-        </div>
       </div>
     ),
 
@@ -3318,7 +3229,6 @@ export default function MainProfile() {
                       }}
                       whileHover={{
                         y: -6,
-                        boxShadow: "0 24px 48px -12px rgba(0, 0, 0, 0.18)",
                         transition: { duration: 0.3 },
                       }}
                     >
@@ -3334,14 +3244,7 @@ export default function MainProfile() {
                               className="icon-btn edit-btn"
                               onClick={() => {
                                 setProjectData(proj);
-                                setCompanyName(proj.company_name || "");
-                                setProject(proj.project_title || "");
-                                setProjectType(proj.project_type || "");
-                                setProjectStartDate(proj.start_date || "");
-                                setProjectEndDate(proj.end_date || "");
-                                setProjectDescription(proj.description || "");
                                 setShowForm(true);
-                                setActiveButton(proj.project_type);
                               }}
                             >
                               <FiEdit size={16} />
@@ -3385,13 +3288,6 @@ export default function MainProfile() {
                               <MdDeleteForever size={18} />
                             </button>
                           </Popconfirm>
-
-                          <button className="view-project-btn">
-                            <span>Explore Project</span>
-                            <div className="arrow-container">
-                              <FiArrowRight size={18} className="arrow-icon" />
-                            </div>
-                          </button>
                         </div>
                       </div>
                     </motion.div>
@@ -3572,17 +3468,15 @@ export default function MainProfile() {
                       </div>
                       <div className="form-row">
                         <div style={{ textAlign: "left" }} className="save_btn">
-                          {projectData ? (
-                            <Button
-                              type="danger"
-                              size="large"
-                              onClick={handleProjectDiscard}
-                              className="nav-btn discard-btn"
-                            >
-                              Discard
-                              <HiMiniXMark style={{ fontSize: 22 }} />
-                            </Button>
-                          ) : null}
+                          <Button
+                            type="danger"
+                            size="large"
+                            onClick={handleProjectDiscard}
+                            className="nav-btn discard-btn"
+                          >
+                            Discard
+                            <HiMiniXMark style={{ fontSize: 22 }} />
+                          </Button>
                         </div>
                         <div
                           style={{ textAlign: "-webkit-right" }}
@@ -3613,6 +3507,107 @@ export default function MainProfile() {
               </Button>
             </div>
           )}
+        </div>
+      </div>
+    ),
+
+    sociallinks: () => (
+      <div>
+        <div style={{ alignItems: "end" }} className="form-row">
+          <div className="form-group">
+            <CommonInputField
+              name="Linkedin"
+              label="Linkedin"
+              placeholder="Add link"
+              type="text"
+              value={socialLinks.Linkedin}
+              onChange={(e) =>
+                handleSocialLinksSave("Linkedin", e.target.value)
+              }
+              error={socialLinkErrors.Linkedin}
+            />
+          </div>
+          <div className="form-group">
+            <CommonInputField
+              name="Facebook"
+              label="Facebook"
+              placeholder="Add link"
+              type="text"
+              value={socialLinks.Facebook}
+              onChange={(e) =>
+                handleSocialLinksSave("Facebook", e.target.value)
+              }
+              error={socialLinkErrors.Facebook}
+            />
+          </div>
+        </div>
+
+        <div style={{ alignItems: "end", marginTop: 20 }} className="form-row">
+          <div className="form-group">
+            <CommonInputField
+              name="Instagram"
+              label="Instagram"
+              placeholder="Add link"
+              type="text"
+              value={socialLinks.Instagram}
+              onChange={(e) =>
+                handleSocialLinksSave("Instagram", e.target.value)
+              }
+              error={socialLinkErrors.Instagram}
+            />
+          </div>
+          <div className="form-group">
+            <CommonInputField
+              name="Twitter"
+              label="Twitter"
+              placeholder="Add link"
+              type="text"
+              value={socialLinks.Twitter}
+              error={socialLinkErrors.Twitter}
+              onChange={(e) => handleSocialLinksSave("Twitter", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div style={{ alignItems: "end", marginTop: 20 }} className="form-row">
+          <div className="form-group">
+            <CommonInputField
+              name="Dribbble"
+              label="Dribbble"
+              placeholder="Add link"
+              type="text"
+              value={socialLinks.Dribbble}
+              error={socialLinkErrors.Dribbble}
+              onChange={(e) =>
+                handleSocialLinksSave("Dribbble", e.target.value)
+              }
+            />
+          </div>
+          <div className="form-group">
+            <CommonInputField
+              name="Behance"
+              label="Behance"
+              placeholder="Add link"
+              type="text"
+              value={socialLinks.Behance}
+              error={socialLinkErrors.Behance}
+              onChange={(e) => handleSocialLinksSave("Behance", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div
+          style={{ textAlign: "-webkit-right", marginTop: 20 }}
+          className="save_btn"
+        >
+          <Button
+            type="primary"
+            size="large"
+            className="nav-btn next-btn"
+            onClick={handleAddSocialLinks}
+          >
+            Save Links
+          </Button>
         </div>
       </div>
     ),
@@ -3705,10 +3700,17 @@ export default function MainProfile() {
               <div style={{ marginLeft: 16, textAlign: "left" }}>
                 <h2 style={{ marginBottom: 0 }}>{`${fname} ${lname}`}</h2>
                 <p style={{ marginBottom: 10, color: "#666" }}>{email}</p>
-                <div>
-                  <Tag color="blue">{organizationName}</Tag>
-                  <Tag color="purple">{organizationNameType}</Tag>
-                </div>
+                {roleId === 3 ? (
+                  <div>
+                    <Tag color="blue">{organizationName}</Tag>
+                    <Tag color="purple">{organizationNameType}</Tag>
+                  </div>
+                ) : (
+                  <div>
+                    <Tag color="blue">{specialization}</Tag>
+                    <Tag color="purple">{educationCourse}</Tag>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -3734,26 +3736,9 @@ export default function MainProfile() {
           </div>
         </Card>
 
-        {/* Profile Sections */}
         <div className="profile-sections">
           {/* About Section */}
-          <Card
-            title="About"
-            className="profile-section-card"
-            extra={
-              <Button
-                onClick={() => {
-                  setActiveTab("about");
-                  showDrawer();
-                }}
-                style={{ color: "#5f2eea" }}
-                type="link"
-              >
-                <PlusOutlined />
-                Add About
-              </Button>
-            }
-          >
+          <Card title="About" className="profile-section-card">
             <p className="profile-section-description">
               Craft an engaging story in your bio and make meaningful
               connections with peers and recruiters alike!
@@ -3761,17 +3746,64 @@ export default function MainProfile() {
 
             <Divider />
 
-            <Card title="Resume" className="resume-card">
-              <p className="resume-card-title">
-                <strong>
-                  Add your Resume & get your profile filled in a click!
-                </strong>
-              </p>
-              <p className="resume-card-description">
-                Adding your Resume helps you to tell who you are and what makes
-                you different — to employers and recruiters.
-              </p>
-            </Card>
+            {isAbout ? (
+              <Card title="About Me" className="resume-card">
+                <p className="resume-card-title">
+                  An introduction to who I am and what I bring to the table!
+                </p>
+
+                <p
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: expanded ? "unset" : 4,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "pre-line",
+                    marginBottom: 0,
+                  }}
+                >
+                  {isAbout}
+                </p>
+
+                <Button
+                  type="link"
+                  onClick={() => setExpanded(!expanded)}
+                  style={{
+                    paddingLeft: 0,
+                    color: "#5f2eea",
+                    textDecoration: "underline",
+                  }}
+                >
+                  {expanded ? "Show Less" : "Show More"}
+                </Button>
+                <br></br>
+
+                <Button
+                  onClick={() => {
+                    setActiveTab("about");
+                    showDrawer();
+                  }}
+                  style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
+                  type="link"
+                >
+                  <PlusOutlined />
+                  Update About
+                </Button>
+              </Card>
+            ) : (
+              <Button
+                onClick={() => {
+                  setActiveTab("about");
+                  showDrawer();
+                }}
+                style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
+                type="link"
+              >
+                <PlusOutlined />
+                Add About
+              </Button>
+            )}
           </Card>
 
           {/* Rankings Section */}
@@ -3849,17 +3881,6 @@ export default function MainProfile() {
 
                 {isResume && (
                   <>
-                    {/* <div style={{ marginTop: 10 }}>
-                      <a
-                        href={isResume}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontWeight: "500", color: "#000" }}
-                      >
-                        {isResume.split("/").pop()}{" "}
-                      </a>
-                    </div> */}
-
                     <Button
                       onClick={() => {
                         setActiveTab("resume");
@@ -3878,9 +3899,6 @@ export default function MainProfile() {
                   </>
                 )}
               </div>
-              <div>
-                <img src={profile1}></img>
-              </div>
             </div>
             <Divider />
           </div>
@@ -3898,19 +3916,23 @@ export default function MainProfile() {
                 </p>
                 {isSkills && (
                   <>
-                    <Tag
-                      style={{
-                        color: "#5f2eead4",
-                        background: "rgba(120, 51, 255, 0.1)",
-                        border: "1px solid rgba(120, 51, 255, 0.2)",
-                        fontSize: 12,
-                        fontWeight: "600",
-                        padding: "5px 10px",
-                        marginTop: 10,
-                      }}
-                    >
-                      {isSkills}
-                    </Tag>
+                    {isSkills.map((skill, index) => (
+                      <Tag
+                        key={index}
+                        style={{
+                          color: "#5f2eead4",
+                          background: "rgb(233, 224, 254)",
+                          border: "none",
+                          fontSize: 13,
+                          fontWeight: "600",
+                          padding: "5px 10px",
+                          marginTop: 10,
+                          borderRadius: "50px",
+                        }}
+                      >
+                        {skill}
+                      </Tag>
+                    ))}
                     <br />
 
                     <Button
@@ -3945,9 +3967,6 @@ export default function MainProfile() {
                   </Button>
                 )}
               </div>
-              <div>
-                <img src={profile1}></img>
-              </div>
             </div>
             <Divider />
           </div>
@@ -3963,99 +3982,122 @@ export default function MainProfile() {
                   Narrate your professional journey and fast-track your way to
                   new career heights!
                 </p>
-                {/* {isWorkExp && (
-                  <>
+                {isWorkExp && (
+                  <div className="work-experience-section">
                     {isWorkExp === "Fresher" ? (
-                      <p>Fresher</p>
-                    ) : (
-                      <table
-                        style={{
-                          width: "100%",
-                          borderCollapse: "collapse",
-                          marginTop: 10,
-                        }}
-                      >
-                        <thead>
-                          <tr
-                            style={{
-                              backgroundColor: "#f0f0f0",
-                              textAlign: "left",
-                            }}
+                      <div className="empty-state">
+                        <div className="empty-icon">
+                          <svg
+                            width="48"
+                            height="48"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
                           >
-                            <th
-                              style={{
-                                padding: "8px",
-                                border: "1px solid #ddd",
-                              }}
-                            >
-                              Years
-                            </th>
-                            <th
-                              style={{
-                                padding: "8px",
-                                border: "1px solid #ddd",
-                              }}
-                            >
-                              Months
-                            </th>
-                            <th
-                              style={{
-                                padding: "8px",
-                                border: "1px solid #ddd",
-                              }}
-                            >
-                              Start Date
-                            </th>
-                            <th
-                              style={{
-                                padding: "8px",
-                                border: "1px solid #ddd",
-                              }}
-                            >
-                              End Date
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {Array.isArray(isWorkExp) &&
-                            isWorkExp.map((exp, index) => (
-                              <tr key={index}>
-                                <td
-                                  style={{
-                                    padding: "8px",
-                                    border: "1px solid #ddd",
-                                  }}
+                            <path
+                              d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                              stroke="#5f2eea"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M12 8V12"
+                              stroke="#5f2eea"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M12 16H12.01"
+                              stroke="#5f2eea"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="empty-title">
+                          No Work Experience Added
+                        </h3>
+                        <p className="empty-description">
+                          You're currently marked as a fresher. Add your first
+                          work experience to showcase your professional journey.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="experience-timeline">
+                        {companies.map((company, index) => (
+                          <div
+                            key={company.id || index}
+                            className="experience-card"
+                          >
+                            <div className="card-header">
+                              <div className="company-info">
+                                <h3 className="company-name">
+                                  {company.workingCompanyName ||
+                                    "Not specified"}
+                                </h3>
+                                <span className="job-title">
+                                  {company.jobTitle || "Not specified"}
+                                </span>
+                              </div>
+                              <div className="company-logo-placeholder">
+                                {company.workingCompanyName
+                                  ?.charAt(0)
+                                  .toUpperCase() || "C"}
+                              </div>
+                            </div>
+
+                            <div className="card-details">
+                              <div className="detail-item">
+                                <svg
+                                  className="detail-icon"
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
                                 >
-                                  {exp.years}
-                                </td>
-                                <td
-                                  style={{
-                                    padding: "8px",
-                                    border: "1px solid #ddd",
-                                  }}
+                                  <path
+                                    d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21L21 21M19 21H14M5 21L3 21M5 21H10M9 6.99998H10M9 11H10M14 6.99998H15M14 11H15"
+                                    stroke="#5f2eea"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                                <span>
+                                  {company.jobTitle || "Not specified"}
+                                </span>
+                              </div>
+
+                              <div className="detail-item">
+                                <svg
+                                  className="detail-icon"
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
                                 >
-                                  {exp.months}
-                                </td>
-                                <td
-                                  style={{
-                                    padding: "8px",
-                                    border: "1px solid #ddd",
-                                  }}
-                                >
-                                  {exp.startDate}
-                                </td>
-                                <td
-                                  style={{
-                                    padding: "8px",
-                                    border: "1px solid #ddd",
-                                  }}
-                                >
-                                  {exp.endDate}
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
+                                  <path
+                                    d="M3 9H21M7 3V5M17 3V5M6 12H8M11 12H13M16 12H18M6 15H8M11 15H13M16 15H18M6 18H8M11 18H13M16 18H18M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z"
+                                    stroke="#5f2eea"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                                <span>
+                                  {company.workingStartDate || "Not specified"}{" "}
+                                  - {company.workingEndDate || "Present"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
 
                     <Button
@@ -4073,20 +4115,9 @@ export default function MainProfile() {
                       <PlusOutlined />
                       Add Work Experience
                     </Button>
-                  </>
-                )} */}
-                <Button
-                  onClick={() => {
-                    setActiveTab("experience");
-                    showDrawer();
-                  }}
-                  style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                  type="link"
-                >
-                  <PlusOutlined />
-                  Add Work Experience
-                </Button>
-                {/* {!isWorkExp && (
+                  </div>
+                )}
+                {!isWorkExp && (
                   <Button
                     onClick={() => {
                       setActiveTab("experience");
@@ -4098,10 +4129,7 @@ export default function MainProfile() {
                     <PlusOutlined />
                     Add Work Experience
                   </Button>
-                )} */}
-              </div>
-              <div>
-                <img src={profile2}></img>
+                )}
               </div>
             </div>
             <Divider />
@@ -4120,119 +4148,382 @@ export default function MainProfile() {
                   Showcase your academic journey and open doors to your dream
                   career opportunities!
                 </p>
-                <Button
-                  onClick={() => {
-                    setActiveTab("education");
-                    showDrawer();
-                  }}
-                  style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                  type="link"
-                >
-                  <PlusOutlined />
-                  Add Education
-                </Button>
-              </div>
-              <div>
-                <img src={profile3}></img>
+                {isEducation && isEducation.length > 0 ? (
+                  <div className="education-section">
+                    <div className="education-grid">
+                      {isEducation.map((edu, index) => (
+                        <div key={index} className="education-card">
+                          <div className="education-header1">
+                            <div className="education-icon">
+                              <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M22 10V16M22 10L12 5L2 10L12 15L22 10Z"
+                                  stroke="#5f2eea"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M6 12V16C6 16.8 6.93333 17.6 8 18L12 20L16 18C17.0667 17.6 18 16.8 18 16V12"
+                                  stroke="#5f2eea"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </div>
+                            <div className="education-titles">
+                              <h3 className="education-degree">
+                                {edu.qualification || "Not specified"}
+                                <br></br>
+                                {edu.specialization && (
+                                  <span className="education-specialization">
+                                    {edu.specialization}
+                                  </span>
+                                )}
+                              </h3>
+                              <p className="education-institution">
+                                {edu.college || "Not specified"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="education-details">
+                            <div className="detail-row">
+                              <svg
+                                className="detail-icon"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                  stroke="#5f2eea"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M12 6V12L16 14"
+                                  stroke="#5f2eea"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                              <span>
+                                {educationStartDate || "Not specified"} -{" "}
+                                {educationEndDate || "Present"}
+                              </span>
+                            </div>
+
+                            {edu.course && (
+                              <div className="detail-row">
+                                <svg
+                                  className="detail-icon"
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21L21 21M19 21H14M5 21L3 21M5 21H10M9 6.99998H10M9 11H10M14 6.99998H15M14 11H15"
+                                    stroke="#5f2eea"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                                <span>{edu.course}</span>
+                              </div>
+                            )}
+
+                            {edu.grade && (
+                              <div className="detail-row">
+                                <svg
+                                  className="detail-icon"
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                                    stroke="#5f2eea"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
+                                    stroke="#5f2eea"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                                <span>Grade: {edu.grade}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Button
+                      onClick={() => {
+                        setActiveTab("education");
+                        showDrawer();
+                      }}
+                      style={{
+                        color: "#5f2eea",
+                        paddingLeft: 0,
+                        paddingTop: 10,
+                      }}
+                      type="link"
+                    >
+                      <PlusOutlined />
+                      Add Another Education
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="empty-state education-empty">
+                    <div className="empty-illustration">
+                      <svg
+                        width="120"
+                        height="120"
+                        viewBox="0 0 200 200"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M50 75L100 50L150 75V125L100 150L50 125V75Z"
+                          stroke="#5f2eea"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M50 75L100 100L150 75M100 100V150"
+                          stroke="#5f2eea"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M75 62.5L100 75L125 62.5"
+                          stroke="#5f2eea"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="empty-title">No Education Added Yet</h3>
+                    <p className="empty-description">
+                      Showcase your academic achievements by adding your
+                      education history. This helps employers understand your
+                      qualifications.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        setActiveTab("education");
+                        showDrawer();
+                      }}
+                      style={{
+                        color: "#5f2eea",
+                        paddingLeft: 0,
+                        paddingTop: 10,
+                      }}
+                      type="link"
+                    >
+                      <PlusOutlined />
+                      Add Education
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
             <Divider />
           </div>
         </div>
 
-        {/* Profile Sections */}
-        {/* Responsibilities Section */}
-        {/* <div style={{ marginTop: 25 }} className="profile-sections">
-            <div className="profile-section-card userprofile_cards">
-              <div className="skills_card">
-                <div style={{ textAlign: "left" }}>
-                  <h3>Responsibilities</h3>
-                  <p className="profile-section-description">
-                    Highlight the responsibilities you've mastered to
-                    demonstrate your leadership and expertise!
-                  </p>
-                  <Button
-                    onClick={showDrawer}
-                    style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                    type="link"
-                  >
-                    <PlusOutlined />
-                    Add Responsibilities
-                  </Button>
-                </div>
-                <div>
-                  <img src={profile4}></img>
-                </div>
-              </div>
-              <Divider />
-            </div>
-          </div> */}
-
-        {/* Profile Sections */}
         <div style={{ marginTop: 25 }} className="profile-sections">
           {/* Projects Section */}
 
-          <div className="profile-section-card userprofile_cards">
+          <div className="profile-section-card userprofile_cards profile_result">
             <div className="skills_card">
               <div style={{ textAlign: "left" }}>
                 <h3>Projects</h3>
                 <p className="profile-section-description">
                   Unveil your projects to the world and pave your path to
+                  <br></br>
                   professional greatness!
                 </p>
-                <Button
-                  onClick={() => {
-                    setActiveTab("projects");
-                    showDrawer();
-                  }}
-                  style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                  type="link"
-                >
-                  <PlusOutlined />
-                  Add Projects
-                </Button>
-              </div>
-              <div>
-                <img src={profile6}></img>
+                {isProjects && isProjects.length > 0 ? (
+                  <div className="projects-section">
+                    <div className="projects-grid">
+                      {isProjects.map((projects, index) => (
+                        <motion.div
+                          key={index}
+                          className="project-card"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                        >
+                          <div className="project-header">
+                            <div className="project-icon">
+                              <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                              >
+                                <path
+                                  d="M3 9L12 3L21 9V19L12 23L3 19V9Z"
+                                  stroke="#5f2eea"
+                                  strokeWidth="2"
+                                />
+                                <path
+                                  d="M3 9L12 13L21 9M12 13V23"
+                                  stroke="#5f2eea"
+                                  strokeWidth="2"
+                                />
+                              </svg>
+                            </div>
+                            <h3 className="project-title">
+                              {projects.project_title || "Untitled Project"}
+                              <span className="project-status-badge">
+                                {projects.current ? "Ongoing" : "Completed"}
+                              </span>
+                            </h3>
+                          </div>
+
+                          <div className="project-meta">
+                            <div className="project-date">
+                              <CalendarOutlined style={{ color: "#5f2eea" }} />
+                              <span>
+                                {projects.start_date || "Not specified"} -{" "}
+                                {projects.end_date || "Present"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <p className="project-description">
+                            {projects.description || "No description provided."}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    <Button
+                      onClick={() => {
+                        setActiveTab("projects");
+                        showDrawer();
+                      }}
+                      style={{
+                        color: "#5f2eea",
+                        paddingLeft: 0,
+                        paddingTop: 10,
+                      }}
+                      type="link"
+                    >
+                      <PlusOutlined />
+                      Add Another Project
+                    </Button>
+                  </div>
+                ) : (
+                  <motion.div
+                    className="empty-state projects-empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <div className="empty-illustration">
+                      <svg
+                        width="100"
+                        height="100"
+                        viewBox="0 0 200 200"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <defs>
+                          <linearGradient
+                            id="projectGradient"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
+                          >
+                            <stop offset="0%" stopColor="#5f2eea" />
+                            <stop offset="100%" stopColor="#8a63f7" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d="M50 75L100 50L150 75V125L100 150L50 125V75Z"
+                          stroke="url(#projectGradient)"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M50 75L100 100L150 75M100 100V150"
+                          stroke="url(#projectGradient)"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M75 62.5L100 75L125 62.5"
+                          stroke="url(#projectGradient)"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="empty-title">
+                      Your Project Showcase Awaits
+                    </h3>
+                    <p className="empty-description">
+                      Transform your portfolio with stunning project displays.
+                      Highlight your work with rich details, technologies used,
+                      and impressive visuals to captivate your audience.
+                    </p>
+
+                    <Button
+                      onClick={() => {
+                        setActiveTab("projects");
+                        showDrawer();
+                      }}
+                      style={{
+                        color: "#5f2eea",
+                        paddingLeft: 0,
+                        paddingTop: 10,
+                      }}
+                      type="link"
+                    >
+                      <PlusOutlined />
+                      Create Your First Project
+                    </Button>
+                  </motion.div>
+                )}
               </div>
             </div>
             <Divider />
           </div>
         </div>
 
-        {/* Profile Sections */}
-        <div style={{ marginTop: 25 }} className="profile-sections">
-          {/* Achievements Section */}
-
-          <div className="profile-section-card userprofile_cards">
-            <div className="skills_card">
-              <div style={{ textAlign: "left" }}>
-                <h3>Achievements</h3>
-                <p className="profile-section-description">
-                  Broadcast your triumphs and make a remarkable impression on
-                  industry leaders!
-                </p>
-                <Button
-                  onClick={() => {
-                    setActiveButton("achievements");
-                    showDrawer();
-                  }}
-                  style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                  type="link"
-                >
-                  <PlusOutlined />
-                  Add Achievements
-                </Button>
-              </div>
-              <div>
-                <img src={profile7}></img>
-              </div>
-            </div>
-            <Divider />
-          </div>
-        </div>
-
-        {/* Profile Sections */}
         <div style={{ marginTop: 25 }} className="profile-sections">
           {/* Social Links Section */}
           <div className="profile-section-card userprofile_cards">
@@ -4240,46 +4531,44 @@ export default function MainProfile() {
               <div style={{ textAlign: "left" }}>
                 <h3>Social Links</h3>
               </div>
-              <div>
-                <Button
-                  onClick={() => {
-                    setActiveButton("sociallinks");
-                    showDrawer();
-                  }}
-                  style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                  type="link"
-                >
-                  <PlusOutlined />
-                  Add Links
-                </Button>
-              </div>
             </div>
             <div className="userprofile_social">
-              <Tooltip title="Not yet added">
-                <FaFacebookF />
-              </Tooltip>
-              <Tooltip title="Not yet added">
-                <BsThreads />
-              </Tooltip>
-              <Tooltip title="Not yet added">
-                <FaInstagram />
-              </Tooltip>
-              <Tooltip title="Not yet added">
-                <FaLinkedinIn />
-              </Tooltip>
-              <Tooltip title="Not yet added">
-                <FaBehance />
-              </Tooltip>
-              <Tooltip title="Not yet added">
-                <FaDribbble />
-              </Tooltip>
-              <Tooltip title="Not yet added">
-                <FaFigma />
-              </Tooltip>
-              <Tooltip title="Not yet added">
-                <IoMdLink />
-              </Tooltip>
+              {socialIcons.map(({ key, icon, color }) => {
+                const link = isSocialLinks?.[key] || null;
+
+                return link ? (
+                  <a
+                    key={key}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="social-icon active"
+                    style={{ backgroundColor: color }}
+                  >
+                    {icon}
+                  </a>
+                ) : (
+                  <Tooltip key={key} title="Not yet added">
+                    <div className="social-icon inactive">{icon}</div>
+                  </Tooltip>
+                );
+              })}
             </div>
+            <Button
+              onClick={() => {
+                setActiveButton("sociallinks");
+                showDrawer();
+              }}
+              style={{
+                color: "#5f2eea",
+                paddingLeft: 0,
+                paddingTop: 10,
+              }}
+              type="link"
+            >
+              <PlusOutlined />
+              Update Links
+            </Button>
 
             <Divider />
 
@@ -4571,8 +4860,8 @@ export default function MainProfile() {
                     padding: 5,
                     height: 700,
                     overflowY: "scroll",
-                    scrollbarWidth: "none", // for Firefox
-                    msOverflowStyle: "none", // for IE/Edge
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
                   }}
                   className="hide-scrollbar"
                 >

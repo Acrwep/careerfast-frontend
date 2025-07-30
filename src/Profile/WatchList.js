@@ -21,12 +21,14 @@ import {
 import { debounce } from "lodash";
 import { CommonToaster } from "../Common/CommonToaster";
 import { getSavedJobs, removeSavedJobs } from "../ApiService/action";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
 const OpportunityCard = ({ opportunity, onSave }) => {
   const [saved, setSaved] = useState(() => opportunity.saved);
   const [loginUserId, setLoginUserId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     try {
@@ -39,14 +41,6 @@ const OpportunityCard = ({ opportunity, onSave }) => {
       console.error("Invalid JSON in localStorage", error);
     }
   }, []);
-
-  const getSavedJobsData = async () => {
-    try {
-      const response = await getSavedJobs({ user_id: loginUserId });
-    } catch (error) {
-      console.error("Error fetching jobs", error);
-    }
-  };
 
   const handleSave = () => {
     if (!loginUserId) {
@@ -65,38 +59,26 @@ const OpportunityCard = ({ opportunity, onSave }) => {
 
     if (newSavedState) {
       removeSavedJobsData(opportunity);
-      getSavedJobsData(opportunity);
     }
   };
 
   const removeSavedJobsData = async (opportunity) => {
     try {
       await removeSavedJobs({ id: opportunity.id });
-      getSavedJobsData(opportunity);
     } catch (error) {
       console.error("Remove saved jobs error", error);
     }
   };
 
-  const menu = (
-    <Menu>
-      <Menu.Item key="1" icon={<ShareAltOutlined />}>
-        Share
-      </Menu.Item>
-      <Menu.Item key="2" icon={<CalendarOutlined />}>
-        Add to Calendar
-      </Menu.Item>
-      <Menu.Item key="3">View Similar Roles</Menu.Item>
-    </Menu>
-  );
-
   return (
     <Card
+      onClick={() => navigate(`/job-details/${opportunity.job_post_id}`)}
       style={{
         marginBottom: 16,
         borderRadius: 12,
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
         border: "none",
+        cursor: "pointer",
       }}
     >
       <div style={{ display: "flex", gap: 20 }}>
@@ -215,6 +197,7 @@ export default function WatchList() {
     setLoading(true);
     try {
       const response = await getSavedJobs({ user_id: loginUserId });
+      // console.log("kjshdfshhd", response);
       setOpportunities(response?.data?.data || []);
     } catch (error) {
       console.error("Error fetching jobs", error);
@@ -265,7 +248,7 @@ export default function WatchList() {
         }}
       >
         <Title level={3} style={{ margin: 0 }}>
-          My Opportunity Watchlist
+          My Opportunity Wishlist
         </Title>
         <Badge
           count={opportunities.length}

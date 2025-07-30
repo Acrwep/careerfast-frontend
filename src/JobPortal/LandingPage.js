@@ -36,6 +36,7 @@ import post_jobs from "../images/post_jobs.webp";
 import post_jobs1 from "../images/post_jobs1.png";
 import { PiCurrencyDollarDuotone } from "react-icons/pi";
 import { LockOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 // header
 import Header from "../Header/Header";
 
@@ -278,6 +279,7 @@ export default function JobPortalLandingPage() {
   const [backendJobs, setBackendJobs] = useState([]);
   const [roleId, setRoleId] = useState(null);
   const [loginUserId, setLoginUserId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "CareerFast | Job Portal";
@@ -331,52 +333,54 @@ export default function JobPortalLandingPage() {
                 and unlock your professional potential.
               </p>
               <div className="button-group">
-                <a href="job-filter">
-                  <button className="primary-btn">
-                    <span>Find Jobs</span>
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M5 12H19M19 12L12 5M19 12L12 19"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                <button
+                  onClick={() => navigate("/job-filter")}
+                  className="primary-btn"
+                >
+                  <span>Find Jobs</span>
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M5 12H19M19 12L12 5M19 12L12 19"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+                {roleId === 3 ? (
+                  <button
+                    onClick={() => navigate("/post-jobs")}
+                    className="secondary-btn"
+                  >
+                    <>
+                      <span>Post Jobs</span>
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M12 5V19M5 12H19"
+                          stroke="#5f2eea"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </>
                   </button>
-                </a>
-                <a href="post-jobs">
-                  {roleId === 3 ? (
-                    <button className="secondary-btn">
-                      <>
-                        <span>Post Jobs</span>
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M12 5V19M5 12H19"
-                            stroke="#6900ad"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </>
-                    </button>
-                  ) : (
-                    ""
-                  )}
-                </a>
+                ) : (
+                  ""
+                )}
               </div>
             </div>
           </div>
@@ -402,7 +406,7 @@ export default function JobPortalLandingPage() {
                   >
                     <path
                       d="M20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12Z"
-                      fill="#6900ad"
+                      fill="#5f2eea"
                     />
                     <path
                       d="M12 8V12L15 15"
@@ -427,14 +431,14 @@ export default function JobPortalLandingPage() {
                   >
                     <path
                       d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                     <path
                       d="M12 8V12L15 15"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -455,27 +459,27 @@ export default function JobPortalLandingPage() {
                   >
                     <path
                       d="M3 21H21"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                     />
                     <path
                       d="M19 21V5C19 4.46957 18.7893 3.96086 18.4142 3.58579C18.0391 3.21071 17.5304 3 17 3H7C6.46957 3 5.96086 3.21071 5.58579 3.58579C5.21071 3.96086 5 4.46957 5 5V21"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                     <path
                       d="M9 10H15"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                     <path
                       d="M9 14H15"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -500,7 +504,7 @@ export default function JobPortalLandingPage() {
                   >
                     <path
                       d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -572,7 +576,9 @@ export default function JobPortalLandingPage() {
               <motion.span
                 className="elite-badge"
                 animate={{
-                  background: ["#6900ad"],
+                  background: [
+                    "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
+                  ],
                   boxShadow: [
                     "0 4px 15px rgba(200, 210, 230, 0.7)",
                     "0 4px 15px rgba(200, 210, 250, 0.7)",
@@ -678,6 +684,7 @@ export default function JobPortalLandingPage() {
                       </div>
 
                       <motion.div
+                        onClick={() => navigate(`/job-details/${jobs.id}`)}
                         className="elite-job-cta"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.95 }}
@@ -686,12 +693,8 @@ export default function JobPortalLandingPage() {
                           style={{ color: "#5f2eea" }}
                           className="elite-cta-icon"
                         />
-                        <a
-                          href={`/job-details/${jobs.id}`}
-                          style={{ color: "#5f2eea" }}
-                        >
-                          <span>View Details</span>
-                        </a>
+
+                        <span style={{ color: "#5f2eea" }}>View Details</span>
                       </motion.div>
                     </Card>
                   </motion.div>
@@ -722,7 +725,9 @@ export default function JobPortalLandingPage() {
               <motion.span
                 className="elite-badge"
                 animate={{
-                  background: ["#6900ad"],
+                  background: [
+                    "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
+                  ],
                   boxShadow: [
                     "0 4px 15px rgba(200, 210, 230, 0.7)",
                     "0 4px 15px rgba(200, 210, 250, 0.7)",
@@ -1088,7 +1093,7 @@ export default function JobPortalLandingPage() {
             >
               <Title className="post_jobs_title">
                 Post Your{" "}
-                <span style={{ color: "#6900ad" }}>Jobs & Internships</span>
+                <span style={{ color: "#5f2eea" }}>Jobs & Internships</span>
               </Title>
               <Text className="post_jobs_text">
                 Connect with top talent actively seeking opportunities across
@@ -1104,7 +1109,7 @@ export default function JobPortalLandingPage() {
               </Text>
 
               <div className="post_jobs_btn">
-                <img src={post_jobs1} alt="icon" />
+                <img style={{ width: "60%" }} src={post_jobs1} alt="icon" />
                 {roleId === 3 ? (
                   <a href="post-jobs">
                     <button className="primary-btn">

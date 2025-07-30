@@ -14,6 +14,7 @@ import { IoMdCloseCircleOutline } from "react-icons/io";
 import { Menu, Dropdown, message, Button } from "antd";
 import { closeRegistration, getJobPostByUserId } from "../ApiService/action";
 import moment from "moment/moment";
+import { useNavigate } from "react-router-dom";
 
 export default function ListingDashboard() {
   const [activeTab, setActiveTab] = useState("All");
@@ -22,6 +23,7 @@ export default function ListingDashboard() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loginUserId, setLoginUserId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getJobPostByUserIdData();
@@ -97,19 +99,18 @@ export default function ListingDashboard() {
     0
   );
 
-  const tabs = ["All", "Internships", "Jobs"];
-  const filters = ["All", "Live", "Expired"];
+  const tabs = ["All", "Internship", "Job"];
 
   const getTypeIcon = (job_nature) => {
     switch (job_nature) {
       case "Job":
         return <FiBriefcase className="icon-blue" />;
       case "Contract":
-        return <FiBriefcase className="icon-purple" />;
+        return <FiBriefcase className="icon-green" />;
       case "Internship":
-        return <FiBriefcase className="icon-orange" />;
+        return <FiBriefcase className="icon-purple" />;
       default:
-        return <FiCalendar className="icon-green" />;
+        return <FiCalendar className="icon-gray" />;
     }
   };
 
@@ -118,18 +119,6 @@ export default function ListingDashboard() {
       <div className="dashboard-inner">
         <div className="dashboard-header">
           <h1>Listing</h1>
-        </div>
-
-        <div className="tabs-container">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`tab-btn ${activeTab === tab ? "active" : ""}`}
-            >
-              {tab}
-            </button>
-          ))}
         </div>
 
         <div className="stats-container">
@@ -166,16 +155,15 @@ export default function ListingDashboard() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="filters">
-            {filters.map((filter) => (
+
+          <div className="tabs-container">
+            {tabs.map((tab) => (
               <button
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
-                className={`filter-btn ${
-                  activeFilter === filter ? "active" : ""
-                }`}
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`tab-btn ${activeTab === tab ? "active" : ""}`}
               >
-                {filter}
+                {tab}
               </button>
             ))}
           </div>
@@ -212,12 +200,14 @@ export default function ListingDashboard() {
                   );
                   return (
                     <motion.div
+                      onClick={() => navigate(`/job-details/${listing.id}`)}
                       key={listing.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.3 }}
                       className="listing-card"
+                      style={{ cursor: "pointer" }}
                     >
                       <div className="card-inner">
                         <img
@@ -273,15 +263,6 @@ export default function ListingDashboard() {
                               <a href="/admin-dashboard">
                                 <FiEdit style={{ cursor: "pointer" }} />
                               </a>
-
-                              <FiSettings />
-                              <Dropdown
-                                placement="bottomRight"
-                                overlay={moreOptions}
-                                trigger={["click"]}
-                              >
-                                <FiMoreVertical style={{ cursor: "pointer" }} />
-                              </Dropdown>
                             </div>
                           </div>
                         </div>

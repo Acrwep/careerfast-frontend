@@ -255,7 +255,7 @@
 .resume-card {
   background-color: #e9e0fe;
   border-radius: 8px;
-  padding: 16px;
+  padding: 5px;
   text-align: left;
 }
 
@@ -265,7 +265,7 @@
 }
 
 .resume-card-title {
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 8px;
   color: #5f2eea;
 }
@@ -337,13 +337,13 @@
   color: #4b5563;
 }
 
-.skills_card {
+/* .skills_card {
   display: flex;
   justify-content: space-between;
-}
+} */
 
 .userprofile_cards {
-  padding: 28px 24px 16px 24px;
+  padding: 28px 40px 16px 40px;
   background: #fff;
 }
 
@@ -356,20 +356,43 @@
 }
 
 .userprofile_social svg {
-  background: #eee;
   height: 40px;
   padding: 9px;
-  border-radius: 30px;
-  width: 50px;
-  cursor: no-drop;
-  opacity: 0.7;
+  width: 40px;
 }
 
 .userprofile_social {
-  padding-top: 12px;
   display: flex;
-  justify-content: left;
   gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.social-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.social-icon.active:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.social-icon.active:hover svg {
+  color: #fff !important;
+}
+
+.social-icon.inactive {
+  background-color: #e0e0e0;
+  color: #999;
+  cursor: default;
 }
 
 .react-calendar-heatmap {
@@ -1302,8 +1325,8 @@
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
-  padding-bottom: 1rem;
-  margin-bottom: 2rem;
+  padding-bottom: 0rem;
+  margin-bottom: 0rem;
   scrollbar-width: thin;
   scrollbar-color: #e6ecfe transparent;
 }
@@ -2323,6 +2346,15 @@
   border-color: #c7d2fe;
 }
 
+.add-company-btn {
+  background: linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%);
+}
+
+.add-company-btn:hover {
+  background: linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%) !important;
+  box-shadow: none !important;
+}
+
 /* Add User Button */
 .account-settings-container .add-user-btn {
   display: flex;
@@ -3173,4 +3205,442 @@
 .ant-popconfirm-buttons .ant-btn-variant-solid {
   color: #fff;
   background: #5f2eea !important;
+}
+
+.work-experience-section {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.work-experience-section .empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f9f9ff 0%, #f0f0ff 100%);
+  border-radius: 12px;
+  border: 1px dashed #d1d1f0;
+  margin-bottom: 24px;
+}
+
+.work-experience-section .empty-icon {
+  margin-bottom: 16px;
+}
+
+.work-experience-section .empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2a2734;
+  margin-bottom: 8px;
+}
+
+.work-experience-section .empty-description {
+  font-size: 14px;
+  color: #6b677d;
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+.work-experience-section .experience-timeline {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 10px;
+  margin-top: 20px;
+}
+
+.work-experience-section .experience-card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f0f5;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: auto;
+}
+
+.work-experience-section .experience-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #5f2eea, #8a63f7);
+}
+
+.work-experience-section .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.work-experience-section .company-info {
+  flex: 1;
+}
+
+.work-experience-section .company-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2a2734;
+  margin: 0 0 8px 0;
+}
+
+.work-experience-section .job-title {
+  font-size: 12px;
+  color: #5f2eea;
+  background: #f5f3ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.work-experience-section .company-logo-placeholder {
+  width: 35px;
+  height: 35px;
+  background: linear-gradient(135deg, #5f2eea 0%, #8b6cf5 100%);
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  margin-left: 16px;
+}
+
+.work-experience-section .card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.work-experience-section .detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b677d;
+}
+
+.work-experience-section .detail-icon {
+  flex-shrink: 0;
+}
+
+.work-experience-section .card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.work-experience-section .edit-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #5f2eea;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.work-experience-section .edit-button:hover {
+  background: #f5f3ff;
+}
+
+/* education result */
+.education-section {
+  margin: 0 auto;
+}
+
+.education-section .education-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.education-section .education-card {
+  background: white;
+  border-radius: 16px;
+  padding: 18px 25px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f0f5;
+  transition: all 0.3s ease;
+  position: relative;
+  margin-top: 35px;
+  overflow: auto;
+}
+
+.education-section .education-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #5f2eea, #8a63f7);
+}
+
+.education-section .education-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.education-section .education-header1 {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.education-section .education-icon {
+  width: 48px;
+  height: 48px;
+  background: #f5f3ff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.education-section .education-titles {
+  flex: 1;
+}
+
+.education-section .education-degree {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2a2734;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+}
+
+.education-section .education-specialization {
+  font-weight: 500;
+  color: #6b677d;
+  font-size: 16px;
+}
+
+.education-section .education-institution {
+  font-size: 15px;
+  color: #5f2eea;
+  margin: 0;
+  font-weight: 500;
+}
+
+.education-section .education-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0px 20px 42px;
+}
+
+.education-section .detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b677d;
+}
+
+.education-section .detail-icon {
+  flex-shrink: 0;
+}
+
+.education-section .edit-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #5f2eea;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.education-section .edit-button:hover {
+  background: #f5f3ff;
+}
+
+.empty-state.education-empty {
+  text-align: center;
+  padding: 20px 20px;
+  background: linear-gradient(135deg, #f9f9ff 0%, #f0f0ff 100%);
+  border-radius: 16px;
+  border: 1px dashed #d1d1f0;
+  margin-top: 20px;
+  margin-bottom: 4px;
+}
+
+.education-empty .empty-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2a2734;
+  margin-bottom: 12px;
+}
+
+.education-empty .empty-description {
+  font-size: 15px;
+  color: #6b677d;
+  max-width: 500px;
+  margin: 0 auto 24px auto;
+  line-height: 1.6;
+}
+
+/* profile result */
+
+.profile_result .projects-section {
+  padding: 1rem 0;
+}
+
+.profile_result .projects-grid {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 1rem;
+}
+
+.profile_result .project-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile_result .project-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #5f2eea, #8a63f7);
+}
+
+.profile_result .project-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.profile_result .project-icon {
+  background: rgba(95, 46, 234, 0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.profile_result .project-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2a2a2a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.profile_result .project-status-badge {
+  background: #f6f2ff;
+  color: #5f2eea;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.profile_result .project-meta {
+  margin-bottom: 16px;
+}
+
+.profile_result .project-date,
+.project-tech {
+  display: flex;
+  align-items: center;
+  color: #666;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.profile_result .project-date svg,
+.project-tech svg {
+  margin-right: 8px;
+  color: #888;
+}
+
+.profile_result .tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.profile_result .tech-tag {
+  background: #f5f5f5;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.profile_result .project-description {
+  color: #444;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.profile_result .project-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.profile_result .empty-state {
+  text-align: center;
+  padding: 20px 0;
+  max-width: 500px;
+}
+
+.profile_result .empty-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2a2a2a;
+  margin-bottom: 0.5rem;
+}
+
+.profile_result .empty-description {
+  color: #666;
+  line-height: 1.6;
+}
+
+.profile_result .cta-button {
+  background: linear-gradient(to right, #5f2eea, #8a63f7);
+  border: none;
+  border-radius: 8px;
+  padding: 0 32px;
+  height: 44px;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(95, 46, 234, 0.3);
 }

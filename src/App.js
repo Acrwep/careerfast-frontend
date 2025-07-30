@@ -6,6 +6,14 @@ import "react-toastify/dist/ReactToastify.css";
 import Layout from "./Layout/Layout";
 
 function App() {
+  //hide console and errors in the production
+  if (process.env.NODE_ENV === "production") {
+    console.log = () => {};
+    console.debug = () => {};
+    console.info = () => {};
+    console.warn = () => {};
+    console.error = () => {};
+  }
   return (
     <div className="App">
       <BrowserRouter>

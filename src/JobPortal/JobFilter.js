@@ -7,36 +7,24 @@ import {
   Space,
   Button,
   Dropdown,
-  Menu,
-  Badge,
   Drawer,
   Radio,
   Divider,
   List,
-  Switch,
   Input,
   Checkbox,
-  Slider,
   message,
   Spin,
   Empty,
-  Tag,
 } from "antd";
 import {
   ClockCircleOutlined,
   ThunderboltFilled,
   CrownFilled,
-  FilterOutlined,
   ThunderboltOutlined,
   DownOutlined,
-  LaptopOutlined,
-  TrophyOutlined,
-  BookOutlined,
-  ReadOutlined,
-  UserOutlined,
   CloseOutlined,
   EnvironmentOutlined,
-  DeleteOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import "../css/JobFilter.css";
@@ -53,7 +41,6 @@ import {
   checkIsJobSaved,
   getJobCategoryData,
   getJobPosts,
-  getSalaryData,
   getSavedJobs,
   removeSavedJobs,
   saveJobPost,
@@ -70,6 +57,7 @@ import { HiOutlineStatusOnline } from "react-icons/hi";
 import { GrLocation } from "react-icons/gr";
 import { CgWorkAlt } from "react-icons/cg";
 import { BiCategoryAlt } from "react-icons/bi";
+import Header from "../Header/Header";
 
 const { Title, Text } = Typography;
 
@@ -106,7 +94,6 @@ export default function JobFilter() {
   const [loading, setLoading] = useState(false);
   const [workLocationOption, setWorkLocationOption] = useState([]);
   const [isApplied, setIsApplied] = useState({});
-  const [savedJobPost, setSavedJobPost] = useState("");
   const [savedJobMap, setSavedJobMap] = useState({});
   const [isSaved, setIsSaved] = useState({});
 
@@ -961,571 +948,583 @@ export default function JobFilter() {
   };
 
   return (
-    <section
-      className="job_filter"
-      style={{
-        padding: "20px 60px 48px 60px",
-        background:
-          "linear-gradient(135deg, rgb(247 247 247) 0%, rgb(244 238 255) 100%)",
-      }}
-    >
-      <div
-        className="job-filter-topbar"
+    <>
+      <Header />
+      <section
+        className="job_filter"
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "16px 24px",
-          borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
-          backgroundColor: "#fff",
-          flexWrap: "wrap",
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
-          borderRadius: "12px 12px 0 0",
-          marginBottom: 15,
+          padding: "10px 60px 48px 60px",
+          background:
+            "linear-gradient(135deg, rgb(247 247 247) 0%, rgb(244 238 255) 100%)",
         }}
       >
-        {/* Primary Filter Dropdown */}
-        <Dropdown
-          popupRender={dropdownItems}
-          trigger={["click"]}
-          open={jobNatureVisible}
-          onOpenChange={(visible) => setJobNatureVisible(visible)}
-          placement="bottomLeft"
-          overlayStyle={{
-            borderRadius: 12,
-            boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-            padding: "8px 0",
+        <div
+          className="job-filter-topbar"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "16px 24px",
+            borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+            backgroundColor: "#fff",
+            flexWrap: "wrap",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
+            borderRadius: "12px 12px 0 0",
+            marginBottom: 15,
           }}
         >
-          <Button
-            className="job-filter-job"
-            shape="round"
-            type="primary"
-            onClick={() => setJobNatureVisible(!jobNatureVisible)}
+          {/* Primary Filter Dropdown */}
+          <Dropdown
+            popupRender={dropdownItems}
+            trigger={["click"]}
+            open={jobNatureVisible}
+            onOpenChange={(visible) => setJobNatureVisible(visible)}
+            placement="bottomLeft"
+            overlayStyle={{
+              borderRadius: 12,
+              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
+              padding: "8px 0",
+            }}
           >
-            <Space>
-              <span style={{ fontWeight: 500 }}>Jobs</span>
-              <DownOutlined style={{ fontSize: 12 }} />
-            </Space>
-          </Button>
-        </Dropdown>
-
-        {/* Salary Filter */}
-        <>
-          {selectedSort ? (
             <Button
+              className="job-filter-job"
               shape="round"
-              type="default"
-              style={{
-                border: "1px solid #4f46e5",
-                backgroundColor: "#fff",
-                color: "#1e293b",
-                fontWeight: 500,
-                padding: "0 12px",
-                height: 36,
-              }}
-              onClick={clearSort}
+              type="primary"
+              onClick={() => setJobNatureVisible(!jobNatureVisible)}
             >
               <Space>
-                {selectedSort === "highToLow"
-                  ? "Salary (High to Low)"
-                  : "Salary (Low to High)"}
-                <CloseOutlined style={{ fontSize: 12 }} />
+                <span style={{ fontWeight: 500 }}>Jobs</span>
+                <DownOutlined style={{ fontSize: 12 }} />
               </Space>
             </Button>
-          ) : (
-            <CommonSelectField
+          </Dropdown>
+
+          {/* Salary Filter */}
+          <>
+            {selectedSort ? (
+              <Button
+                shape="round"
+                type="default"
+                style={{
+                  border: "1px solid #4f46e5",
+                  backgroundColor: "#fff",
+                  color: "#1e293b",
+                  fontWeight: 500,
+                  padding: "0 12px",
+                  height: 36,
+                }}
+                onClick={clearSort}
+              >
+                <Space>
+                  {selectedSort === "highToLow"
+                    ? "Salary (High to Low)"
+                    : "Salary (Low to High)"}
+                  <CloseOutlined style={{ fontSize: 12 }} />
+                </Space>
+              </Button>
+            ) : (
+              <CommonSelectField
+                style={{
+                  border: "1px solid rgba(0, 0, 0, 0.08)",
+                  background: "#fff",
+                  padding: "0 5px",
+                  height: 36,
+                  borderRadius: 20,
+                  color: "#2d3748",
+                  fontWeight: 500,
+                  marginBottom: 0,
+                }}
+                onChange={(value) => setSelectedSort(value)}
+                placeholder="Select Salary Filter"
+                options={[
+                  {
+                    id: 1,
+                    label: "Salary (High to Low)",
+                    value: "highToLow",
+                  },
+                  {
+                    id: 2,
+                    label: "Salary (Low to High)",
+                    value: "lowToHigh",
+                  },
+                ]}
+                showSearch={true}
+              />
+            )}
+          </>
+
+          {/* Status Filter */}
+          <Dropdown
+            popupRender={renderStatus}
+            trigger={["click"]}
+            open={statusVisible}
+            onOpenChange={setStatusVisible}
+            overlayStyle={{
+              borderRadius: 12,
+              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
+              padding: "8px 0",
+            }}
+          >
+            <Button
+              shape="round"
               style={{
                 border: "1px solid rgba(0, 0, 0, 0.08)",
                 background: "#fff",
-                padding: "0 5px",
+                padding: "0 16px",
                 height: 36,
-                borderRadius: 20,
                 color: "#2d3748",
                 fontWeight: 500,
-                marginBottom: 0,
               }}
-              onChange={(value) => setSelectedSort(value)}
-              placeholder="Select Salary Filter"
-              options={[
-                {
-                  id: 1,
-                  label: "Salary (High to Low)",
-                  value: "highToLow",
-                },
-                {
-                  id: 2,
-                  label: "Salary (Low to High)",
-                  value: "lowToHigh",
-                },
-              ]}
-              showSearch={true}
-            />
-          )}
-        </>
+            >
+              <Space>
+                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <HiOutlineStatusOnline /> Status
+                </div>
+                <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
+              </Space>
+            </Button>
+          </Dropdown>
 
-        {/* Status Filter */}
-        <Dropdown
-          popupRender={renderStatus}
-          trigger={["click"]}
-          open={statusVisible}
-          onOpenChange={setStatusVisible}
-          overlayStyle={{
-            borderRadius: 12,
-            boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-            padding: "8px 0",
-          }}
-        >
-          <Button
-            shape="round"
-            style={{
-              border: "1px solid rgba(0, 0, 0, 0.08)",
-              background: "#fff",
-              padding: "0 16px",
-              height: 36,
-              color: "#2d3748",
-              fontWeight: 500,
+          {/* Status Filter */}
+          <Dropdown
+            popupRender={renderWorkingDays}
+            trigger={["click"]}
+            open={workingDaysVisible}
+            onOpenChange={(flag) => setWorkingDaysVisible(flag)}
+            overlayStyle={{
+              borderRadius: 12,
+              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
+              padding: "8px 0",
             }}
           >
-            <Space>
-              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                <HiOutlineStatusOnline /> Status
-              </div>
-              <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
-            </Space>
-          </Button>
-        </Dropdown>
+            <Button
+              shape="round"
+              style={{
+                border: "1px solid rgba(0, 0, 0, 0.08)",
+                background: "#fff",
+                padding: "0 16px",
+                height: 36,
+                color: "#2d3748",
+                fontWeight: 500,
+              }}
+            >
+              <Space>
+                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <LuCalendarDays /> Working Days
+                </div>
+                <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
+              </Space>
+            </Button>
+          </Dropdown>
 
-        {/* Status Filter */}
-        <Dropdown
-          popupRender={renderWorkingDays}
-          trigger={["click"]}
-          open={workingDaysVisible}
-          onOpenChange={(flag) => setWorkingDaysVisible(flag)}
-          overlayStyle={{
-            borderRadius: 12,
-            boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-            padding: "8px 0",
-          }}
-        >
-          <Button
-            shape="round"
-            style={{
-              border: "1px solid rgba(0, 0, 0, 0.08)",
-              background: "#fff",
-              padding: "0 16px",
-              height: 36,
-              color: "#2d3748",
-              fontWeight: 500,
+          {/* Location Filter */}
+          <Dropdown
+            popupRender={renderLocation}
+            trigger={["click"]}
+            open={visible}
+            onOpenChange={(flag) => setVisible(flag)}
+            overlayStyle={{
+              borderRadius: 12,
+              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
+              padding: "8px 0",
             }}
           >
-            <Space>
-              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                <LuCalendarDays /> Working Days
-              </div>
-              <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
-            </Space>
-          </Button>
-        </Dropdown>
+            <Button
+              shape="round"
+              style={{
+                border: "1px solid rgba(0, 0, 0, 0.08)",
+                background: "#fff",
+                padding: "0 16px",
+                height: 36,
+                color: "#2d3748",
+                fontWeight: 500,
+              }}
+            >
+              <Space>
+                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <GrLocation /> Location
+                </div>
 
-        {/* Location Filter */}
-        <Dropdown
-          popupRender={renderLocation}
-          trigger={["click"]}
-          open={visible}
-          onOpenChange={(flag) => setVisible(flag)}
-          overlayStyle={{
-            borderRadius: 12,
-            boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-            padding: "8px 0",
-          }}
-        >
-          <Button
-            shape="round"
-            style={{
-              border: "1px solid rgba(0, 0, 0, 0.08)",
-              background: "#fff",
-              padding: "0 16px",
-              height: 36,
-              color: "#2d3748",
-              fontWeight: 500,
+                <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
+              </Space>
+            </Button>
+          </Dropdown>
+
+          {/* Work Type Filter */}
+          <Dropdown
+            popupRender={dropdownContent}
+            trigger={["click"]}
+            open={workTypevisible}
+            onOpenChange={(flag) => setWorkTypeVisible(flag)}
+            overlayStyle={{
+              borderRadius: 12,
+              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
+              padding: "8px 0",
             }}
           >
-            <Space>
-              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                <GrLocation /> Location
-              </div>
+            <Button
+              shape="round"
+              style={{
+                border: "1px solid rgba(0, 0, 0, 0.08)",
+                background: "#fff",
+                padding: "0 16px",
+                height: 36,
+                color: "#2d3748",
+                fontWeight: 500,
+              }}
+            >
+              <Space>
+                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <CgWorkAlt /> Work Type
+                </div>
 
-              <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
-            </Space>
-          </Button>
-        </Dropdown>
+                <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
+              </Space>
+            </Button>
+          </Dropdown>
 
-        {/* Work Type Filter */}
-        <Dropdown
-          popupRender={dropdownContent}
-          trigger={["click"]}
-          open={workTypevisible}
-          onOpenChange={(flag) => setWorkTypeVisible(flag)}
-          overlayStyle={{
-            borderRadius: 12,
-            boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-            padding: "8px 0",
-          }}
-        >
-          <Button
-            shape="round"
-            style={{
-              border: "1px solid rgba(0, 0, 0, 0.08)",
-              background: "#fff",
-              padding: "0 16px",
-              height: 36,
-              color: "#2d3748",
-              fontWeight: 500,
+          {/*Category */}
+          <Dropdown
+            popupRender={userCatergory}
+            trigger={["click"]}
+            open={userCatergoryvisible}
+            onOpenChange={(flag) => setUserCatergoryVisible(flag)}
+            overlayStyle={{
+              borderRadius: 12,
+              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
+              padding: "8px 0",
             }}
           >
-            <Space>
-              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                <CgWorkAlt /> Work Type
-              </div>
+            <Button
+              shape="round"
+              style={{
+                border: "1px solid rgba(0, 0, 0, 0.08)",
+                background: "#fff",
+                padding: "0 16px",
+                height: 36,
+                color: "#2d3748",
+                fontWeight: 500,
+              }}
+            >
+              <Space>
+                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <BiCategoryAlt /> Category
+                </div>
+                <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
+              </Space>
+            </Button>
+          </Dropdown>
 
-              <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
-            </Space>
-          </Button>
-        </Dropdown>
-
-        {/*Category */}
-        <Dropdown
-          popupRender={userCatergory}
-          trigger={["click"]}
-          open={userCatergoryvisible}
-          onOpenChange={(flag) => setUserCatergoryVisible(flag)}
-          overlayStyle={{
-            borderRadius: 12,
-            boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-            padding: "8px 0",
-          }}
-        >
-          <Button
-            shape="round"
-            style={{
-              border: "1px solid rgba(0, 0, 0, 0.08)",
-              background: "#fff",
-              padding: "0 16px",
-              height: 36,
-              color: "#2d3748",
-              fontWeight: 500,
-            }}
-          >
-            <Space>
-              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                <BiCategoryAlt /> Category
-              </div>
-              <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
-            </Space>
-          </Button>
-        </Dropdown>
-
-        {/* Quick Apply Button */}
-        <div style={{ marginLeft: "auto" }}>
-          <Button
-            shape="round"
-            icon={<ThunderboltOutlined style={{ color: "#f59e0b" }} />}
-            style={{
-              border: "1px solid rgba(0, 0, 0, 0.08)",
-              background: "#fff",
-              padding: "0 20px",
-              height: 36,
-              color: "#fff",
-              fontWeight: 500,
-              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.03)",
-              background:
-                "linear-gradient(135deg, rgb(79, 70, 229) 0%, rgb(124, 58, 237) 100%)",
-            }}
-          >
-            <Space>Quick Apply</Space>
-          </Button>
+          {/* Quick Apply Button */}
+          <div style={{ marginLeft: "auto" }}>
+            <Button
+              shape="round"
+              icon={<ThunderboltOutlined style={{ color: "#f59e0b" }} />}
+              style={{
+                border: "1px solid rgba(0, 0, 0, 0.08)",
+                background: "#fff",
+                padding: "0 20px",
+                height: 36,
+                color: "#fff",
+                fontWeight: 500,
+                boxShadow: "0 1px 2px rgba(0, 0, 0, 0.03)",
+                background:
+                  "linear-gradient(135deg, rgb(79, 70, 229) 0%, rgb(124, 58, 237) 100%)",
+              }}
+            >
+              <Space>Quick Apply</Space>
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div>
-        <Row gutter={32}>
-          <Col className="job_filter_left" lg={7} xs={24} md={8}>
-            {backendJobs.length === 0 ? (
-              <Empty description="No jobs found" />
-            ) : (
-              <Spin spinning={loading} size="large">
-                <Space direction="vertical" size={24} style={{ width: "100%" }}>
-                  {backendJobs.map((job) => (
-                    <JobCard key={job.id} job={transformJob(job)} />
-                  ))}
-                </Space>
-              </Spin>
-            )}
-          </Col>
+        <div>
+          <Row gutter={32}>
+            <Col className="job_filter_left" lg={7} xs={24} md={8}>
+              {backendJobs.length === 0 ? (
+                <Empty description="No jobs found" />
+              ) : (
+                <Spin spinning={loading} size="large">
+                  <Space
+                    direction="vertical"
+                    size={24}
+                    style={{ width: "100%" }}
+                  >
+                    {backendJobs.map((job) => (
+                      <JobCard key={job.id} job={transformJob(job)} />
+                    ))}
+                  </Space>
+                </Spin>
+              )}
+            </Col>
 
-          <Col className="job_filter_left" lg={17} xs={24} md={16}>
-            <section className="premium-job-details">
-              {postDetails.map((job) => (
-                <>
-                  <div className="premium-job-card">
-                    <div className="">
-                      <div className="premium-border"></div>
-                      <div className="premium-indicator">
-                        <span
-                          className={
-                            job.status === "Live"
-                              ? "status-badge"
-                              : job.status === "Expired"
-                              ? "status-badge-red"
-                              : ""
-                          }
-                        >
-                          {job.status}
-                        </span>
+            <Col className="job_filter_left" lg={17} xs={24} md={16}>
+              <section className="premium-job-details">
+                {postDetails.map((job) => (
+                  <>
+                    <div className="premium-job-card">
+                      <div className="">
+                        <div className="premium-border"></div>
+                        <div className="premium-indicator">
+                          <span
+                            className={
+                              job.status === "Live"
+                                ? "status-badge"
+                                : job.status === "Expired"
+                                ? "status-badge-red"
+                                : ""
+                            }
+                          >
+                            {job.status}
+                          </span>
+                        </div>
+
+                        <div className="company-logo-wrapper">
+                          <img
+                            src={job.logo}
+                            alt="Company Logo"
+                            className="premium-logo"
+                          />
+                        </div>
+
+                        <div className="job-content">
+                          <h2 className="premium-job-title">{job.title}</h2>
+
+                          <div className="job-meta-item">
+                            <FaRegBuilding className="meta-icon premium-icon" />
+                            <span className="meta-text">{job.company}</span>
+                            <span className="verified-badge">Verified</span>
+                          </div>
+
+                          <div className="job-meta-item">
+                            <FaMapMarkerAlt className="meta-icon premium-icon" />
+                            <span className="meta-text">{job.location}</span>
+                          </div>
+
+                          <div className="job-meta-item">
+                            <FaRegCalendarAlt className="meta-icon premium-icon" />
+                            <span className="meta-text">
+                              Updated On: {job.created_date}
+                            </span>
+                          </div>
+
+                          <div className="job-tags">
+                            <span className="tag">{job.type}</span>
+                            <span className="tag">{job.working_days}</span>
+                            <span className="tag">{job.salary}</span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="company-logo-wrapper">
+                      <div className="side_job_details">
+                        <div className="side_job_actions">
+                          <div className="side_job_action_buttons">
+                            <div className="side_job_action_icons">
+                              <span
+                                className="side_job_action_icon"
+                                onClick={() => handleWishlistToggle(job.id)}
+                              >
+                                {isSaved[job.id] ? (
+                                  <FaHeart className="side_job_action_icon heart active" />
+                                ) : (
+                                  <FaRegHeart className="side_job_action_icon heart" />
+                                )}
+                              </span>
+                              <span className="side_job_action_icon">
+                                <IoMdCalendar className="side_job_action_icon calendar" />
+                              </span>
+                            </div>
+                            <button className="side_job_share_button">
+                              <IoIosShareAlt /> Share
+                            </button>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {isApplied[job.id] === true ? (
+                              <div className="side_job_applied_badge">
+                                <FaCheckCircle /> Applied
+                              </div>
+                            ) : (
+                              <button
+                                onClick={showDrawer}
+                                disabled={job.status !== "Live"}
+                                className={
+                                  job.status === "Live"
+                                    ? "side_job_apply_button primary"
+                                    : "side_job_apply_button disabled"
+                                }
+                              >
+                                Apply Now
+                              </button>
+                            )}
+                          </div>
+                          <Drawer
+                            size="default"
+                            title="Apply Now"
+                            closable={{ "aria-label": "Close Button" }}
+                            onClose={onClose}
+                            open={openApplyNow}
+                          >
+                            <p>
+                              Hi Santhosh! We request you to take a couple of
+                              minutes to update your profile.
+                            </p>
+
+                            {postDetails[0]?.questions?.length > 0 && (
+                              <div className="job-questions-section">
+                                <h4>Application Questions</h4>
+                                {postDetails[0].questions.map(
+                                  (question, index) => (
+                                    <div key={index} className="question-item">
+                                      <p>{question}</p>
+                                      <Input.TextArea
+                                        rows={3}
+                                        placeholder="Your answer..."
+                                        className="premium-input"
+                                        value={answers[index] || ""}
+                                        onChange={(e) => {
+                                          const newAnswers = [...answers];
+                                          newAnswers[index] = e.target.value;
+                                          setAnswers(newAnswers);
+                                        }}
+                                      />
+                                    </div>
+                                  )
+                                )}
+                                <div>
+                                  <button
+                                    className="premium-apply"
+                                    onClick={applyForJobData}
+                                  >
+                                    Submit
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </Drawer>
+                        </div>
+
+                        <div className="side_job_eligibility">
+                          <h4 className="side_job_eligibility_title">
+                            Eligibility
+                          </h4>
+                          <div className="side_job_eligibility_details">
+                            <span className="side_job_eligibility_item">
+                              <MdOutlineSchool /> {job.level}
+                            </span>
+                            <span className="side_job_eligibility_item">
+                              <MdOutlineWorkOutline /> {job.eligibility}
+                            </span>
+                            <span className="side_job_eligibility_item">
+                              <FaTransgender />{" "}
+                              {job.diversity_hiring.map(
+                                (diversity_hiring, index) => (
+                                  <span key={index}>
+                                    {diversity_hiring}
+                                    {index < job.diversity_hiring.length - 1 &&
+                                      ", "}
+                                  </span>
+                                )
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="section-card job-description">
+                      <h2 className="section-title">Job Description</h2>
+                      <h6>
+                        {job.company} is hiring for the role of {job.title}!
+                      </h6>
+                      <div
+                        className="job-description-content"
+                        dangerouslySetInnerHTML={{
+                          __html: job.job_description,
+                        }}
+                      />
+                    </div>
+
+                    <div className="section-card">
+                      <h2 className="section-title">Additional Information</h2>
+
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Job Location(s)</h4>
+                          <p>{job.location}</p>
+                        </div>
                         <img
-                          src={job.logo}
-                          alt="Company Logo"
-                          className="premium-logo"
+                          className="info-card-image"
+                          src="https://d8it4huxumps7.cloudfront.net/uploads/images/66702737c9e5c_location.png"
+                          alt="Location"
                         />
                       </div>
 
-                      <div className="job-content">
-                        <h2 className="premium-job-title">{job.title}</h2>
-
-                        <div className="job-meta-item">
-                          <FaRegBuilding className="meta-icon premium-icon" />
-                          <span className="meta-text">{job.company}</span>
-                          <span className="verified-badge">Verified</span>
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Experience</h4>
+                          <p>{job.eligibility}</p>
                         </div>
-
-                        <div className="job-meta-item">
-                          <FaMapMarkerAlt className="meta-icon premium-icon" />
-                          <span className="meta-text">{job.location}</span>
-                        </div>
-
-                        <div className="job-meta-item">
-                          <FaRegCalendarAlt className="meta-icon premium-icon" />
-                          <span className="meta-text">
-                            Updated On: {job.created_date}
-                          </span>
-                        </div>
-
-                        <div className="job-tags">
-                          <span className="tag">{job.type}</span>
-                          <span className="tag">{job.working_days}</span>
-                          <span className="tag">{job.salary}</span>
-                        </div>
+                        <img
+                          className="info-card-image"
+                          src="https://d8it4huxumps7.cloudfront.net/uploads/images/66710a39d5851_experience.png"
+                          alt="Experience"
+                        />
                       </div>
-                    </div>
 
-                    <div className="side_job_details">
-                      <div className="side_job_actions">
-                        <div className="side_job_action_buttons">
-                          <div className="side_job_action_icons">
-                            <span
-                              className="side_job_action_icon"
-                              onClick={() => handleWishlistToggle(job.id)}
-                            >
-                              {isSaved[job.id] ? (
-                                <FaHeart className="side_job_action_icon heart active" />
-                              ) : (
-                                <FaRegHeart className="side_job_action_icon heart" />
-                              )}
-                            </span>
-                            <span className="side_job_action_icon">
-                              <IoMdCalendar className="side_job_action_icon calendar" />
-                            </span>
-                          </div>
-                          <button className="side_job_share_button">
-                            <IoIosShareAlt /> Share
-                          </button>
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Salary</h4>
+                          <p>{job.salary}</p>
                         </div>
-                        <div
-                          style={{ display: "flex", justifyContent: "center" }}
-                        >
-                          {isApplied[job.id] === true ? (
-                            <div className="side_job_applied_badge">
-                              <FaCheckCircle /> Applied
-                            </div>
-                          ) : (
-                            <button
-                              onClick={showDrawer}
-                              disabled={job.status !== "Live"}
-                              className={
-                                job.status === "Live"
-                                  ? "side_job_apply_button primary"
-                                  : "side_job_apply_button disabled"
-                              }
-                            >
-                              Apply Now
-                            </button>
-                          )}
-                        </div>
-                        <Drawer
-                          size="default"
-                          title="Apply Now"
-                          closable={{ "aria-label": "Close Button" }}
-                          onClose={onClose}
-                          open={openApplyNow}
-                        >
+                        <img
+                          className="info-card-image"
+                          src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109f58b243_salary.png"
+                          alt="Salary"
+                        />
+                      </div>
+
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Work Schedule</h4>
                           <p>
-                            Hi Santhosh! We request you to take a couple of
-                            minutes to update your profile.
+                            <b>Working Days</b>: {job.working_days}
                           </p>
-
-                          {postDetails[0]?.questions?.length > 0 && (
-                            <div className="job-questions-section">
-                              <h4>Application Questions</h4>
-                              {postDetails[0].questions.map(
-                                (question, index) => (
-                                  <div key={index} className="question-item">
-                                    <p>{question}</p>
-                                    <Input.TextArea
-                                      rows={3}
-                                      placeholder="Your answer..."
-                                      className="premium-input"
-                                      value={answers[index] || ""}
-                                      onChange={(e) => {
-                                        const newAnswers = [...answers];
-                                        newAnswers[index] = e.target.value;
-                                        setAnswers(newAnswers);
-                                      }}
-                                    />
-                                  </div>
-                                )
-                              )}
-                              <div>
-                                <button
-                                  className="premium-apply"
-                                  onClick={applyForJobData}
-                                >
-                                  Submit
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </Drawer>
-                      </div>
-
-                      <div className="side_job_eligibility">
-                        <h4 className="side_job_eligibility_title">
-                          Eligibility
-                        </h4>
-                        <div className="side_job_eligibility_details">
-                          <span className="side_job_eligibility_item">
-                            <MdOutlineSchool /> {job.level}
-                          </span>
-                          <span className="side_job_eligibility_item">
-                            <MdOutlineWorkOutline /> {job.eligibility}
-                          </span>
-                          <span className="side_job_eligibility_item">
-                            <FaTransgender />{" "}
-                            {job.diversity_hiring.map(
-                              (diversity_hiring, index) => (
-                                <span key={index}>
-                                  {diversity_hiring}
-                                  {index < job.diversity_hiring.length - 1 &&
-                                    ", "}
-                                </span>
-                              )
-                            )}
-                          </span>
                         </div>
+                        <img
+                          className="info-card-image"
+                          src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109d710a09_work_detail.png"
+                          alt="Work Details"
+                        />
+                      </div>
+
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Job Type / Natute</h4>
+                          <p>
+                            <b>Job Type</b>: {job.location}
+                          </p>
+                          <p>
+                            <b>Job Nature</b>: {job.type}
+                          </p>
+                        </div>
+                        <img
+                          className="info-card-image"
+                          src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109c430518_job_typetiming.png?d=240x172"
+                          alt="Work Details"
+                        />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="section-card job-description">
-                    <h2 className="section-title">Job Description</h2>
-                    <h6>
-                      {job.company} is hiring for the role of {job.title}!
-                    </h6>
-                    <div
-                      className="job-description-content"
-                      dangerouslySetInnerHTML={{ __html: job.job_description }}
-                    />
-                  </div>
-
-                  <div className="section-card">
-                    <h2 className="section-title">Additional Information</h2>
-
-                    <div className="info-card">
-                      <div className="info-card-content">
-                        <h4>Job Location(s)</h4>
-                        <p>{job.location}</p>
-                      </div>
-                      <img
-                        className="info-card-image"
-                        src="https://d8it4huxumps7.cloudfront.net/uploads/images/66702737c9e5c_location.png"
-                        alt="Location"
-                      />
-                    </div>
-
-                    <div className="info-card">
-                      <div className="info-card-content">
-                        <h4>Experience</h4>
-                        <p>{job.eligibility}</p>
-                      </div>
-                      <img
-                        className="info-card-image"
-                        src="https://d8it4huxumps7.cloudfront.net/uploads/images/66710a39d5851_experience.png"
-                        alt="Experience"
-                      />
-                    </div>
-
-                    <div className="info-card">
-                      <div className="info-card-content">
-                        <h4>Salary</h4>
-                        <p>{job.salary}</p>
-                      </div>
-                      <img
-                        className="info-card-image"
-                        src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109f58b243_salary.png"
-                        alt="Salary"
-                      />
-                    </div>
-
-                    <div className="info-card">
-                      <div className="info-card-content">
-                        <h4>Work Schedule</h4>
-                        <p>
-                          <b>Working Days</b>: {job.working_days}
-                        </p>
-                      </div>
-                      <img
-                        className="info-card-image"
-                        src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109d710a09_work_detail.png"
-                        alt="Work Details"
-                      />
-                    </div>
-
-                    <div className="info-card">
-                      <div className="info-card-content">
-                        <h4>Job Type / Natute</h4>
-                        <p>
-                          <b>Job Type</b>: {job.location}
-                        </p>
-                        <p>
-                          <b>Job Nature</b>: {job.type}
-                        </p>
-                      </div>
-                      <img
-                        className="info-card-image"
-                        src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109c430518_job_typetiming.png?d=240x172"
-                        alt="Work Details"
-                      />
-                    </div>
-                  </div>
-                </>
-              ))}
-            </section>
-          </Col>
-        </Row>
-      </div>
-    </section>
+                  </>
+                ))}
+              </section>
+            </Col>
+          </Row>
+        </div>
+      </section>
+    </>
   );
 }

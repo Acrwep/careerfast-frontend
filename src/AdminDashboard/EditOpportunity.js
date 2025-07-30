@@ -37,6 +37,7 @@ import {
   getWorkPlaceLocation,
   getYears,
   getEligibilityData,
+  getSkillsData,
 } from "../ApiService/action";
 import ReactQuill from "react-quill";
 import styled from "styled-components";
@@ -52,6 +53,11 @@ import { FaPersonCircleExclamation } from "react-icons/fa6";
 import { MdFileDownloadDone } from "react-icons/md";
 import { FaBusinessTime } from "react-icons/fa";
 import { State, City } from "country-state-city";
+import {
+  nameValidator,
+  selectValidator,
+  userTypeValidator,
+} from "../Common/Validation";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -252,6 +258,24 @@ const EditOpportunity = () => {
       console.log("Eligibility data", response);
     } catch (error) {
       console.log("Eligibility data error", error);
+    } finally {
+      setTimeout(() => {
+        getSkillsDataType();
+      }, 300);
+    }
+  };
+
+  const getSkillsDataType = async () => {
+    try {
+      const response = await getSkillsData();
+      const formattedOptions =
+        response?.data?.data?.map((skill) => ({
+          label: skill.name,
+          value: skill.name,
+        })) || [];
+      setSkillsRequiredOption(formattedOptions);
+    } catch (error) {
+      console.log("skills error", error);
     }
   };
 
@@ -291,6 +315,11 @@ const EditOpportunity = () => {
   const [eligibilityYear, setEligibilityYear] = useState("");
   const [experienceRequired, setExperienceRequired] = useState("");
   const [jobType, setJobType] = useState("");
+  const [skillsRequired, setSkillsRequired] = useState([]);
+  const [skillsRequiredOptions, setSkillsRequiredOption] = useState([]);
+  const [skillsRequiredError, setSkillsRequiredError] = useState("");
+  const [workingDaysName, setWorkingDaysName] = useState("");
+  const [workingDaysError, setWorkingDaysError] = useState("");
 
   const handleEditClick = (key) => {
     setActiveSection(key);
@@ -504,23 +533,25 @@ const EditOpportunity = () => {
                 }}
               />
             </div>
-
-            <div className="form-row">
-              <div className="from-group">
-                <CommonDatePicker
-                  label="Job Start Date"
-                  value={startDate}
-                  onChange={(value) => setStartDate(value)}
-                />
-              </div>
-              <div className="from-group">
-                <CommonDatePicker
-                  label="Job End Date"
-                  value={endDate}
-                  onChange={(value) => setEndDate(value)}
-                />
-              </div>
+            <div className="from-group">
+              <CommonSelectField
+                label={"Skills Required"}
+                mandatory={true}
+                name={"skill_required"}
+                showSearch={true}
+                mode="multiple"
+                placeholder={"Select skills"}
+                style={{ height: 56 }}
+                value={skillsRequired}
+                options={skillsRequiredOptions}
+                onChange={(value) => {
+                  setSkillsRequired(value);
+                  setSkillsRequiredError(selectValidator(value));
+                }}
+                error={skillsRequiredError}
+              />
             </div>
+
             <div style={{ marginTop: 15 }} className="form-group">
               <CommonSelectField
                 label={"Job Category"}
@@ -573,6 +604,24 @@ const EditOpportunity = () => {
                 onChange={(e) => {
                   setJobOpenings(e.target.value);
                 }}
+              />
+            </div>
+
+            {/* working days */}
+            <div style={{ marginTop: 20 }} className="form-group">
+              <CommonSelectField
+                label={"Working Days"}
+                showSearch={true}
+                value={workingDays}
+                name={"working_days"}
+                placeholder={"Choose working days"}
+                options={workingDaysOptions}
+                onChange={(value) => {
+                  setWorkingDays(value);
+                  setWorkingDaysName(value);
+                  setWorkingDaysError(selectValidator(value));
+                }}
+                error={workingDaysError}
               />
             </div>
           </div>

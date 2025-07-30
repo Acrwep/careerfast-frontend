@@ -21,6 +21,7 @@ import {
   Tooltip,
   message,
 } from "antd";
+import { AutoComplete } from "antd";
 import { useLocation, Link } from "react-router-dom";
 
 import {
@@ -44,7 +45,17 @@ import {
   LogoutOutlined,
   RightOutlined,
 } from "@ant-design/icons";
-import { getUserProfile } from "../ApiService/action";
+
+import { Skeleton, Tag } from "antd";
+import {
+  CrownFilled,
+  StarFilled,
+  EnvironmentOutlined,
+  ClockCircleOutlined,
+} from "@ant-design/icons";
+import { getUserProfile, searchByKeyword } from "../ApiService/action";
+import { IoChevronDownOutline } from "react-icons/io5";
+
 const { Title, Text } = Typography;
 
 export default function Header() {
@@ -58,6 +69,10 @@ export default function Header() {
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
   const [email, setEmail] = useState("");
+  const [searchText, setSearchText] = useState(""); // input field state
+  const [suggestions, setSuggestions] = useState([]);
+  const [globalSearch, setGlobalSearch] = useState([]); // search result data
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -103,7 +118,80 @@ export default function Header() {
       setLname(response?.data?.data?.last_name || "");
     } catch (error) {
       console.log("getuserprofile errorddd", error);
+    } finally {
+      setTimeout(() => {
+        handleSearch();
+      }, 300);
     }
+  };
+
+  const handleSearch = async (value) => {
+    setSearchText(value);
+    if (!value) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const payload = { searchTerm: value };
+      const response = await searchByKeyword(payload);
+      const data = response?.data?.data || [];
+      console.log("search", response);
+
+      const formattedSuggestions = data.map((item) => ({
+        value: item.id,
+        label: (
+          <div className={`suggestion-item ${item.isPremium ? "premium" : ""}`}>
+            {item.isPremium && (
+              <span className="premium-badge">
+                <CrownFilled /> Premium
+              </span>
+            )}
+            <img
+              src={item.company_logo}
+              alt={item.company_name}
+              className="company-logo"
+              onError={(e) => {
+                e.target.src = "https://via.placeholder.com/48";
+              }}
+            />
+            <div className="suggestion-content">
+              <div className="job-title">
+                {item.job_title}
+                {item.isFeatured && <StarFilled className="featured-icon" />}
+              </div>
+              <div className="company-info">
+                <span style={{ marginBottom: "7px" }}>{item.company_name}</span>
+                <br></br>
+                <Tag
+                  style={{ marginTop: "7px" }}
+                  icon={<EnvironmentOutlined />}
+                  color="blue"
+                >
+                  {item.work_location}
+                </Tag>
+                <Tag
+                  color={item.workplace_type === "Remote" ? "green" : "purple"}
+                >
+                  {item.workplace_type}
+                </Tag>
+              </div>
+            </div>
+          </div>
+        ),
+      }));
+
+      setSuggestions(formattedSuggestions);
+    } catch (error) {
+      console.error("Search failed", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelect = (jobId) => {
+    navigate(`/job-detail/${jobId}`);
   };
 
   const menuItems = [
@@ -113,13 +201,6 @@ export default function Header() {
       label: "Internships",
       icon: <BookOutlined />,
       path: "/internship",
-    },
-
-    {
-      key: "competitions",
-      label: "Competitions",
-      icon: <TrophyOutlined />,
-      path: "#",
     },
     { key: "practice", label: "Practice", icon: <CodeOutlined />, path: "#" },
   ];
@@ -131,10 +212,6 @@ export default function Header() {
     { key: "blog", label: "Blog", path: "#" },
   ];
 
-  const userMenuItems = [
-    { key: "profile", label: "Profile" },
-    { key: "logout", label: "Logout" },
-  ];
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -147,19 +224,48 @@ export default function Header() {
         className="bg-white shadow-sm py-3 premium-header"
       >
         <Container>
-          {/* Left: Logo + Search */}
-          <div className="d-flex align-items-center gap-3">
+          <div className="d-flex gap-3 global_search">
             <Navbar.Brand href="#">
               <a href="job-portal">
                 <img src={logo} alt="Logo" className="main-logo" />
               </a>
             </Navbar.Brand>
-            <Input
-              className="premium-search d-none d-lg-flex"
-              placeholder="Search opportunities, companies, or skills"
-              prefix={<SearchOutlined />}
-              allowClear
-            />
+            <AutoComplete
+              options={suggestions}
+              onSearch={handleSearch}
+              onSelect={handleSelect}
+              style={{ width: "100%" }}
+              dropdownStyle={{
+                borderRadius: 12,
+                padding: "8px 0",
+                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+              }}
+              notFoundContent={
+                loading ? (
+                  <div className="loading-container">
+                    <Skeleton active paragraph={{ rows: 2 }} />
+                  </div>
+                ) : (
+                  <div className="no-results-container">
+                    <div className="no-results-title">No results found</div>
+                    <div className="no-results-subtitle">
+                      Try different keywords or check your spelling
+                    </div>
+                  </div>
+                )
+              }
+              popupClassName="premium-dropdown"
+            >
+              <Input
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search opportunities, companies, or skills"
+                prefix={<SearchOutlined className="search-icon" />}
+                allowClear
+                className="premium-search-input"
+                size="large"
+              />
+            </AutoComplete>
           </div>
 
           <Navbar.Toggle aria-controls="offcanvasNavbar-expand-md" />
@@ -179,7 +285,8 @@ export default function Header() {
                 {menuItems.map((item) => (
                   <Nav.Link
                     key={item.key}
-                    href={item.path}
+                    as={Link}
+                    to={item.path}
                     active={currentPath === item.path}
                   >
                     {item.label}
@@ -191,7 +298,7 @@ export default function Header() {
                   placement="bottomLeft"
                 >
                   <Nav.Link className="nav-item">
-                    More <DownOutlined />
+                    More <IoChevronDownOutline />
                   </Nav.Link>
                 </Dropdown>
               </Nav>
@@ -219,13 +326,20 @@ export default function Header() {
                 {roleId === 2 ? (
                   <Tooltip title="You don't have permission to post jobs">
                     <span>
-                      <Button href="post-jobs" className="host-button" disabled>
+                      <Button
+                        onClick={() => navigate("/post-jobs")}
+                        className="host-button"
+                        disabled
+                      >
                         <PlusOutlined /> Host
                       </Button>
                     </span>
                   </Tooltip>
                 ) : (
-                  <Button href="post-jobs" className="host-button">
+                  <Button
+                    onClick={() => navigate("/post-jobs")}
+                    className="host-button"
+                  >
                     <PlusOutlined /> Host
                   </Button>
                 )}
@@ -340,7 +454,7 @@ export default function Header() {
         {/* Premium Content */}
         <div style={{ padding: "24px" }}>
           {/* Completion Card */}
-          <div
+          {/* <div
             className=""
             style={{
               background:
@@ -387,7 +501,7 @@ export default function Header() {
             >
               Finish Setup
             </Button>
-          </div>
+          </div> */}
 
           {/* Menu Sections */}
           <div className="premium-menu-section">

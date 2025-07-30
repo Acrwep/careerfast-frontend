@@ -68,6 +68,7 @@ import {
   getJobCategoryData,
   createJobPost,
 } from "../ApiService/action";
+import Header from "../Header/Header";
 const { Option } = Select;
 const { Group: InputGroup } = Input;
 export default function PostJobs() {
@@ -126,7 +127,6 @@ export default function PostJobs() {
   const [specificLocationName, setSpecificLocationName] = useState("");
   const [otherBenifits, setOtherBenifits] = useState([]);
   const [gender, setGender] = useState([]);
-  const [genderData, setGenderData] = useState("");
   const [salaryData, setSalaryData] = useState([]);
   // salary
   const [currency, setCurrency] = useState("INR");
@@ -697,1184 +697,1216 @@ export default function PostJobs() {
   };
 
   return (
-    <section className="post_jobs_section">
-      <Row>
-        <Col lg={13} md={13} sm={24} xs={24}>
-          <div style={{ textAlign: "left" }}>
-            <h3 style={{ fontSize: 20 }}>Post New Job</h3>
-          </div>
-
-          <div
-            style={{
-              position: "relative",
-              textAlign: "center",
-              paddingBottom: "20px",
-            }}
-            className=""
-          >
-            <Avatar
-              onClick={openModal}
-              size={80}
-              src={profileImage || null}
-              icon={!profileImage && <UserOutlined />}
-              className="profile-avatar"
-            />
-
-            <br></br>
-            <label className="image_upload" htmlFor="upload-input">
-              Click me
-              <input
-                id="upload-input"
-                type="file"
-                accept="image/*"
-                style={{ display: "block" }}
-                onChange={handleImageChange}
-              ></input>
-            </label>
-            <Button
-              type="primary"
-              shape="round"
-              icon={<EditOutlined />}
-              className="edit-btn"
-            >
-              Change Logo
-            </Button>
-          </div>
-
-          <Modal
-            open={isModalVisible}
-            footer={null}
-            onCancel={() => setIsModalVisible(false)}
-            centered
-            style={{ textAlign: "center", padding: 0 }}
-          >
-            <img
-              src={profileImage}
-              alt="Profile Zoomed"
-              style={{ width: "100%", maxWidth: "400px", margin: "auto" }}
-            />
-          </Modal>
-
-          <CommonInputField
-            name={"Company name"}
-            label="Company you are hiring for"
-            mandotary={true}
-            placeholder={"Enter your company name"}
-            type={"text"}
-            value={companyName}
-            onChange={(e) => {
-              setCompanyName(e.target.value);
-              setCompanyNameError(nameValidator(e.target.value));
-            }}
-            error={companyNameError}
-          />
-
-          <div className="form-group">
-            <CommonInputField
-              name={"Job title"}
-              label="Job Title/Role"
-              mandotary={true}
-              placeholder={"Enter your job title"}
-              type={"text"}
-              value={jobTitle}
-              onChange={(e) => {
-                setJobTitle(e.target.value);
-                setJobTitleError(nameValidator(e.target.value));
-              }}
-              error={jobTitleError}
-            />
-          </div>
-
-          <div style={{ marginTop: 15 }} className="form-group">
-            <Form.Item
-              layout="vertical"
-              label={<span style={{ fontWeight: 500 }}>Job Nature </span>}
-              name="jobnature"
-              rules={[
-                {
-                  required: true,
-                  message: "Please Select your Job Nature ",
-                },
-              ]}
-            >
-              <div className="job_nature">
-                {jobNatureOptions.map((item) => {
-                  return (
-                    <button
-                      type="button"
-                      className={
-                        jobNatureId === item.id
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => {
-                        if (item.id === jobNatureId) {
-                          return;
-                        } else {
-                          setJobNatureId(item.id);
-                          setJobNatureError("");
-                          if (item.id === 2) {
-                            getDurationTypesData();
-                          } else {
-                            setInternshipDurationTypeData([]);
-                          }
-                        }
-                      }}
-                    >
-                      {item.id === 1 ? (
-                        <HiMiniComputerDesktop />
-                      ) : item.id === 2 ? (
-                        <MdOutlineEventNote />
-                      ) : (
-                        <TbContract />
-                      )}{" "}
-                      {item.name}
-                    </button>
-                  );
-                })}
+    <>
+      <Header />
+      <div className="container">
+        <section className="post_jobs_section">
+          <Row>
+            <Col lg={13} md={13} sm={24} xs={24}>
+              <div style={{ textAlign: "left" }}>
+                <h3 style={{ fontSize: 20 }}>Post New Job</h3>
               </div>
-              {jobNatureError && (
-                <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
-                  {"Job nature" + jobNatureError}
-                </div>
-              )}
-            </Form.Item>
-          </div>
-          {/*  */}
 
-          <div style={{ marginTop: 15 }} className="form-group">
-            {jobNatureId === 2 && (
-              <Form.Item
-                layout="vertical"
-                label={
-                  <span style={{ fontWeight: 500 }}>Internships Duration</span>
-                }
-                name="internship_duration"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please Choose your Internships Duration",
-                  },
-                ]}
+              <div
+                style={{
+                  position: "relative",
+                  textAlign: "center",
+                  paddingBottom: "20px",
+                }}
+                className=""
               >
-                <div className="job_nature">
-                  {internshipDurationTypeData.map((item) => {
-                    return (
-                      <button
-                        type="button"
-                        className={
-                          jobInternshipDuration === item.id
-                            ? "internship_duration_button_active"
-                            : "internship_duration_button"
-                        }
-                        onClick={() => {
-                          getDurationData(item.id);
-                          setJobInternshipDuration(item.id);
-                          setJobInternshipDurationError("");
-                        }}
-                      >
-                        {item.name === "In Weeks" ? (
-                          <HiMiniComputerDesktop />
-                        ) : (
-                          <HiMiniComputerDesktop />
-                        )}{" "}
-                        {item.name}
-                      </button>
-                    );
-                  })}
-                </div>
-                {jobInternshipDurationError && (
-                  <div
-                    className="error-message"
-                    style={{ color: "red", marginTop: "8px" }}
-                  >
-                    {"Internship" + jobInternshipDurationError}
-                  </div>
-                )}
-              </Form.Item>
-            )}
-          </div>
+                <Avatar
+                  onClick={openModal}
+                  size={80}
+                  src={profileImage || null}
+                  icon={!profileImage && <UserOutlined />}
+                  className="profile-avatar"
+                />
 
-          <div style={{ marginTop: 15 }} className="form-group">
-            {jobNatureId === 2 && (
-              <div className="job_nature">
-                {internShipDuration.map((item) => {
-                  return (
-                    <button
-                      type="button"
-                      key={item.id}
-                      className={
-                        selectedDurationId === item.id
-                          ? "weeks_button_active"
-                          : "weeks_button"
-                      }
-                      onClick={() => {
-                        setWeeksActiveButton(item.id);
-                        setSelectedDurationId(item.id);
-                      }}
-                    >
-                      {item.duration}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div style={{ marginTop: 15 }} className="form-group">
-            <div className="job_nature">
-              <Form.Item
-                layout="vertical"
-                name={"workplaceType"}
-                label={<span style={{ fontWeight: 500 }}>Workplace Type</span>}
-                style={{ marginBottom: "0px" }}
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter your Workplace Type",
-                  },
-                ]}
-              >
-                <div className="work_type">
-                  {workplaceTypeData.map((item) => {
-                    return (
-                      <button
-                        type="button"
-                        className={
-                          workTypeActiveButton === item.id
-                            ? "work_type_button_active"
-                            : "work_type_button"
-                        }
-                        onClick={() => {
-                          if (item.id === 3 || item.id === 1) {
-                            getWorkPlaceLocationData();
-                          } else {
-                            setWorkplaceLocation([]);
-                          }
-                          setWorkTypeActiveButton(item.id);
-                          setWorkplaceType(item.id);
-                          setWorkplaceTypeError("");
-                        }}
-                      >
-                        <PiOfficeChairLight /> {item.name}
-                      </button>
-                    );
-                  })}
-                </div>
-                {workplaceTypeError && (
-                  <div
-                    className="error-message"
-                    style={{ color: "red", marginTop: "8px", fontSize: 13 }}
-                  >
-                    {"Workplace Type" + workplaceTypeError}
-                  </div>
-                )}
-              </Form.Item>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 15 }} className="form-group">
-            {workTypeActiveButton === 3 || workTypeActiveButton === 1 ? (
-              <Form.Item
-                layout="vertical"
-                label={<span style={{ fontWeight: 500 }}>Work Location</span>}
-                name="fname"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter your Work Location",
-                  },
-                ]}
-              >
-                <div className="job_nature">
-                  {workplaceLocation.map((item) => {
-                    return (
-                      <button
-                        type="button"
-                        className={
-                          workLocationActiveButton === item.id
-                            ? "work_location_button_active"
-                            : "work_location_button"
-                        }
-                        onClick={() => {
-                          setWorkLocationActiveButton(item.id);
-                          setWorkLocation(item.id);
-                          setWorkLocationError("");
-                        }}
-                      >
-                        <PiOfficeChairLight /> {item.name}
-                      </button>
-                    );
-                  })}
-                </div>
-                {workLocationError && (
-                  <div
-                    className="error-message"
-                    style={{ color: "red", marginTop: "8px" }}
-                  >
-                    {"Work location" + workLocationError}
-                  </div>
-                )}
-
-                {workLocationActiveButton === 1 ? (
-                  <CommonSelectField
-                    style={{ marginTop: "20px" }}
-                    showSearch={true}
-                    name={"specific_location"}
-                    placeholder={"Select location"}
-                    value={specificLocation}
-                    onChange={(value, option) => {
-                      setSpecificLocation(value);
-                      setSpecificLocationName(option.label);
-                    }}
-                    options={workLocationOption}
-                  />
-                ) : null}
-              </Form.Item>
-            ) : null}
-          </div>
-          {/*  */}
-
-          {/* Job category */}
-          <div style={{ marginTop: 15 }} className="form-group">
-            <CommonSelectField
-              label={"Job Category"}
-              showSearch={true}
-              value={jobCategory}
-              mandatory={true}
-              name={"Job category"}
-              placeholder={"Select Job Category"}
-              options={jobCategoryOptions}
-              onChange={(value) => {
-                setJobCategory(value);
-                setJobCategoryError(selectValidator(value));
-              }}
-              error={jobCategoryError}
-            />
-
-            <CommonSelectField
-              label={"Skills Required"}
-              mandatory={true}
-              name={"skill_required"}
-              showSearch={true}
-              mode="multiple"
-              placeholder={"Select skills"}
-              style={{ height: 56 }}
-              value={skillsRequired}
-              options={skillsRequiredOptions}
-              onChange={(value) => {
-                setSkillsRequired(value);
-                setSkillsRequiredError(selectValidator(value));
-              }}
-              error={skillsRequiredError}
-            />
-          </div>
-
-          {/* Openings */}
-          <div style={{ marginTop: 0 }} className="form-group">
-            <CommonInputField
-              name={"Job Openings"}
-              label="Job Openings"
-              mandotary={true}
-              placeholder={"No.of openings"}
-              type={"text"}
-              value={jobOpenings}
-              onChange={(e) => {
-                setJobOpenings(e.target.value);
-                setJobOpeningsError(selectValidator(e.target.value));
-              }}
-              error={jobOpeningsError}
-            />
-          </div>
-
-          {/* working days */}
-          <div style={{ marginTop: 0 }} className="form-group">
-            <CommonSelectField
-              label={"Working Days"}
-              showSearch={true}
-              value={workingDays}
-              mandatory={true}
-              name={"working_days"}
-              placeholder={"Choose working days"}
-              options={workingDaysOptions}
-              onChange={(value) => {
-                setWorkingDays(value);
-                setWorkingDaysName(value);
-                setWorkingDaysError(selectValidator(value));
-              }}
-              error={workingDaysError}
-            />
-          </div>
-
-          <div className="eligibility">
-            <h4>Eligibility</h4>
-            <p>Add the eligibility criteria to better filter the candidates.</p>
-
-            <div className="experience_required">
-              <p>
-                <span style={{ color: "red" }}>*</span> Experience Required (In
-                Years)
-              </p>
-              <div className="job_nature">
-                {eligibilityData.map((item) => {
-                  return (
-                    <button
-                      type="button"
-                      className={
-                        experienceRequiredActiveButton === item.id
-                          ? "experience_required_button_active"
-                          : "experience_required_button"
-                      }
-                      onClick={() => {
-                        setExperienceRequiredActiveButton(item.id);
-                        setEligibility(item.id);
-                        setEligibilityError("");
-                      }}
-                    >
-                      <FaPersonCircleExclamation /> {item.name}
-                    </button>
-                  );
-                })}
-              </div>
-              {eligibilityError && (
-                <div
-                  className="error-message"
-                  style={{ color: "red", marginTop: "8px", fontSize: 13 }}
+                <br></br>
+                <label className="image_upload" htmlFor="upload-input">
+                  Click me
+                  <input
+                    id="upload-input"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "block" }}
+                    onChange={handleImageChange}
+                  ></input>
+                </label>
+                <Button
+                  type="primary"
+                  shape="round"
+                  icon={<EditOutlined />}
+                  className="edit-btn"
                 >
-                  {"Experience" + eligibilityError}
-                </div>
-              )}
-            </div>
+                  Change Logo
+                </Button>
+              </div>
 
-            <div className="experience_required">
-              {experienceRequiredActiveButton === 1 ? (
-                <>
-                  <p>Experience Required (In Years)</p>
+              <Modal
+                open={isModalVisible}
+                footer={null}
+                onCancel={() => setIsModalVisible(false)}
+                centered
+                style={{ textAlign: "center", padding: 0 }}
+              >
+                <img
+                  src={profileImage}
+                  alt="Profile Zoomed"
+                  style={{ width: "100%", maxWidth: "400px", margin: "auto" }}
+                />
+              </Modal>
+
+              <CommonInputField
+                name={"Company name"}
+                label="Company you are hiring for"
+                mandotary={true}
+                placeholder={"Enter your company name"}
+                type={"text"}
+                value={companyName}
+                onChange={(e) => {
+                  setCompanyName(e.target.value);
+                  setCompanyNameError(nameValidator(e.target.value));
+                }}
+                error={companyNameError}
+              />
+
+              <div className="form-group">
+                <CommonInputField
+                  name={"Job title"}
+                  label="Job Title/Role"
+                  mandotary={true}
+                  placeholder={"Enter your job title"}
+                  type={"text"}
+                  value={jobTitle}
+                  onChange={(e) => {
+                    setJobTitle(e.target.value);
+                    setJobTitleError(nameValidator(e.target.value));
+                  }}
+                  error={jobTitleError}
+                />
+              </div>
+
+              <div style={{ marginTop: 15 }} className="form-group">
+                <Form.Item
+                  layout="vertical"
+                  label={<span style={{ fontWeight: 500 }}>Job Nature </span>}
+                  name="jobnature"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please Select your Job Nature ",
+                    },
+                  ]}
+                >
                   <div className="job_nature">
-                    {eligibilityYearData.map((item) => {
-                      const isSelected =
-                        item.year === "All"
-                          ? selectedFresherPass.length ===
-                            eligibilityYearData.filter((i) => i.year !== "All")
-                              .length
-                          : selectedFresherPass.includes(item.year);
-
+                    {jobNatureOptions.map((item) => {
                       return (
                         <button
-                          key={item.id}
+                          type="button"
                           className={
-                            isSelected
-                              ? "fresher_pass_button_active"
-                              : "fresher_pass_button"
+                            jobNatureId === item.id
+                              ? "job_nature_button_active"
+                              : "job_nature_button"
                           }
                           onClick={() => {
-                            handleFresherPassClick(item);
-                            setEligibilityYear(item.id);
+                            if (item.id === jobNatureId) {
+                              return;
+                            } else {
+                              setJobNatureId(item.id);
+                              setJobNatureError("");
+                              if (item.id === 2) {
+                                getDurationTypesData();
+                              } else {
+                                setInternshipDurationTypeData([]);
+                              }
+                            }
                           }}
                         >
-                          {item.year === "All" ? (
-                            <MdFileDownloadDone />
+                          {item.id === 1 ? (
+                            <HiMiniComputerDesktop />
+                          ) : item.id === 2 ? (
+                            <MdOutlineEventNote />
                           ) : (
-                            <FaBusinessTime />
+                            <TbContract />
                           )}{" "}
-                          {item.year}
+                          {item.name}
                         </button>
                       );
                     })}
                   </div>
-                </>
-              ) : null}
-
-              {experienceRequiredActiveButton === 2 ? (
-                <>
-                  <div className="">
-                    <CommonInputField
-                      name={"Experience"}
-                      label="Experience required"
-                      onChange={(e) => {
-                        setExperienceRequired(e.target.value);
-                      }}
-                      mandotary={false}
-                      placeholder={"Enter your Experience"}
-                      type={"text"}
-                    />
-                  </div>
-                </>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="salary_details">
-            <h4>Salary Details</h4>
-            <p>
-              Add compensation details to filter better candidates and speed up
-              the sourcing process.
-            </p>
-            <Form.Item
-              layout="vertical"
-              label={
-                <h5>
-                  <span style={{ color: "red" }}>*</span> Salary Type
-                </h5>
-              }
-              name="internship_duration"
-            >
-              <div className="job_nature">
-                {salaryData.map((item) => {
-                  return (
-                    <button
-                      className={
-                        salaryTypeActiveButton === item.id
-                          ? "experience_required_button_active"
-                          : "experience_required_button"
-                      }
-                      onClick={() => {
-                        setSalaryTypeActiveButton(item.id);
-                        setSalaryDetails(item.id);
-                        setSalaryDetailsError(selectValidator(item.name));
-                      }}
-                    >
-                      {item.id === 1 ? (
-                        <LuLocateFixed />
-                      ) : item.id === 2 ? (
-                        <RiEqualizerLine />
-                      ) : (
-                        <TbContract />
-                      )}{" "}
-                      {item.name}
-                    </button>
-                  );
-                })}
+                  {jobNatureError && (
+                    <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+                      {"Job nature" + jobNatureError}
+                    </div>
+                  )}
+                </Form.Item>
               </div>
-              {salaryDetailsError && (
-                <div
-                  className="error-message"
-                  style={{ color: "red", marginTop: "8px", fontSize: 13 }}
-                >
-                  {"Salary Type" + salaryDetailsError}
-                </div>
-              )}
-            </Form.Item>
+              {/*  */}
 
-            {salaryTypeActiveButton === 1 && (
-              <div className="salary_details_inner">
-                <h5>Salary Figure</h5>
-                <p>The salary on the job page will be shown in years only.</p>
-                <div className="job_nature">
-                  <Select
-                    value={currency}
-                    onChange={(value) => setCurrency(value)}
-                    style={{ border: "none" }}
+              <div style={{ marginTop: 15 }} className="form-group">
+                {jobNatureId === 2 && (
+                  <Form.Item
+                    layout="vertical"
+                    label={
+                      <span style={{ fontWeight: 500 }}>
+                        Internships Duration
+                      </span>
+                    }
+                    name="internship_duration"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please Choose your Internships Duration",
+                      },
+                    ]}
                   >
-                    <Option value="INR">₹ (INR)</Option>
-                    <Option value="USD">$ (USD)</Option>
-                    <Option value="EUR">€ (EUR)</Option>
-                  </Select>
-
-                  <Input
-                    style={{ width: "60%" }}
-                    value={fixedSalary}
-                    onChange={(e) => setFixedSalary(e.target.value)}
-                    placeholder="Enter amount"
-                  />
-                </div>
-              </div>
-            )}
-
-            {salaryTypeActiveButton === 2 && (
-              <div className="salary_details_inner">
-                <h5>Salary Figure</h5>
-                <p>The salary on the job page will be shown in years only.</p>
-                <div className="job_nature">
-                  <Select
-                    value={currency}
-                    onChange={(value) => setCurrency(value)}
-                    style={{ width: 100 }}
-                  >
-                    <Option value="INR">₹ (INR)</Option>
-                    <Option value="USD">$ (USD)</Option>
-                    <Option value="EUR">€ (EUR)</Option>
-                  </Select>
-
-                  <InputNumber
-                    value={salaryMin}
-                    onChange={(value) => setSalaryMin(value)}
-                    placeholder="Min"
-                    min={0}
-                    style={{
-                      width: "30%",
-                      height: 45,
-                      placeContent: "center",
-                      textAlign: "center",
-                    }}
-                  />
-
-                  <InputNumber
-                    value={salaryMax}
-                    onChange={(value) => setSalaryMax(value)}
-                    placeholder="Max"
-                    min={0}
-                    style={{
-                      width: "30%",
-                      height: 45,
-                      placeContent: "center",
-                      textAlign: "center",
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div
-            className="diversity_options"
-            style={{
-              background: "#f8f9fa",
-              padding: 16,
-              borderRadius: 8,
-              border: "1px solid #e0e0e0",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: 8,
-              }}
-            >
-              <Text strong>Diversity Hiring</Text>
-              <Switch
-                checked={diversityenabled}
-                onChange={setDiversityEnabled}
-              />
-            </div>
-            <Divider style={{ margin: "8px 0px 15px 0" }} />
-            {diversityenabled && (
-              <Space wrap>
-                {gender.map((item) => (
-                  <Tag.CheckableTag
-                    key={item.id}
-                    checked={genderselected.includes(item.id)}
-                    onChange={() => handleTagClick(item.id)}
-                    style={{
-                      border: "1px dashed #ccc",
-                      borderRadius: 8,
-                      padding: "4px 12px",
-                    }}
-                  >
-                    {item.name}
-                  </Tag.CheckableTag>
-                ))}
-              </Space>
-            )}
-          </div>
-
-          <div className="other_benifits">
-            <div className="job_nature">
-              <Text strong>Other Benefits</Text>
-              <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
-                {visibleBenefits.map((item) => (
-                  <Col key={item.key}>
-                    <Card
-                      hoverable
-                      onClick={() => {
-                        toggleBenefitSelection(item.id);
-                      }}
-                      style={{
-                        width: 140,
-                        textAlign: "center",
-                        border: selectedBenefits.includes(item.id)
-                          ? "2px dashed #6a00ff"
-                          : "1px dashed #ccc",
-                        background: selectedBenefits.includes(item.id)
-                          ? "#6a00ff14"
-                          : "#fff",
-                        borderRadius: 8,
-                      }}
-                    >
-                      <div style={{ fontSize: 24, marginBottom: 4 }}>
-                        {item.id === 1 ? (
-                          <LineChartOutlined />
-                        ) : item.id === 2 ? (
-                          <MedicineBoxOutlined />
-                        ) : item.id === 3 ? (
-                          <CarOutlined />
-                        ) : item.id === 4 ? (
-                          <CoffeeOutlined />
-                        ) : null}
+                    <div className="job_nature">
+                      {internshipDurationTypeData.map((item) => {
+                        return (
+                          <button
+                            type="button"
+                            className={
+                              jobInternshipDuration === item.id
+                                ? "internship_duration_button_active"
+                                : "internship_duration_button"
+                            }
+                            onClick={() => {
+                              getDurationData(item.id);
+                              setJobInternshipDuration(item.id);
+                              setJobInternshipDurationError("");
+                            }}
+                          >
+                            {item.name === "In Weeks" ? (
+                              <HiMiniComputerDesktop />
+                            ) : (
+                              <HiMiniComputerDesktop />
+                            )}{" "}
+                            {item.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {jobInternshipDurationError && (
+                      <div
+                        className="error-message"
+                        style={{ color: "red", marginTop: "8px" }}
+                      >
+                        {"Internship" + jobInternshipDurationError}
                       </div>
-                      <Text>{item.name}</Text>
-                    </Card>
-                  </Col>
-                ))}
-              </Row>
-              <Button
-                type="link"
-                onClick={() => setShowMore(!showMore)}
-                style={{ marginTop: 12, color: "#6a00ff" }}
-              >
-                {showMore ? (
-                  <>
-                    View Less <FaAngleUp />
-                  </>
-                ) : (
-                  <>
-                    View More <FaAngleDown />
-                  </>
+                    )}
+                  </Form.Item>
                 )}
-              </Button>
-            </div>
-          </div>
+              </div>
 
-          <div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 8,
-                marginTop: 28,
-              }}
-            >
-              <label style={{ fontWeight: "bold" }}>Job Description</label>
-              <button
-                onClick={generateWithAI}
+              <div style={{ marginTop: 15 }} className="form-group">
+                {jobNatureId === 2 && (
+                  <div className="job_nature">
+                    {internShipDuration.map((item) => {
+                      return (
+                        <button
+                          type="button"
+                          key={item.id}
+                          className={
+                            selectedDurationId === item.id
+                              ? "weeks_button_active"
+                              : "weeks_button"
+                          }
+                          onClick={() => {
+                            setWeeksActiveButton(item.id);
+                            setSelectedDurationId(item.id);
+                          }}
+                        >
+                          {item.duration}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ marginTop: 15 }} className="form-group">
+                <div className="job_nature">
+                  <Form.Item
+                    layout="vertical"
+                    name={"workplaceType"}
+                    label={
+                      <span style={{ fontWeight: 500 }}>Workplace Type</span>
+                    }
+                    style={{ marginBottom: "0px" }}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter your Workplace Type",
+                      },
+                    ]}
+                  >
+                    <div className="work_type">
+                      {workplaceTypeData.map((item) => {
+                        return (
+                          <button
+                            type="button"
+                            className={
+                              workTypeActiveButton === item.id
+                                ? "work_type_button_active"
+                                : "work_type_button"
+                            }
+                            onClick={() => {
+                              if (item.id === 3 || item.id === 1) {
+                                getWorkPlaceLocationData();
+                              } else {
+                                setWorkplaceLocation([]);
+                              }
+                              setWorkTypeActiveButton(item.id);
+                              setWorkplaceType(item.id);
+                              setWorkplaceTypeError("");
+                            }}
+                          >
+                            <PiOfficeChairLight /> {item.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {workplaceTypeError && (
+                      <div
+                        className="error-message"
+                        style={{ color: "red", marginTop: "8px", fontSize: 13 }}
+                      >
+                        {"Workplace Type" + workplaceTypeError}
+                      </div>
+                    )}
+                  </Form.Item>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 15 }} className="form-group">
+                {workTypeActiveButton === 3 || workTypeActiveButton === 1 ? (
+                  <Form.Item
+                    layout="vertical"
+                    label={
+                      <span style={{ fontWeight: 500 }}>Work Location</span>
+                    }
+                    name="fname"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter your Work Location",
+                      },
+                    ]}
+                  >
+                    <div className="job_nature">
+                      {workplaceLocation.map((item) => {
+                        return (
+                          <button
+                            type="button"
+                            className={
+                              workLocationActiveButton === item.id
+                                ? "work_location_button_active"
+                                : "work_location_button"
+                            }
+                            onClick={() => {
+                              setWorkLocationActiveButton(item.id);
+                              setWorkLocation(item.id);
+                              setWorkLocationError("");
+                            }}
+                          >
+                            <PiOfficeChairLight /> {item.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {workLocationError && (
+                      <div
+                        className="error-message"
+                        style={{ color: "red", marginTop: "8px" }}
+                      >
+                        {"Work location" + workLocationError}
+                      </div>
+                    )}
+
+                    {workLocationActiveButton === 1 ? (
+                      <CommonSelectField
+                        style={{ marginTop: "20px" }}
+                        showSearch={true}
+                        name={"specific_location"}
+                        placeholder={"Select location"}
+                        value={specificLocation}
+                        onChange={(value, option) => {
+                          setSpecificLocation(value);
+                          setSpecificLocationName(option.label);
+                        }}
+                        options={workLocationOption}
+                      />
+                    ) : null}
+                  </Form.Item>
+                ) : null}
+              </div>
+              {/*  */}
+
+              {/* Job category */}
+              <div style={{ marginTop: 15 }} className="form-group">
+                <CommonSelectField
+                  label={"Job Category"}
+                  showSearch={true}
+                  value={jobCategory}
+                  mandatory={true}
+                  name={"Job category"}
+                  placeholder={"Select Job Category"}
+                  options={jobCategoryOptions}
+                  onChange={(value) => {
+                    setJobCategory(value);
+                    setJobCategoryError(selectValidator(value));
+                  }}
+                  error={jobCategoryError}
+                />
+
+                <CommonSelectField
+                  label={"Skills Required"}
+                  mandatory={true}
+                  name={"skill_required"}
+                  showSearch={true}
+                  mode="multiple"
+                  placeholder={"Select skills"}
+                  style={{ height: 56 }}
+                  value={skillsRequired}
+                  options={skillsRequiredOptions}
+                  onChange={(value) => {
+                    setSkillsRequired(value);
+                    setSkillsRequiredError(selectValidator(value));
+                  }}
+                  error={skillsRequiredError}
+                />
+              </div>
+
+              {/* Openings */}
+              <div style={{ marginTop: 0 }} className="form-group">
+                <CommonInputField
+                  name={"Job Openings"}
+                  label="Job Openings"
+                  mandotary={true}
+                  placeholder={"No.of openings"}
+                  type={"text"}
+                  value={jobOpenings}
+                  onChange={(e) => {
+                    setJobOpenings(e.target.value);
+                    setJobOpeningsError(selectValidator(e.target.value));
+                  }}
+                  error={jobOpeningsError}
+                />
+              </div>
+
+              {/* working days */}
+              <div style={{ marginTop: 0 }} className="form-group">
+                <CommonSelectField
+                  label={"Working Days"}
+                  showSearch={true}
+                  value={workingDays}
+                  mandatory={true}
+                  name={"working_days"}
+                  placeholder={"Choose working days"}
+                  options={workingDaysOptions}
+                  onChange={(value) => {
+                    setWorkingDays(value);
+                    setWorkingDaysName(value);
+                    setWorkingDaysError(selectValidator(value));
+                  }}
+                  error={workingDaysError}
+                />
+              </div>
+
+              <div className="eligibility">
+                <h4>Eligibility</h4>
+                <p>
+                  Add the eligibility criteria to better filter the candidates.
+                </p>
+
+                <div className="experience_required">
+                  <p>
+                    <span style={{ color: "red" }}>*</span> Experience Required
+                    (In Years)
+                  </p>
+                  <div className="job_nature">
+                    {eligibilityData.map((item) => {
+                      return (
+                        <button
+                          type="button"
+                          className={
+                            experienceRequiredActiveButton === item.id
+                              ? "experience_required_button_active"
+                              : "experience_required_button"
+                          }
+                          onClick={() => {
+                            setExperienceRequiredActiveButton(item.id);
+                            setEligibility(item.id);
+                            setEligibilityError("");
+                          }}
+                        >
+                          <FaPersonCircleExclamation /> {item.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {eligibilityError && (
+                    <div
+                      className="error-message"
+                      style={{ color: "red", marginTop: "8px", fontSize: 13 }}
+                    >
+                      {"Experience" + eligibilityError}
+                    </div>
+                  )}
+                </div>
+
+                <div className="experience_required">
+                  {experienceRequiredActiveButton === 1 ? (
+                    <>
+                      <p>Experience Required (In Years)</p>
+                      <div className="job_nature">
+                        {eligibilityYearData.map((item) => {
+                          const isSelected =
+                            item.year === "All"
+                              ? selectedFresherPass.length ===
+                                eligibilityYearData.filter(
+                                  (i) => i.year !== "All"
+                                ).length
+                              : selectedFresherPass.includes(item.year);
+
+                          return (
+                            <button
+                              key={item.id}
+                              className={
+                                isSelected
+                                  ? "fresher_pass_button_active"
+                                  : "fresher_pass_button"
+                              }
+                              onClick={() => {
+                                handleFresherPassClick(item);
+                                setEligibilityYear(item.id);
+                              }}
+                            >
+                              {item.year === "All" ? (
+                                <MdFileDownloadDone />
+                              ) : (
+                                <FaBusinessTime />
+                              )}{" "}
+                              {item.year}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : null}
+
+                  {experienceRequiredActiveButton === 2 ? (
+                    <>
+                      <div className="">
+                        <CommonInputField
+                          name={"Experience"}
+                          label="Experience required"
+                          onChange={(e) => {
+                            setExperienceRequired(e.target.value);
+                          }}
+                          mandotary={false}
+                          placeholder={"Enter your Experience"}
+                          type={"text"}
+                        />
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="salary_details">
+                <h4>Salary Details</h4>
+                <p>
+                  Add compensation details to filter better candidates and speed
+                  up the sourcing process.
+                </p>
+                <Form.Item
+                  layout="vertical"
+                  label={
+                    <h5>
+                      <span style={{ color: "red" }}>*</span> Salary Type
+                    </h5>
+                  }
+                  name="internship_duration"
+                >
+                  <div className="job_nature">
+                    {salaryData.map((item) => {
+                      return (
+                        <button
+                          className={
+                            salaryTypeActiveButton === item.id
+                              ? "experience_required_button_active"
+                              : "experience_required_button"
+                          }
+                          onClick={() => {
+                            setSalaryTypeActiveButton(item.id);
+                            setSalaryDetails(item.id);
+                            setSalaryDetailsError(selectValidator(item.name));
+                          }}
+                        >
+                          {item.id === 1 ? (
+                            <LuLocateFixed />
+                          ) : item.id === 2 ? (
+                            <RiEqualizerLine />
+                          ) : (
+                            <TbContract />
+                          )}{" "}
+                          {item.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {salaryDetailsError && (
+                    <div
+                      className="error-message"
+                      style={{ color: "red", marginTop: "8px", fontSize: 13 }}
+                    >
+                      {"Salary Type" + salaryDetailsError}
+                    </div>
+                  )}
+                </Form.Item>
+
+                {salaryTypeActiveButton === 1 && (
+                  <div className="salary_details_inner">
+                    <h5>Salary Figure</h5>
+                    <p>
+                      The salary on the job page will be shown in years only.
+                    </p>
+                    <div className="job_nature">
+                      <Select
+                        value={currency}
+                        onChange={(value) => setCurrency(value)}
+                        style={{ border: "none" }}
+                      >
+                        <Option value="INR">₹ (INR)</Option>
+                        <Option value="USD">$ (USD)</Option>
+                        <Option value="EUR">€ (EUR)</Option>
+                      </Select>
+
+                      <Input
+                        style={{ width: "60%" }}
+                        value={fixedSalary}
+                        onChange={(e) => setFixedSalary(e.target.value)}
+                        placeholder="Enter amount"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {salaryTypeActiveButton === 2 && (
+                  <div className="salary_details_inner">
+                    <h5>Salary Figure</h5>
+                    <p>
+                      The salary on the job page will be shown in years only.
+                    </p>
+                    <div className="job_nature">
+                      <Select
+                        value={currency}
+                        onChange={(value) => setCurrency(value)}
+                        style={{ width: 100 }}
+                      >
+                        <Option value="INR">₹ (INR)</Option>
+                        <Option value="USD">$ (USD)</Option>
+                        <Option value="EUR">€ (EUR)</Option>
+                      </Select>
+
+                      <InputNumber
+                        value={salaryMin}
+                        onChange={(value) => setSalaryMin(value)}
+                        placeholder="Min"
+                        min={0}
+                        style={{
+                          width: "30%",
+                          height: 45,
+                          placeContent: "center",
+                          textAlign: "center",
+                        }}
+                      />
+
+                      <InputNumber
+                        value={salaryMax}
+                        onChange={(value) => setSalaryMax(value)}
+                        placeholder="Max"
+                        min={0}
+                        style={{
+                          width: "30%",
+                          height: 45,
+                          placeContent: "center",
+                          textAlign: "center",
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div
+                className="diversity_options"
                 style={{
-                  backgroundColor: "#6a00ff",
-                  padding: "6px 12px",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  color: "#fff",
-                  border: "none",
+                  background: "#f8f9fa",
+                  padding: 16,
+                  borderRadius: 8,
+                  border: "1px solid #e0e0e0",
                 }}
               >
-                🧠 Generate with AI
-              </button>
-            </div>
-
-            <ReactQuill
-              value={value}
-              onChange={handleChange}
-              modules={{
-                toolbar: [
-                  ["bold", "italic", "underline", "strike"],
-                  [{ list: "ordered" }, { list: "bullet" }],
-                  ["link", "image"],
-                  ["clean"],
-                ],
-              }}
-              formats={[
-                "bold",
-                "italic",
-                "underline",
-                "strike",
-                "list",
-                "bullet",
-                "link",
-                "image",
-              ]}
-              style={{ height: "300px", marginBottom: "8px" }}
-            />
-
-            <div
-              style={{
-                textAlign: "right",
-                fontSize: 12,
-                color:
-                  value.replace(/<[^>]+>/g, "").length >= MAX_LENGTH
-                    ? "red"
-                    : "gray",
-              }}
-            >
-              {value.replace(/<[^>]+>/g, "").length}/{MAX_LENGTH}
-            </div>
-          </div>
-
-          <div className="job_posting_submit">
-            <div style={{ justifyContent: "end" }} className="button-group">
-              <button onClick={handleCheckValidation} className="primary-btn">
-                <span>Save</span>
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 8,
+                  }}
                 >
-                  <path
-                    d="M5 12H19M19 12L12 5M19 12L12 19"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                  <Text strong>Diversity Hiring</Text>
+                  <Switch
+                    checked={diversityenabled}
+                    onChange={setDiversityEnabled}
                   />
-                </svg>
-              </button>
+                </div>
+                <Divider style={{ margin: "8px 0px 15px 0" }} />
+                {diversityenabled && (
+                  <Space wrap>
+                    {gender.map((item) => (
+                      <Tag.CheckableTag
+                        key={item.id}
+                        checked={genderselected.includes(item.id)}
+                        onChange={() => handleTagClick(item.id)}
+                        style={{
+                          border: "1px dashed #ccc",
+                          borderRadius: 8,
+                          padding: "4px 12px",
+                        }}
+                      >
+                        {item.name}
+                      </Tag.CheckableTag>
+                    ))}
+                  </Space>
+                )}
+              </div>
 
-              <Modal
-                className="premium-question-modal"
-                open={openQuestionModal}
-                title={
-                  <div className="premium-modal-header">
-                    <div className="header-icon-container">
-                      <QuestionCircleOutlined className="header-icon" />
+              <div className="other_benifits">
+                <div className="job_nature">
+                  <Text strong>Other Benefits</Text>
+                  <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
+                    {visibleBenefits.map((item) => (
+                      <Col key={item.key}>
+                        <Card
+                          hoverable
+                          onClick={() => {
+                            toggleBenefitSelection(item.id);
+                          }}
+                          style={{
+                            width: 140,
+                            textAlign: "center",
+                            border: selectedBenefits.includes(item.id)
+                              ? "2px dashed #6a00ff"
+                              : "1px dashed #ccc",
+                            background: selectedBenefits.includes(item.id)
+                              ? "#6a00ff14"
+                              : "#fff",
+                            borderRadius: 8,
+                          }}
+                        >
+                          <div style={{ fontSize: 24, marginBottom: 4 }}>
+                            {item.id === 1 ? (
+                              <LineChartOutlined />
+                            ) : item.id === 2 ? (
+                              <MedicineBoxOutlined />
+                            ) : item.id === 3 ? (
+                              <CarOutlined />
+                            ) : item.id === 4 ? (
+                              <CoffeeOutlined />
+                            ) : null}
+                          </div>
+                          <Text>{item.name}</Text>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                  <Button
+                    type="link"
+                    onClick={() => setShowMore(!showMore)}
+                    style={{ marginTop: 12, color: "#6a00ff" }}
+                  >
+                    {showMore ? (
+                      <>
+                        View Less <FaAngleUp />
+                      </>
+                    ) : (
+                      <>
+                        View More <FaAngleDown />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 8,
+                    marginTop: 28,
+                  }}
+                >
+                  <label style={{ fontWeight: "bold" }}>Job Description</label>
+                  <button
+                    onClick={generateWithAI}
+                    style={{
+                      backgroundColor: "#6a00ff",
+                      padding: "6px 12px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      color: "#fff",
+                      border: "none",
+                    }}
+                  >
+                    🧠 Generate with AI
+                  </button>
+                </div>
+
+                <ReactQuill
+                  value={value}
+                  onChange={handleChange}
+                  modules={{
+                    toolbar: [
+                      ["bold", "italic", "underline", "strike"],
+                      [{ list: "ordered" }, { list: "bullet" }],
+                      ["link", "image"],
+                      ["clean"],
+                    ],
+                  }}
+                  formats={[
+                    "bold",
+                    "italic",
+                    "underline",
+                    "strike",
+                    "list",
+                    "bullet",
+                    "link",
+                    "image",
+                  ]}
+                  style={{ height: "300px", marginBottom: "8px" }}
+                />
+
+                <div
+                  style={{
+                    textAlign: "right",
+                    fontSize: 12,
+                    color:
+                      value.replace(/<[^>]+>/g, "").length >= MAX_LENGTH
+                        ? "red"
+                        : "gray",
+                  }}
+                >
+                  {value.replace(/<[^>]+>/g, "").length}/{MAX_LENGTH}
+                </div>
+              </div>
+
+              <div className="job_posting_submit">
+                <div style={{ justifyContent: "end" }} className="button-group">
+                  <button
+                    onClick={handleCheckValidation}
+                    className="primary-btn"
+                  >
+                    <span>Save</span>
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M5 12H19M19 12L12 5M19 12L12 19"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+
+                  <Modal
+                    className="premium-question-modal"
+                    open={openQuestionModal}
+                    title={
+                      <div className="premium-modal-header">
+                        <div className="header-icon-container">
+                          <QuestionCircleOutlined className="header-icon" />
+                        </div>
+                        <span className="header-title">
+                          Want to add questions on your post
+                        </span>
+                      </div>
+                    }
+                    onOk={handleOk}
+                    closable={false}
+                    confirmLoading={confirmLoading}
+                    onCancel={handlePublishPostWithoutQuestions}
+                    okText="Yes, Add Questions"
+                    cancelText="Publish Without Questions"
+                    maskClosable={false}
+                    width={560}
+                    centered
+                    footer={
+                      <div className="premium-modal-footer">
+                        <Button
+                          key="publish"
+                          onClick={handlePublishPostWithoutQuestions}
+                          className="premium-cancel-btn"
+                          size="large"
+                        >
+                          Publish Without Questions
+                        </Button>
+                        <Button
+                          key="add"
+                          type="primary"
+                          onClick={handleOk}
+                          loading={confirmLoading}
+                          className="premium-confirm-btn"
+                          size="large"
+                        >
+                          {confirmLoading ? (
+                            <>
+                              <span className="btn-loading-text">Adding</span>
+                              <span className="btn-loading-dots"></span>
+                            </>
+                          ) : (
+                            "Yes, Add Questions"
+                          )}
+                        </Button>
+                      </div>
+                    }
+                  >
+                    <div className="premium-modal-content">
+                      <p className="premium-modal-description">
+                        Adding interactive questions can increase engagement by
+                        up to 300%. Would you like to include some questions
+                        with your post?
+                      </p>
                     </div>
-                    <span className="header-title">
-                      Want to add questions on your post
-                    </span>
-                  </div>
-                }
-                onOk={handleOk}
-                closable={false}
-                confirmLoading={confirmLoading}
-                onCancel={handlePublishPostWithoutQuestions}
-                okText="Yes, Add Questions"
-                cancelText="Publish Without Questions"
-                maskClosable={false}
-                width={560}
-                centered
-                footer={
-                  <div className="premium-modal-footer">
-                    <Button
-                      key="publish"
-                      onClick={handlePublishPostWithoutQuestions}
-                      className="premium-cancel-btn"
-                      size="large"
+                  </Modal>
+
+                  <Drawer
+                    title="Question Manager"
+                    closable={{ "aria-label": "Close Button" }}
+                    onClose={onClose}
+                    open={openDrawer}
+                    width={600}
+                    headerStyle={{
+                      borderBottom: "1px solid #f0f0f0",
+                      padding: "24px",
+                      fontSize: "18px",
+                      fontWeight: 600,
+                      background: "#fafafa",
+                    }}
+                    bodyStyle={{ padding: "24px" }}
+                    maskStyle={{ background: "rgba(0, 0, 0, 0.45)" }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "24px",
+                      }}
                     >
-                      Publish Without Questions
-                    </Button>
+                      {questions.map((q, index) => (
+                        <div
+                          key={q.id}
+                          style={{
+                            position: "relative",
+                            padding: "12px 20px 10px 20px",
+                            borderRadius: "8px",
+                            border: "1px solid #f0f0f0",
+                            boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)",
+                            transition: "all 0.3s ease",
+                            background: "#fff",
+                            ":hover": {
+                              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                            },
+                          }}
+                        >
+                          <CommonInputField
+                            name={"question" + index}
+                            label={`Question ${index + 1}`}
+                            placeholder="e.g. What is your current location?"
+                            type="text"
+                            value={q.question}
+                            onChange={(e) => {
+                              handleQuestionChange(
+                                index,
+                                "question",
+                                e.target.value
+                              );
+                            }}
+                            inputStyle={{
+                              padding: "12px 16px",
+                              borderRadius: "6px",
+                              border: "1px solid #d9d9d9",
+                            }}
+                            labelStyle={{
+                              fontWeight: 500,
+                              marginBottom: "8px",
+                              color: "#1d1d1d",
+                            }}
+                          />
+                          {q.error && (
+                            <div
+                              style={{
+                                color: "#ff4d4f",
+                                marginTop: "6px",
+                                fontSize: "13px",
+                              }}
+                            >
+                              {q.error}
+                            </div>
+                          )}
+
+                          <Checkbox
+                            style={{ marginTop: 10 }}
+                            checked={q.isrequired}
+                            onChange={(e) =>
+                              handleQuestionChange(
+                                index,
+                                "isrequired",
+                                e.target.checked
+                              )
+                            }
+                          >
+                            Is Required
+                          </Checkbox>
+
+                          {index !== 0 && (
+                            <Button
+                              type="text"
+                              danger
+                              icon={
+                                <MdDeleteForever style={{ fontSize: "18px" }} />
+                              }
+                              onClick={() => handleRemoveQuestion(q.id)}
+                              style={{
+                                position: "absolute",
+                                top: "16px",
+                                right: "16px",
+                                padding: "4px",
+                                color: "#ff4d4f",
+                                ":hover": {
+                                  background: "#fff2f0",
+                                },
+                              }}
+                            />
+                          )}
+                        </div>
+                      ))}
+
+                      <Button
+                        onClick={handleAddQuestions}
+                        type="primary"
+                        className=""
+                        ghost
+                        icon={<IoMdAdd style={{ fontSize: "18px" }} />}
+                        style={{
+                          alignSelf: "flex-end",
+                          padding: "8px 16px",
+                          height: "auto",
+                          borderStyle: "dashed",
+                          borderWidth: "1.5px",
+                          borderRadius: "6px",
+                          fontWeight: 500,
+                          color: "#6a00ff",
+                          borderColor: "#6a00ff",
+                        }}
+                      >
+                        Add New Question
+                      </Button>
+                    </div>
                     <Button
-                      key="add"
-                      type="primary"
-                      onClick={handleOk}
-                      loading={confirmLoading}
-                      className="premium-confirm-btn"
-                      size="large"
+                      onClick={handlePublishPostWithQuestions}
+                      style={{
+                        padding: "10px 15px",
+                        backgroundColor: "#6900ad",
+                        border: "none",
+                        color: "#fff",
+                        fontSize: 16,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                      className="add_question"
+                      loading={isLoading}
                     >
-                      {confirmLoading ? (
+                      {isLoading ? (
                         <>
-                          <span className="btn-loading-text">Adding</span>
+                          <span className="btn-loading-text">Publishing</span>
                           <span className="btn-loading-dots"></span>
                         </>
                       ) : (
-                        "Yes, Add Questions"
+                        <>
+                          <span>Publish</span>
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M5 12H19M19 12L12 5M19 12L12 19"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            ></path>
+                          </svg>
+                        </>
                       )}
                     </Button>
-                  </div>
-                }
-              >
-                <div className="premium-modal-content">
-                  <p className="premium-modal-description">
-                    Adding interactive questions can increase engagement by up
-                    to 300%. Would you like to include some questions with your
-                    post?
-                  </p>
+                  </Drawer>
                 </div>
-              </Modal>
+              </div>
+            </Col>
+            <Col className="guideline_right" lg={11} md={11} sm={24} xs={24}>
+              <div className="guidelines">
+                <h5>Guidelines</h5>
+                <h3>Follow these guidelines for faster approval</h3>
+                <ul>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" /> User can use
+                    Job Title suggestions to auto-fill common industry terms and
+                    enhance discoverability.
+                  </li>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" /> Clearly define
+                    your ideal candidate using the Eligibility section for
+                    targeted applications.
+                  </li>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" /> Select the
+                    right Job Category to ensure your listing reaches the right
+                    candidates.
+                  </li>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" /> Avoid
+                    restricting applications based on nationality, caste,
+                    religion, gender, etc.
+                  </li>
+                  <li>
+                    <FaHeartCircleCheck className="heart_icon" /> Do not charge
+                    any application fees.
+                  </li>
+                  <li>
+                    <FaHeartCircleCheck className="heart_icon" /> Keep the Job
+                    Description clear and specific to the role, highlighting
+                    responsibilities, required skills, and growth opportunities.
+                    Use the AI generator for quick drafts, then customize as
+                    needed.
+                  </li>
+                </ul>
+              </div>
 
-              <Drawer
-                title="Question Manager"
-                closable={{ "aria-label": "Close Button" }}
-                onClose={onClose}
-                open={openDrawer}
-                width={600}
-                headerStyle={{
-                  borderBottom: "1px solid #f0f0f0",
-                  padding: "24px",
-                  fontSize: "18px",
-                  fontWeight: 600,
-                  background: "#fafafa",
-                }}
-                bodyStyle={{ padding: "24px" }}
-                maskStyle={{ background: "rgba(0, 0, 0, 0.45)" }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "24px",
-                  }}
-                >
-                  {questions.map((q, index) => (
-                    <div
-                      key={q.id}
-                      style={{
-                        position: "relative",
-                        padding: "12px 20px 10px 20px",
-                        borderRadius: "8px",
-                        border: "1px solid #f0f0f0",
-                        boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)",
-                        transition: "all 0.3s ease",
-                        background: "#fff",
-                        ":hover": {
-                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                        },
-                      }}
-                    >
-                      <CommonInputField
-                        name={"question" + index}
-                        label={`Question ${index + 1}`}
-                        placeholder="e.g. What is your current location?"
-                        type="text"
-                        value={q.question}
-                        onChange={(e) => {
-                          handleQuestionChange(
-                            index,
-                            "question",
-                            e.target.value
-                          );
-                        }}
-                        inputStyle={{
-                          padding: "12px 16px",
-                          borderRadius: "6px",
-                          border: "1px solid #d9d9d9",
-                        }}
-                        labelStyle={{
-                          fontWeight: 500,
-                          marginBottom: "8px",
-                          color: "#1d1d1d",
-                        }}
-                      />
-                      {q.error && (
-                        <div
-                          style={{
-                            color: "#ff4d4f",
-                            marginTop: "6px",
-                            fontSize: "13px",
-                          }}
-                        >
-                          {q.error}
-                        </div>
-                      )}
+              <div className="guidelines">
+                <h5>Shortlist faster & accurately</h5>
+                <h3>
+                  Follow these guidelines & recruitment rounds on next step:
+                </h3>
+                <ul>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Add assessment rounds like quiz, coding, case submissions
+                    etc.
+                  </li>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" /> Accept
+                    submissions via PPT, PDFs, DOC, CSVs, etc.
+                  </li>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" /> Add Video
+                    interview rounds for final selection of candidates.
+                  </li>
+                </ul>
+              </div>
 
-                      <Checkbox
-                        style={{ marginTop: 10 }}
-                        checked={q.isrequired}
-                        onChange={(e) =>
-                          handleQuestionChange(
-                            index,
-                            "isrequired",
-                            e.target.checked
-                          )
-                        }
-                      >
-                        Is Required
-                      </Checkbox>
+              <div className="guidelines">
+                <h5>Shortlist faster & accurately</h5>
+                <h3>
+                  Follow these guidelines & recruitment rounds on next step:
+                </h3>
+                <ul>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Add assessment rounds like quiz, coding, case submissions
+                    etc.
+                  </li>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" /> Accept
+                    submissions via PPT, PDFs, DOC, CSVs, etc.
+                  </li>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" /> Add Video
+                    interview rounds for final selection of candidates.
+                  </li>
+                </ul>
+              </div>
 
-                      {index !== 0 && (
-                        <Button
-                          type="text"
-                          danger
-                          icon={
-                            <MdDeleteForever style={{ fontSize: "18px" }} />
-                          }
-                          onClick={() => handleRemoveQuestion(q.id)}
-                          style={{
-                            position: "absolute",
-                            top: "16px",
-                            right: "16px",
-                            padding: "4px",
-                            color: "#ff4d4f",
-                            ":hover": {
-                              background: "#fff2f0",
-                            },
-                          }}
-                        />
-                      )}
-                    </div>
-                  ))}
+              <div className="guidelines">
+                <h5>Shortlist faster & accurately</h5>
+                <h3>
+                  Follow these guidelines & recruitment rounds on next step:
+                </h3>
+                <ul>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Add assessment rounds like quiz, coding, case submissions
+                    etc.
+                  </li>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" /> Accept
+                    submissions via PPT, PDFs, DOC, CSVs, etc.
+                  </li>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" /> Add Video
+                    interview rounds for final selection of candidates.
+                  </li>
+                </ul>
+              </div>
 
-                  <Button
-                    onClick={handleAddQuestions}
-                    type="primary"
-                    className=""
-                    ghost
-                    icon={<IoMdAdd style={{ fontSize: "18px" }} />}
-                    style={{
-                      alignSelf: "flex-end",
-                      padding: "8px 16px",
-                      height: "auto",
-                      borderStyle: "dashed",
-                      borderWidth: "1.5px",
-                      borderRadius: "6px",
-                      fontWeight: 500,
-                      color: "#6a00ff",
-                      borderColor: "#6a00ff",
-                    }}
-                  >
-                    Add New Question
-                  </Button>
-                </div>
-                <Button
-                  onClick={handlePublishPostWithQuestions}
-                  style={{
-                    padding: "10px 15px",
-                    backgroundColor: "#6900ad",
-                    border: "none",
-                    color: "#fff",
-                    fontSize: 16,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  className="add_question"
-                  loading={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="btn-loading-text">Publishing</span>
-                      <span className="btn-loading-dots"></span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Publish</span>
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M5 12H19M19 12L12 5M19 12L12 19"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        ></path>
-                      </svg>
-                    </>
-                  )}
-                </Button>
-              </Drawer>
-            </div>
-          </div>
-        </Col>
-        <Col className="guideline_right" lg={11} md={11} sm={24} xs={24}>
-          <div className="guidelines">
-            <h5>Guidelines</h5>
-            <h3>Follow these guidelines for faster approval</h3>
-            <ul>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" /> User can use Job
-                Title suggestions to auto-fill common industry terms and enhance
-                discoverability.
-              </li>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" /> Clearly define
-                your ideal candidate using the Eligibility section for targeted
-                applications.
-              </li>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" /> Select the right
-                Job Category to ensure your listing reaches the right
-                candidates.
-              </li>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" /> Avoid restricting
-                applications based on nationality, caste, religion, gender, etc.
-              </li>
-              <li>
-                <FaHeartCircleCheck className="heart_icon" /> Do not charge any
-                application fees.
-              </li>
-              <li>
-                <FaHeartCircleCheck className="heart_icon" /> Keep the Job
-                Description clear and specific to the role, highlighting
-                responsibilities, required skills, and growth opportunities. Use
-                the AI generator for quick drafts, then customize as needed.
-              </li>
-            </ul>
-          </div>
-
-          <div className="guidelines">
-            <h5>Shortlist faster & accurately</h5>
-            <h3>Follow these guidelines & recruitment rounds on next step:</h3>
-            <ul>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" />
-                Add assessment rounds like quiz, coding, case submissions etc.
-              </li>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" /> Accept submissions
-                via PPT, PDFs, DOC, CSVs, etc.
-              </li>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" /> Add Video
-                interview rounds for final selection of candidates.
-              </li>
-            </ul>
-          </div>
-
-          <div className="guidelines">
-            <h5>Shortlist faster & accurately</h5>
-            <h3>Follow these guidelines & recruitment rounds on next step:</h3>
-            <ul>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" />
-                Add assessment rounds like quiz, coding, case submissions etc.
-              </li>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" /> Accept submissions
-                via PPT, PDFs, DOC, CSVs, etc.
-              </li>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" /> Add Video
-                interview rounds for final selection of candidates.
-              </li>
-            </ul>
-          </div>
-
-          <div className="guidelines">
-            <h5>Shortlist faster & accurately</h5>
-            <h3>Follow these guidelines & recruitment rounds on next step:</h3>
-            <ul>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" />
-                Add assessment rounds like quiz, coding, case submissions etc.
-              </li>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" /> Accept submissions
-                via PPT, PDFs, DOC, CSVs, etc.
-              </li>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" /> Add Video
-                interview rounds for final selection of candidates.
-              </li>
-            </ul>
-          </div>
-
-          <div className="guidelines">
-            <h5>Support</h5>
-            <h3>Facing an issue or need any help ?</h3>
-            <ul>
-              <li>
-                {" "}
-                <FaHeartCircleCheck className="heart_icon" />
-                Reach us at support@carrerfast.com
-              </li>
-              <li>
-                {" "}
-                <a style={{ color: "#6a00ff" }} href="">
-                  Get in touch with us here
-                </a>
-              </li>
-            </ul>
-          </div>
-        </Col>
-      </Row>
-    </section>
+              <div className="guidelines">
+                <h5>Support</h5>
+                <h3>Facing an issue or need any help ?</h3>
+                <ul>
+                  <li>
+                    {" "}
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Reach us at support@carrerfast.com
+                  </li>
+                  <li>
+                    {" "}
+                    <a style={{ color: "#6a00ff" }} href="">
+                      Get in touch with us here
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </Col>
+          </Row>
+        </section>
+      </div>
+    </>
   );
 }

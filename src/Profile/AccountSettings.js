@@ -419,7 +419,6 @@ export default function AccountSettings() {
         <div className="tab-content">
           <h3>Billing History</h3>
           <p>View your payment history and invoices.</p>
-          {/* Placeholder for billing content */}
           <div className="blurred-blocks">
             <div className="blurred-item"></div>
             <div className="blurred-item"></div>

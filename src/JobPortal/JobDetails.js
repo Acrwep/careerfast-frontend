@@ -32,7 +32,11 @@ import {
   applyForJob,
   checkIsJobApplied,
   getJobAppliedCandidates,
+  checkIsJobSaved,
   getJobPosts,
+  saveJobPost,
+  getSavedJobs,
+  removeSavedJobs,
 } from "../ApiService/action";
 import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
 import { FaTransgender } from "react-icons/fa6";
@@ -50,6 +54,9 @@ export default function JobDetails() {
   const [loginUserId, setLoginUserId] = useState(null);
   const { id } = useParams();
   const [isApplied, setIsApplied] = useState({});
+  const [isSaved, setIsSaved] = useState({});
+  const [wishlistedJobs, setWishlistedJobs] = useState({});
+  const [savedJobMap, setSavedJobMap] = useState({});
 
   useEffect(() => {
     document.title = "CareerFast | Job Details";
@@ -58,7 +65,6 @@ export default function JobDetails() {
 
   useEffect(() => {
     console.log("Job ID from URL:", id);
-    // Fetch or filter job details using `id`
   }, [id]);
 
   useEffect(() => {
@@ -137,7 +143,7 @@ export default function JobDetails() {
     const timeDiff = today - postedDate;
     const daysPassed = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
 
-    const totalActiveDays = 5;
+    const totalActiveDays = 15;
     const daysLeft = totalActiveDays - daysPassed;
 
     return {
@@ -229,13 +235,115 @@ export default function JobDetails() {
     setAnswers("");
   };
 
-  const handleWishlistToggle = () => {
-    setWishlisted(!wishlisted);
-    // Show toast notification
-    if (wishlisted === false) {
-      CommonToaster("Added to wishlist ❤️", "success");
-    } else {
-      CommonToaster("Removed from wishlist 💔", "error");
+  const checkIsJobSavedData = async (postId) => {
+    if (!loginUserId || !postId) return;
+
+    const payload = {
+      user_id: loginUserId,
+      job_post_id: postId,
+    };
+
+    try {
+      const response = await checkIsJobSaved(payload);
+      setIsSaved((prev) => ({
+        ...prev,
+        [postId]: response?.data?.data || false,
+      }));
+    } catch (error) {
+      console.log("is saved error", error);
+      setIsSaved((prev) => ({
+        ...prev,
+        [postId]: false,
+      }));
+    }
+  };
+
+  useEffect(() => {
+    if (postDetails.length > 0) {
+      const jobId = postDetails[0]?.id;
+      if (jobId) {
+        checkIsJobSavedData(jobId);
+      }
+    }
+  }, [postDetails]);
+
+  const handleWishlistToggle = async (jobId) => {
+    try {
+      const isWishlisted = !wishlistedJobs[jobId];
+
+      setWishlistedJobs((prev) => {
+        const updated = { ...prev, [jobId]: isWishlisted };
+        localStorage.setItem("wishlist", JSON.stringify(updated));
+        return updated;
+      });
+
+      if (isWishlisted) {
+        await saveJobPostData(jobId);
+        CommonToaster("Added to wishlist ❤️", "success");
+      } else {
+        await removeSavedJobsData(jobId);
+        CommonToaster("Removed from wishlist 💔", "error");
+      }
+
+      setIsSaved((prev) => ({
+        ...prev,
+        [jobId]: !prev[jobId],
+      }));
+
+      await getSavedJobsData();
+    } catch (error) {
+      console.error("Wishlist toggle failed:", error);
+      setWishlistedJobs((prev) => {
+        const updated = { ...prev, [jobId]: !prev[jobId] };
+        localStorage.setItem("wishlist", JSON.stringify(updated));
+        return updated;
+      });
+      CommonToaster("Failed to update wishlist", "error");
+    }
+  };
+
+  const saveJobPostData = async (jobId) => {
+    if (!loginUserId || !jobId) return;
+
+    const payload = {
+      user_id: loginUserId,
+      job_post_id: jobId,
+    };
+
+    try {
+      const response = await saveJobPost(payload);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getSavedJobsData = async () => {
+    try {
+      const response = await getSavedJobs({ user_id: loginUserId });
+      const savedJobs = response?.data?.data || [];
+
+      const jobMap = {};
+      savedJobs.forEach((job) => {
+        jobMap[job.job_post_id] = job.id;
+      });
+
+      setSavedJobMap(jobMap);
+    } catch (error) {
+      console.log("Get saved job error", error);
+    }
+  };
+
+  const removeSavedJobsData = async (jobId) => {
+    try {
+      const savedJobId = savedJobMap[jobId];
+      if (!savedJobId) throw new Error("Saved job ID not found");
+
+      const response = await removeSavedJobs({ id: savedJobId });
+      return response;
+    } catch (error) {
+      console.error("Remove saved job error:", error);
+      throw error;
     }
   };
 
@@ -325,11 +433,8 @@ export default function JobDetails() {
                 <div className="side_job_actions">
                   <div className="side_job_action_buttons">
                     <div className="side_job_action_icons">
-                      <span
-                        className="side_job_action_icon"
-                        onClick={handleWishlistToggle}
-                      >
-                        {wishlisted ? (
+                      <span className="side_job_action_icon">
+                        {isSaved[job.id] ? (
                           <FaHeart className="side_job_action_icon heart active" />
                         ) : (
                           <FaRegHeart className="side_job_action_icon heart" />

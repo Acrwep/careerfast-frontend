@@ -1,25 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  Typography,
-  Card,
-  Divider,
-  message,
-  Col,
-  Carousel,
-  Row,
-  Empty,
-} from "antd";
+import { Typography, Card, message, Col, Row, Empty } from "antd";
 
 import {
-  UserOutlined,
-  SolutionOutlined,
-  DollarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
   EnvironmentOutlined,
   TeamOutlined,
   StarOutlined,
-  EditOutlined,
   ArrowRightOutlined,
   LeftOutlined,
   RightOutlined,
@@ -36,6 +21,7 @@ import logo4 from "../images/logo4.svg";
 import logo5 from "../images/tesla-pure.svg";
 import logo6 from "../images/samsung-8.svg";
 import logo7 from "../images/tata-1.svg";
+import { LockOutlined } from "@ant-design/icons";
 import right_role1 from "../images/right_role1.png";
 import right_role2 from "../images/right_role2.png";
 import right_role3 from "../images/right_role3.png";
@@ -51,6 +37,7 @@ import need_guidence1 from "../images/need_guidence1.png";
 import post_jobs from "../images/post_jobs.webp";
 import post_jobs1 from "../images/post_jobs1.png";
 import Header from "../Header/Header";
+import { useNavigate } from "react-router-dom";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -59,35 +46,6 @@ import { getJobPosts } from "../ApiService/action";
 import { PiCurrencyDollarDuotone } from "react-icons/pi";
 
 const { Title, Text } = Typography;
-
-const tabItems = [
-  {
-    key: "candidate",
-    label: (
-      <motion.span
-        className="tab-label"
-        style={{ padding: "0 24px", fontWeight: 500 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        Candidate Login
-      </motion.span>
-    ),
-  },
-  {
-    key: "recruiter",
-    label: (
-      <motion.span
-        className="tab-label"
-        style={{ padding: "0 24px", fontWeight: 500 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        Recruiter Login
-      </motion.span>
-    ),
-  },
-];
 
 const gradientColors = [
   "linear-gradient(to right, #0f3443, #34e89e)", // Teal-Blue
@@ -370,10 +328,26 @@ const companiesSettings = {
 
 export default function JobPortalLandingPage() {
   const [backendJobs, setBackendJobs] = useState([]);
+  const [roleId, setRoleId] = useState(null);
+  const [loginUserId, setLoginUserId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "CareerFast | Internship Portal";
     getJobPostsData();
+  }, []);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+        setRoleId(loginDetails.role_id);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
   }, []);
 
   const getJobPostsData = async () => {
@@ -411,28 +385,32 @@ export default function JobPortalLandingPage() {
                 dream companies!
               </p>
               <div className="button-group">
-                <a href="job-filter">
-                  <button className="primary-btn">
-                    <span>Find Internships</span>
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M5 12H19M19 12L12 5M19 12L12 19"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </a>
-                <a href="post-jobs">
-                  <button className="secondary-btn">
+                <button
+                  onClick={() => navigate("/job-filter")}
+                  className="primary-btn"
+                >
+                  <span>Find Internships</span>
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M5 12H19M19 12L12 5M19 12L12 19"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+                {roleId === 3 ? (
+                  <button
+                    onClick={() => navigate("/post-jobs")}
+                    className="secondary-btn"
+                  >
                     <span>Post Internships</span>
                     <svg
                       width="24"
@@ -443,14 +421,14 @@ export default function JobPortalLandingPage() {
                     >
                       <path
                         d="M12 5V19M5 12H19"
-                        stroke="#6900ad"
+                        stroke="#5f2eea"
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
                   </button>
-                </a>
+                ) : null}
               </div>
             </div>
           </div>
@@ -476,7 +454,7 @@ export default function JobPortalLandingPage() {
                   >
                     <path
                       d="M20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12Z"
-                      fill="#6900ad"
+                      fill="#5f2eea"
                     />
                     <path
                       d="M12 8V12L15 15"
@@ -501,14 +479,14 @@ export default function JobPortalLandingPage() {
                   >
                     <path
                       d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                     <path
                       d="M12 8V12L15 15"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -529,27 +507,27 @@ export default function JobPortalLandingPage() {
                   >
                     <path
                       d="M3 21H21"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                     />
                     <path
                       d="M19 21V5C19 4.46957 18.7893 3.96086 18.4142 3.58579C18.0391 3.21071 17.5304 3 17 3H7C6.46957 3 5.96086 3.21071 5.58579 3.58579C5.21071 3.96086 5 4.46957 5 5V21"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                     <path
                       d="M9 10H15"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                     <path
                       d="M9 14H15"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -574,7 +552,7 @@ export default function JobPortalLandingPage() {
                   >
                     <path
                       d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-                      stroke="#6900ad"
+                      stroke="#5f2eea"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -646,7 +624,9 @@ export default function JobPortalLandingPage() {
               <motion.span
                 className="elite-badge"
                 animate={{
-                  background: ["#6900ad"],
+                  background: [
+                    "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
+                  ],
                   boxShadow: [
                     "0 4px 15px rgba(200, 210, 230, 0.7)",
                     "0 4px 15px rgba(200, 210, 250, 0.7)",
@@ -752,12 +732,17 @@ export default function JobPortalLandingPage() {
                       </div>
 
                       <motion.div
+                        onClick={() => navigate(`/job-details/${jobs.id}`)}
                         className="elite-job-cta"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <ArrowRightOutlined className="elite-cta-icon" />
-                        <span>View Details</span>
+                        <ArrowRightOutlined
+                          style={{ color: "#5f2eea" }}
+                          className="elite-cta-icon"
+                        />
+
+                        <span style={{ color: "#5f2eea" }}>View Details</span>
                       </motion.div>
                     </Card>
                   </motion.div>
@@ -788,7 +773,9 @@ export default function JobPortalLandingPage() {
               <motion.span
                 className="elite-badge"
                 animate={{
-                  background: ["#6900ad"],
+                  background: [
+                    "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
+                  ],
                   boxShadow: [
                     "0 4px 15px rgba(200, 210, 230, 0.7)",
                     "0 4px 15px rgba(200, 210, 250, 0.7)",
@@ -1148,17 +1135,19 @@ export default function JobPortalLandingPage() {
             md={24}
             xs={24}
           >
-            <div className="post_jobs_div">
+            <div
+              className={`post_jobs_glass ${roleId !== 3 ? "blur-access" : ""}`}
+            >
               <Title className="post_jobs_title">
                 Post Your{" "}
-                <span style={{ color: "#6900ad" }}>Jobs & Internships</span>
+                <span style={{ color: "#5f2eea" }}>Jobs & Internships</span>
               </Title>
               <Text className="post_jobs_text">
                 Connect with top talent actively seeking opportunities across
                 various domains. Whether you're hiring for full-time roles,
                 part-time positions, or internships.
               </Text>
-              <br></br>
+              <br />
               <Text className="post_jobs_text">
                 Tap into a diverse and dynamic talent pool of fresh graduates,
                 experienced professionals, and industry-ready interns. Post your
@@ -1167,28 +1156,54 @@ export default function JobPortalLandingPage() {
               </Text>
 
               <div className="post_jobs_btn">
-                <img src={post_jobs1}></img>
-                <a href="post-jobs">
-                  <button className="primary-btn">
-                    <span>Post Jobs Now</span>
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M5 12H19M19 12L12 5M19 12L12 19"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                <img style={{ width: "60%" }} src={post_jobs1} alt="icon" />
+                {roleId === 3 ? (
+                  <a href="post-jobs">
+                    <button className="primary-btn">
+                      <span>Post Jobs Now</span>
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M5 12H19M19 12L12 5M19 12L12 19"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </a>
+                ) : (
+                  <button className="primary-btn" disabled>
+                    <span>You cannot access</span>
                   </button>
-                </a>
+                )}
               </div>
+              {roleId !== 3 && (
+                <div className="access-restricted-overlay">
+                  <div className="access-restricted-content">
+                    <LockOutlined
+                      style={{
+                        fontSize: "32px",
+                        color: "#fff",
+                        marginBottom: "16px",
+                      }}
+                    />
+                    <h3 style={{ color: "#fff", marginBottom: "8px" }}>
+                      Access Restricted
+                    </h3>
+                    <p style={{ color: "#fff", textAlign: "center" }}>
+                      This feature is only available for employers. Please
+                      contact support if you believe this is an error.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </Col>
 
@@ -1199,8 +1214,13 @@ export default function JobPortalLandingPage() {
             md={24}
             xs={24}
           >
-            <div className="post_jobs_div1">
-              <img src={post_jobs}></img>
+            <div
+              className={`post_jobs_div1 ${roleId !== 3 ? "blur-access" : ""}`}
+            >
+              <img src={post_jobs} alt="Post Job Illustration" />
+              {roleId !== 3 && (
+                <div className="access-restricted-overlay"></div>
+              )}
             </div>
           </Col>
         </Row>

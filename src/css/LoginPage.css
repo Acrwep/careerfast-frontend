@@ -414,6 +414,7 @@ label::after {
 .nav-item {
   border-radius: 8px;
   color: #2a2a2a !important;
+  font-weight: 500 !important;
 }
 
 .nav-link:hover {
@@ -500,19 +501,20 @@ label::after {
 }
 
 .host-button {
-  background-color: #8d3ffb !important;
+  background: linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%) !important;
   border: none !important;
   border-radius: 20px !important;
-  padding: 8px 16px !important;
-  font-weight: 500;
+  padding: 6px 25px !important;
+  font-weight: 600 !important;
   display: flex;
   align-items: center;
   gap: 6px;
+  color: #fff !important;
   transition: all 0.2s ease;
 }
 
 .host-button:hover {
-  background-color: #7b2cf7 !important;
+  background: linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%) !important;
   transform: translateY(-1px);
 }
 

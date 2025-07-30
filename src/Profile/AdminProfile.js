@@ -20,6 +20,7 @@ import ProSubscription from "./ProSubscription";
 import TextArea from "antd/es/input/TextArea";
 import BookMark from "./BookMark";
 import Listing from "./Listing";
+import AppliedJobs from "./AppliedJobs";
 import AccountSettings from "./AccountSettings";
 import { getUserProfile } from "../ApiService/action";
 
@@ -50,11 +51,16 @@ export default function UserProfile() {
 
   const menuItems = [
     { key: "mainprofile", icon: <FaUserPen />, label: "Your profile" },
-    { key: "watchlist", icon: <FaRegHeart />, label: "Watchlist" },
+    { key: "wishlist", icon: <FaRegHeart />, label: "Wishlist" },
     { key: "settings", icon: <SettingOutlined />, label: "Settings" },
+
     ...(roleId === 3
-      ? [{ key: "listing", icon: <FaListOl />, label: "Manage Listing" }]
-      : []),
+      ? [
+          { key: "listing", icon: <FaListOl />, label: "Manage Listing" },
+          { key: "applied", icon: <FaListOl />, label: "Applied Jobs" },
+        ]
+      : [{ key: "applied", icon: <FaListOl />, label: "Applied Jobs" }]),
+
     {
       key: "accountsettings",
       icon: <SettingOutlined />,
@@ -163,25 +169,27 @@ export default function UserProfile() {
       </Sider>
 
       {/* Main Content */}
-      <Layout className="profile-content-layout">
+      <Layout style={{ background: "none" }} className="profile-content-layout">
         {/* Dynamic Content */}
         <div style={{ flex: 1, padding: 5 }}>
           {sideBar === "mainprofile" ? (
             <MainProfile />
-          ) : sideBar === "watchlist" ? (
+          ) : sideBar === "wishlist" ? (
             <WatchList />
           ) : sideBar === "bookmarked" ? (
             <BookMark />
           ) : sideBar === "viewed" ? (
             <RecentlyViewed />
-          ) : sideBar === "settings" ? (
-            <Settings />
           ) : sideBar === "listing" ? (
             <Listing />
+          ) : sideBar === "settings" ? (
+            <Settings />
           ) : sideBar === "accountsettings" ? (
             <AccountSettings />
           ) : sideBar === "prosubscription" ? (
             <ProSubscription />
+          ) : sideBar === "applied" ? (
+            <AppliedJobs />
           ) : (
             ""
           )}

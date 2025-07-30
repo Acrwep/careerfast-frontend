@@ -692,3 +692,40 @@ export const checkIsJobSaved = async (payload) => {
     throw error;
   }
 };
+
+// updateProfileImage
+
+export const updateProfileImage = async (payload) => {
+  try {
+    const response = await api.put("/api/updateProfileImage", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getUserAppliedJobs
+
+export const getUserAppliedJobs = async (payload) => {
+  try {
+    const response = await api.get("api/userAppliedJobs", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// searchByKeyword
+
+export const searchByKeyword = async (payload) => {
+  try {
+    const response = await api.get("api/searchByKeyword", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
