@@ -81,9 +81,12 @@ body {
 }
 
 .ant-select-outlined.ant-select-multiple .ant-select-selection-item {
-  background: rgb(144 53 255 / 18%);
-  border: 1px solid #5400ff;
-  color: #6a00ff;
+  background: #f3f2ff;
+  color: #6a5cff;
+  padding: 0px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .premium-steps .ant-steps-item-process .ant-steps-icon {
@@ -1141,7 +1144,7 @@ body {
 }
 
 .guideline_right {
-  padding: 60px 50px;
+  padding: 60px 10px 50px 50px;
 }
 
 .add_question {

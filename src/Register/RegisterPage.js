@@ -197,7 +197,12 @@ const RegisterPage = () => {
               <div style={{ textAlign: "center", marginBottom: 12 }}>
                 <Title
                   level={2}
-                  style={{ marginBottom: 8, fontWeight: 700, color: "#2d3748" }}
+                  style={{
+                    marginBottom: 8,
+                    fontWeight: 700,
+                    color: "#2d3748",
+                    marginTop: 0,
+                  }}
                 >
                   Join CareerFast!
                 </Title>
@@ -440,7 +445,11 @@ const RegisterPage = () => {
                     Already have an account?
                     <Link
                       href="/login"
-                      style={{ color: "#8d3ffb", fontWeight: 600 }}
+                      style={{
+                        color: "#8d3ffb",
+                        fontWeight: 600,
+                        marginLeft: 5,
+                      }}
                       className="hover-underline"
                     >
                       Sign in now

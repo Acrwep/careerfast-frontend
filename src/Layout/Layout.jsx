@@ -7,6 +7,7 @@ import RegisterPage from "../Register/RegisterPage";
 import JobPortalLandingPage from "../JobPortal/LandingPage";
 import InternshipLandingPage from "../InternshipPortal/LandingPage";
 import Header from "../Header/Header";
+import Footer from "../Footer/Footer";
 import PostJobs from "../JobPortal/PostJobs";
 import JobFilter from "../JobPortal/JobFilter";
 import JobDetails from "../JobPortal/JobDetails";
@@ -26,10 +27,13 @@ import ManageCandidate from "../AdminDashboard/ManageCandidate";
 import EditOpportunity from "../AdminDashboard/EditOpportunity";
 import RegistrationChart from "../AdminDashboard/RegistrationChart";
 import ManageNotification from "../AdminDashboard/ManageNotification";
+import { useDispatch } from "react-redux";
+import { storeLoginStatus } from "../Redux/Slice";
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     //handle navigate to login page when token expire
@@ -53,18 +57,32 @@ const Layout = () => {
 
     console.log("pathname", pathName);
     if (AccessToken) {
+      dispatch(storeLoginStatus(true));
       if (pathName === "" || pathName === "/") {
-        navigate("/job-portal");
-      } else if (pathName.includes("job-details")) {
+        navigate("/job-portal", { replace: true });
+      } else if (
+        pathName.includes("job-details") ||
+        pathName.includes("admin-dashboard") ||
+        pathName.includes("edit-opportunity")
+      ) {
         return;
       } else {
-        navigate(`/${pathName}`);
+        navigate(`/${pathName}`, { replace: true });
       }
     } else {
+      dispatch(storeLoginStatus(false));
       if (pathName === "register") {
-        navigate("/register");
+        navigate("/register", { replace: true });
+      } else if (pathName === "login") {
+        navigate("/login", { replace: true });
+      } else if (pathName === "internship") {
+        navigate("/internship", { replace: true });
+      } else if (pathName === "job-filter") {
+        navigate("/job-filter", { replace: true });
+      } else if (location.pathname.includes("/job-details/")) {
+        return;
       } else {
-        navigate("/login");
+        navigate("/job-portal", { replace: true });
       }
     }
   }, [location.pathname]);
@@ -80,6 +98,7 @@ const Layout = () => {
         <Route path="/job-portal" element={<JobPortalLandingPage />} />
         <Route path="/internship" element={<InternshipLandingPage />} />
         <Route path="/header" element={<Header />} />
+        <Route path="/footer" element={<Footer />}></Route>
         <Route path="/post-jobs" element={<PostJobs />} />
         <Route path="/job-filter" element={<JobFilter />} />
         <Route path="/job-details/:id" element={<JobDetails />} />
@@ -94,8 +113,8 @@ const Layout = () => {
         <Route path="/listing" element={<Listing />} />
         <Route path="/accountsetting" element={<AccountSettings />} />
         <Route path="/pro-subscription" element={<ProSubscription />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/edit-opportunity" element={<EditOpportunity />} />
+        <Route path="/admin-dashboard/:id" element={<AdminDashboard />} />
+        <Route path="/edit-opportunity/:id" element={<EditOpportunity />} />
         <Route path="/manage-candidate" element={<ManageCandidate />} />
         <Route path="/registration-chart" element={<RegistrationChart />} />
         <Route path="/manage-notification" element={<ManageNotification />} />

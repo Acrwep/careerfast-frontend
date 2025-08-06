@@ -1688,7 +1688,7 @@
   display: flex;
   gap: 1rem;
   color: #6c757d;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .listing-actions svg {
@@ -3619,8 +3619,12 @@
 
 .profile_result .empty-state {
   text-align: center;
-  padding: 20px 0;
-  max-width: 500px;
+  padding: 20px 20px;
+  background: linear-gradient(135deg, #f9f9ff 0%, #f0f0ff 100%);
+  border-radius: 16px;
+  border: 1px dashed #d1d1f0;
+  margin-top: 20px;
+  margin-bottom: 4px;
 }
 
 .profile_result .empty-title {

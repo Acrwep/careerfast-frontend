@@ -729,3 +729,58 @@ export const searchByKeyword = async (payload) => {
     throw error;
   }
 };
+
+// updateJobBasicDetails
+
+export const updateJobBasicDetails = async (payload) => {
+  try {
+    const response = await api.put("api/updateJobBasicDetails", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// updateJobNature
+
+export const updateJobNature = async (payload) => {
+  try {
+    const response = await api.put("api/updateJobNature", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// updateEligibility
+
+export const updateEligibility = async (payload) => {
+  try {
+    const response = await api.put("api/updateEligibility", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// updateJobDescription
+
+export const updateJobDescription = async (payload) => {
+  try {
+    const response = await api.put("api/updateJobDescription", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// updateUserAppliedJobStatus
+
+export const updateUserAppliedJobStatus = async (payload) => {
+  try {
+    const response = await api.put("api/updateUserAppliedJobStatus", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

@@ -319,7 +319,7 @@ const LoginPage = () => {
           {" "}
           <div className="floating_circle1"></div>
           <div
-            style={{ height: 720, placeContent: "center" }}
+            style={{ height: 700, placeContent: "center" }}
             className="login-animation"
           >
             <Card className="login_card">

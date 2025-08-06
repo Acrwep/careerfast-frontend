@@ -5,6 +5,7 @@ import { debounce } from "lodash";
 import { getUserAppliedJobs } from "../ApiService/action";
 import { useNavigate } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
+import Header from "../Header/Header";
 
 const { Title, Text } = Typography;
 
@@ -144,61 +145,64 @@ export default function AppliedJobs() {
   }, [opportunities, searchQuery]);
 
   return (
-    <section
-      className="watchlist-container"
-      style={{
-        padding: "24px 32px",
-        background: "#fff",
-        borderRadius: 12,
-        boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)",
-      }}
-    >
-      <div
+    <>
+      <Header />
+      <section
+        className="watchlist-container"
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
+          padding: "24px 32px",
+          background: "#fff",
+          borderRadius: 12,
+          boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)",
         }}
       >
-        <Title level={3} style={{ margin: 0 }}>
-          Applied Jobs & Internships
-        </Title>
-        <Badge
-          count={filteredOpportunities.length}
-          style={{ backgroundColor: "#5f2eea" }}
-        />
-      </div>
-
-      <Input
-        placeholder="Search by role or company..."
-        prefix={<SearchOutlined />}
-        style={{
-          borderRadius: 8,
-          padding: "10px 16px",
-          maxWidth: 400,
-          marginBottom: 24,
-        }}
-        onChange={(e) => debouncedSearch(e.target.value)}
-        allowClear
-      />
-
-      {loading ? (
-        <div style={{ textAlign: "center", padding: 40 }}>
-          <Spin size="large" />
-        </div>
-      ) : filteredOpportunities.length > 0 ? (
-        filteredOpportunities.map((opp) => (
-          <OpportunityCard key={opp.id} opportunity={opp} />
-        ))
-      ) : (
-        <Card style={{ textAlign: "center", padding: 40 }}>
-          <Title level={4} style={{ color: "#bfbfbf" }}>
-            No opportunities found
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 24,
+          }}
+        >
+          <Title level={3} style={{ margin: 0 }}>
+            Applied Jobs & Internships
           </Title>
-          <Text type="secondary">Try adjusting your search query</Text>
-        </Card>
-      )}
-    </section>
+          <Badge
+            count={filteredOpportunities.length}
+            style={{ backgroundColor: "#5f2eea" }}
+          />
+        </div>
+
+        <Input
+          placeholder="Search by role or company..."
+          prefix={<SearchOutlined />}
+          style={{
+            borderRadius: 8,
+            padding: "10px 16px",
+            maxWidth: 400,
+            marginBottom: 24,
+          }}
+          onChange={(e) => debouncedSearch(e.target.value)}
+          allowClear
+        />
+
+        {loading ? (
+          <div style={{ textAlign: "center", padding: 40 }}>
+            <Spin size="large" />
+          </div>
+        ) : filteredOpportunities.length > 0 ? (
+          filteredOpportunities.map((opp) => (
+            <OpportunityCard key={opp.id} opportunity={opp} />
+          ))
+        ) : (
+          <Card style={{ textAlign: "center", padding: 40 }}>
+            <Title level={4} style={{ color: "#bfbfbf" }}>
+              No opportunities found
+            </Title>
+            <Text type="secondary">Try adjusting your search query</Text>
+          </Card>
+        )}
+      </section>
+    </>
   );
 }

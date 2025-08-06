@@ -44,6 +44,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
 import { getJobPosts } from "../ApiService/action";
+import Footer from "../Footer/Footer";
 
 const { Title, Text } = Typography;
 
@@ -233,7 +234,7 @@ const rightRolesettings = {
   arrows: true,
   autoplay: true,
   autoplaySpeed: 4000,
-  slidesToShow: 4.5,
+  slidesToShow: 4,
   prevArrow: <PrevArrow />,
   nextArrow: <NextArrow />,
   responsive: [
@@ -1180,6 +1181,7 @@ export default function JobPortalLandingPage() {
       </div>
 
       {/*  */}
+      <Footer />
     </div>
   );
 }

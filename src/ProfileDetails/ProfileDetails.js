@@ -314,6 +314,7 @@ const ProfileDetails = () => {
       const response = await getCourses();
       setCourseOptions(response?.data?.data || []);
       setFresherCourse(response?.data?.data || []);
+      setFresherCourseOptions(response?.data?.data || []);
     } catch (error) {
       console.log("getCourses", error);
     }

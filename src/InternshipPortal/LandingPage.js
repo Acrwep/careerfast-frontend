@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Typography, Card, message, Col, Row, Empty } from "antd";
+import Footer from "../Footer/Footer";
 
 import {
   EnvironmentOutlined,
@@ -58,57 +59,6 @@ const gradientColors = [
   "linear-gradient(to right, #1e3c72, #2a5298)", // Cool Royal Blue
   "linear-gradient(to right, #0f2027, #203a43, #2c5364)", // Deep Space
   "linear-gradient(to right, #141e30, #243b55)", // Moody Blue
-];
-
-const jobs = [
-  {
-    id: 1,
-    title: "Customer Service Representative",
-    company: "Neelam",
-    applicants: 1159,
-    salary: "₹ 2.4 LPA - 2.6 LPA",
-    logo: logo1,
-    bgColor: "linear-gradient(to right, #666600, #999966)",
-    tag: "In Office",
-    location: "Bangalore",
-    experience: "0-2 years",
-  },
-  {
-    id: 2,
-    title: "Full Stack Developer",
-    company: "VOCSO Technologies Pvt. Ltd",
-    applicants: 124,
-    salary: "₹ 3 LPA - 6 LPA",
-    logo: logo2,
-    bgColor: "linear-gradient(90deg, #0575E6 0%, #021B79 100%)",
-    tag: "In Office",
-    location: "Hyderabad",
-    experience: "1-3 years",
-  },
-  {
-    id: 3,
-    title: "Digital Marketing Associate",
-    company: "Indofit Solutions Private Limited",
-    applicants: 6,
-    salary: "₹ 2.4 LPA",
-    logo: logo3,
-    bgColor: "linear-gradient(90deg, #20002c 0%, #cbb4d4 100%)",
-    tag: "In Office",
-    location: "Delhi",
-    experience: "0-1 year",
-  },
-  {
-    id: 4,
-    title: "Telesales Executive",
-    company: "Genius Labs",
-    applicants: 89,
-    salary: "₹ 2.5 LPA - 4 LPA",
-    logo: logo4,
-    bgColor: "linear-gradient(90deg, #16222A 0%, #3A6073 100%)",
-    tag: "In Office",
-    location: "Mumbai",
-    experience: "0-1 year",
-  },
 ];
 
 const rightRole = [
@@ -284,7 +234,7 @@ const rightRolesettings = {
   arrows: true,
   autoplay: true,
   autoplaySpeed: 4000,
-  slidesToShow: 4.5,
+  slidesToShow: 4,
   prevArrow: <PrevArrow />,
   nextArrow: <NextArrow />,
   responsive: [
@@ -1226,6 +1176,7 @@ export default function JobPortalLandingPage() {
         </Row>
       </div>
       {/*  */}
+      <Footer />
     </div>
   );
 }

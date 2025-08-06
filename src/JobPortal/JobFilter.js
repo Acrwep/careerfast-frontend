@@ -551,11 +551,7 @@ export default function JobFilter() {
 
         <div className="premium-footer">
           <span className="premium-level">
-            {job.level.includes("Leadership") ? (
-              <CrownFilled />
-            ) : (
-              <ThunderboltFilled />
-            )}
+            {job.level ? <CrownFilled /> : <ThunderboltFilled />}
             {job.level}
           </span>
           <span

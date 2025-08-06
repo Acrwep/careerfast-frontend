@@ -41,7 +41,7 @@ import { GiNewShoot } from "react-icons/gi";
 import { FiEdit } from "react-icons/fi";
 
 import "../css/Profile.css";
-import { FaFacebookF } from "react-icons/fa";
+import { FaFacebookF, FaTwitter } from "react-icons/fa";
 import { FiBriefcase, FiCalendar, FiPlusCircle } from "react-icons/fi";
 import { FaInstagram } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
@@ -187,7 +187,7 @@ export default function MainProfile() {
   const [userTypeactiveButton, setUserTypeActiveButton] = useState(null);
   const defaultAvatar =
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [profileImage, setProfileImage] = useState("");
   const [lateral, setLateral] = useState(null);
 
   //
@@ -335,24 +335,24 @@ export default function MainProfile() {
     console.log("loginUserId updated", loginUserId);
     if (loginUserId) {
       getUserProfileData();
-      updateProfileImageData();
+      // updateProfileImageData();
     }
   }, [loginUserId]);
 
-  // UPDATE PROFILE IMAGE
-  const updateProfileImageData = async () => {
-    const payload = {
-      user_id: loginUserId,
-      profile_image: avatarUrl,
-    };
-    try {
-      const response = await updateProfileImage(payload);
-      console.log("profile updated", response);
-      getUserProfileData();
-    } catch (error) {
-      console.log("did not update", error);
-    }
-  };
+  // // UPDATE PROFILE IMAGE
+  // const updateProfileImageData = async () => {
+  //   const payload = {
+  //     user_id: loginUserId,
+  //     profile_image: profileImage,
+  //   };
+  //   try {
+  //     const response = await updateProfileImage(payload);
+  //     console.log("profile updated", response);
+  //     getUserProfileData();
+  //   } catch (error) {
+  //     console.log("did not update", error);
+  //   }
+  // };
 
   // QUALIFICATION
   useEffect(() => {
@@ -475,7 +475,9 @@ export default function MainProfile() {
 
     try {
       const response = await getUserProfile(payload);
-      console.log("fetchedProfile", response);
+      const image = response?.data?.data?.profile_image || "";
+      setProfileImage(image || defaultAvatar);
+      localStorage.setItem("profileImage", image);
       setIsResume(response?.data?.data?.resume || "");
       setIsSkills(response?.data?.data?.skills || []);
       setIsWorkExp(response?.data?.data?.experince_type || []);
@@ -499,7 +501,7 @@ export default function MainProfile() {
 
       if (response?.data?.data) {
         const profile = response.data.data;
-        setAvatarUrl(profile.profile_image || "");
+
         // Handle education
         if (profile.education && profile.education.length > 0) {
           const edu = profile.education[0];
@@ -733,7 +735,6 @@ export default function MainProfile() {
       const response = await updateBasicDetails(payload);
       console.log("Saving user data:", response);
       message.success("Profile details saved successfully.");
-      resetFormFields();
     } catch (error) {
       console.log("Saving user data:", error);
     }
@@ -750,39 +751,6 @@ export default function MainProfile() {
   const educationEndDateOptions = yearOptions;
 
   const handleExperienceTypeChange = (value) => setExperienceType(value);
-  const handleCompanyFields = (index, fieldName, value) => {
-    const updateDatas = [...companies];
-    updateDatas[index][fieldName] = value;
-
-    if (fieldName === "jobTitle") {
-      updateDatas[index].jobTitleError = nameValidator(value);
-    }
-
-    if (fieldName === "workingCompanyName") {
-      updateDatas[index].workingCompanyNameError = nameValidator(value);
-    }
-
-    if (fieldName === "designation") {
-      updateDatas[index].designationError = nameValidator(value);
-    }
-
-    if (fieldName === "workingStartDate") {
-      updateDatas[index].WorkingStartDateError = selectValidator(value);
-    }
-
-    if (fieldName === "workingEndDate") {
-      updateDatas[index].workingEndDateError = selectValidator(value);
-    }
-
-    if (fieldName === "currentlyWorking") {
-      if (updateDatas[index].currentlyWorking === true) {
-        updateDatas[index].workingEndDate = "";
-        updateDatas[index].workingEndDateError = "";
-      }
-    }
-
-    setCompanies(updateDatas);
-  };
 
   const handleAddCompany = () => {
     setEditingCompanyId(null);
@@ -1023,11 +991,6 @@ export default function MainProfile() {
     }
   };
 
-  const handleDeleteProject = () => {
-    setShowForm(true);
-    getUserProfileData();
-  };
-
   const handleProjectDiscard = () => {
     setShowForm(false);
   };
@@ -1153,7 +1116,6 @@ export default function MainProfile() {
       setProjectsList(updatedList);
 
       if (updatedList.length === 0) {
-        // 👇 Automatically open the form to add new project
         handleAddNewProject();
       } else {
         setShowForm(false);
@@ -1296,6 +1258,7 @@ export default function MainProfile() {
     { key: "facebook", icon: <FaFacebookF />, color: "#3b5998" },
     { key: "instagram", icon: <FaInstagram />, color: "#E1306C" },
     { key: "behance", icon: <FaBehance />, color: "#1769ff" },
+    { key: "twitter", icon: <FaTwitter />, color: "#17aaffff" },
     { key: "dribble", icon: <FaDribbble />, color: "#ea4c89" },
   ];
 
@@ -1398,15 +1361,15 @@ export default function MainProfile() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Simulate data loading
-  useEffect(() => {
-    const storedAvatar = localStorage.getItem("profileAvatar");
-    if (storedAvatar) {
-      setAvatarUrl(storedAvatar);
-    }
+  // useEffect(() => {
+  //   const storedAvatar = localStorage.getItem("profileAvatar");
+  //   if (storedAvatar) {
+  //     setProfileImage(storedAvatar);
+  //   }
 
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+  //   const timer = setTimeout(() => setIsLoading(false), 800);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   useEffect(() => {
     try {
@@ -1542,32 +1505,37 @@ export default function MainProfile() {
     setStartDate("");
   };
 
-  const [purpose, setPurpose] = useState(null);
-  const handlePurposeClick = (buttonId) => {
-    setPurpose((prev) => buttonId);
-  };
-
   const [Class, setClass] = useState(null);
   const handleClassClick = (buttonId) => {
     setClass((prev) => buttonId);
   };
 
-  const handleCertification = ({ file }) => {
-    console.log("fileee", file);
-
-    setCertification([file]);
-  };
-
-  const handleUpload = (info) => {
+  const handleUpload = async (info) => {
     const file = info.file.originFileObj || info.file;
+
     if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+
+      reader.onloadend = async () => {
         const imageDataUrl = reader.result;
-        setAvatarUrl(imageDataUrl);
+        setProfileImage(imageDataUrl);
         localStorage.setItem("profileAvatar", imageDataUrl);
         message.success("Profile image updated!");
+
+        const payload = {
+          user_id: loginUserId,
+          profile_image: imageDataUrl,
+        };
+
+        try {
+          const response = await updateProfileImage(payload);
+          console.log("Profile updated:", response);
+          getUserProfileData();
+        } catch (error) {
+          console.error("Failed to update profile:", error);
+        }
       };
+
       reader.readAsDataURL(file);
     } else {
       message.error("Please upload a valid image file");
@@ -1575,10 +1543,11 @@ export default function MainProfile() {
   };
 
   const handleRemove = () => {
-    setAvatarUrl(defaultAvatar);
+    setProfileImage(defaultAvatar);
     localStorage.removeItem("profileAvatar");
     message.error("Profile image removed.");
   };
+
   // --- Tab Content Components ---
   const TabContent = {
     basic: () => (
@@ -3653,7 +3622,7 @@ export default function MainProfile() {
                   padding: "7px",
                 }}
               >
-                <Avatar size={90} src={avatarUrl || defaultAvatar} />
+                <Avatar size={90} src={profileImage || defaultAvatar} />
 
                 <Upload
                   showUploadList={false}
@@ -3677,7 +3646,7 @@ export default function MainProfile() {
                 </Upload>
 
                 {/* Remove Button */}
-                {avatarUrl !== defaultAvatar && (
+                {profileImage !== defaultAvatar && (
                   <Button
                     icon={<DeleteOutlined />}
                     size="small"
@@ -3817,10 +3786,6 @@ export default function MainProfile() {
             }
           >
             <div className="stats-container">
-              <div className="stat-item">
-                <div className="stat-label">Total Points</div>
-                <div className="stat-value">0</div>
-              </div>
               <div className="stat-item">
                 <div className="stat-label">Total Badges</div>
                 <div className="stat-value">2</div>

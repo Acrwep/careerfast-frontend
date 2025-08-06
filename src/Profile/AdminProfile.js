@@ -82,6 +82,8 @@ export default function UserProfile() {
         const loginDetails = JSON.parse(stored);
         setLoginUserId(loginDetails.id);
         setRoleId(loginDetails.role_id);
+        const storedImage = localStorage.getItem("profileImage");
+        if (storedImage) setAvatarUrl(storedImage);
       }
       console.log("stored", stored);
     } catch (error) {
@@ -106,10 +108,12 @@ export default function UserProfile() {
       console.log("getUserProfile", response);
       if (response?.data?.data) {
         const profile = response.data.data;
-        setAvatarUrl(response?.data?.data?.profile_image || "");
+        const image = profile.profile_image || "";
+        setAvatarUrl(image);
         setFname(profile.first_name || "");
         setEmail(profile.email || "");
         setLname(profile.last_name || "");
+        localStorage.setItem("profileImage", image);
       }
     } catch (error) {
       console.log("getuserprofile errorddd", error);

@@ -5,8 +5,10 @@ import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import Offcanvas from "react-bootstrap/Offcanvas";
-import logo from "../images/careerfast_logo.png";
+import logo from "../images/careerfastlogofinal.png";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { storeLoginStatus } from "../Redux/Slice";
 import {
   Input,
   Avatar,
@@ -55,12 +57,14 @@ import {
 } from "@ant-design/icons";
 import { getUserProfile, searchByKeyword } from "../ApiService/action";
 import { IoChevronDownOutline } from "react-icons/io5";
+import { CommonToaster } from "../Common/CommonToaster";
 
 const { Title, Text } = Typography;
 
 export default function Header() {
   const [open, setOpen] = useState(false);
-
+  const dispatch = useDispatch();
+  const isLoggedIn = useSelector((state) => state.loginstatus);
   const showDrawer = () => setOpen(true);
   const onClose = () => setOpen(false);
   const [loginUserId, setLoginUserId] = useState(null);
@@ -71,26 +75,28 @@ export default function Header() {
   const [email, setEmail] = useState("");
   const [searchText, setSearchText] = useState(""); // input field state
   const [suggestions, setSuggestions] = useState([]);
-  const [globalSearch, setGlobalSearch] = useState([]); // search result data
+  // const [isLoggedIn, setIsLoggedIn] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("loginDetails");
-      if (stored) {
+    const token = localStorage.getItem("AccessToken");
+    const stored = localStorage.getItem("loginDetails");
+    if (stored) {
+      try {
         const loginDetails = JSON.parse(stored);
         setLoginUserId(loginDetails.id);
         setRoleId(loginDetails.role_id);
+      } catch (err) {
+        console.error("Invalid loginDetails", err);
       }
-    } catch (error) {
-      console.error("Invalid JSON in localStorage", error);
     }
   }, []);
 
   const handleLogOut = () => {
     localStorage.removeItem("loginDetails");
-    setLoginUserId(null);
+    // setLoginUserId(null);
+    dispatch(storeLoginStatus(false));
     setRoleId(null);
     navigate("/login");
     message.error("Your'e logged out");
@@ -111,11 +117,14 @@ export default function Header() {
     try {
       const response = await getUserProfile(payload);
       console.log("getUserProfile", response);
+      const image = response?.data?.data?.profile_image || "";
 
-      setProfileImage(response?.data?.data?.profile_image || "");
+      setProfileImage(image);
       setFname(response?.data?.data?.first_name || "");
       setEmail(response?.data?.data?.email || "");
       setLname(response?.data?.data?.last_name || "");
+
+      localStorage.setItem("profileImage", image);
     } catch (error) {
       console.log("getuserprofile errorddd", error);
     } finally {
@@ -191,7 +200,7 @@ export default function Header() {
   };
 
   const handleSelect = (jobId) => {
-    navigate(`/job-detail/${jobId}`);
+    navigate(`/job-details/${jobId}`);
   };
 
   const menuItems = [
@@ -284,8 +293,12 @@ export default function Header() {
               <Nav className="justify-content-center flex-grow-1 align-items-start gap-3">
                 {menuItems.map((item) => (
                   <Nav.Link
+                    disabled={item.key === "practice" ? true : false}
                     key={item.key}
-                    as={Link}
+                    onClick={() => {
+                      onClose();
+                      navigate(item.path);
+                    }}
                     to={item.path}
                     active={currentPath === item.path}
                   >
@@ -293,6 +306,7 @@ export default function Header() {
                   </Nav.Link>
                 ))}
                 <Dropdown
+                  disabled
                   menu={{ items: moreMenuItems }}
                   trigger={["click"]}
                   placement="bottomLeft"
@@ -305,43 +319,81 @@ export default function Header() {
 
               {/* Right: User Actions */}
               <div className="align-items-center gap-3 mt-3 mt-md-0 mobile_sidebar">
-                <Badge count={3}>
-                  <Button className="icon-button" variant="light">
-                    <BellOutlined />
-                  </Button>
-                </Badge>
+                {isLoggedIn === true ? (
+                  <Badge count={3}>
+                    <Button className="icon-button" variant="light">
+                      <BellOutlined />
+                    </Button>
+                  </Badge>
+                ) : (
+                  ""
+                )}
 
-                <div
-                  className="d-flex align-items-center gap-1 user-dropdown"
-                  style={{ cursor: "pointer" }}
-                >
-                  <Avatar
-                    onClick={showDrawer}
-                    style={{ objectFit: "contain" }}
-                    size="large"
-                    src={profileImage}
-                  />
-                </div>
+                {isLoggedIn === true ? (
+                  <div
+                    className="d-flex align-items-center gap-1 user-dropdown"
+                    style={{ cursor: "pointer" }}
+                  >
+                    <Avatar
+                      onClick={showDrawer}
+                      style={{ objectFit: "contain" }}
+                      size="large"
+                      src={profileImage}
+                    />
+                  </div>
+                ) : (
+                  ""
+                )}
 
                 {roleId === 2 ? (
-                  <Tooltip title="You don't have permission to post jobs">
-                    <span>
+                  <>
+                    <Tooltip title="You don't have permission to post jobs">
+                      <span>
+                        <Button
+                          onClick={() => navigate("/post-jobs")}
+                          className="host-button"
+                          disabled
+                        >
+                          <PlusOutlined /> Host
+                        </Button>
+                      </span>
+                    </Tooltip>
+                    {isLoggedIn === false ? (
                       <Button
-                        onClick={() => navigate("/post-jobs")}
+                        onClick={() => navigate("/login")}
                         className="host-button"
-                        disabled
                       >
-                        <PlusOutlined /> Host
+                        Login
                       </Button>
-                    </span>
-                  </Tooltip>
+                    ) : (
+                      ""
+                    )}
+                  </>
                 ) : (
-                  <Button
-                    onClick={() => navigate("/post-jobs")}
-                    className="host-button"
-                  >
-                    <PlusOutlined /> Host
-                  </Button>
+                  <>
+                    <Button
+                      onClick={() => {
+                        if (isLoggedIn === false) {
+                          message.error("Please Login");
+                        } else {
+                          navigate("/post-jobs");
+                        }
+                      }}
+                      className="host-button"
+                    >
+                      <PlusOutlined /> Host
+                    </Button>
+                    {isLoggedIn === false ? (
+                      <Button
+                        onClick={() => navigate("/login")}
+                        className="host-button"
+                      >
+                        Login
+                      </Button>
+                    ) : (
+                      ""
+                    )}{" "}
+                  </>
                 )}
               </div>
             </Offcanvas.Body>

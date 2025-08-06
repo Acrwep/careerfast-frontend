@@ -50,7 +50,7 @@ export default function CommonSelectField({
             option.label.toLowerCase().includes(input.toLowerCase())
           }
           options={options.map((item) => ({
-            label: item.label ?? item.name,
+            label: item.label || item.name || String(item.value),
             value: item.value ?? item.isoCode ?? item.id ?? item.name,
           }))}
           {...rest}

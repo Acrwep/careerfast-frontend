@@ -18,6 +18,7 @@ import {
   message,
   Drawer,
   Checkbox,
+  Upload,
 } from "antd";
 import {
   UserOutlined,
@@ -26,6 +27,9 @@ import {
   MedicineBoxOutlined,
   CarOutlined,
   CoffeeOutlined,
+  UploadOutlined,
+  DeleteOutlined,
+  CheckOutlined,
 } from "@ant-design/icons";
 import { HiMiniComputerDesktop } from "react-icons/hi2";
 import { IoMdAdd } from "react-icons/io";
@@ -146,6 +150,10 @@ export default function PostJobs() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [openDrawer, setOpenDrawer] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(
+    "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+  );
+  const [logoFile, setLogoFile] = useState(null);
   const [questions, setQuestions] = useState([
     {
       id: Date.now(),
@@ -169,7 +177,9 @@ export default function PostJobs() {
     { value: "5 Working Days", label: "5 Working Days" },
   ];
 
-  const indianStates = State.getStatesOfCountry("IN");
+  useEffect(() => {
+    document.title = "CareerFast | Post Jobs";
+  }, []);
 
   useEffect(() => {
     getJobNatureData();
@@ -567,7 +577,7 @@ export default function PostJobs() {
     return {
       user_id: getUserDetails.id,
       company_name: companyName,
-      company_logo: profileImage,
+      company_logo: logoUrl,
       job_title: jobTitle,
       job_nature:
         jobNatureId === 1
@@ -709,54 +719,159 @@ export default function PostJobs() {
 
               <div
                 style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: 40,
                   position: "relative",
-                  textAlign: "center",
-                  paddingBottom: "20px",
                 }}
-                className=""
               >
-                <Avatar
-                  onClick={openModal}
-                  size={80}
-                  src={profileImage || null}
-                  icon={!profileImage && <UserOutlined />}
-                  className="profile-avatar"
-                />
-
-                <br></br>
-                <label className="image_upload" htmlFor="upload-input">
-                  Click me
-                  <input
-                    id="upload-input"
-                    type="file"
-                    accept="image/*"
-                    style={{ display: "block" }}
-                    onChange={handleImageChange}
-                  ></input>
-                </label>
-                <Button
-                  type="primary"
-                  shape="round"
-                  icon={<EditOutlined />}
-                  className="edit-btn"
+                <div
+                  className="logo-upload-container"
+                  style={{
+                    textAlign: "center",
+                    position: "relative",
+                    transition: "all 0.3s ease",
+                  }}
                 >
-                  Change Logo
-                </Button>
-              </div>
+                  <div
+                    style={{
+                      width: 110,
+                      height: 110,
+                      margin: "0 auto",
+                      borderRadius: 80,
+                      border: "1px dashed #d9d9d9",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+                      position: "relative",
+                      background: logoUrl ? "transparent" : "#fafafa",
+                      transition:
+                        "all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1)",
+                    }}
+                  >
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt="Company Logo"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          transition: "transform 0.3s ease",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.transform = "scale(1.05)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          color: "#8c8c8c",
+                          fontSize: 14,
+                          padding: 20,
+                        }}
+                      >
+                        <UploadOutlined
+                          style={{ fontSize: 24, marginBottom: 8 }}
+                        />
+                        <div>Company Logo</div>
+                      </div>
+                    )}
+                  </div>
 
-              <Modal
-                open={isModalVisible}
-                footer={null}
-                onCancel={() => setIsModalVisible(false)}
-                centered
-                style={{ textAlign: "center", padding: 0 }}
-              >
-                <img
-                  src={profileImage}
-                  alt="Profile Zoomed"
-                  style={{ width: "100%", maxWidth: "400px", margin: "auto" }}
-                />
-              </Modal>
+                  <div
+                    style={{
+                      marginTop: 20,
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: 12,
+                    }}
+                  >
+                    <Upload
+                      showUploadList={false}
+                      beforeUpload={(file) => {
+                        const isImage = file.type.startsWith("image/");
+                        if (!isImage) {
+                          message.error("Only image files are allowed");
+                          return false;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (e) => setLogoUrl(e.target.result);
+                        reader.readAsDataURL(file);
+                        setLogoFile(file);
+                        return false;
+                      }}
+                    >
+                      <Button
+                        type={logoUrl ? "default" : "primary"}
+                        icon={<UploadOutlined />}
+                        className="uploadNew_profile"
+                        shape="round"
+                        style={{
+                          minWidth: 140,
+                          height: 36,
+                          fontWeight: 500,
+                          letterSpacing: 0.2,
+                          boxShadow: logoUrl
+                            ? "none"
+                            : "0 2px 8px rgba(0, 85, 255, 0.2)",
+                        }}
+                      >
+                        {logoUrl ? "Change Logo" : "Upload Logo"}
+                      </Button>
+                    </Upload>
+
+                    {logoUrl && (
+                      <Button
+                        danger
+                        type="text"
+                        icon={<DeleteOutlined />}
+                        shape="round"
+                        style={{
+                          height: 36,
+                          fontWeight: 500,
+                          letterSpacing: 0.2,
+                        }}
+                        onClick={() => {
+                          setLogoUrl(null);
+                          setLogoFile(null);
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+
+                  {logoUrl && (
+                    <>
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: -10,
+                          right: -10,
+                          width: 24,
+                          height: 24,
+                          borderRadius: "50%",
+                          background: "rgb(0 179 5)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "white",
+                          fontSize: 12,
+                          boxShadow: "0 2px 8px rgba(24, 144, 255, 0.3)",
+                        }}
+                      >
+                        <CheckOutlined />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
 
               <CommonInputField
                 name={"Company name"}
