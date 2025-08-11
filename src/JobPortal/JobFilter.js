@@ -16,6 +16,8 @@ import {
   message,
   Spin,
   Empty,
+  Skeleton,
+  Tooltip,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -45,6 +47,7 @@ import {
   removeSavedJobs,
   saveJobPost,
 } from "../ApiService/action";
+import { FaLink } from "react-icons/fa6";
 import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
 import { FaCheckCircle } from "react-icons/fa";
 import { CommonToaster } from "../Common/CommonToaster";
@@ -58,8 +61,14 @@ import { GrLocation } from "react-icons/gr";
 import { CgWorkAlt } from "react-icons/cg";
 import { BiCategoryAlt } from "react-icons/bi";
 import Header from "../Header/Header";
+import additional1 from "../images/additional1.png";
+import additional2 from "../images/additional2.png";
+import additional3 from "../images/additional3.png";
+import additional4 from "../images/additional4.png";
+import additional5 from "../images/additional5.png";
+import additional6 from "../images/additional6.png";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const workTypes = ["In Office", "On Field", "Work From Home"];
 const jobNature = ["Job", "Internship", "Contract"];
@@ -96,6 +105,13 @@ export default function JobFilter() {
   const [isApplied, setIsApplied] = useState({});
   const [savedJobMap, setSavedJobMap] = useState({});
   const [isSaved, setIsSaved] = useState({});
+  const [jobLoading, setJobLoading] = useState(false);
+  const [jobDetailsLoading, setJobDetailsLoading] = useState(false);
+  const [tempStatus, setTempStatus] = useState(selectedStatus);
+  const [tempWorkingDays, setTempWorkingDays] = useState("");
+  const [tempTypes, setTempTypes] = useState([]);
+  const [tempCategories, setTempCategories] = useState([]);
+  const [tempSelected, setTempSelected] = useState([]);
 
   useEffect(() => {
     document.title = "CareerFast | Find Jobs";
@@ -170,6 +186,7 @@ export default function JobFilter() {
       console.log("getJobPosts response", response);
 
       const jobs = response?.data?.data?.data;
+      setJobLoading(true);
 
       if (Array.isArray(jobs)) {
         setBackendJobs(jobs);
@@ -181,6 +198,7 @@ export default function JobFilter() {
     } finally {
       setTimeout(() => {
         checkIsJobAppliedData();
+        setJobLoading(false);
       }, 300);
     }
   };
@@ -346,9 +364,11 @@ export default function JobFilter() {
       id: job.id,
       title: job.job_title,
       company: job.company_name,
+      benefits: job.benefits,
       logo: job.company_logo,
       created_date: job.created_at,
       job_description: job.job_description,
+      openings: job.openings,
       postedDate,
       working_days: job.working_days,
       daysLeft: daysLeft > 0 ? `${daysLeft} days left` : "Expired",
@@ -363,6 +383,7 @@ export default function JobFilter() {
         job.work_location ? ` • ${job.work_location}` : ""
       }`,
       diversity_hiring: job.diversity_hiring,
+      job_category: job.job_category,
       type: job.job_nature,
       premium: true,
       urgent: false,
@@ -379,7 +400,45 @@ export default function JobFilter() {
     };
   };
 
+  const handleShare = (job) => {
+    const jobLink = `${window.location.origin}/job-details/${job.id}`;
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title: job.title,
+          text: `Check out this job at ${job.company}!`,
+          url: jobLink,
+        })
+        .then(() => console.log("Share successful"))
+        .catch((err) => console.error("Share failed:", err));
+    } else {
+      navigator.clipboard.writeText(jobLink).then(() => {
+        alert("Job link copied to clipboard!");
+      });
+    }
+  };
+
+  const handleCopy = (job) => {
+    const jobUrl = `${window.location.origin}/job-details/${job.id}`;
+
+    navigator.clipboard
+      .writeText(jobUrl)
+      .then(() => {
+        message.success("Job link copied to clipboard!");
+      })
+      .catch(() => {
+        message.error("Failed to copy job link");
+      });
+  };
+
   const applyForJobData = async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      message.error("Please login before applying.");
+      return;
+    }
+
     const jobId = postDetails[0]?.id;
     const questionsWithIds = postDetails[0]?.questions_with_ids || [];
 
@@ -404,7 +463,7 @@ export default function JobFilter() {
     };
 
     try {
-      const response = await applyForJob(payload);
+      const response = await applyForJob(payload, token); // pass token to API helper
       console.log("apply jobs", response);
       message.success("Job applied successfully");
       setIsApplied((prev) => ({
@@ -437,11 +496,26 @@ export default function JobFilter() {
     );
   };
 
+  const handleTempLocationCheck = (value) => {
+    setTempSelected((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
+
   const applyLocationFilter = () => {
-    console.log("Selected Locations:", selected);
+    setSelected(tempSelected); // Commit UI choice
+    console.log("Selected Locations:", tempSelected);
     setVisible(false);
     fetchJobs();
-    CommonToaster("Location filter applied", "success");
+  };
+
+  // Clear filter
+  const handleLocationClear = () => {
+    setTempSelected([]);
+    setSelected([]);
+    fetchJobs();
+    setSearch("");
+    setVisible(false);
   };
 
   const handleJobNatureChange = (checkedValue) => {
@@ -456,13 +530,11 @@ export default function JobFilter() {
     setJobNatureSelected("");
     fetchJobs();
     setJobNatureVisible(false);
-    CommonToaster("Work type filter cleared", "info");
   };
 
   const handleJobNatureFilter = () => {
     fetchJobs();
     setJobNatureVisible(false);
-    CommonToaster("Work type filter applied", "success");
   };
 
   const dropdownItems = () => (
@@ -505,13 +577,62 @@ export default function JobFilter() {
   );
 
   const JobCard = ({ job }) => (
-    <Card className="premium-job-card" onClick={() => handleClickedjob(job)}>
-      <div className="premium-content">
-        <div className="premium-headers">
-          <img src={job.logo} alt={job.company} className="premium-logo" />
-          <div className="premium-title-section">
-            <div className="premium-job-titles">
-              <h3 className="premium-titles">{job.title}</h3>
+    <>
+      {jobLoading ? (
+        <Skeleton active />
+      ) : (
+        <Card
+          className="premium-job-card"
+          onClick={() => handleClickedjob(job)}
+        >
+          <div className="premium-content">
+            <div className="premium-headers">
+              <img src={job.logo} alt={job.company} className="premium-logo" />
+              <div className="premium-title-section">
+                <div className="premium-job-titles">
+                  <h3 className="premium-titles">{job.title}</h3>
+                  <span
+                    className={
+                      job.status === "Live"
+                        ? "status-badge"
+                        : job.status === "Expired"
+                        ? "status-badge-red"
+                        : ""
+                    }
+                  >
+                    {job.status}
+                  </span>
+                </div>
+
+                <div className="premium-company">({job.company})</div>
+              </div>
+            </div>
+
+            <div className="premium-details">
+              <span className="premium-detail-item">
+                <ClockCircleOutlined />
+                {job.daysLeft}
+              </span>
+              <span className="premium-detail-item">
+                <EnvironmentOutlined />
+                {job.location}
+              </span>
+              <span className="premium-detail-item">Salary: {job.salary}</span>
+            </div>
+
+            <div className="premium-skills">
+              {job.skills.map((skill, index) => (
+                <span key={index} className="premium-skill">
+                  {skill}
+                </span>
+              ))}
+            </div>
+
+            <div className="premium-footer">
+              <span className="premium-level">
+                {job.level ? <CrownFilled /> : <ThunderboltFilled />}
+                {job.level}
+              </span>
               <span
                 className={
                   job.type === "Job"
@@ -524,50 +645,10 @@ export default function JobFilter() {
                 {job.type}
               </span>
             </div>
-
-            <div className="premium-company">({job.company})</div>
           </div>
-        </div>
-
-        <div className="premium-details">
-          <span className="premium-detail-item">
-            <ClockCircleOutlined />
-            {job.daysLeft}
-          </span>
-          <span className="premium-detail-item">
-            <EnvironmentOutlined />
-            {job.location}
-          </span>
-          <span className="premium-detail-item">Salary: {job.salary}</span>
-        </div>
-
-        <div className="premium-skills">
-          {job.skills.map((skill, index) => (
-            <span key={index} className="premium-skill">
-              {skill}
-            </span>
-          ))}
-        </div>
-
-        <div className="premium-footer">
-          <span className="premium-level">
-            {job.level ? <CrownFilled /> : <ThunderboltFilled />}
-            {job.level}
-          </span>
-          <span
-            className={
-              job.status === "Live"
-                ? "status-badge"
-                : job.status === "Expired"
-                ? "status-badge-red"
-                : ""
-            }
-          >
-            {job.status}
-          </span>
-        </div>
-      </div>
-    </Card>
+        </Card>
+      )}
+    </>
   );
 
   const handleClickedjob = (item) => {
@@ -575,6 +656,12 @@ export default function JobFilter() {
     arr.push(item);
     setPostDetails(arr);
     checkIsJobAppliedData(item.id);
+    setJobLoading(false);
+    setJobDetailsLoading(true);
+    const timer = setTimeout(() => {
+      setJobDetailsLoading(false);
+    }, 700);
+    return () => clearTimeout(timer);
   };
 
   const renderLocation = () => {
@@ -588,18 +675,7 @@ export default function JobFilter() {
           }}
         >
           <Text strong>Location</Text>
-          <Button
-            type="link"
-            size="small"
-            danger
-            onClick={() => {
-              fetchJobs();
-              setSelected([]);
-              setSearch("");
-              setVisible(false);
-              CommonToaster("Location filter cleared", "info");
-            }}
-          >
+          <Button type="link" size="small" danger onClick={handleLocationClear}>
             Clear
           </Button>
         </div>
@@ -620,8 +696,8 @@ export default function JobFilter() {
           renderItem={(item) => (
             <List.Item style={{ padding: "4px 0" }} key={item.value}>
               <Checkbox
-                checked={selected.includes(item.value)}
-                onChange={() => handleLocationCheck(item.value)}
+                checked={tempSelected.includes(item.value)}
+                onChange={() => handleTempLocationCheck(item.value)}
               >
                 <Text>
                   <EnvironmentOutlined style={{ marginRight: 6 }} />
@@ -648,19 +724,16 @@ export default function JobFilter() {
     );
   };
 
-  const handleApply = () => {
+  const handleStatusApply = () => {
+    setSelectedStatus(tempStatus);
     fetchJobs();
     setStatusVisible(false);
-    CommonToaster("Status filter applied", "success");
   };
 
   const handleStatusClear = () => {
-    CommonToaster("Status filter cleared", "info");
-    setSelectedStatus("");
-    setTimeout(() => {
-      fetchJobs();
-      setStatusVisible(false);
-    }, 0);
+    setTempStatus(null);
+    setSelectedStatus(null);
+    setStatusVisible(false);
   };
 
   const renderStatus = () => {
@@ -681,8 +754,8 @@ export default function JobFilter() {
 
         <Radio.Group
           className="custom-radio"
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          value={selectedStatus}
+          onChange={(e) => setTempStatus(e.target.value)}
+          value={tempStatus}
           style={{ display: "flex", flexDirection: "column", gap: 8 }}
         >
           <Radio value="Live">Live</Radio>
@@ -696,7 +769,7 @@ export default function JobFilter() {
           type="primary"
           shape="round"
           block
-          onClick={handleApply}
+          onClick={handleStatusApply}
         >
           Apply Filter
         </Button>
@@ -706,18 +779,16 @@ export default function JobFilter() {
 
   const renderWorkingDays = () => {
     const handleWorkingDaysClear = () => {
-      CommonToaster("Working Days filter cleared", "info");
+      setTempWorkingDays("");
       setSelectedWorkingDays("");
-      setTimeout(() => {
-        fetchJobs();
-        setWorkingDaysVisible(false);
-      }, 0);
+      fetchJobs();
+      setWorkingDaysVisible(false);
     };
 
     const handleWorkingDaysApply = () => {
-      setWorkingDaysVisible(false);
+      setSelectedWorkingDays(tempWorkingDays);
       fetchJobs();
-      CommonToaster("Working days filter applied", "success");
+      setWorkingDaysVisible(false);
     };
 
     return (
@@ -737,8 +808,8 @@ export default function JobFilter() {
 
         <Radio.Group
           className="custom-radio"
-          onChange={(e) => setSelectedWorkingDays(e.target.value)}
-          value={selectedWorkingDays}
+          onChange={(e) => setTempWorkingDays(e.target.value)}
+          value={tempWorkingDays}
           style={{ display: "flex", flexDirection: "column", gap: 8 }}
         >
           <Radio value="5 Working days">5 Working days</Radio>
@@ -768,24 +839,28 @@ export default function JobFilter() {
     );
   };
 
+  const handleTempCheckboxChange = (type) => {
+    setTempTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
   const handleClear = () => {
-    fetchJobs();
+    setTempTypes([]);
     setSelectedTypes([]);
     setWorkTypeVisible(false);
-    CommonToaster("Work type filter cleared", "info");
   };
 
   const handleWorkTypeFilter = async () => {
-    setLoading(true);
+    setSelectedTypes(tempTypes);
     setWorkTypeVisible(false);
-    CommonToaster("Work type filter applied", "success");
+
     const startTime = Date.now();
     try {
       await fetchJobs();
     } finally {
       const elapsed = Date.now() - startTime;
       const remainingTime = 3000 - elapsed;
-
       if (remainingTime > 0) {
         await new Promise((resolve) => setTimeout(resolve, remainingTime));
       }
@@ -812,8 +887,8 @@ export default function JobFilter() {
         {workTypes.map((type) => (
           <div key={type} style={{ marginBottom: 8 }}>
             <Checkbox
-              checked={selectedTypes.includes(type)}
-              onChange={() => handleCheckboxChange(type)}
+              checked={tempTypes.includes(type)}
+              onChange={() => handleTempCheckboxChange(type)}
             >
               {type}
             </Checkbox>
@@ -884,18 +959,17 @@ export default function JobFilter() {
     </div>
   );
 
-  const handleUserCatergoryClear = () => {
-    setSelectedCategories(null);
+  const handleUserCategoryClear = () => {
+    setTempCategories([]);
+    setSelectedCategories([]);
     fetchJobs();
     setUserCatergoryVisible(false);
-    CommonToaster("Category filter cleared", "info");
   };
 
-  const handleUserCatergoryApply = () => {
-    console.log("Selected Catergory:", selectedCategories);
+  const handleUserCategoryApply = () => {
+    setSelectedCategories(tempCategories);
     fetchJobs();
     setUserCatergoryVisible(false);
-    CommonToaster("Category filter applied", "success");
   };
 
   const userCatergory = () => (
@@ -908,14 +982,14 @@ export default function JobFilter() {
         }}
       >
         <strong>Catergory</strong>
-        <a onClick={handleUserCatergoryClear} style={{ color: "#f5222d" }}>
+        <a onClick={handleUserCategoryClear} style={{ color: "#f5222d" }}>
           Clear
         </a>
       </div>
       <Checkbox.Group
         options={jobCategoryOptions}
-        value={selectedCategories}
-        onChange={setSelectedCategories}
+        value={tempCategories}
+        onChange={setTempCategories}
         style={{
           gap: 8,
           maxHeight: "200px",
@@ -928,7 +1002,7 @@ export default function JobFilter() {
         shape="round"
         className="apply_filter"
         block
-        onClick={handleUserCatergoryApply}
+        onClick={handleUserCategoryApply}
       >
         Apply Filter
       </Button>
@@ -959,7 +1033,7 @@ export default function JobFilter() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 12,
+            gap: 22,
             padding: "16px 24px",
             borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
             backgroundColor: "#fff",
@@ -1210,27 +1284,6 @@ export default function JobFilter() {
               </Space>
             </Button>
           </Dropdown>
-
-          {/* Quick Apply Button */}
-          <div style={{ marginLeft: "auto" }}>
-            <Button
-              shape="round"
-              icon={<ThunderboltOutlined style={{ color: "#f59e0b" }} />}
-              style={{
-                border: "1px solid rgba(0, 0, 0, 0.08)",
-                background: "#fff",
-                padding: "0 20px",
-                height: 36,
-                color: "#fff",
-                fontWeight: 500,
-                boxShadow: "0 1px 2px rgba(0, 0, 0, 0.03)",
-                background:
-                  "linear-gradient(135deg, rgb(79, 70, 229) 0%, rgb(124, 58, 237) 100%)",
-              }}
-            >
-              <Space>Quick Apply</Space>
-            </Button>
-          </div>
         </div>
 
         <div>
@@ -1257,263 +1310,339 @@ export default function JobFilter() {
               <section className="premium-job-details">
                 {postDetails.map((job) => (
                   <>
-                    <div className="premium-job-card">
-                      <div className="">
-                        <div className="premium-border"></div>
-                        <div className="premium-indicator">
-                          <span
-                            className={
-                              job.status === "Live"
-                                ? "status-badge"
-                                : job.status === "Expired"
-                                ? "status-badge-red"
-                                : ""
-                            }
-                          >
-                            {job.status}
-                          </span>
+                    {jobDetailsLoading ? (
+                      <Skeleton active />
+                    ) : (
+                      <>
+                        <div className="premium-job-card">
+                          <div className="">
+                            <div className="premium-border"></div>
+                            <div className="premium-indicator">
+                              <span
+                                className={
+                                  job.status === "Live"
+                                    ? "status-badge"
+                                    : job.status === "Expired"
+                                    ? "status-badge-red"
+                                    : ""
+                                }
+                              >
+                                {job.status}
+                              </span>
+                            </div>
+
+                            <div className="company-logo-wrapper">
+                              <img
+                                src={job.logo}
+                                alt="Company Logo"
+                                className="premium-logo"
+                              />
+                            </div>
+
+                            <div className="job-content">
+                              <h2 className="premium-job-title">{job.title}</h2>
+
+                              <div className="job-meta-item">
+                                <FaRegBuilding className="meta-icon premium-icon" />
+                                <span className="meta-text">{job.company}</span>
+                                <span className="verified-badge">Verified</span>
+                              </div>
+
+                              <div className="job-meta-item">
+                                <FaMapMarkerAlt className="meta-icon premium-icon" />
+                                <span className="meta-text">
+                                  {job.location}
+                                </span>
+                              </div>
+
+                              <div className="job-meta-item">
+                                <FaRegCalendarAlt className="meta-icon premium-icon" />
+                                <span className="meta-text">
+                                  Updated On: {job.created_date}
+                                </span>
+                              </div>
+
+                              <div className="job-tags">
+                                <span className="tag">{job.type}</span>
+                                <span className="tag">{job.working_days}</span>
+                                <span className="tag">{job.salary}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="side_job_details">
+                            <div className="side_job_actions">
+                              <div className="side_job_action_buttons">
+                                <div className="side_job_action_icons">
+                                  <span
+                                    className="side_job_action_icon"
+                                    onClick={() => handleWishlistToggle(job.id)}
+                                  >
+                                    {isSaved[job.id] ? (
+                                      <FaHeart
+                                        size={20}
+                                        className="side_job_action_icon heart active"
+                                      />
+                                    ) : (
+                                      <FaRegHeart
+                                        size={20}
+                                        className="side_job_action_icon heart"
+                                      />
+                                    )}
+                                  </span>
+                                  <span className="side_job_action_icon">
+                                    <IoMdCalendar
+                                      size={20}
+                                      className="side_job_action_icon calendar"
+                                    />
+                                  </span>
+                                </div>
+                                <div style={{ display: "flex", gap: 10 }}>
+                                  <Tooltip title="Copy link">
+                                    <span className="side_job_action_icon">
+                                      <FaLink
+                                        size={20}
+                                        onClick={() => handleCopy(job)}
+                                      />
+                                    </span>
+                                  </Tooltip>
+                                  <span className="side_job_action_icon">
+                                    <Tooltip title="Share link">
+                                      <IoIosShareAlt
+                                        size={20}
+                                        onClick={() => handleShare(job)}
+                                      />{" "}
+                                    </Tooltip>
+                                  </span>
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                {isApplied[job.id] === true ? (
+                                  <div className="side_job_applied_badge">
+                                    <FaCheckCircle /> Applied
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={showDrawer}
+                                    disabled={job.status !== "Live"}
+                                    className={
+                                      job.status === "Live"
+                                        ? "side_job_apply_button primary"
+                                        : "side_job_apply_button disabled"
+                                    }
+                                  >
+                                    Apply Now
+                                  </button>
+                                )}
+                              </div>
+                              <Drawer
+                                size="default"
+                                title="Apply Now"
+                                closable={{ "aria-label": "Close Button" }}
+                                onClose={onClose}
+                                open={openApplyNow}
+                              >
+                                <p>
+                                  Hi Santhosh! We request you to take a couple
+                                  of minutes to update your profile.
+                                </p>
+
+                                {postDetails[0]?.questions?.length > 0 && (
+                                  <div className="job-questions-section">
+                                    <h4>Application Questions</h4>
+                                    {postDetails[0].questions.map(
+                                      (question, index) => (
+                                        <div
+                                          key={index}
+                                          className="question-item"
+                                        >
+                                          <p>{question}</p>
+                                          <Input.TextArea
+                                            rows={3}
+                                            placeholder="Your answer..."
+                                            className="premium-input"
+                                            value={answers[index] || ""}
+                                            onChange={(e) => {
+                                              const newAnswers = [...answers];
+                                              newAnswers[index] =
+                                                e.target.value;
+                                              setAnswers(newAnswers);
+                                            }}
+                                          />
+                                        </div>
+                                      )
+                                    )}
+                                    <div>
+                                      <button
+                                        className="premium-apply"
+                                        onClick={applyForJobData}
+                                      >
+                                        Submit
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </Drawer>
+                            </div>
+
+                            <div className="side_job_eligibility">
+                              <h4 className="side_job_eligibility_title">
+                                Eligibility
+                              </h4>
+                              <div className="side_job_eligibility_details">
+                                <span className="side_job_eligibility_item">
+                                  <MdOutlineSchool /> {job.level}
+                                </span>
+                                <span className="side_job_eligibility_item">
+                                  <MdOutlineWorkOutline /> {job.eligibility}
+                                </span>
+                                <span className="side_job_eligibility_item">
+                                  <FaTransgender />{" "}
+                                  {job.diversity_hiring.map(
+                                    (diversity_hiring, index) => (
+                                      <span key={index}>
+                                        {diversity_hiring}
+                                        {index <
+                                          job.diversity_hiring.length - 1 &&
+                                          ", "}
+                                      </span>
+                                    )
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="company-logo-wrapper">
-                          <img
-                            src={job.logo}
-                            alt="Company Logo"
-                            className="premium-logo"
+                        <div className="section-card job-description">
+                          <h2 className="section-title">Job Description</h2>
+                          <h6>
+                            {job.company} is hiring for the role of {job.title}!
+                          </h6>
+                          <div
+                            className="job-description-content"
+                            dangerouslySetInnerHTML={{
+                              __html: job.job_description,
+                            }}
                           />
                         </div>
 
-                        <div className="job-content">
-                          <h2 className="premium-job-title">{job.title}</h2>
+                        <div className="section-card">
+                          <h2 className="section-title">
+                            Additional Information
+                          </h2>
 
-                          <div className="job-meta-item">
-                            <FaRegBuilding className="meta-icon premium-icon" />
-                            <span className="meta-text">{job.company}</span>
-                            <span className="verified-badge">Verified</span>
-                          </div>
-
-                          <div className="job-meta-item">
-                            <FaMapMarkerAlt className="meta-icon premium-icon" />
-                            <span className="meta-text">{job.location}</span>
-                          </div>
-
-                          <div className="job-meta-item">
-                            <FaRegCalendarAlt className="meta-icon premium-icon" />
-                            <span className="meta-text">
-                              Updated On: {job.created_date}
-                            </span>
-                          </div>
-
-                          <div className="job-tags">
-                            <span className="tag">{job.type}</span>
-                            <span className="tag">{job.working_days}</span>
-                            <span className="tag">{job.salary}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="side_job_details">
-                        <div className="side_job_actions">
-                          <div className="side_job_action_buttons">
-                            <div className="side_job_action_icons">
-                              <span
-                                className="side_job_action_icon"
-                                onClick={() => handleWishlistToggle(job.id)}
-                              >
-                                {isSaved[job.id] ? (
-                                  <FaHeart className="side_job_action_icon heart active" />
-                                ) : (
-                                  <FaRegHeart className="side_job_action_icon heart" />
-                                )}
-                              </span>
-                              <span className="side_job_action_icon">
-                                <IoMdCalendar className="side_job_action_icon calendar" />
-                              </span>
+                          <div className="info-card">
+                            <div className="info-card-content">
+                              <h4>Skills Required</h4>
+                              <p>
+                                {job.skills.map((skill, index) => (
+                                  <span key={index} className="premium-skill">
+                                    {skill}
+                                    {index < job.skills.length - 1 && (
+                                      <span className="skill-separator">
+                                        {" "}
+                                        |{" "}
+                                      </span>
+                                    )}
+                                  </span>
+                                ))}
+                              </p>
                             </div>
-                            <button className="side_job_share_button">
-                              <IoIosShareAlt /> Share
-                            </button>
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                            }}
-                          >
-                            {isApplied[job.id] === true ? (
-                              <div className="side_job_applied_badge">
-                                <FaCheckCircle /> Applied
-                              </div>
-                            ) : (
-                              <button
-                                onClick={showDrawer}
-                                disabled={job.status !== "Live"}
-                                className={
-                                  job.status === "Live"
-                                    ? "side_job_apply_button primary"
-                                    : "side_job_apply_button disabled"
-                                }
-                              >
-                                Apply Now
-                              </button>
-                            )}
-                          </div>
-                          <Drawer
-                            size="default"
-                            title="Apply Now"
-                            closable={{ "aria-label": "Close Button" }}
-                            onClose={onClose}
-                            open={openApplyNow}
-                          >
-                            <p>
-                              Hi Santhosh! We request you to take a couple of
-                              minutes to update your profile.
-                            </p>
 
-                            {postDetails[0]?.questions?.length > 0 && (
-                              <div className="job-questions-section">
-                                <h4>Application Questions</h4>
-                                {postDetails[0].questions.map(
-                                  (question, index) => (
-                                    <div key={index} className="question-item">
-                                      <p>{question}</p>
-                                      <Input.TextArea
-                                        rows={3}
-                                        placeholder="Your answer..."
-                                        className="premium-input"
-                                        value={answers[index] || ""}
-                                        onChange={(e) => {
-                                          const newAnswers = [...answers];
-                                          newAnswers[index] = e.target.value;
-                                          setAnswers(newAnswers);
-                                        }}
-                                      />
-                                    </div>
+                            <img
+                              className="info-card-image"
+                              src={additional1}
+                              alt="Location"
+                            />
+                          </div>
+
+                          <div className="info-card">
+                            <div className="info-card-content">
+                              <h4>Job Openings</h4>
+                              <p>{job.openings}</p>
+                            </div>
+                            <img
+                              className="info-card-image"
+                              src={additional2}
+                              alt="Experience"
+                            />
+                          </div>
+
+                          <div className="info-card">
+                            <div className="info-card-content">
+                              <h4>Job Benefits</h4>
+                              <p>
+                                {(job.benefits || []).map(
+                                  (benefit, index, arr) => (
+                                    <span key={index} className="premium-skill">
+                                      {benefit}
+                                      {index < arr.length - 1 && (
+                                        <span className="separator"> | </span>
+                                      )}
+                                    </span>
                                   )
                                 )}
-                                <div>
-                                  <button
-                                    className="premium-apply"
-                                    onClick={applyForJobData}
-                                  >
-                                    Submit
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </Drawer>
-                        </div>
+                              </p>
+                            </div>
 
-                        <div className="side_job_eligibility">
-                          <h4 className="side_job_eligibility_title">
-                            Eligibility
-                          </h4>
-                          <div className="side_job_eligibility_details">
-                            <span className="side_job_eligibility_item">
-                              <MdOutlineSchool /> {job.level}
-                            </span>
-                            <span className="side_job_eligibility_item">
-                              <MdOutlineWorkOutline /> {job.eligibility}
-                            </span>
-                            <span className="side_job_eligibility_item">
-                              <FaTransgender />{" "}
-                              {job.diversity_hiring.map(
-                                (diversity_hiring, index) => (
-                                  <span key={index}>
-                                    {diversity_hiring}
-                                    {index < job.diversity_hiring.length - 1 &&
-                                      ", "}
-                                  </span>
-                                )
-                              )}
-                            </span>
+                            <img
+                              className="info-card-image"
+                              src={additional3}
+                              alt="Salary"
+                            />
+                          </div>
+
+                          <div className="info-card">
+                            <div className="info-card-content">
+                              <h4>Job Catergory</h4>
+                              <p>{job.job_category}</p>
+                            </div>
+                            <img
+                              className="info-card-image"
+                              src={additional4}
+                              alt="Work Details"
+                            />
+                          </div>
+
+                          <div className="info-card">
+                            <div className="info-card-content">
+                              <h4>Work Schedule</h4>
+                              <p>
+                                <b>Working Days</b>: {job.working_days}
+                              </p>
+                            </div>
+                            <img
+                              className="info-card-image"
+                              src={additional5}
+                              alt="Work Details"
+                            />
+                          </div>
+
+                          <div className="info-card">
+                            <div className="info-card-content">
+                              <h4>Job Type / Nature</h4>
+                              <p>
+                                <b>Job Type</b>: {job.location}
+                              </p>
+                              <p>
+                                <b>Job Nature</b>: {job.type}
+                              </p>
+                            </div>
+                            <img
+                              className="info-card-image"
+                              src={additional6}
+                              alt="Work Details"
+                            />
                           </div>
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="section-card job-description">
-                      <h2 className="section-title">Job Description</h2>
-                      <h6>
-                        {job.company} is hiring for the role of {job.title}!
-                      </h6>
-                      <div
-                        className="job-description-content"
-                        dangerouslySetInnerHTML={{
-                          __html: job.job_description,
-                        }}
-                      />
-                    </div>
-
-                    <div className="section-card">
-                      <h2 className="section-title">Additional Information</h2>
-
-                      <div className="info-card">
-                        <div className="info-card-content">
-                          <h4>Job Location(s)</h4>
-                          <p>{job.location}</p>
-                        </div>
-                        <img
-                          className="info-card-image"
-                          src="https://d8it4huxumps7.cloudfront.net/uploads/images/66702737c9e5c_location.png"
-                          alt="Location"
-                        />
-                      </div>
-
-                      <div className="info-card">
-                        <div className="info-card-content">
-                          <h4>Experience</h4>
-                          <p>{job.eligibility}</p>
-                        </div>
-                        <img
-                          className="info-card-image"
-                          src="https://d8it4huxumps7.cloudfront.net/uploads/images/66710a39d5851_experience.png"
-                          alt="Experience"
-                        />
-                      </div>
-
-                      <div className="info-card">
-                        <div className="info-card-content">
-                          <h4>Salary</h4>
-                          <p>{job.salary}</p>
-                        </div>
-                        <img
-                          className="info-card-image"
-                          src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109f58b243_salary.png"
-                          alt="Salary"
-                        />
-                      </div>
-
-                      <div className="info-card">
-                        <div className="info-card-content">
-                          <h4>Work Schedule</h4>
-                          <p>
-                            <b>Working Days</b>: {job.working_days}
-                          </p>
-                        </div>
-                        <img
-                          className="info-card-image"
-                          src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109d710a09_work_detail.png"
-                          alt="Work Details"
-                        />
-                      </div>
-
-                      <div className="info-card">
-                        <div className="info-card-content">
-                          <h4>Job Type / Natute</h4>
-                          <p>
-                            <b>Job Type</b>: {job.location}
-                          </p>
-                          <p>
-                            <b>Job Nature</b>: {job.type}
-                          </p>
-                        </div>
-                        <img
-                          className="info-card-image"
-                          src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109c430518_job_typetiming.png?d=240x172"
-                          alt="Work Details"
-                        />
-                      </div>
-                    </div>
+                      </>
+                    )}
                   </>
                 ))}
               </section>

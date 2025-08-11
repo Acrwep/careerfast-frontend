@@ -11,7 +11,7 @@ import {
 } from "../Common/Validation";
 export default function AccountSettings() {
   // State for active tab
-  const [activeTab, setActiveTab] = useState("Users Roles / Permissions");
+  const [activeTab, setActiveTab] = useState("Plans");
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [open, setOpen] = useState(false);
   const [fname, setFname] = useState("");
@@ -65,7 +65,7 @@ export default function AccountSettings() {
 
   // Tabs configuration
   const tabs = [
-    "Users Roles / Permissions",
+    // "Users Roles / Permissions",
     "Plans",
     "Billing history",
     "Blocked Candidates & Org.",
@@ -149,9 +149,8 @@ export default function AccountSettings() {
         ))}
       </div>
 
-      {activeTab === "Users Roles / Permissions" && (
+      {/* {activeTab === "Users Roles / Permissions" && (
         <>
-          {/* Section Title */}
           <div className="section-header">
             <h3>Users Roles / Permissions</h3>
             <p>
@@ -160,8 +159,6 @@ export default function AccountSettings() {
             </p>
           </div>
 
-          {/* User Cards */}
-          {/* User Cards */}
           {users.map((user) => (
             <div key={user.id} className="user-card">
               <div className="user-avatar">{user.avatar}</div>
@@ -178,7 +175,6 @@ export default function AccountSettings() {
               </div>
               <div className="user-role-label">{user.role}</div>
 
-              {/* Role Buttons - only show if not Account Owner */}
               {user.role !== "Account Owner" && (
                 <div className="role-buttons">
                   {roles
@@ -199,7 +195,6 @@ export default function AccountSettings() {
             </div>
           ))}
 
-          {/* Add User Button */}
           <button onClick={showDrawer} className="add-user-btn">
             + Add New User
           </button>
@@ -276,7 +271,7 @@ export default function AccountSettings() {
             </div>
           </Drawer>
         </>
-      )}
+      )} */}
 
       {activeTab === "Plans" && (
         <div className="plans-container">

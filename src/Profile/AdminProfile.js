@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Progress, Avatar, Upload, Typography } from "antd";
-import {
-  SettingOutlined,
-  ClockCircleOutlined,
-  SafetyCertificateOutlined,
-} from "@ant-design/icons";
+import { Layout, Menu, Progress, Avatar, Modal } from "antd";
+import { SettingOutlined } from "@ant-design/icons";
 import "../css/Profile.css";
-import { FaRegBookmark } from "react-icons/fa";
 import { FaUserPen } from "react-icons/fa6";
 import { FaRegHeart } from "react-icons/fa";
 import { FaListOl } from "react-icons/fa";
@@ -17,14 +12,15 @@ import MainProfile from "./MainProfile";
 import Settings from "./Settings";
 import "react-calendar-heatmap/dist/styles.css";
 import ProSubscription from "./ProSubscription";
-import TextArea from "antd/es/input/TextArea";
 import BookMark from "./BookMark";
 import Listing from "./Listing";
 import AppliedJobs from "./AppliedJobs";
 import AccountSettings from "./AccountSettings";
 import { getUserProfile } from "../ApiService/action";
+import { VscGitStashApply } from "react-icons/vsc";
+import { GrUserSettings } from "react-icons/gr";
 
-const { Header, Sider, Content } = Layout;
+const { Sider } = Layout;
 
 const siderStyle = {
   overflow: "auto",
@@ -48,6 +44,7 @@ export default function UserProfile() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [roleId, setRoleId] = useState(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const menuItems = [
     { key: "mainprofile", icon: <FaUserPen />, label: "Your profile" },
@@ -57,13 +54,13 @@ export default function UserProfile() {
     ...(roleId === 3
       ? [
           { key: "listing", icon: <FaListOl />, label: "Manage Listing" },
-          { key: "applied", icon: <FaListOl />, label: "Applied Jobs" },
+          { key: "applied", icon: <VscGitStashApply />, label: "Applied Jobs" },
         ]
       : [{ key: "applied", icon: <FaListOl />, label: "Applied Jobs" }]),
 
     {
       key: "accountsettings",
-      icon: <SettingOutlined />,
+      icon: <GrUserSettings />,
       label: "Account Settings",
     },
     { key: "prosubscription", icon: <FcApproval />, label: "Pro Subscription" },
@@ -85,6 +82,12 @@ export default function UserProfile() {
         const storedImage = localStorage.getItem("profileImage");
         if (storedImage) setAvatarUrl(storedImage);
       }
+
+      const activeTab = localStorage.getItem("activeAdminTab");
+      if (activeTab) {
+        setSideBar(activeTab);
+      }
+
       console.log("stored", stored);
     } catch (error) {
       console.error("Invalid JSON in localStorage", error);
@@ -133,7 +136,12 @@ export default function UserProfile() {
         breakpoint="lg"
       >
         <div className="profile-card-sidebar">
-          <Avatar size={80} src={avatarUrl} className="profile-avatar" />
+          <Avatar
+            size={80}
+            src={avatarUrl}
+            onClick={() => setIsImageModalOpen(true)}
+            className="profile-avatar"
+          />
           <h3 className="profile-name">
             {fname} {""}
             {lname}
@@ -172,9 +180,7 @@ export default function UserProfile() {
         />
       </Sider>
 
-      {/* Main Content */}
       <Layout style={{ background: "none" }} className="profile-content-layout">
-        {/* Dynamic Content */}
         <div style={{ flex: 1, padding: 5 }}>
           {sideBar === "mainprofile" ? (
             <MainProfile />
@@ -198,6 +204,25 @@ export default function UserProfile() {
             ""
           )}
         </div>
+
+        {/* Modal for image preview */}
+        <Modal
+          open={isImageModalOpen}
+          footer={null}
+          onCancel={() => setIsImageModalOpen(false)}
+          centered
+        >
+          <img
+            alt="Profile"
+            src={avatarUrl}
+            style={{
+              width: "100%",
+              height: "400px",
+              objectFit: "contain",
+              borderRadius: "10px",
+            }}
+          />
+        </Modal>
       </Layout>
     </Layout>
   );

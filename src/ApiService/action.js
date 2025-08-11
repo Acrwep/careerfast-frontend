@@ -784,3 +784,16 @@ export const updateUserAppliedJobStatus = async (payload) => {
     throw error;
   }
 };
+
+// getUserJobPostStatus
+
+export const getUserJobPostStatus = async (payload) => {
+  try {
+    const response = await api.get("api/getUserJobPostStatus", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

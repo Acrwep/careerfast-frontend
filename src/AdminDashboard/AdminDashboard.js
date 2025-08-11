@@ -64,6 +64,7 @@ import {
   Select,
   Drawer,
   message,
+  Skeleton,
 } from "antd";
 import ManageCandidate from "./ManageCandidate";
 import EditOpportunity from "./EditOpportunity";
@@ -93,7 +94,7 @@ export default function AdminDashboard() {
   const [profileImage, setProfileImage] = useState(null);
   const [appliedUser, setAppliedUser] = useState([]);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("1");
   const [selectedUser, setSelectedUser] = useState(null);
   const navigate = useNavigate();
@@ -147,10 +148,10 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (id) {
+    if (activeTab === "1" && id) {
       getJobAppliedCandidatesData();
     }
-  }, [id]);
+  }, [activeTab, id]);
 
   const getJobPostsData = async () => {
     const payload = {};
@@ -163,28 +164,28 @@ export default function AdminDashboard() {
   };
 
   const getJobAppliedCandidatesData = async () => {
+    setLoading(true);
+
     if (!id) {
       console.warn("Post ID is missing");
+      setLoading(false);
       return;
     }
-    setPostId(id);
 
-    const payload = {
-      post_id: id,
-    };
+    setPostId(id);
+    const payload = { post_id: id };
 
     try {
       const response = await getJobAppliedCandidates(payload);
       const users = response?.data?.data[0]?.users;
-
-      if (Array.isArray(users)) {
-        setAppliedUser(users);
-      } else {
-        console.warn("No users found in response", response?.data?.data);
-        setAppliedUser([]);
-      }
+      setAppliedUser(Array.isArray(users) ? users : []);
     } catch (error) {
       console.error("Error fetching applied candidates:", error);
+      setAppliedUser([]);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 700);
     }
   };
 
@@ -470,17 +471,6 @@ export default function AdminDashboard() {
                 height: 48,
               }}
             />
-            <Input
-              placeholder="Search candidates, jobs, reports..."
-              prefix={<FaSearch style={{ color: "#999" }} />}
-              style={{
-                width: 400,
-                marginLeft: 16,
-                borderRadius: 8,
-                height: 40,
-              }}
-              allowClear
-            />
           </div>
 
           <Space size="large">
@@ -570,7 +560,7 @@ export default function AdminDashboard() {
                 </Select>
               </div>
 
-              <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+              <Row gutter={[24, 24]} style={{ marginBottom: 44 }}>
                 <Col xs={24} sm={12} md={6}>
                   <Card
                     hoverable
@@ -578,25 +568,71 @@ export default function AdminDashboard() {
                       background:
                         "linear-gradient(135deg, #f6faff 0%, #e6f4ff 100%)",
                       border: "none",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                      borderRadius: 12,
                     }}
+                    bodyStyle={{ padding: 20 }}
                   >
-                    <Statistic
-                      title="Total Candidates"
-                      value={1234}
-                      prefix={<IoQrCode style={{ color: colorPrimary }} />}
-                      valueStyle={{ color: colorPrimary }}
-                    />
-                    <div style={{ marginTop: 16 }}>
-                      <Text type="secondary">
-                        <span style={{ color: "#52c41a", fontWeight: "bold" }}>
-                          +12.5%
-                        </span>{" "}
-                        from last month
-                      </Text>
-                    </div>
+                    {loading ? (
+                      <>
+                        <Skeleton.Input
+                          active
+                          style={{ width: 120, height: 32, marginBottom: 12 }}
+                        />
+                        <Skeleton
+                          paragraph={{ rows: 1, width: "60%" }}
+                          active
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              backgroundColor: "white",
+                              padding: 8,
+                              borderRadius: "50%",
+                              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                            }}
+                          >
+                            <IoQrCode
+                              style={{ color: colorPrimary, fontSize: 24 }}
+                            />
+                          </div>
+                          <Statistic
+                            title={
+                              <Text type="secondary">Total Candidates</Text>
+                            }
+                            value={1234}
+                            valueStyle={{
+                              color: colorPrimary,
+                              fontWeight: 600,
+                              fontSize: 24,
+                            }}
+                          />
+                        </div>
+                        <div style={{ marginTop: 16 }}>
+                          <Text type="secondary">
+                            <span
+                              style={{ color: "#52c41a", fontWeight: "bold" }}
+                            >
+                              +12.5%
+                            </span>{" "}
+                            from last month
+                          </Text>
+                        </div>
+                      </>
+                    )}
                   </Card>
                 </Col>
 
+                {/* Active Jobs */}
                 <Col xs={24} sm={12} md={6}>
                   <Card
                     hoverable
@@ -604,25 +640,69 @@ export default function AdminDashboard() {
                       background:
                         "linear-gradient(135deg, #f6ffed 0%, #e6ffd7 100%)",
                       border: "none",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                      borderRadius: 12,
                     }}
+                    bodyStyle={{ padding: 20 }}
                   >
-                    <Statistic
-                      title="Active Jobs"
-                      value={42}
-                      prefix={<FaClipboardUser style={{ color: "#52c41a" }} />}
-                      valueStyle={{ color: "#52c41a" }}
-                    />
-                    <div style={{ marginTop: 16 }}>
-                      <Text type="secondary">
-                        <span style={{ color: "#52c41a", fontWeight: "bold" }}>
-                          +3
-                        </span>{" "}
-                        new this week
-                      </Text>
-                    </div>
+                    {loading ? (
+                      <>
+                        <Skeleton.Input
+                          active
+                          style={{ width: 100, height: 32, marginBottom: 12 }}
+                        />
+                        <Skeleton
+                          paragraph={{ rows: 1, width: "50%" }}
+                          active
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              backgroundColor: "white",
+                              padding: 8,
+                              borderRadius: "50%",
+                              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                            }}
+                          >
+                            <FaClipboardUser
+                              style={{ color: "#52c41a", fontSize: 24 }}
+                            />
+                          </div>
+                          <Statistic
+                            title={<Text type="secondary">Active Jobs</Text>}
+                            value={42}
+                            valueStyle={{
+                              color: "#52c41a",
+                              fontWeight: 600,
+                              fontSize: 24,
+                            }}
+                          />
+                        </div>
+                        <div style={{ marginTop: 16 }}>
+                          <Text type="secondary">
+                            <span
+                              style={{ color: "#52c41a", fontWeight: "bold" }}
+                            >
+                              +3
+                            </span>{" "}
+                            new this week
+                          </Text>
+                        </div>
+                      </>
+                    )}
                   </Card>
                 </Col>
 
+                {/* Interviews */}
                 <Col xs={24} sm={12} md={6}>
                   <Card
                     hoverable
@@ -630,25 +710,69 @@ export default function AdminDashboard() {
                       background:
                         "linear-gradient(135deg, #fffbe6 0%, #fff1b8 100%)",
                       border: "none",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                      borderRadius: 12,
                     }}
+                    bodyStyle={{ padding: 20 }}
                   >
-                    <Statistic
-                      title="Interviews"
-                      value={156}
-                      prefix={<VscGraph style={{ color: "#faad14" }} />}
-                      valueStyle={{ color: "#faad14" }}
-                    />
-                    <div style={{ marginTop: 16 }}>
-                      <Text type="secondary">
-                        <span style={{ color: "#ff4d4f", fontWeight: "bold" }}>
-                          -8
-                        </span>{" "}
-                        from last week
-                      </Text>
-                    </div>
+                    {loading ? (
+                      <>
+                        <Skeleton.Input
+                          active
+                          style={{ width: 100, height: 32, marginBottom: 12 }}
+                        />
+                        <Skeleton
+                          paragraph={{ rows: 1, width: "50%" }}
+                          active
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              backgroundColor: "white",
+                              padding: 8,
+                              borderRadius: "50%",
+                              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                            }}
+                          >
+                            <VscGraph
+                              style={{ color: "#faad14", fontSize: 24 }}
+                            />
+                          </div>
+                          <Statistic
+                            title={<Text type="secondary">Interviews</Text>}
+                            value={156}
+                            valueStyle={{
+                              color: "#faad14",
+                              fontWeight: 600,
+                              fontSize: 24,
+                            }}
+                          />
+                        </div>
+                        <div style={{ marginTop: 16 }}>
+                          <Text type="secondary">
+                            <span
+                              style={{ color: "#ff4d4f", fontWeight: "bold" }}
+                            >
+                              -8
+                            </span>{" "}
+                            from last week
+                          </Text>
+                        </div>
+                      </>
+                    )}
                   </Card>
                 </Col>
 
+                {/* Pending Actions */}
                 <Col xs={24} sm={12} md={6}>
                   <Card
                     hoverable
@@ -656,22 +780,67 @@ export default function AdminDashboard() {
                       background:
                         "linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%)",
                       border: "none",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                      borderRadius: 12,
                     }}
+                    bodyStyle={{ padding: 20 }}
                   >
-                    <Statistic
-                      title="Pending Actions"
-                      value={28}
-                      prefix={<IoNotifications style={{ color: "#ff4d4f" }} />}
-                      valueStyle={{ color: "#ff4d4f" }}
-                    />
-                    <div style={{ marginTop: 16 }}>
-                      <Text type="secondary">
-                        <span style={{ color: "#ff4d4f", fontWeight: "bold" }}>
-                          +5
-                        </span>{" "}
-                        urgent
-                      </Text>
-                    </div>
+                    {loading ? (
+                      <>
+                        <Skeleton.Input
+                          active
+                          style={{ width: 100, height: 32, marginBottom: 12 }}
+                        />
+                        <Skeleton
+                          paragraph={{ rows: 1, width: "50%" }}
+                          active
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              backgroundColor: "white",
+                              padding: 8,
+                              borderRadius: "50%",
+                              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                            }}
+                          >
+                            <IoNotifications
+                              style={{ color: "#ff4d4f", fontSize: 24 }}
+                            />
+                          </div>
+                          <Statistic
+                            title={
+                              <Text type="secondary">Pending Actions</Text>
+                            }
+                            value={28}
+                            valueStyle={{
+                              color: "#ff4d4f",
+                              fontWeight: 600,
+                              fontSize: 24,
+                            }}
+                          />
+                        </div>
+                        <div style={{ marginTop: 16 }}>
+                          <Text type="secondary">
+                            <span
+                              style={{ color: "#ff4d4f", fontWeight: "bold" }}
+                            >
+                              +5
+                            </span>{" "}
+                            urgent
+                          </Text>
+                        </div>
+                      </>
+                    )}
                   </Card>
                 </Col>
               </Row>
@@ -1213,58 +1382,68 @@ export default function AdminDashboard() {
                                     </div>
                                   </Drawer>
                                 )}
-                                <List.Item.Meta
-                                  avatar={
-                                    <Badge
-                                      dot
-                                      color="#52c41a"
-                                      offset={[-4, 40]}
-                                      className="online-badge"
-                                    >
-                                      <Avatar
-                                        className="profile_image"
-                                        size={48}
-                                        src={
-                                          item.image ||
-                                          "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                                        }
-                                        style={{
-                                          border: "2px solid #fff",
-                                          boxShadow:
-                                            "0 2px 8px rgba(0, 0, 0, 0.1)",
-                                        }}
-                                      />
-                                    </Badge>
-                                  }
-                                  title={
-                                    <a className="candidate-name">{`${item.first_name} ${item.last_name}`}</a>
-                                  }
-                                  description={
-                                    <div className="candidate-info">
-                                      <span>{item.email || item.phone}</span>
-                                      {item.skills && (
-                                        <div className="skill-tags">
-                                          {item.skills
-                                            .slice(0, 2)
-                                            .map((skill) => (
+                                {loading ? (
+                                  <Skeleton
+                                    avatar={{ size: "large", shape: "circle" }}
+                                    active
+                                    paragraph={{ rows: 5 }}
+                                    title={false}
+                                    style={{ padding: "24px 0" }}
+                                  />
+                                ) : (
+                                  <List.Item.Meta
+                                    avatar={
+                                      <Badge
+                                        dot
+                                        color="#52c41a"
+                                        offset={[-4, 40]}
+                                        className="online-badge"
+                                      >
+                                        <Avatar
+                                          className="profile_image"
+                                          size={48}
+                                          src={
+                                            item.image ||
+                                            "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                                          }
+                                          style={{
+                                            border: "2px solid #fff",
+                                            boxShadow:
+                                              "0 2px 8px rgba(0, 0, 0, 0.1)",
+                                          }}
+                                        />
+                                      </Badge>
+                                    }
+                                    title={
+                                      <a className="candidate-name">{`${item.first_name} ${item.last_name}`}</a>
+                                    }
+                                    description={
+                                      <div className="candidate-info">
+                                        <span>{item.email || item.phone}</span>
+                                        {item.skills && (
+                                          <div className="skill-tags">
+                                            {item.skills
+                                              .slice(0, 2)
+                                              .map((skill) => (
+                                                <Tag className="skill-tag">
+                                                  {skill}
+                                                </Tag>
+                                              ))}
+                                            {item.skills.length > 2 && (
                                               <Tag className="skill-tag">
-                                                {skill}
+                                                +{item.skills.length - 2}
                                               </Tag>
-                                            ))}
-                                          {item.skills.length > 2 && (
-                                            <Tag className="skill-tag">
-                                              +{item.skills.length - 2}
-                                            </Tag>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  }
-                                  style={{
-                                    alignItems: "center",
-                                    display: "flex",
-                                  }}
-                                />
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    }
+                                    style={{
+                                      alignItems: "center",
+                                      display: "flex",
+                                    }}
+                                  />
+                                )}
                               </List.Item>
                             )}
                           />

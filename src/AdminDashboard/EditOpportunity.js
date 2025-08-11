@@ -19,6 +19,7 @@ import {
   Switch,
   Divider,
   Tag,
+  Skeleton,
 } from "antd";
 import {
   EditOutlined,
@@ -78,11 +79,14 @@ import {
 import { State, City } from "country-state-city";
 import { HiMiniComputerDesktop } from "react-icons/hi2";
 import { MdOutlineEventNote } from "react-icons/md";
-import { FaHeart, FaRegHeart } from "react-icons/fa6";
-import { IoMdCalendar } from "react-icons/io";
-import { IoIosShareAlt } from "react-icons/io";
 import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
 import { FaTransgender } from "react-icons/fa6";
+import additional1 from "../images/additional1.png";
+import additional2 from "../images/additional2.png";
+import additional3 from "../images/additional3.png";
+import additional4 from "../images/additional4.png";
+import additional5 from "../images/additional5.png";
+import additional6 from "../images/additional6.png";
 
 import {
   FaRegCalendarAlt,
@@ -212,7 +216,6 @@ const EditOpportunity = () => {
     try {
       const response = await getSalaryData();
       setSalaryData(response?.data?.data || []);
-      // console.log("Salary data", response);
     } catch (error) {
       console.log("Salary data error", error);
     } finally {
@@ -378,6 +381,40 @@ const EditOpportunity = () => {
     }
   };
 
+  const OptionCardSkeleton = () => (
+    <Card
+      style={{
+        padding: "15px 6px",
+        borderRadius: 12,
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+        border: "none",
+        marginBottom: 16,
+      }}
+    >
+      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+        {/* Avatar Skeleton */}
+        <Skeleton.Avatar active size={40} />
+
+        {/* Content Skeleton */}
+        <div style={{ flex: 1 }}>
+          <Skeleton.Input
+            active
+            size="small"
+            style={{ width: 150, marginBottom: 8 }}
+          />
+          <Skeleton
+            active
+            paragraph={{ rows: 1, width: "100%" }}
+            title={false}
+          />
+        </div>
+
+        {/* Button Skeleton */}
+        <Skeleton.Button active shape="circle" size="small" />
+      </div>
+    </Card>
+  );
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
   const [salaryData, setSalaryData] = useState([]);
@@ -450,10 +487,22 @@ const EditOpportunity = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [currentPostId, setCurrentPostId] = useState(null);
   const { id } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
 
   useEffect(() => {
     console.log("Job ID from URL:", id);
   }, [id]);
+
+  useEffect(() => {
+    setLoading(true);
+
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   ///////
   const transformJob = (job) => {
@@ -472,8 +521,10 @@ const EditOpportunity = () => {
       company: job.company_name,
       logo: job.company_logo,
       created_date: job.created_at,
+      benefits: job.benefits,
       job_description: job.job_description,
       postedDate,
+      job_category: job.job_category,
       working_days: job.working_days,
       daysLeft: daysLeft > 0 ? `${daysLeft} days left` : "Expired",
       level: job.experience_type,
@@ -539,6 +590,7 @@ const EditOpportunity = () => {
     };
 
     try {
+      setLoading(true);
       const response = await getJobPosts({});
       console.log("fetched jobs", response);
       const jobs = response?.data?.data?.data || [];
@@ -554,6 +606,7 @@ const EditOpportunity = () => {
     } finally {
       setTimeout(() => {
         checkIsJobAppliedData();
+        setLoading(false);
       }, 300);
     }
   };
@@ -773,6 +826,11 @@ const EditOpportunity = () => {
   const handleEditClick = (key) => {
     setActiveSection(key);
     setDrawerOpen(true);
+    setDrawerLoading(true);
+    const timer = setTimeout(() => {
+      setDrawerLoading(false);
+    }, 700);
+    return () => clearTimeout(timer);
   };
 
   const handleFresherPassClick = (item) => {
@@ -891,8 +949,8 @@ const EditOpportunity = () => {
                       src={logoUrl}
                       alt="Company Logo"
                       style={{
-                        width: "100%",
-                        height: "100%",
+                        width: "100px",
+                        height: "100px",
                         objectFit: "cover",
                         transition: "transform 0.3s ease",
                       }}
@@ -1724,7 +1782,7 @@ const EditOpportunity = () => {
         {/* Left Panel - Edit Options */}
         <div
           style={{
-            width: "320px",
+            width: "360px",
             flexShrink: 0,
             position: "sticky",
             top: 0,
@@ -1743,42 +1801,53 @@ const EditOpportunity = () => {
           >
             Customize Your Post <MdOutlineModeEdit size={18} />
           </Title>
-
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            {editOptions.map((item) => (
-              <OptionCard
-                style={{ padding: "15px 6px" }}
-                key={item.key}
-                hoverable
-              >
-                <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                  <Avatar
-                    size={40}
-                    style={{
-                      backgroundColor: `${item.color}20`,
-                      color: item.color,
-                    }}
+          {loading ? (
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              {[1, 2, 3, 4].map((item) => (
+                <OptionCardSkeleton key={item} />
+              ))}
+            </Space>
+          ) : (
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              {editOptions.map((item) => (
+                <>
+                  <OptionCard
+                    style={{ padding: "15px 6px" }}
+                    key={item.key}
+                    hoverable
                   >
-                    {item.icon}
-                  </Avatar>
-                  <div style={{ flex: 1 }}>
-                    <Text strong style={{ display: "block" }}>
-                      {item.title}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {item.description}
-                    </Text>
-                  </div>
-                  <Button
-                    type="text"
-                    icon={<EditOutlined style={{ color: item.color }} />}
-                    onClick={() => handleEditClick(item.key)}
-                    style={{ marginLeft: "auto" }}
-                  />
-                </div>
-              </OptionCard>
-            ))}
-          </Space>
+                    <div
+                      style={{ display: "flex", gap: 16, alignItems: "center" }}
+                    >
+                      <Avatar
+                        size={40}
+                        style={{
+                          backgroundColor: `${item.color}20`,
+                          color: item.color,
+                        }}
+                      >
+                        {item.icon}
+                      </Avatar>
+                      <div style={{ flex: 1 }}>
+                        <Text strong style={{ display: "block" }}>
+                          {item.title}
+                        </Text>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {item.description}
+                        </Text>
+                      </div>
+                      <Button
+                        type="text"
+                        icon={<EditOutlined style={{ color: item.color }} />}
+                        onClick={() => handleEditClick(item.key)}
+                        style={{ marginLeft: "auto" }}
+                      />
+                    </div>
+                  </OptionCard>
+                </>
+              ))}
+            </Space>
+          )}
         </div>
 
         {/* Right Panel - Preview */}
@@ -1793,270 +1862,319 @@ const EditOpportunity = () => {
         >
           {postDetails.map((job) => (
             <>
-              <div className="premium-job-card">
-                <div className="">
-                  <div className="premium-border"></div>
-                  <div className="premium-indicator">
-                    <span
-                      className={
-                        job.status === "Live"
-                          ? "status-badge"
-                          : job.status === "Expired"
-                          ? "status-badge-red"
-                          : "status-badge"
-                      }
-                    >
-                      {job.status}
-                    </span>
-                  </div>
-
-                  <div className="company-logo-wrapper">
-                    <img
-                      src={job.logo}
-                      alt="Company Logo"
-                      className="premium-logo"
-                    />
-                  </div>
-
-                  <div className="job-content">
-                    <h2 className="premium-job-title">{job.title}</h2>
-
-                    <div className="job-meta-item">
-                      <FaRegBuilding className="meta-icon premium-icon" />
-                      <span className="meta-text">{job.company}</span>
-                      <span className="verified-badge">Verified</span>
-                    </div>
-
-                    <div className="job-meta-item">
-                      <FaMapMarkerAlt className="meta-icon premium-icon" />
-                      <span className="meta-text">{job.location}</span>
-                    </div>
-
-                    <div className="job-meta-item">
-                      <FaRegCalendarAlt className="meta-icon premium-icon" />
-                      <span className="meta-text">
-                        Updated On: {job.created_date}
-                      </span>
-                    </div>
-
-                    <div className="job-tags">
-                      <span className="tag">{job.type}</span>
-                      <span className="tag">{job.working_days}</span>
-                      <span className="tag">{job.salary}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="side_job_details">
-                  <div className="side_job_actions">
-                    {/* <div className="side_job_action_buttons">
-                      <div className="side_job_action_icons">
-                        <span className="side_job_action_icon">
-                          {isSaved[job.id] ? (
-                            <FaHeart className="side_job_action_icon heart active" />
-                          ) : (
-                            <FaRegHeart className="side_job_action_icon heart" />
-                          )}
-                        </span>
-                        <span className="side_job_action_icon">
-                          <IoMdCalendar className="side_job_action_icon calendar" />
-                        </span>
-                      </div>
-                      <button className="side_job_share_button">
-                        <IoIosShareAlt /> Share
-                      </button>
-                    </div> */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {isApplied[job.id] === true ? (
-                        <div className="side_job_applied_badge">
-                          <FaCheckCircle /> Applied
-                        </div>
-                      ) : (
-                        <button
-                          disabled={job.status !== "Live"}
+              {loading ? (
+                <Skeleton active />
+              ) : (
+                <>
+                  <div className="premium-job-card">
+                    <div className="">
+                      <div className="premium-border"></div>
+                      <div className="premium-indicator">
+                        <span
                           className={
                             job.status === "Live"
-                              ? "side_job_apply_button primary"
-                              : "side_job_apply_button disabled"
+                              ? "status-badge"
+                              : job.status === "Expired"
+                              ? "status-badge-red"
+                              : "status-badge"
                           }
                         >
-                          Apply Now
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                          {job.status}
+                        </span>
+                      </div>
 
-                  <div className="side_job_eligibility">
-                    <h4 className="side_job_eligibility_title">Eligibility</h4>
-                    <div className="side_job_eligibility_details">
-                      <span className="side_job_eligibility_item">
-                        <MdOutlineSchool />
-                        {job.level}
-                      </span>
-                      <span className="side_job_eligibility_item">
-                        <MdOutlineWorkOutline />
-                        {job.eligibility}
-                      </span>
-                      <span className="side_job_eligibility_item">
-                        <FaTransgender />{" "}
-                        {job.diversity_hiring.map((diversity_hiring, index) => (
-                          <span key={index}>
-                            {diversity_hiring}
-                            {index < job.diversity_hiring.length - 1 && ", "}
+                      <div className="company-logo-wrapper">
+                        <img
+                          src={job.logo}
+                          alt="Company Logo"
+                          className="premium-logo"
+                        />
+                      </div>
+
+                      <div className="job-content">
+                        <h2 className="premium-job-title">{job.title}</h2>
+
+                        <div className="job-meta-item">
+                          <FaRegBuilding className="meta-icon premium-icon" />
+                          <span className="meta-text">{job.company}</span>
+                          <span className="verified-badge">Verified</span>
+                        </div>
+
+                        <div className="job-meta-item">
+                          <FaMapMarkerAlt className="meta-icon premium-icon" />
+                          <span className="meta-text">{job.location}</span>
+                        </div>
+
+                        <div className="job-meta-item">
+                          <FaRegCalendarAlt className="meta-icon premium-icon" />
+                          <span className="meta-text">
+                            Updated On: {job.created_date}
                           </span>
-                        ))}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                        </div>
 
-              <StatsCard
-                className="edit_oppor_details"
-                style={{ marginTop: 24 }}
-              >
-                <Row style={{ alignItems: "baseline" }} gutter={16}>
-                  <Col lg={8} xs={24} sm={12}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 12,
-                      }}
-                    >
-                      <Avatar
-                        icon={<UserOutlined />}
-                        style={{ backgroundColor: "#fde3cf", color: "#f56a00" }}
-                      />
-                      <div>
-                        <Text type="secondary">Applications</Text>
-                        <Title level={4} style={{ margin: 0 }}>
-                          481
-                        </Title>
+                        <div className="job-tags">
+                          <span className="tag">{job.type}</span>
+                          <span className="tag">{job.working_days}</span>
+                          <span className="tag">{job.salary}</span>
+                        </div>
                       </div>
                     </div>
-                  </Col>
-                  <Col lg={8} xs={24} sm={12}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 12,
-                      }}
-                    >
-                      <Avatar
-                        icon={<EyeOutlined />}
-                        style={{ backgroundColor: "#d6e4ff", color: "#1d39c4" }}
-                      />
-                      <div>
-                        <Text type="secondary">Impressions</Text>
-                        <Title level={4} style={{ margin: 0 }}>
-                          18,609
-                        </Title>
+
+                    <div className="side_job_details">
+                      <div className="side_job_actions">
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {isApplied[job.id] === true ? (
+                            <div className="side_job_applied_badge">
+                              <FaCheckCircle /> Applied
+                            </div>
+                          ) : (
+                            <button
+                              disabled={job.status !== "Live"}
+                              className={
+                                job.status === "Live"
+                                  ? "side_job_apply_button primary"
+                                  : "side_job_apply_button disabled"
+                              }
+                            >
+                              Apply Now
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="side_job_eligibility">
+                        <h4 className="side_job_eligibility_title">
+                          Eligibility
+                        </h4>
+                        <div className="side_job_eligibility_details">
+                          <span className="side_job_eligibility_item">
+                            <MdOutlineSchool />
+                            {job.level}
+                          </span>
+                          <span className="side_job_eligibility_item">
+                            <MdOutlineWorkOutline />
+                            {job.eligibility}
+                          </span>
+                          <span className="side_job_eligibility_item">
+                            <FaTransgender />{" "}
+                            {job.diversity_hiring.map(
+                              (diversity_hiring, index) => (
+                                <span key={index}>
+                                  {diversity_hiring}
+                                  {index < job.diversity_hiring.length - 1 &&
+                                    ", "}
+                                </span>
+                              )
+                            )}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </Col>
+                  </div>
 
-                  <Col lg={8} xs={24} sm={12}>
+                  <StatsCard
+                    className="edit_oppor_details"
+                    style={{ marginTop: 24 }}
+                  >
+                    <Row style={{ alignItems: "baseline" }} gutter={16}>
+                      <Col lg={8} xs={24} sm={12}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <Avatar
+                            icon={<UserOutlined />}
+                            style={{
+                              backgroundColor: "#fde3cf",
+                              color: "#f56a00",
+                            }}
+                          />
+                          <div>
+                            <Text type="secondary">Applications</Text>
+                            <Title level={4} style={{ margin: 0 }}>
+                              481
+                            </Title>
+                          </div>
+                        </div>
+                      </Col>
+                      <Col lg={8} xs={24} sm={12}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <Avatar
+                            icon={<EyeOutlined />}
+                            style={{
+                              backgroundColor: "#d6e4ff",
+                              color: "#1d39c4",
+                            }}
+                          />
+                          <div>
+                            <Text type="secondary">Impressions</Text>
+                            <Title level={4} style={{ margin: 0 }}>
+                              18,609
+                            </Title>
+                          </div>
+                        </div>
+                      </Col>
+
+                      <Col lg={8} xs={24} sm={12}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <Avatar
+                            icon={<AreaChartOutlined />}
+                            style={{
+                              backgroundColor: "rgb(234 255 212)",
+                              color: "#52c41a",
+                            }}
+                          />
+                          <div>
+                            <Text type="secondary">Reach</Text>
+                            <Title level={4} style={{ margin: 0 }}>
+                              18,609
+                            </Title>
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+                  </StatsCard>
+
+                  <StatsCard className="section-card job-description">
+                    <h2 className="section-title">Job Description</h2>
+                    <h6>
+                      {job.company} is hiring for the role of {job.title}!
+                    </h6>
                     <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 12,
+                      className="job-description-content"
+                      dangerouslySetInnerHTML={{
+                        __html: job.job_description,
                       }}
-                    >
-                      <Avatar
-                        icon={<AreaChartOutlined />}
-                        style={{
-                          backgroundColor: "rgb(234 255 212)",
-                          color: "#52c41a",
-                        }}
-                      />
-                      <div>
-                        <Text type="secondary">Reach</Text>
-                        <Title level={4} style={{ margin: 0 }}>
-                          18,609
-                        </Title>
+                    />
+                  </StatsCard>
+
+                  <StatsCard className="section-card">
+                    <h2 className="section-title">Additional Information</h2>
+
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Skills Required</h4>
+                        <p>
+                          {job.skills.map((skill, index) => (
+                            <span key={index} className="premium-skill">
+                              {skill}
+                              {index < job.skills.length - 1 && (
+                                <span className="skill-separator"> | </span>
+                              )}
+                            </span>
+                          ))}
+                        </p>
                       </div>
+
+                      <img
+                        className="info-card-image"
+                        src={additional1}
+                        alt="Location"
+                      />
                     </div>
-                  </Col>
-                </Row>
-              </StatsCard>
 
-              <StatsCard className="section-card job-description">
-                <h2 className="section-title">Job Description</h2>
-                <h6>
-                  {job.company} is hiring for the role of {job.title}!
-                </h6>
-                <div
-                  className="job-description-content"
-                  dangerouslySetInnerHTML={{
-                    __html: job.job_description,
-                  }}
-                />
-              </StatsCard>
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Job Openings</h4>
+                        <p>{job.openings}</p>
+                      </div>
+                      <img
+                        className="info-card-image"
+                        src={additional2}
+                        alt="Experience"
+                      />
+                    </div>
 
-              <StatsCard className="section-card">
-                <h2 className="section-title">Additional Information</h2>
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Job Benefits</h4>
+                        <p>
+                          {(job.benefits || []).map((benefit, index, arr) => (
+                            <span key={index} className="premium-skill">
+                              {benefit}
+                              {index < arr.length - 1 && (
+                                <span className="separator"> | </span>
+                              )}
+                            </span>
+                          ))}
+                        </p>
+                      </div>
 
-                <div className="info-card">
-                  <div className="info-card-content">
-                    <h4>Job Location(s)</h4>
-                    <p>{job.location}</p>
-                  </div>
-                  <img
-                    className="info-card-image"
-                    src="https://d8it4huxumps7.cloudfront.net/uploads/images/66702737c9e5c_location.png"
-                    alt="Location"
-                  />
-                </div>
+                      <img
+                        className="info-card-image"
+                        src={additional3}
+                        alt="Salary"
+                      />
+                    </div>
 
-                <div className="info-card">
-                  <div className="info-card-content">
-                    <h4>Experience</h4>
-                    <p>{job.eligibility}</p>
-                  </div>
-                  <img
-                    className="info-card-image"
-                    src="https://d8it4huxumps7.cloudfront.net/uploads/images/66710a39d5851_experience.png"
-                    alt="Experience"
-                  />
-                </div>
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Job Catergory</h4>
+                        <p>{job.job_category}</p>
+                      </div>
+                      <img
+                        className="info-card-image"
+                        src={additional4}
+                        alt="Work Details"
+                      />
+                    </div>
 
-                <div className="info-card">
-                  <div className="info-card-content">
-                    <h4>Salary</h4>
-                    <p>{job.salary}</p>
-                  </div>
-                  <img
-                    className="info-card-image"
-                    src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109f58b243_salary.png"
-                    alt="Salary"
-                  />
-                </div>
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Work Schedule</h4>
+                        <p>
+                          <b>Working Days</b>: {job.working_days}
+                        </p>
+                      </div>
+                      <img
+                        className="info-card-image"
+                        src={additional5}
+                        alt="Work Details"
+                      />
+                    </div>
 
-                <div className="info-card">
-                  <div className="info-card-content">
-                    <h4>Work Schedule</h4>
-                    <p>
-                      <b>Working Days</b>: {job.working_days}
-                    </p>
-                  </div>
-                  <img
-                    className="info-card-image"
-                    src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109d710a09_work_detail.png"
-                    alt="Work Details"
-                  />
-                </div>
-              </StatsCard>
+                    <div className="info-card">
+                      <div className="info-card-content">
+                        <h4>Job Type / Nature</h4>
+                        <p>
+                          <b>Job Type</b>: {job.location}
+                        </p>
+                        <p>
+                          <b>Job Nature</b>: {job.type}
+                        </p>
+                      </div>
+                      <img
+                        className="info-card-image"
+                        src={additional6}
+                        alt="Work Details"
+                      />
+                    </div>
+                  </StatsCard>
+                </>
+              )}
             </>
           ))}
         </div>
@@ -2084,13 +2202,10 @@ const EditOpportunity = () => {
         extra={
           <Space>
             <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
-            <Button className="account_settings" type="primary">
-              Save Changes
-            </Button>
           </Space>
         }
       >
-        {renderDrawerContent()}
+        {drawerLoading ? <Skeleton active /> : <>{renderDrawerContent()}</>}
       </Drawer>
     </div>
   );

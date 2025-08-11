@@ -20,6 +20,8 @@ import {
   Checkbox,
   Popconfirm,
   Empty,
+  Skeleton,
+  Badge,
 } from "antd";
 import {
   StarOutlined,
@@ -31,6 +33,11 @@ import {
   UploadOutlined,
   DeleteOutlined,
   CalendarOutlined,
+  TrophyFilled,
+  QuestionCircleOutlined,
+  CrownFilled,
+  StarFilled,
+  RocketFilled,
 } from "@ant-design/icons";
 import { IoIosMale } from "react-icons/io";
 import { IoFemaleOutline } from "react-icons/io5";
@@ -305,6 +312,9 @@ export default function MainProfile() {
   const [isProjects, setIsProjects] = useState([]);
   const [isSocialLinks, setIsSocialLinks] = useState({});
   const [expanded, setExpanded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [userProfileLoading, setUserProfileLoading] = useState(false);
   const [companies, setCompanies] = useState([
     {
       id: Date.now(),
@@ -338,21 +348,6 @@ export default function MainProfile() {
       // updateProfileImageData();
     }
   }, [loginUserId]);
-
-  // // UPDATE PROFILE IMAGE
-  // const updateProfileImageData = async () => {
-  //   const payload = {
-  //     user_id: loginUserId,
-  //     profile_image: profileImage,
-  //   };
-  //   try {
-  //     const response = await updateProfileImage(payload);
-  //     console.log("profile updated", response);
-  //     getUserProfileData();
-  //   } catch (error) {
-  //     console.log("did not update", error);
-  //   }
-  // };
 
   // QUALIFICATION
   useEffect(() => {
@@ -474,10 +469,10 @@ export default function MainProfile() {
     };
 
     try {
+      setUserProfileLoading(true);
       const response = await getUserProfile(payload);
       const image = response?.data?.data?.profile_image || "";
       setProfileImage(image || defaultAvatar);
-      localStorage.setItem("profileImage", image);
       setIsResume(response?.data?.data?.resume || "");
       setIsSkills(response?.data?.data?.skills || []);
       setIsWorkExp(response?.data?.data?.experince_type || []);
@@ -597,6 +592,12 @@ export default function MainProfile() {
       setShowEducationForm(true);
       setShowWorkExpForm(true);
       setShowForm(true);
+    } finally {
+      const timer = setUserProfileLoading(() => {
+        setUserProfileLoading(false);
+      }, 1700);
+
+      return () => clearTimeout(timer);
     }
   };
 
@@ -1358,21 +1359,11 @@ export default function MainProfile() {
     return new Date(date).toISOString().slice(0, 19).replace("T", " "); // 'YYYY-MM-DD HH:MM:SS'
   };
 
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Simulate data loading
-  // useEffect(() => {
-  //   const storedAvatar = localStorage.getItem("profileAvatar");
-  //   if (storedAvatar) {
-  //     setProfileImage(storedAvatar);
-  //   }
-
-  //   const timer = setTimeout(() => setIsLoading(false), 800);
-  //   return () => clearTimeout(timer);
-  // }, []);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     try {
+      setIsLoading(true);
       const stored = localStorage.getItem("loginDetails");
       if (stored) {
         const loginDetails = JSON.parse(stored);
@@ -1388,6 +1379,12 @@ export default function MainProfile() {
       console.log("stored", stored);
     } catch (error) {
       console.error("Invalid JSON in localStorage", error);
+    } finally {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 700);
+
+      return () => clearTimeout(timer);
     }
   }, []);
 
@@ -1519,7 +1516,7 @@ export default function MainProfile() {
       reader.onloadend = async () => {
         const imageDataUrl = reader.result;
         setProfileImage(imageDataUrl);
-        localStorage.setItem("profileAvatar", imageDataUrl);
+        // localStorage.setItem("profileAvatar", imageDataUrl);
         message.success("Profile image updated!");
 
         const payload = {
@@ -1544,7 +1541,7 @@ export default function MainProfile() {
 
   const handleRemove = () => {
     setProfileImage(defaultAvatar);
-    localStorage.removeItem("profileAvatar");
+    // localStorage.removeItem("profileAvatar");
     message.error("Profile image removed.");
   };
 
@@ -1557,766 +1554,789 @@ export default function MainProfile() {
         className="multi-step-form"
         form={form}
       >
-        <div>
-          <div className="form-row">
+        {detailsLoading ? (
+          <Skeleton active />
+        ) : (
+          <div>
+            <div className="form-row">
+              <div className="form-group">
+                <CommonInputField
+                  label="First Name"
+                  mandotary={true}
+                  value={fname}
+                  placeholder="Enter your first name"
+                  onChange={(e) => {
+                    setFname(e.target.value);
+                    setFnameError(nameValidator(e.target.value));
+                  }}
+                  readOnly={true}
+                  disabled={true}
+                  error={fnameError}
+                />
+              </div>
+              <div className="form-group">
+                <CommonInputField
+                  label="Last Name"
+                  mandotary={true}
+                  value={lname}
+                  placeholder="Enter your Last Name"
+                  type="text"
+                  onChange={(e) => {
+                    setLname(e.target.value);
+                    setLnameError(nameValidator(e.target.value));
+                  }}
+                  readOnly={true}
+                  disabled={true}
+                  error={lnameError}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <CommonInputField
+                  name="email"
+                  label="Email"
+                  mandotary={true}
+                  value={email}
+                  placeholder="Enter your Email"
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailError(emailValidator(e.target.value));
+                  }}
+                  readOnly={true}
+                  disabled={true}
+                  error={emailError}
+                />
+              </div>
+              <div className="form-group">
+                <CommonInputField
+                  name="Mobile"
+                  label="Mobile"
+                  mandotary={true}
+                  value={phoneNumber}
+                  placeholder="Enter your mobile"
+                  onChange={(e) => {
+                    setPhoneNumber(e.target.value);
+                    setPhoneNumberError(phoneValidation(e.target.value));
+                  }}
+                  readOnly={true}
+                  disabled={true}
+                  error={phoneNumberError}
+                />
+              </div>
+            </div>
+
             <div className="form-group">
-              <CommonInputField
-                label="First Name"
-                mandotary={true}
-                value={fname}
-                placeholder="Enter your first name"
-                onChange={(e) => {
-                  setFname(e.target.value);
-                  setFnameError(nameValidator(e.target.value));
+              <Form.Item
+                layout="vertical"
+                label={<span style={{ fontWeight: 500 }}>Gender</span>}
+                required
+              >
+                <div className="job_nature">
+                  {genderOptions.map((item) => {
+                    return (
+                      <button
+                        type="button"
+                        className={
+                          activeButton === item.name
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => {
+                          handleButtonClick(item.name);
+                          setGender(item.name);
+                          setGenderError("");
+                        }}
+                      >
+                        {item.name === "Male" ? (
+                          <IoIosMale />
+                        ) : item.name === "Female" ? (
+                          <IoFemaleOutline />
+                        ) : item.name === "Transgender" ? (
+                          <PiGenderTransgender />
+                        ) : item.name === "Intersex" ? (
+                          <PiGenderIntersex />
+                        ) : item.name === "Non-binary" ? (
+                          <PiGenderNonbinary />
+                        ) : item.name === "Others" ? (
+                          <MdNotInterested />
+                        ) : (
+                          ""
+                        )}{" "}
+                        {item.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {genderError && (
+                  <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+                    {genderError}
+                  </div>
+                )}
+              </Form.Item>
+            </div>
+
+            <div style={{ marginTop: 15 }} className="form-group">
+              <Form.Item
+                layout="vertical"
+                label={<span style={{ fontWeight: 500 }}>User Type </span>}
+                name="usertype"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please Select your User Type ",
+                  },
+                ]}
+              >
+                <div className="job_nature">
+                  {userTypeName.map((item) => {
+                    return (
+                      <button
+                        type="button"
+                        className={
+                          userTypeactiveButton === item.name
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => {
+                          handleUserTypeClick(item.name);
+                          setUserType(item.name);
+                          setUserTypeError("");
+                        }}
+                      >
+                        {item.name === "College Student" ? (
+                          <LuGraduationCap />
+                        ) : item.name === "Professional" ? (
+                          <GiOfficeChair />
+                        ) : item.name === "School Student" ? (
+                          <PiStudent />
+                        ) : item.name === "Fresher" ? (
+                          <GiNewShoot />
+                        ) : (
+                          ""
+                        )}
+                        {item.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                {userTypeError && (
+                  <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
+                    {userTypeError}
+                  </div>
+                )}
+              </Form.Item>
+            </div>
+
+            <div className="">
+              {userTypeactiveButton === "College Student" && (
+                <>
+                  <div style={{ marginTop: 15 }} className="form-group">
+                    <CommonSelectField
+                      label="Course"
+                      disabled={false}
+                      name="course"
+                      mandatory={true}
+                      placeholder="Select Course"
+                      value={course}
+                      showSearch={true}
+                      options={courseOptions}
+                      onChange={(value) => {
+                        setCourse(value);
+                        setCourseError(selectValidator(value));
+                      }}
+                      error={courseError}
+                    />
+                  </div>
+
+                  <div
+                    className="form-row"
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <CommonSelectField
+                        value={startDate}
+                        label="Start Year"
+                        mandatory={true}
+                        name="startyear"
+                        placeholder="Start Year"
+                        options={startYearOptions}
+                        onChange={(value) => {
+                          setStartDate(value);
+
+                          if (!value || value.trim() === "") {
+                            setStartDateError("Start year is required");
+                          } else {
+                            setStartDateError("");
+                          }
+
+                          if (endDate && parseInt(value) > parseInt(endDate)) {
+                            setEndDateError(
+                              "End year must be after start year"
+                            );
+                          } else {
+                            setEndDateError("");
+                          }
+                        }}
+                        error={startDateError}
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <CommonSelectField
+                        value={endDate}
+                        label="End Year"
+                        name="endyear"
+                        placeholder="End Year"
+                        mandatory={true}
+                        options={endYearOptions}
+                        onChange={(value) => {
+                          setEndDate(value);
+
+                          if (!value || value.trim() === "") {
+                            setEndDateError("End year is required");
+                          } else if (
+                            startDate &&
+                            parseInt(value) < parseInt(startDate)
+                          ) {
+                            setEndDateError(
+                              "End year must be after start year"
+                            );
+                          } else {
+                            setEndDateError("");
+                          }
+                        }}
+                        error={endDateError}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {userTypeactiveButton === "Fresher" && (
+                <>
+                  <div style={{ marginTop: 15 }} className="form-group">
+                    <CommonSelectField
+                      label="Course"
+                      disabled={false}
+                      name="course1"
+                      mandatory={true}
+                      placeholder="Select Course"
+                      showSearch={true}
+                      value={fresherCourse}
+                      options={fresherCourseOptions}
+                      onChange={(value) => {
+                        setFresherCourse(value);
+                        setFresherCourseError(selectValidator(value));
+                      }}
+                      error={fresherCourseError}
+                    />
+                  </div>
+
+                  {/*  */}
+
+                  <div
+                    className="form-row"
+                    style={{
+                      display: "flex",
+                      gap: "16px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <CommonSelectField
+                        value={fresherStartDate}
+                        label="Start Year"
+                        name="startyear"
+                        placeholder="Start Year"
+                        options={fresherStartYearOptions}
+                        onChange={(value) => {
+                          setFresherStartDate(value);
+
+                          if (!value || value.trim() === "") {
+                            setFresherStartDateError("Start year is required");
+                          } else {
+                            setFresherStartDateError("");
+                          }
+
+                          if (endDate && parseInt(value) > parseInt(endDate)) {
+                            setFresherEndDateError(
+                              "End year must be after start year"
+                            );
+                          } else {
+                            setFresherEndDateError("");
+                          }
+                        }}
+                        error={fresherStartDateError}
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <CommonSelectField
+                        label="End Year"
+                        name="endyear"
+                        placeholder="End Year"
+                        value={fresherEndtDate}
+                        options={fresherEndYearOptions}
+                        onChange={(value) => {
+                          setFresherEndDate(value);
+
+                          if (!value || value.trim() === "") {
+                            setFresherEndDateError("End year is required");
+                          } else if (
+                            startDate &&
+                            parseInt(value) < parseInt(startDate)
+                          ) {
+                            setFresherEndDateError(
+                              "End year must be after start year"
+                            );
+                          } else {
+                            setFresherEndDateError("");
+                          }
+                        }}
+                        error={fresherEndDateError} // fixed
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {userTypeactiveButton === "School Student" && (
+                <>
+                  <Form.Item
+                    style={{ marginTop: 15 }}
+                    layout="vertical"
+                    label={<span style={{ fontWeight: 500 }}>Class</span>}
+                    name="usertype"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please Select your Class",
+                      },
+                    ]}
+                  >
+                    <div className="job_nature">
+                      <button
+                        type="button"
+                        className={
+                          Class === "1"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("1")}
+                      >
+                        <LiaSchoolSolid /> 1
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "2"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("2")}
+                      >
+                        <LiaSchoolSolid /> 2
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "3"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("3")}
+                      >
+                        <LiaSchoolSolid /> 3
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "4"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("4")}
+                      >
+                        <LiaSchoolSolid /> 4
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "5"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("5")}
+                      >
+                        <LiaSchoolSolid /> 5
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "6"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("6")}
+                      >
+                        <LiaSchoolSolid /> 6
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "7"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("7")}
+                      >
+                        <LiaSchoolSolid /> 7
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "8"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("8")}
+                      >
+                        <LiaSchoolSolid /> 8
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "9"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("9")}
+                      >
+                        <LiaSchoolSolid /> 9
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "10"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("10")}
+                      >
+                        <LiaSchoolSolid /> 10
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "11"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("11")}
+                      >
+                        <LiaSchoolSolid /> 11
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          Class === "12"
+                            ? "job_nature_button_active"
+                            : "job_nature_button"
+                        }
+                        onClick={() => handleClassClick("12")}
+                      >
+                        <LiaSchoolSolid /> 12
+                      </button>
+                    </div>
+                  </Form.Item>
+                </>
+              )}
+            </div>
+
+            <div style={{ marginTop: 20 }} className="form-group">
+              <CommonSelectField
+                label="Fresher / Experience"
+                name="fresherexperience"
+                mandatory={true}
+                placeholder="Select Experience"
+                options={[
+                  {
+                    value: "Fresher",
+                    label: "Fresher",
+                  },
+                  {
+                    value: "Experience",
+                    label: "Experience",
+                  },
+                ]}
+                onChange={(value) => {
+                  handleExperienceTypeChange(value);
+                  setSelectExperienceType(value);
+                  setSelectExperienceTypeError(selectValidator(value));
                 }}
-                readOnly={true}
-                disabled={true}
-                error={fnameError}
+                showSearch={true}
+                error={selectExperienceTypeError}
               />
             </div>
-            <div className="form-group">
+
+            <div className="form-row">
+              {experienceType === "Experience" && (
+                <>
+                  <div className="form-group">
+                    <CommonSelectField
+                      label="Total Years of Experience"
+                      name="totalexperience"
+                      mandatory={true}
+                      placeholder="Select Experience"
+                      options={[
+                        {
+                          value: "0 Years",
+                          label: "0 Years",
+                        },
+                        {
+                          value: "1 Years",
+                          label: "1 Years",
+                        },
+                        {
+                          value: "2 Years",
+                          label: "2 Years",
+                        },
+                        {
+                          value: "3 Years",
+                          label: "3 Years",
+                        },
+                        {
+                          value: "4 Years",
+                          label: "4 Years",
+                        },
+                        {
+                          value: "5 Years",
+                          label: "5 Years",
+                        },
+                        {
+                          value: "6 Years",
+                          label: "6 Years",
+                        },
+                        {
+                          value: "7 Years",
+                          label: "7 Years",
+                        },
+                        {
+                          value: "8 Years",
+                          label: "8 Years",
+                        },
+                        {
+                          value: "9 Years",
+                          label: "9 Years",
+                        },
+                        {
+                          value: "10 Years",
+                          label: "10 Years",
+                        },
+                        {
+                          value: "11 Years",
+                          label: "11 Years",
+                        },
+                      ]}
+                      showSearch={true}
+                      onChange={(value) => {
+                        setTotalYearsExperience(value);
+                        setTotalYearsExperienceError(selectValidator(value));
+                      }}
+                      error={totalYearsExperienceError}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <CommonSelectField
+                      label="Total Months of Experience"
+                      name="experiencemonth"
+                      mandatory={true}
+                      placeholder="Select Experience"
+                      options={[
+                        {
+                          value: "0 Month",
+                          label: "0 Month",
+                        },
+                        {
+                          value: "1 Month",
+                          label: "1 Month",
+                        },
+                        {
+                          value: "2 Months",
+                          label: "2 Months",
+                        },
+                        {
+                          value: "3 Months",
+                          label: "3 Months",
+                        },
+                        {
+                          value: "4 Months",
+                          label: "4 Months",
+                        },
+                        {
+                          value: "5 Months",
+                          label: "5 Months",
+                        },
+                        {
+                          value: "6 Months",
+                          label: "6 Months",
+                        },
+                        {
+                          value: "7 Months",
+                          label: "7 Months",
+                        },
+                        {
+                          value: "8 Months",
+                          label: "8 Months",
+                        },
+                        {
+                          value: "9 Months",
+                          label: "9 Months",
+                        },
+                        {
+                          value: "10 Months",
+                          label: "10 Months",
+                        },
+                        {
+                          value: "11 Months",
+                          label: "11 Months",
+                        },
+                        {
+                          value: "12 Months",
+                          label: "12 Months",
+                        },
+                      ]}
+                      onChange={(value) => {
+                        setTotalMonthsExperience(value);
+                        setTotalMonthsExperienceError(selectValidator(value));
+                      }}
+                      showSearch={true}
+                      error={totalMonthsExperienceError}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div style={{ marginTop: 0 }} className="form-group">
               <CommonInputField
-                label="Last Name"
+                name="location"
+                label="Location"
                 mandotary={true}
-                value={lname}
-                placeholder="Enter your Last Name"
+                value={location}
+                placeholder="Enter your Location"
                 type="text"
                 onChange={(e) => {
-                  setLname(e.target.value);
-                  setLnameError(nameValidator(e.target.value));
+                  setLocation(e.target.value);
+                  setLocationError(nameValidator(e.target.value));
                 }}
-                readOnly={true}
-                disabled={true}
-                error={lnameError}
+                error={locationError}
               />
             </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <CommonInputField
-                name="email"
-                label="Email"
-                mandotary={true}
-                value={email}
-                placeholder="Enter your Email"
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setEmailError(emailValidator(e.target.value));
-                }}
-                readOnly={true}
-                disabled={true}
-                error={emailError}
-              />
-            </div>
-            <div className="form-group">
-              <CommonInputField
-                name="Mobile"
-                label="Mobile"
-                mandotary={true}
-                value={phoneNumber}
-                placeholder="Enter your mobile"
-                onChange={(e) => {
-                  setPhoneNumber(e.target.value);
-                  setPhoneNumberError(phoneValidation(e.target.value));
-                }}
-                readOnly={true}
-                disabled={true}
-                error={phoneNumberError}
-              />
+            <div style={{ textAlign: "-webkit-right" }} className="save_btn">
+              <Button
+                type="primary"
+                size="large"
+                onClick={handleSave}
+                className="nav-btn next-btn"
+              >
+                <MdFileDownloadDone style={{ fontSize: 22 }} />
+                Update
+              </Button>
             </div>
           </div>
-
-          <div className="form-group">
-            <Form.Item
-              layout="vertical"
-              label={<span style={{ fontWeight: 500 }}>Gender</span>}
-              required
-            >
-              <div className="job_nature">
-                {genderOptions.map((item) => {
-                  return (
-                    <button
-                      type="button"
-                      className={
-                        activeButton === item.name
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => {
-                        handleButtonClick(item.name);
-                        setGender(item.name);
-                        setGenderError("");
-                      }}
-                    >
-                      {item.name === "Male" ? (
-                        <IoIosMale />
-                      ) : item.name === "Female" ? (
-                        <IoFemaleOutline />
-                      ) : item.name === "Transgender" ? (
-                        <PiGenderTransgender />
-                      ) : item.name === "Intersex" ? (
-                        <PiGenderIntersex />
-                      ) : item.name === "Non-binary" ? (
-                        <PiGenderNonbinary />
-                      ) : item.name === "Others" ? (
-                        <MdNotInterested />
-                      ) : (
-                        ""
-                      )}{" "}
-                      {item.name}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {genderError && (
-                <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
-                  {genderError}
-                </div>
-              )}
-            </Form.Item>
-          </div>
-
-          <div style={{ marginTop: 15 }} className="form-group">
-            <Form.Item
-              layout="vertical"
-              label={<span style={{ fontWeight: 500 }}>User Type </span>}
-              name="usertype"
-              rules={[
-                {
-                  required: true,
-                  message: "Please Select your User Type ",
-                },
-              ]}
-            >
-              <div className="job_nature">
-                {userTypeName.map((item) => {
-                  return (
-                    <button
-                      type="button"
-                      className={
-                        userTypeactiveButton === item.name
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => {
-                        handleUserTypeClick(item.name);
-                        setUserType(item.name);
-                        setUserTypeError("");
-                      }}
-                    >
-                      {item.name === "College Student" ? (
-                        <LuGraduationCap />
-                      ) : item.name === "Professional" ? (
-                        <GiOfficeChair />
-                      ) : item.name === "School Student" ? (
-                        <PiStudent />
-                      ) : item.name === "Fresher" ? (
-                        <GiNewShoot />
-                      ) : (
-                        ""
-                      )}
-                      {item.name}
-                    </button>
-                  );
-                })}
-              </div>
-              {userTypeError && (
-                <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
-                  {userTypeError}
-                </div>
-              )}
-            </Form.Item>
-          </div>
-
-          <div className="">
-            {userTypeactiveButton === "College Student" && (
-              <>
-                <div style={{ marginTop: 15 }} className="form-group">
-                  <CommonSelectField
-                    label="Course"
-                    disabled={false}
-                    name="course"
-                    mandatory={true}
-                    placeholder="Select Course"
-                    value={course}
-                    showSearch={true}
-                    options={courseOptions}
-                    onChange={(value) => {
-                      setCourse(value);
-                      setCourseError(selectValidator(value));
-                    }}
-                    error={courseError}
-                  />
-                </div>
-
-                <div
-                  className="form-row"
-                  style={{ display: "flex", gap: "16px", alignItems: "center" }}
-                >
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <CommonSelectField
-                      value={startDate}
-                      label="Start Year"
-                      mandatory={true}
-                      name="startyear"
-                      placeholder="Start Year"
-                      options={startYearOptions}
-                      onChange={(value) => {
-                        setStartDate(value);
-
-                        if (!value || value.trim() === "") {
-                          setStartDateError("Start year is required");
-                        } else {
-                          setStartDateError("");
-                        }
-
-                        if (endDate && parseInt(value) > parseInt(endDate)) {
-                          setEndDateError("End year must be after start year");
-                        } else {
-                          setEndDateError("");
-                        }
-                      }}
-                      error={startDateError}
-                    />
-                  </div>
-
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <CommonSelectField
-                      value={endDate}
-                      label="End Year"
-                      name="endyear"
-                      placeholder="End Year"
-                      mandatory={true}
-                      options={endYearOptions}
-                      onChange={(value) => {
-                        setEndDate(value);
-
-                        if (!value || value.trim() === "") {
-                          setEndDateError("End year is required");
-                        } else if (
-                          startDate &&
-                          parseInt(value) < parseInt(startDate)
-                        ) {
-                          setEndDateError("End year must be after start year");
-                        } else {
-                          setEndDateError("");
-                        }
-                      }}
-                      error={endDateError}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {userTypeactiveButton === "Fresher" && (
-              <>
-                <div style={{ marginTop: 15 }} className="form-group">
-                  <CommonSelectField
-                    label="Course"
-                    disabled={false}
-                    name="course1"
-                    mandatory={true}
-                    placeholder="Select Course"
-                    showSearch={true}
-                    value={fresherCourse}
-                    options={fresherCourseOptions}
-                    onChange={(value) => {
-                      setFresherCourse(value);
-                      setFresherCourseError(selectValidator(value));
-                    }}
-                    error={fresherCourseError}
-                  />
-                </div>
-
-                {/*  */}
-
-                <div
-                  className="form-row"
-                  style={{ display: "flex", gap: "16px", alignItems: "center" }}
-                >
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <CommonSelectField
-                      value={fresherStartDate}
-                      label="Start Year"
-                      name="startyear"
-                      placeholder="Start Year"
-                      options={fresherStartYearOptions}
-                      onChange={(value) => {
-                        setFresherStartDate(value);
-
-                        if (!value || value.trim() === "") {
-                          setFresherStartDateError("Start year is required");
-                        } else {
-                          setFresherStartDateError("");
-                        }
-
-                        if (endDate && parseInt(value) > parseInt(endDate)) {
-                          setFresherEndDateError(
-                            "End year must be after start year"
-                          );
-                        } else {
-                          setFresherEndDateError("");
-                        }
-                      }}
-                      error={fresherStartDateError}
-                    />
-                  </div>
-
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <CommonSelectField
-                      label="End Year"
-                      name="endyear"
-                      placeholder="End Year"
-                      value={fresherEndtDate}
-                      options={fresherEndYearOptions}
-                      onChange={(value) => {
-                        setFresherEndDate(value);
-
-                        if (!value || value.trim() === "") {
-                          setFresherEndDateError("End year is required");
-                        } else if (
-                          startDate &&
-                          parseInt(value) < parseInt(startDate)
-                        ) {
-                          setFresherEndDateError(
-                            "End year must be after start year"
-                          );
-                        } else {
-                          setFresherEndDateError("");
-                        }
-                      }}
-                      error={fresherEndDateError} // fixed
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {userTypeactiveButton === "School Student" && (
-              <>
-                <Form.Item
-                  style={{ marginTop: 15 }}
-                  layout="vertical"
-                  label={<span style={{ fontWeight: 500 }}>Class</span>}
-                  name="usertype"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please Select your Class",
-                    },
-                  ]}
-                >
-                  <div className="job_nature">
-                    <button
-                      type="button"
-                      className={
-                        Class === "1"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("1")}
-                    >
-                      <LiaSchoolSolid /> 1
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "2"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("2")}
-                    >
-                      <LiaSchoolSolid /> 2
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "3"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("3")}
-                    >
-                      <LiaSchoolSolid /> 3
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "4"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("4")}
-                    >
-                      <LiaSchoolSolid /> 4
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "5"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("5")}
-                    >
-                      <LiaSchoolSolid /> 5
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "6"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("6")}
-                    >
-                      <LiaSchoolSolid /> 6
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "7"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("7")}
-                    >
-                      <LiaSchoolSolid /> 7
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "8"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("8")}
-                    >
-                      <LiaSchoolSolid /> 8
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "9"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("9")}
-                    >
-                      <LiaSchoolSolid /> 9
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "10"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("10")}
-                    >
-                      <LiaSchoolSolid /> 10
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "11"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("11")}
-                    >
-                      <LiaSchoolSolid /> 11
-                    </button>
-
-                    <button
-                      type="button"
-                      className={
-                        Class === "12"
-                          ? "job_nature_button_active"
-                          : "job_nature_button"
-                      }
-                      onClick={() => handleClassClick("12")}
-                    >
-                      <LiaSchoolSolid /> 12
-                    </button>
-                  </div>
-                </Form.Item>
-              </>
-            )}
-          </div>
-
-          <div style={{ marginTop: 20 }} className="form-group">
-            <CommonSelectField
-              label="Fresher / Experience"
-              name="fresherexperience"
-              mandatory={true}
-              placeholder="Select Experience"
-              options={[
-                {
-                  value: "Fresher",
-                  label: "Fresher",
-                },
-                {
-                  value: "Experience",
-                  label: "Experience",
-                },
-              ]}
-              onChange={(value) => {
-                handleExperienceTypeChange(value);
-                setSelectExperienceType(value);
-                setSelectExperienceTypeError(selectValidator(value));
-              }}
-              showSearch={true}
-              error={selectExperienceTypeError}
-            />
-          </div>
-
-          <div className="form-row">
-            {experienceType === "Experience" && (
-              <>
-                <div className="form-group">
-                  <CommonSelectField
-                    label="Total Years of Experience"
-                    name="totalexperience"
-                    mandatory={true}
-                    placeholder="Select Experience"
-                    options={[
-                      {
-                        value: "0 Years",
-                        label: "0 Years",
-                      },
-                      {
-                        value: "1 Years",
-                        label: "1 Years",
-                      },
-                      {
-                        value: "2 Years",
-                        label: "2 Years",
-                      },
-                      {
-                        value: "3 Years",
-                        label: "3 Years",
-                      },
-                      {
-                        value: "4 Years",
-                        label: "4 Years",
-                      },
-                      {
-                        value: "5 Years",
-                        label: "5 Years",
-                      },
-                      {
-                        value: "6 Years",
-                        label: "6 Years",
-                      },
-                      {
-                        value: "7 Years",
-                        label: "7 Years",
-                      },
-                      {
-                        value: "8 Years",
-                        label: "8 Years",
-                      },
-                      {
-                        value: "9 Years",
-                        label: "9 Years",
-                      },
-                      {
-                        value: "10 Years",
-                        label: "10 Years",
-                      },
-                      {
-                        value: "11 Years",
-                        label: "11 Years",
-                      },
-                    ]}
-                    showSearch={true}
-                    onChange={(value) => {
-                      setTotalYearsExperience(value);
-                      setTotalYearsExperienceError(selectValidator(value));
-                    }}
-                    error={totalYearsExperienceError}
-                  />
-                </div>
-                <div className="form-group">
-                  <CommonSelectField
-                    label="Total Months of Experience"
-                    name="experiencemonth"
-                    mandatory={true}
-                    placeholder="Select Experience"
-                    options={[
-                      {
-                        value: "0 Month",
-                        label: "0 Month",
-                      },
-                      {
-                        value: "1 Month",
-                        label: "1 Month",
-                      },
-                      {
-                        value: "2 Months",
-                        label: "2 Months",
-                      },
-                      {
-                        value: "3 Months",
-                        label: "3 Months",
-                      },
-                      {
-                        value: "4 Months",
-                        label: "4 Months",
-                      },
-                      {
-                        value: "5 Months",
-                        label: "5 Months",
-                      },
-                      {
-                        value: "6 Months",
-                        label: "6 Months",
-                      },
-                      {
-                        value: "7 Months",
-                        label: "7 Months",
-                      },
-                      {
-                        value: "8 Months",
-                        label: "8 Months",
-                      },
-                      {
-                        value: "9 Months",
-                        label: "9 Months",
-                      },
-                      {
-                        value: "10 Months",
-                        label: "10 Months",
-                      },
-                      {
-                        value: "11 Months",
-                        label: "11 Months",
-                      },
-                      {
-                        value: "12 Months",
-                        label: "12 Months",
-                      },
-                    ]}
-                    onChange={(value) => {
-                      setTotalMonthsExperience(value);
-                      setTotalMonthsExperienceError(selectValidator(value));
-                    }}
-                    showSearch={true}
-                    error={totalMonthsExperienceError}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          <div style={{ marginTop: 0 }} className="form-group">
-            <CommonInputField
-              name="location"
-              label="Location"
-              mandotary={true}
-              value={location}
-              placeholder="Enter your Location"
-              type="text"
-              onChange={(e) => {
-                setLocation(e.target.value);
-                setLocationError(nameValidator(e.target.value));
-              }}
-              error={locationError}
-            />
-          </div>
-          <div style={{ textAlign: "-webkit-right" }} className="save_btn">
-            <Button
-              type="primary"
-              size="large"
-              onClick={handleSave}
-              className="nav-btn next-btn"
-            >
-              <MdFileDownloadDone style={{ fontSize: 22 }} />
-              Update
-            </Button>
-          </div>
-        </div>
+        )}
       </Form>
     ),
 
     resume: () => (
       <>
-        <Title level={4}>Resume</Title>
-        <Text type="secondary">
-          Remember that one pager that highlights how amazing you are? Time to
-          let employers notice your potential through it.
-        </Text>
+        {detailsLoading ? (
+          <Skeleton active />
+        ) : (
+          <div>
+            <Title level={4}>Resume</Title>
+            <Text type="secondary">
+              Remember that one pager that highlights how amazing you are? Time
+              to let employers notice your potential through it.
+            </Text>
 
-        <div
-          style={{
-            border: "1px dashed #d9d9d9",
-            borderRadius: 8,
-            padding: 32,
-            textAlign: "center",
-            marginTop: 24,
-          }}
-        >
-          <Upload
-            name="resume"
-            showUploadList={false}
-            accept=".doc,.docx,.pdf"
-            maxCount={1}
-            beforeUpload={handleBeforeUpload}
-          >
-            <Button
-              style={{ background: "#5f2eea" }}
-              icon={<UploadOutlined />}
-              type="primary"
+            <div
+              style={{
+                border: "1px dashed #d9d9d9",
+                borderRadius: 8,
+                padding: 32,
+                textAlign: "center",
+                marginTop: 24,
+              }}
             >
-              Update Resume
-            </Button>
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary">
-                Supported file formats: DOC, DOCX, PDF. File size limit: 10 MB.
-              </Text>
-            </div>
-          </Upload>
+              <Upload
+                name="resume"
+                showUploadList={false}
+                accept=".doc,.docx,.pdf"
+                maxCount={1}
+                beforeUpload={handleBeforeUpload}
+              >
+                <Button
+                  style={{ background: "#5f2eea" }}
+                  icon={<UploadOutlined />}
+                  type="primary"
+                >
+                  Update Resume
+                </Button>
+                <div style={{ marginTop: 8 }}>
+                  <Text type="secondary">
+                    Supported file formats: DOC, DOCX, PDF. File size limit: 10
+                    MB.
+                  </Text>
+                </div>
+              </Upload>
 
-          {resumeFile && (
-            <div style={{ marginTop: 16 }}>
-              <Text strong>Selected File: </Text>
-              <Text>{resumeFile.name}</Text>
-            </div>
-          )}
+              {resumeFile && (
+                <div style={{ marginTop: 16 }}>
+                  <Text strong>Selected File: </Text>
+                  <Text>{resumeFile.name}</Text>
+                </div>
+              )}
 
-          {resumeError && (
-            <div style={{ marginTop: 8 }}>
-              <Text type="danger" style={{ color: "red" }}>
-                {resumeError}
-              </Text>
-            </div>
-          )}
+              {resumeError && (
+                <div style={{ marginTop: 8 }}>
+                  <Text type="danger" style={{ color: "red" }}>
+                    {resumeError}
+                  </Text>
+                </div>
+              )}
 
-          <div style={{ textAlign: "right", marginTop: 24 }}>
-            <Button
-              type="primary"
-              style={{ background: "#5f2eea" }}
-              onClick={handleFileSave}
-            >
-              Save Resume
-            </Button>
+              <div style={{ textAlign: "right", marginTop: 24 }}>
+                <Button
+                  type="primary"
+                  style={{ background: "#5f2eea" }}
+                  onClick={handleFileSave}
+                >
+                  Save Resume
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </>
     ),
 
@@ -2329,1256 +2349,1337 @@ export default function MainProfile() {
           boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <CheckCircleFilled style={{ color: "#00c853", marginRight: 8 }} />
-          <Title level={4} style={{ margin: 0 }}>
-            About
-          </Title>
-        </div>
+        {detailsLoading ? (
+          <Skeleton active />
+        ) : (
+          <>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <CheckCircleFilled style={{ color: "#00c853", marginRight: 8 }} />
+              <Title level={4} style={{ margin: 0 }}>
+                About
+              </Title>
+            </div>
 
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 12, color: "#888" }}>
-            About gives you a chance to showcase your personality, skills, and
-            aspirations. Use this space to tell your story, highlight your
-            achievements, and share what makes you unique.
-          </div>
-        </div>
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: "#888" }}>
+                About gives you a chance to showcase your personality, skills,
+                and aspirations. Use this space to tell your story, highlight
+                your achievements, and share what makes you unique.
+              </div>
+            </div>
 
-        <CommonTextArea
-          style={{ height: 150 }}
-          mandatory={true}
-          rows={6}
-          label={"About"}
-          value={aboutTextNew}
-          onChange={(e) => {
-            setAboutTextNew(e.target.value);
-            setAboutTextError(descriptionValidator(e.target.value));
-          }}
-          error={aboutTextError}
-        />
+            <CommonTextArea
+              style={{ height: 150 }}
+              mandatory={true}
+              rows={6}
+              label={"About"}
+              value={aboutTextNew}
+              onChange={(e) => {
+                setAboutTextNew(e.target.value);
+                setAboutTextError(descriptionValidator(e.target.value));
+              }}
+              error={aboutTextError}
+            />
 
-        <div style={{ textAlign: "-webkit-right" }} className="save_btn">
-          <Button
-            type="primary"
-            size="large"
-            onClick={handleAboutSave}
-            className="nav-btn next-btn"
-          >
-            <MdFileDownloadDone style={{ fontSize: 22 }} />
-            {aboutData ? "Update" : "Save"}
-          </Button>
-        </div>
+            <div style={{ textAlign: "-webkit-right" }} className="save_btn">
+              <Button
+                type="primary"
+                size="large"
+                onClick={handleAboutSave}
+                className="nav-btn next-btn"
+              >
+                <MdFileDownloadDone style={{ fontSize: 22 }} />
+                {aboutData ? "Update" : "Save"}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     ),
 
     skills: () => (
-      <div
-        className="drawer_skills"
-        style={{
-          background: "#fff",
-          borderRadius: 8,
-          padding: 24,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div
-          style={{ display: "flex", alignItems: "center", marginBottom: 16 }}
-        >
-          <CheckCircleFilled style={{ color: "#00c853", marginRight: 8 }} />
-          <Title level={4} style={{ margin: 0 }}>
-            Skills
-          </Title>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <Text strong>Suggestions</Text>
-          <div style={{ marginTop: 12 }}>
-            {suggestions.map((skill) => (
-              <Tag
-                key={skill}
-                style={{
-                  borderStyle: "dashed",
-                  marginBottom: 8,
-                  borderRadius: 50,
-                  cursor: "pointer",
-                  fontSize: 13,
-                  padding: "7px 10px",
-                }}
-                onClick={() => handleAddSkill(skill)}
-              >
-                {skill}
-              </Tag>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ marginTop: 8, marginBottom: 12 }}>
-            {selectedSkills.map((skill) => (
-              <Tag
-                key={skill}
-                closable
-                onClose={() => handleRemoveSkill(skill)}
-                style={{
-                  marginBottom: 15,
-                  fontSize: 14,
-                  padding: "5px 10px",
-                  border: "none",
-                  backgroundColor: "#e9e0fe",
-                  color: "#5f2eea",
-                  borderRadius: 50,
-                }}
-              >
-                {skill}
-              </Tag>
-            ))}
-          </div>
-
-          <CommonInputField
-            label={"Skills"}
-            onPressEnter={handleCustomSkillAdd}
-            value={customSkill}
-            name={"Skills"}
-            onChange={(e) => {
-              setCustomSkill(e.target.value);
-              if (customSkillError) setCustomSkillError("");
-            }}
-            mandotary={true}
-            placeholder={"List your skills here, showcasing what you excel at."}
-            error={customSkillError}
-          />
-
-          <Button
-            type="primary"
+      <>
+        {detailsLoading ? (
+          <Skeleton active />
+        ) : (
+          <div
+            className="drawer_skills"
             style={{
-              marginTop: 20,
-              background: "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
+              background: "#fff",
+              borderRadius: 8,
+              padding: 24,
+              boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
             }}
-            onClick={handleSkillsSave}
           >
-            Add Skill
-          </Button>
-        </div>
-      </div>
-    ),
-
-    education: () => (
-      <div>
-        {showEducationForm && (
-          <>
-            <div className="form-group">
-              <CommonSelectField
-                label={"Qualification"}
-                name={"qualificaton"}
-                placeholder={"Select Qualification"}
-                value={qualificaton}
-                mandatory={true}
-                showSearch={true}
-                optionFilterProp={"lable"}
-                options={qualificationOptions}
-                onChange={(value) => {
-                  setQualification(value);
-                  setQualificationError(selectValidator(value));
-                }}
-                error={qualificatonError}
-              />
-            </div>
-
-            <div className="form-group">
-              <div className="form-group">
-                <CommonSelectField
-                  label={"Course"}
-                  name={"course"}
-                  placeholder={"Select Course"}
-                  mandatory={true}
-                  showSearch={true}
-                  optionFilterProp={"lable"}
-                  value={educationCourse}
-                  options={educationCourseOptions}
-                  onChange={(value) => {
-                    setEducationCourse(value);
-                    setEducationCourseError(selectValidator(value));
-                  }}
-                  error={educationCourseError}
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <CommonSelectField
-                label={"Specialization"}
-                name={"specialization"}
-                placeholder={"Select Specialization"}
-                mandatory={true}
-                value={specialization}
-                showSearch={true}
-                optionFilterProp={"lable"}
-                options={specializationOptions}
-                onChange={(value) => {
-                  setSpecialization(value);
-                  setSpecializationError(selectValidator(value));
-                }}
-                error={specializationError}
-              />
-            </div>
-
-            <div className="form-group">
-              <CommonSelectField
-                label={"Collage"}
-                name={"Collage"}
-                placeholder={"Select Collage"}
-                mandatory={true}
-                value={educationCollege}
-                showSearch={true}
-                optionFilterProp={"lable"}
-                options={collageOptions}
-                onChange={(value) => {
-                  setEducationCollege(value);
-                  setCollageError(selectValidator(value));
-                }}
-                error={collageError}
-              />
-            </div>
-
             <div
-              style={{ alignItems: "center", marginTop: 10 }}
-              className="form-row"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
             >
-              <div className="form-group">
-                <CommonSelectField
-                  value={educationStartDate}
-                  options={educationStartDateOptions}
-                  label="Start Year"
-                  name="startyear"
-                  mandatory={true}
-                  placeholder="Start Year"
-                  onChange={(value) => {
-                    setEducationStartDate(value);
-
-                    if (!value || value.trim() === "") {
-                      setEducationStartDateError(" is required");
-                    } else {
-                      setEducationStartDateError("");
-                    }
-                  }}
-                  error={educationStartDateError}
-                />
-              </div>
-
-              <div className="form-group">
-                <CommonSelectField
-                  value={educationEndDate}
-                  options={educationEndDateOptions}
-                  mandatory={true}
-                  label="End Year"
-                  name="endyear"
-                  placeholder="End Year"
-                  onChange={(value) => {
-                    setEducationEndDate(value);
-
-                    if (!value || value.trim() === "") {
-                      setEducationEndDateError(" is required");
-                    } else {
-                      setEducationEndDateError("");
-                    }
-                  }}
-                  error={educationEndDateError}
-                />
-              </div>
+              <CheckCircleFilled style={{ color: "#00c853", marginRight: 8 }} />
+              <Title level={4} style={{ margin: 0 }}>
+                Skills
+              </Title>
             </div>
 
-            <div className="form-group">
-              <CommonSelectField
-                label={"Course type"}
-                name={"coursetype"}
-                placeholder={"Select Course type"}
-                mandatory={true}
-                showSearch={true}
-                optionFilterProp={"lable"}
-                value={courseType}
-                options={courseTypeOptions}
-                onChange={(value) => {
-                  setCourseType(value);
-                  setCourseTypeError(selectValidator(value));
-                }}
-                error={courseTypeError}
-              />
-            </div>
-
-            <Row style={{ alignItems: "end", gap: 20 }}>
-              <Col lg={11}>
-                <div className="form-group">
-                  <CommonInputField
-                    name="percentage"
-                    label="Percentage"
-                    placeholder="Percentage"
-                    type="text"
-                    value={percentage}
-                    onChange={(e) => {
-                      setPercentage(e.target.value);
+            <div style={{ marginBottom: 16 }}>
+              <Text strong>Suggestions</Text>
+              <div style={{ marginTop: 12 }}>
+                {suggestions.map((skill) => (
+                  <Tag
+                    key={skill}
+                    style={{
+                      borderStyle: "dashed",
+                      marginBottom: 8,
+                      borderRadius: 50,
+                      cursor: "pointer",
+                      fontSize: 13,
+                      padding: "7px 10px",
                     }}
-                  />
-                </div>
-              </Col>
-              <Col lg={11}>
-                <div className="form-group">
-                  <CommonInputField
-                    name="cgpa"
-                    label="CGPA"
-                    placeholder="CGPA"
-                    type="text"
-                    value={cgpa}
-                    onChange={(e) => {
-                      setCgpa(e.target.value);
-                    }}
-                  />
-                </div>
-              </Col>
-            </Row>
-
-            <Row style={{ gap: 20, marginTop: 30 }}>
-              <Col lg={11}>
-                <div className="form-group">
-                  <CommonInputField
-                    name="rollnumber"
-                    label="Roll Number"
-                    placeholder="Roll Number"
-                    type="number"
-                    value={rollNumber}
-                    onChange={(e) => {
-                      setRollNumber(e.target.value);
-                    }}
-                  />
-                </div>
-              </Col>
-              <Col lg={11}>
-                <div className="form-group">
-                  <CommonSelectField
-                    label="Are you a Lateral Entry Student?"
-                    name="lateralstudent"
-                    placeholder="Lateral Entry"
-                    showSearch={true}
-                    options={[
-                      { value: "Yes", label: "Yes" },
-                      { value: "No", label: "No" },
-                    ]}
-                    value={lateral}
-                    optionFilterProp="label"
-                    onChange={handleLateralTypeChange}
-                  />
-                </div>
-              </Col>
-            </Row>
-            <div style={{ marginTop: 25 }} className="form-row">
-              <div style={{ textAlign: "left" }} className="save_btn">
-                {educationData ? (
-                  <Button
-                    type="danger"
-                    size="large"
-                    onClick={handleEducationDiscard}
-                    className="nav-btn discard-btn"
+                    onClick={() => handleAddSkill(skill)}
                   >
-                    Discard
-                    <HiMiniXMark style={{ fontSize: 22 }} />
-                  </Button>
-                ) : null}
-              </div>
-
-              <div style={{ textAlign: "-webkit-right" }} className="save_btn">
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={handleEducationSave}
-                  className="nav-btn next-btn"
-                >
-                  <MdFileDownloadDone
-                    style={{ fontSize: 22, marginRight: 6 }}
-                  />
-                  {educationData ? "Update" : "Save"}
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {!showEducationForm && (
-          <div className="education-details-container">
-            <div className="education-header">
-              <div className="header-contents">
-                <div className="header-icons">
-                  <MdSchool className="icon" />
-                </div>
-                <h3 className="header-titles">Education Details</h3>
-              </div>
-            </div>
-
-            <div className="education-content">
-              <Row gutter={[24, 30]}>
-                {[
-                  {
-                    label: "Qualification",
-                    value: qualificaton,
-                    icon: <MdOutlineSchool />,
-                  },
-                  {
-                    label: "Course",
-                    value: educationCourse,
-                    icon: <MdMenuBook />,
-                  },
-                  {
-                    label: "Specialization",
-                    value: specialization,
-                    icon: <MdStarOutline />,
-                  },
-
-                  {
-                    label: "College/University",
-                    value: educationCollege,
-                    icon: <MdLocationCity />,
-                  },
-                  {
-                    label: "Start Year",
-                    value: educationStartDate,
-                    icon: <MdDateRange />,
-                  },
-                  {
-                    label: "End Year",
-                    value: educationEndDate,
-                    icon: <MdEventAvailable />,
-                  },
-                  {
-                    label: "Course Type",
-                    value: courseType,
-                    icon: <MdCategory />,
-                  },
-                  {
-                    label: "Percentage",
-                    value: percentage || "N/A",
-                    icon: <MdPercent />,
-                  },
-                  {
-                    label: "CGPA",
-                    value: cgpa || "N/A",
-                    icon: <MdOutlineCalculate />,
-                  },
-                  {
-                    label: "Roll Number",
-                    value: rollNumber || "N/A",
-                    icon: <MdConfirmationNumber />,
-                  },
-                  {
-                    label: "Lateral Entry",
-                    value: lateral || "N/A",
-                    icon: <MdSwapHoriz />,
-                  },
-                ].map((item, index) => (
-                  <Col xs={24} sm={12} key={index}>
-                    <div className="education-detail-item">
-                      <div className="detail-icons">{item.icon}</div>
-                      <div className="detail-content">
-                        <div className="detail-label">{item.label}</div>
-                        <div className="detail-value">{item.value || "-"}</div>
-                      </div>
-                    </div>
-                  </Col>
+                    {skill}
+                  </Tag>
                 ))}
-              </Row>
+              </div>
             </div>
 
-            {/* Premium footer */}
-            <div className="education-footer">
-              <Popconfirm
-                title="Are you sure you want to delete your Education?"
-                onConfirm={handleDeleteEducation}
-                okText="Yes"
-                cancelText="No"
-              >
-                <Button
-                  type="primary"
-                  danger
-                  icon={<MdDeleteForever className="button-icon" />}
-                  className="delete-button"
-                >
-                  Delete Education
-                </Button>
-              </Popconfirm>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ marginTop: 8, marginBottom: 12 }}>
+                {selectedSkills.map((skill) => (
+                  <Tag
+                    key={skill}
+                    closable
+                    onClose={() => handleRemoveSkill(skill)}
+                    style={{
+                      marginBottom: 15,
+                      fontSize: 14,
+                      padding: "5px 10px",
+                      border: "none",
+                      backgroundColor: "#e9e0fe",
+                      color: "#5f2eea",
+                      borderRadius: 50,
+                    }}
+                  >
+                    {skill}
+                  </Tag>
+                ))}
+              </div>
+
+              <CommonInputField
+                label={"Skills"}
+                onPressEnter={handleCustomSkillAdd}
+                value={customSkill}
+                name={"Skills"}
+                onChange={(e) => {
+                  setCustomSkill(e.target.value);
+                  if (customSkillError) setCustomSkillError("");
+                }}
+                mandotary={true}
+                placeholder={
+                  "List your skills here, showcasing what you excel at."
+                }
+                error={customSkillError}
+              />
 
               <Button
                 type="primary"
-                icon={<MdEdit className="button-icon" />}
-                onClick={() => {
-                  setShowEducationForm(true);
+                style={{
+                  marginTop: 20,
+                  background:
+                    "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
                 }}
-                className="edit-button"
+                onClick={handleSkillsSave}
               >
-                Edit Education
+                Add Skill
               </Button>
             </div>
           </div>
         )}
-      </div>
+      </>
     ),
 
-    experience: () => (
-      <div>
-        {showWorkExpForm && (
-          <>
-            <div className="forexprience">
-              {companies.map(
-                (company, index) =>
-                  (editingCompanyId === null ||
-                    company.id === editingCompanyId) && (
-                    <div key={company.id} className="add-company-section">
-                      <div className="form-group">
-                        <CommonInputField
-                          label="Company name"
-                          mandotary={true}
-                          placeholder="Tech Corp Inc."
-                          value={company.workingCompanyName}
-                          error={company.workingCompanyNameError}
-                          onChange={(e) => {
-                            const updatedCompanies = [...companies];
-                            updatedCompanies[index].workingCompanyName =
-                              e.target.value;
-                            updatedCompanies[index].workingCompanyNameError =
-                              nameValidator(e.target.value);
-                            setCompanies(updatedCompanies);
-                          }}
-                        />
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <CommonInputField
-                            label="Job Title"
-                            mandotary={true}
-                            placeholder="Software Engineer"
-                            value={company.jobTitle}
-                            error={company.jobTitleError}
-                            onChange={(e) => {
-                              const updatedCompanies = [...companies];
-                              updatedCompanies[index].jobTitle = e.target.value;
-                              updatedCompanies[index].jobTitleError =
-                                nameValidator(e.target.value);
-                              setCompanies(updatedCompanies);
-                            }}
-                          />
-                        </div>
-                        <div className="form-group">
-                          <CommonInputField
-                            label="Designation"
-                            mandotary={true}
-                            placeholder="Senior Developer"
-                            value={company.designation}
-                            error={company.designationError}
-                            onChange={(e) => {
-                              const updatedCompanies = [...companies];
-                              updatedCompanies[index].designation =
-                                e.target.value;
-                              updatedCompanies[index].designationError =
-                                nameValidator(e.target.value);
-                              setCompanies(updatedCompanies);
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="form-row">
-                        <div className="form-group">
-                          <CommonSelectField
-                            label="Start Year"
-                            name="startYear"
-                            placeholder="Select Start Year"
-                            mandatory={true}
-                            value={company.workingStartDate}
-                            options={workingStartDateOptions}
-                            error={company.workingStartDateError}
-                            onChange={(value) => {
-                              const updatedCompanies = [...companies];
-                              updatedCompanies[index].workingStartDate = value;
-                              updatedCompanies[index].workingStartDateError =
-                                selectValidator(value);
-                              setCompanies(updatedCompanies);
-                            }}
-                          />
-                        </div>
-                        <div className="form-group">
-                          <CommonSelectField
-                            label="End Year"
-                            name="endYear"
-                            placeholder="Select End Year"
-                            mandatory={true}
-                            value={company.workingEndDate}
-                            options={workingEndDateOptions}
-                            error={company.workingEndDateError}
-                            onChange={(value) => {
-                              const updatedCompanies = [...companies];
-                              updatedCompanies[index].workingEndDate = value;
-                              updatedCompanies[index].workingEndDateError =
-                                selectValidator(value);
-                              setCompanies(updatedCompanies);
-                            }}
-                            disabled={company.currentlyWorking}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="form-row">
-                        <Checkbox
-                          checked={company.currentlyWorking}
-                          onChange={(e) => {
-                            const updatedCompanies = [...companies];
-                            updatedCompanies[index].currentlyWorking =
-                              e.target.checked;
-                            if (e.target.checked) {
-                              updatedCompanies[index].workingEndDate = "";
-                              updatedCompanies[index].workingEndDateError = "";
-                            }
-                            setCompanies(updatedCompanies);
-                          }}
-                        >
-                          Currently Working Here
-                        </Checkbox>
-                      </div>
-
-                      <div
-                        style={{ marginTop: 15, marginBottom: 20 }}
-                        className="form-row"
-                      >
-                        <div style={{ textAlign: "left" }} className="save_btn">
-                          <Button
-                            type="danger"
-                            size="large"
-                            onClick={handleWorkDiscard}
-                            className="nav-btn discard-btn"
-                          >
-                            Discard
-                            <HiMiniXMark style={{ fontSize: 22 }} />
-                          </Button>
-                        </div>
-                        <div
-                          style={{ textAlign: "-webkit-right" }}
-                          className="save_btn"
-                        >
-                          <Button
-                            type="primary"
-                            size="large"
-                            onClick={handleWorkExpSave}
-                            className="nav-btn next-btn"
-                          >
-                            {company.isNew ? "Save" : "Update"}
-                            <MdFileDownloadDone style={{ fontSize: 22 }} />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )
-              )}
-            </div>
-          </>
-        )}
-
-        {!showWorkExpForm && (
-          <div className="experience-preview">
-            {companies.length > 0 ? (
+    education: () => (
+      <>
+        {detailsLoading ? (
+          <Skeleton active />
+        ) : (
+          <div>
+            {showEducationForm && (
               <>
-                <div className="experience-summary-card">
-                  <div className="summary-header">
-                    <h3>
-                      <GiOfficeChair /> Experience Summary
-                    </h3>
+                <div className="form-group">
+                  <CommonSelectField
+                    label={"Qualification"}
+                    name={"qualificaton"}
+                    placeholder={"Select Qualification"}
+                    value={qualificaton}
+                    mandatory={true}
+                    showSearch={true}
+                    optionFilterProp={"lable"}
+                    options={qualificationOptions}
+                    onChange={(value) => {
+                      setQualification(value);
+                      setQualificationError(selectValidator(value));
+                    }}
+                    error={qualificatonError}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <div className="form-group">
+                    <CommonSelectField
+                      label={"Course"}
+                      name={"course"}
+                      placeholder={"Select Course"}
+                      mandatory={true}
+                      showSearch={true}
+                      optionFilterProp={"lable"}
+                      value={educationCourse}
+                      options={educationCourseOptions}
+                      onChange={(value) => {
+                        setEducationCourse(value);
+                        setEducationCourseError(selectValidator(value));
+                      }}
+                      error={educationCourseError}
+                    />
                   </div>
-                  <div className="summary-grid">
+                </div>
+
+                <div className="form-group">
+                  <CommonSelectField
+                    label={"Specialization"}
+                    name={"specialization"}
+                    placeholder={"Select Specialization"}
+                    mandatory={true}
+                    value={specialization}
+                    showSearch={true}
+                    optionFilterProp={"lable"}
+                    options={specializationOptions}
+                    onChange={(value) => {
+                      setSpecialization(value);
+                      setSpecializationError(selectValidator(value));
+                    }}
+                    error={specializationError}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <CommonSelectField
+                    label={"Collage"}
+                    name={"Collage"}
+                    placeholder={"Select Collage"}
+                    mandatory={true}
+                    value={educationCollege}
+                    showSearch={true}
+                    optionFilterProp={"lable"}
+                    options={collageOptions}
+                    onChange={(value) => {
+                      setEducationCollege(value);
+                      setCollageError(selectValidator(value));
+                    }}
+                    error={collageError}
+                  />
+                </div>
+
+                <div
+                  style={{ alignItems: "center", marginTop: 10 }}
+                  className="form-row"
+                >
+                  <div className="form-group">
+                    <CommonSelectField
+                      value={educationStartDate}
+                      options={educationStartDateOptions}
+                      label="Start Year"
+                      name="startyear"
+                      mandatory={true}
+                      placeholder="Start Year"
+                      onChange={(value) => {
+                        setEducationStartDate(value);
+
+                        if (!value || value.trim() === "") {
+                          setEducationStartDateError(" is required");
+                        } else {
+                          setEducationStartDateError("");
+                        }
+                      }}
+                      error={educationStartDateError}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <CommonSelectField
+                      value={educationEndDate}
+                      options={educationEndDateOptions}
+                      mandatory={true}
+                      label="End Year"
+                      name="endyear"
+                      placeholder="End Year"
+                      onChange={(value) => {
+                        setEducationEndDate(value);
+
+                        if (!value || value.trim() === "") {
+                          setEducationEndDateError(" is required");
+                        } else {
+                          setEducationEndDateError("");
+                        }
+                      }}
+                      error={educationEndDateError}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <CommonSelectField
+                    label={"Course type"}
+                    name={"coursetype"}
+                    placeholder={"Select Course type"}
+                    mandatory={true}
+                    showSearch={true}
+                    optionFilterProp={"lable"}
+                    value={courseType}
+                    options={courseTypeOptions}
+                    onChange={(value) => {
+                      setCourseType(value);
+                      setCourseTypeError(selectValidator(value));
+                    }}
+                    error={courseTypeError}
+                  />
+                </div>
+
+                <Row style={{ alignItems: "end", gap: 20 }}>
+                  <Col lg={11}>
+                    <div className="form-group">
+                      <CommonInputField
+                        name="percentage"
+                        label="Percentage"
+                        placeholder="Percentage"
+                        type="text"
+                        value={percentage}
+                        onChange={(e) => {
+                          setPercentage(e.target.value);
+                        }}
+                      />
+                    </div>
+                  </Col>
+                  <Col lg={11}>
+                    <div className="form-group">
+                      <CommonInputField
+                        name="cgpa"
+                        label="CGPA"
+                        placeholder="CGPA"
+                        type="text"
+                        value={cgpa}
+                        onChange={(e) => {
+                          setCgpa(e.target.value);
+                        }}
+                      />
+                    </div>
+                  </Col>
+                </Row>
+
+                <Row style={{ gap: 20, marginTop: 30 }}>
+                  <Col lg={11}>
+                    <div className="form-group">
+                      <CommonInputField
+                        name="rollnumber"
+                        label="Roll Number"
+                        placeholder="Roll Number"
+                        type="number"
+                        value={rollNumber}
+                        onChange={(e) => {
+                          setRollNumber(e.target.value);
+                        }}
+                      />
+                    </div>
+                  </Col>
+                  <Col lg={11}>
+                    <div className="form-group">
+                      <CommonSelectField
+                        label="Are you a Lateral Entry Student?"
+                        name="lateralstudent"
+                        placeholder="Lateral Entry"
+                        showSearch={true}
+                        options={[
+                          { value: "Yes", label: "Yes" },
+                          { value: "No", label: "No" },
+                        ]}
+                        value={lateral}
+                        optionFilterProp="label"
+                        onChange={handleLateralTypeChange}
+                      />
+                    </div>
+                  </Col>
+                </Row>
+                <div style={{ marginTop: 25 }} className="form-row">
+                  <div style={{ textAlign: "left" }} className="save_btn">
+                    {educationData ? (
+                      <Button
+                        type="danger"
+                        size="large"
+                        onClick={handleEducationDiscard}
+                        className="nav-btn discard-btn"
+                      >
+                        Discard
+                        <HiMiniXMark style={{ fontSize: 22 }} />
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  <div
+                    style={{ textAlign: "-webkit-right" }}
+                    className="save_btn"
+                  >
+                    <Button
+                      type="primary"
+                      size="large"
+                      onClick={handleEducationSave}
+                      className="nav-btn next-btn"
+                    >
+                      <MdFileDownloadDone
+                        style={{ fontSize: 22, marginRight: 6 }}
+                      />
+                      {educationData ? "Update" : "Save"}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!showEducationForm && (
+              <div className="education-details-container">
+                <div className="education-header">
+                  <div className="header-contents">
+                    <div className="header-icons">
+                      <MdSchool className="icon" />
+                    </div>
+                    <h3 className="header-titles">Education Details</h3>
+                  </div>
+                </div>
+
+                <div className="education-content">
+                  <Row gutter={[24, 30]}>
                     {[
                       {
-                        label: "Experience Type",
-                        value: experienceType,
+                        label: "Qualification",
+                        value: qualificaton,
                         icon: <MdOutlineSchool />,
                       },
                       {
-                        label: "Years of Experience",
-                        value: totalYearsExperience,
+                        label: "Course",
+                        value: educationCourse,
                         icon: <MdMenuBook />,
                       },
                       {
-                        label: "Months of Experience",
-                        value: totalMonthsExperience,
+                        label: "Specialization",
+                        value: specialization,
+                        icon: <MdStarOutline />,
+                      },
+
+                      {
+                        label: "College/University",
+                        value: educationCollege,
                         icon: <MdLocationCity />,
                       },
                       {
-                        label: "Location",
-                        value: location,
-                        icon: <IoLocationSharp />,
+                        label: "Start Year",
+                        value: educationStartDate,
+                        icon: <MdDateRange />,
+                      },
+                      {
+                        label: "End Year",
+                        value: educationEndDate,
+                        icon: <MdEventAvailable />,
+                      },
+                      {
+                        label: "Course Type",
+                        value: courseType,
+                        icon: <MdCategory />,
+                      },
+                      {
+                        label: "Percentage",
+                        value: percentage || "N/A",
+                        icon: <MdPercent />,
+                      },
+                      {
+                        label: "CGPA",
+                        value: cgpa || "N/A",
+                        icon: <MdOutlineCalculate />,
+                      },
+                      {
+                        label: "Roll Number",
+                        value: rollNumber || "N/A",
+                        icon: <MdConfirmationNumber />,
+                      },
+                      {
+                        label: "Lateral Entry",
+                        value: lateral || "N/A",
+                        icon: <MdSwapHoriz />,
                       },
                     ].map((item, index) => (
-                      <div className="summary-item" key={index}>
-                        <div className="icon-wrapper">{item.icon}</div>
-                        <div>
-                          <div className="item-label">{item.label}</div>
-                          <div className="item-value">{item.value || "-"}</div>
+                      <Col xs={24} sm={12} key={index}>
+                        <div className="education-detail-item">
+                          <div className="detail-icons">{item.icon}</div>
+                          <div className="detail-content">
+                            <div className="detail-label">{item.label}</div>
+                            <div className="detail-value">
+                              {item.value || "-"}
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      </Col>
                     ))}
-                  </div>
+                  </Row>
                 </div>
 
-                {companies.map((company) => (
-                  <motion.div
-                    key={company.id}
-                    className="project-card"
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: 0.05,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                    whileHover={{
-                      y: -6,
-                      transition: { duration: 0.3 },
-                    }}
+                {/* Premium footer */}
+                <div className="education-footer">
+                  <Popconfirm
+                    title="Are you sure you want to delete your Education?"
+                    onConfirm={handleDeleteEducation}
+                    okText="Yes"
+                    cancelText="No"
                   >
-                    <div className="card-content">
-                      <div className="card-header">
-                        <span
-                          className={
-                            company.currentlyWorking
-                              ? "currently-working-badge"
-                              : "project-type-badge"
-                          }
-                        >
-                          {company.currentlyWorking
-                            ? "Currently Working"
-                            : "Past Role"}
-                        </span>
-                        <div className="card-actions">
-                          <button
-                            onClick={() => {
-                              setEditingCompanyId(company.id);
-                              setShowWorkExpForm(true);
-                            }}
-                            className="icon-btn edit-btn"
-                          >
-                            <FiEdit size={16} />
-                          </button>
-                        </div>
-                      </div>
+                    <Button
+                      type="primary"
+                      danger
+                      icon={<MdDeleteForever className="button-icon" />}
+                      className="delete-button"
+                    >
+                      Delete Education
+                    </Button>
+                  </Popconfirm>
 
-                      <h3 className="project-title">
-                        {company.jobTitle || "Job Title"}
-                      </h3>
-
-                      <div className="project-meta">
-                        <div className="meta-item company">
-                          <FiBriefcase className="meta-icon" />
-                          <span>
-                            {company.workingCompanyName || "Company Name"}
-                          </span>
-                        </div>
-                        <div className="meta-item timeline">
-                          <MdOutlineWorkHistory className="meta-icon" />
-                          <span>
-                            {company.workingStartDate || "Start"} —{" "}
-                            {company.currentlyWorking
-                              ? "Present"
-                              : company.workingEndDate || "End"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="project-description">
-                        <p>
-                          <span style={{ color: "#5f2eea" }}>Designation:</span>{" "}
-                          {company.designation || "Designation"}
-                        </p>
-                      </div>
-
-                      <div className="card-footer">
-                        <Popconfirm
-                          title="Delete this experience?"
-                          onConfirm={() => handleDeleteCompanyWork(company.id)}
-                          okText="Yes"
-                          cancelText="No"
-                        >
-                          <button className="icon-btn delete-btn">
-                            <MdDeleteForever size={18} />
-                          </button>
-                        </Popconfirm>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </>
-            ) : (
-              <div className="empty-state">
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={
-                    <span style={{ color: "#666", fontSize: "1rem" }}>
-                      No work experience added yet
-                    </span>
-                  }
-                />
-                <Button
-                  type="primary"
-                  onClick={() => {
-                    setShowWorkExpForm(true);
-                    setCompanies([
-                      {
-                        id: Date.now(),
-                        isNew: true,
-                        jobTitle: "",
-                        workingCompanyName: "",
-                        designation: "",
-                        workingStartDate: "",
-                        workingEndDate: "",
-                        currentlyWorking: false,
-                      },
-                    ]);
-                  }}
-                  style={{ marginTop: 16 }}
-                >
-                  Add Work Experience
-                </Button>
-              </div>
-            )}
-
-            {companies.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "end",
-                  marginTop: 20,
-                }}
-              >
-                <Button
-                  className="add-company-btn"
-                  type="primary"
-                  onClick={handleAddCompany}
-                  icon={<PlusOutlined />}
-                >
-                  Add Company
-                </Button>
+                  <Button
+                    type="primary"
+                    icon={<MdEdit className="button-icon" />}
+                    onClick={() => {
+                      setShowEducationForm(true);
+                    }}
+                    className="edit-button"
+                  >
+                    Edit Education
+                  </Button>
+                </div>
               </div>
             )}
           </div>
         )}
-      </div>
+      </>
+    ),
+
+    experience: () => (
+      <>
+        {detailsLoading ? (
+          <Skeleton active />
+        ) : (
+          <div>
+            {showWorkExpForm && (
+              <>
+                <div className="forexprience">
+                  {companies.map(
+                    (company, index) =>
+                      (editingCompanyId === null ||
+                        company.id === editingCompanyId) && (
+                        <div key={company.id} className="add-company-section">
+                          <div className="form-group">
+                            <CommonInputField
+                              label="Company name"
+                              mandotary={true}
+                              placeholder="Tech Corp Inc."
+                              value={company.workingCompanyName}
+                              error={company.workingCompanyNameError}
+                              onChange={(e) => {
+                                const updatedCompanies = [...companies];
+                                updatedCompanies[index].workingCompanyName =
+                                  e.target.value;
+                                updatedCompanies[
+                                  index
+                                ].workingCompanyNameError = nameValidator(
+                                  e.target.value
+                                );
+                                setCompanies(updatedCompanies);
+                              }}
+                            />
+                          </div>
+
+                          <div className="form-row">
+                            <div className="form-group">
+                              <CommonInputField
+                                label="Job Title"
+                                mandotary={true}
+                                placeholder="Software Engineer"
+                                value={company.jobTitle}
+                                error={company.jobTitleError}
+                                onChange={(e) => {
+                                  const updatedCompanies = [...companies];
+                                  updatedCompanies[index].jobTitle =
+                                    e.target.value;
+                                  updatedCompanies[index].jobTitleError =
+                                    nameValidator(e.target.value);
+                                  setCompanies(updatedCompanies);
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <CommonInputField
+                                label="Designation"
+                                mandotary={true}
+                                placeholder="Senior Developer"
+                                value={company.designation}
+                                error={company.designationError}
+                                onChange={(e) => {
+                                  const updatedCompanies = [...companies];
+                                  updatedCompanies[index].designation =
+                                    e.target.value;
+                                  updatedCompanies[index].designationError =
+                                    nameValidator(e.target.value);
+                                  setCompanies(updatedCompanies);
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="form-row">
+                            <div className="form-group">
+                              <CommonSelectField
+                                label="Start Year"
+                                name="startYear"
+                                placeholder="Select Start Year"
+                                mandatory={true}
+                                value={company.workingStartDate}
+                                options={workingStartDateOptions}
+                                error={company.workingStartDateError}
+                                onChange={(value) => {
+                                  const updatedCompanies = [...companies];
+                                  updatedCompanies[index].workingStartDate =
+                                    value;
+                                  updatedCompanies[
+                                    index
+                                  ].workingStartDateError =
+                                    selectValidator(value);
+                                  setCompanies(updatedCompanies);
+                                }}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <CommonSelectField
+                                label="End Year"
+                                name="endYear"
+                                placeholder="Select End Year"
+                                mandatory={true}
+                                value={company.workingEndDate}
+                                options={workingEndDateOptions}
+                                error={company.workingEndDateError}
+                                onChange={(value) => {
+                                  const updatedCompanies = [...companies];
+                                  updatedCompanies[index].workingEndDate =
+                                    value;
+                                  updatedCompanies[index].workingEndDateError =
+                                    selectValidator(value);
+                                  setCompanies(updatedCompanies);
+                                }}
+                                disabled={company.currentlyWorking}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="form-row">
+                            <Checkbox
+                              checked={company.currentlyWorking}
+                              onChange={(e) => {
+                                const updatedCompanies = [...companies];
+                                updatedCompanies[index].currentlyWorking =
+                                  e.target.checked;
+                                if (e.target.checked) {
+                                  updatedCompanies[index].workingEndDate = "";
+                                  updatedCompanies[index].workingEndDateError =
+                                    "";
+                                }
+                                setCompanies(updatedCompanies);
+                              }}
+                            >
+                              Currently Working Here
+                            </Checkbox>
+                          </div>
+
+                          <div
+                            style={{ marginTop: 15, marginBottom: 20 }}
+                            className="form-row"
+                          >
+                            <div
+                              style={{ textAlign: "left" }}
+                              className="save_btn"
+                            >
+                              <Button
+                                type="danger"
+                                size="large"
+                                onClick={handleWorkDiscard}
+                                className="nav-btn discard-btn"
+                              >
+                                Discard
+                                <HiMiniXMark style={{ fontSize: 22 }} />
+                              </Button>
+                            </div>
+                            <div
+                              style={{ textAlign: "-webkit-right" }}
+                              className="save_btn"
+                            >
+                              <Button
+                                type="primary"
+                                size="large"
+                                onClick={handleWorkExpSave}
+                                className="nav-btn next-btn"
+                              >
+                                {company.isNew ? "Save" : "Update"}
+                                <MdFileDownloadDone style={{ fontSize: 22 }} />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                  )}
+                </div>
+              </>
+            )}
+
+            {!showWorkExpForm && (
+              <div className="experience-preview">
+                {companies.length > 0 ? (
+                  <>
+                    <div className="experience-summary-card">
+                      <div className="summary-header">
+                        <h3>
+                          <GiOfficeChair /> Experience Summary
+                        </h3>
+                      </div>
+                      <div className="summary-grid">
+                        {[
+                          {
+                            label: "Experience Type",
+                            value: experienceType,
+                            icon: <MdOutlineSchool />,
+                          },
+                          {
+                            label: "Years of Experience",
+                            value: totalYearsExperience,
+                            icon: <MdMenuBook />,
+                          },
+                          {
+                            label: "Months of Experience",
+                            value: totalMonthsExperience,
+                            icon: <MdLocationCity />,
+                          },
+                          {
+                            label: "Location",
+                            value: location,
+                            icon: <IoLocationSharp />,
+                          },
+                        ].map((item, index) => (
+                          <div className="summary-item" key={index}>
+                            <div className="icon-wrapper">{item.icon}</div>
+                            <div>
+                              <div className="item-label">{item.label}</div>
+                              <div className="item-value">
+                                {item.value || "-"}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {companies.map((company) => (
+                      <motion.div
+                        key={company.id}
+                        className="project-card"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{
+                          duration: 0.6,
+                          delay: 0.05,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        whileHover={{
+                          y: -6,
+                          transition: { duration: 0.3 },
+                        }}
+                      >
+                        <div className="card-content">
+                          <div className="card-header">
+                            <span
+                              className={
+                                company.currentlyWorking
+                                  ? "currently-working-badge"
+                                  : "project-type-badge"
+                              }
+                            >
+                              {company.currentlyWorking
+                                ? "Currently Working"
+                                : "Past Role"}
+                            </span>
+                            <div className="card-actions">
+                              <button
+                                onClick={() => {
+                                  setEditingCompanyId(company.id);
+                                  setShowWorkExpForm(true);
+                                }}
+                                className="icon-btn edit-btn"
+                              >
+                                <FiEdit size={16} />
+                              </button>
+                            </div>
+                          </div>
+
+                          <h3 className="project-title">
+                            {company.jobTitle || "Job Title"}
+                          </h3>
+
+                          <div className="project-meta">
+                            <div className="meta-item company">
+                              <FiBriefcase className="meta-icon" />
+                              <span>
+                                {company.workingCompanyName || "Company Name"}
+                              </span>
+                            </div>
+                            <div className="meta-item timeline">
+                              <MdOutlineWorkHistory className="meta-icon" />
+                              <span>
+                                {company.workingStartDate || "Start"} —{" "}
+                                {company.currentlyWorking
+                                  ? "Present"
+                                  : company.workingEndDate || "End"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="project-description">
+                            <p>
+                              <span style={{ color: "#5f2eea" }}>
+                                Designation:
+                              </span>{" "}
+                              {company.designation || "Designation"}
+                            </p>
+                          </div>
+
+                          <div className="card-footer">
+                            <Popconfirm
+                              title="Delete this experience?"
+                              onConfirm={() =>
+                                handleDeleteCompanyWork(company.id)
+                              }
+                              okText="Yes"
+                              cancelText="No"
+                            >
+                              <button className="icon-btn delete-btn">
+                                <MdDeleteForever size={18} />
+                              </button>
+                            </Popconfirm>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="empty-state">
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={
+                        <span style={{ color: "#666", fontSize: "1rem" }}>
+                          No work experience added yet
+                        </span>
+                      }
+                    />
+                    <Button
+                      type="primary"
+                      onClick={() => {
+                        setShowWorkExpForm(true);
+                        setCompanies([
+                          {
+                            id: Date.now(),
+                            isNew: true,
+                            jobTitle: "",
+                            workingCompanyName: "",
+                            designation: "",
+                            workingStartDate: "",
+                            workingEndDate: "",
+                            currentlyWorking: false,
+                          },
+                        ]);
+                      }}
+                      style={{ marginTop: 16 }}
+                    >
+                      Add Work Experience
+                    </Button>
+                  </div>
+                )}
+
+                {companies.length > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "end",
+                      marginTop: 20,
+                    }}
+                  >
+                    <Button
+                      className="add-company-btn"
+                      type="primary"
+                      onClick={handleAddCompany}
+                      icon={<PlusOutlined />}
+                    >
+                      Add Company
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </>
     ),
 
     projects: () => (
-      <div>
-        <div>
-          {projectsList.length > 0 && !showForm ? (
-            <>
-              <div className="projects-container">
-                <div className="projects-header">
-                  <Button
-                    type="text"
-                    onClick={handleAddNewProject}
-                    className="add-project-btn"
-                    icon={<FiPlusCircle />}
-                  >
-                    Add New Project
-                  </Button>
-                  <div className="projects-header-decoration"></div>
-                </div>
-
-                <div className="projects-mosaic">
-                  {projectsList.map((proj, idx) => (
-                    <motion.div
-                      key={idx}
-                      className="project-card"
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{
-                        duration: 0.6,
-                        delay: idx * 0.05,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                      whileHover={{
-                        y: -6,
-                        transition: { duration: 0.3 },
-                      }}
-                    >
-                      <div className="card-glow"></div>
-                      <div className="card-content">
-                        <div className="card-header">
-                          <span className="project-type-badge">
-                            {proj.project_type}
-                            <span className="badge-accent"></span>
-                          </span>
-                          <div className="card-actions">
-                            <button
-                              className="icon-btn edit-btn"
-                              onClick={() => {
-                                setProjectData(proj);
-                                setShowForm(true);
-                              }}
-                            >
-                              <FiEdit size={16} />
-                            </button>
-                          </div>
-                        </div>
-
-                        <h3 className="project-title">
-                          <span className="title-text">
-                            {proj.project_title}
-                          </span>
-                          <span className="title-underline"></span>
-                        </h3>
-
-                        <div className="project-meta">
-                          <div className="meta-item company">
-                            <FiBriefcase className="meta-icon" />
-                            <span>{proj.company_name}</span>
-                          </div>
-                          <div className="meta-item timeline">
-                            <FiCalendar className="meta-icon" />
-                            <span>
-                              {proj.start_date} — {proj.end_date}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="project-description">
-                          <p>{proj.description}</p>
-                        </div>
-
-                        <div className="card-footer">
-                          <Popconfirm
-                            title="Delete this project?"
-                            onConfirm={() => handleDeleteCompany(proj.id)}
-                            okText="Confirm"
-                            cancelText="Cancel"
-                            overlayClassName="popconfirm-overlay"
-                          >
-                            <button className="icon-btn delete-btn">
-                              <MdDeleteForever size={18} />
-                            </button>
-                          </Popconfirm>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            showForm && (
-              <div>
-                <div>
-                  {
-                    <>
-                      <div className="form-group">
-                        <CommonInputField
-                          name="companyName"
-                          label="Company Name"
-                          mandotary={true}
-                          placeholder="Company Name"
-                          type="text"
-                          value={companyName}
-                          onChange={(e) => {
-                            setCompanyName(e.target.value);
-                            setCompanyNameError(nameValidator(e.target.value));
-                          }}
-                          error={companyNameError}
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <CommonInputField
-                          name="projectname"
-                          label="Project Name"
-                          mandotary={true}
-                          placeholder="Project Name"
-                          type="text"
-                          value={project}
-                          onChange={(e) => {
-                            setProject(e.target.value);
-                            setProjectError(nameValidator(e.target.value));
-                          }}
-                          error={projectError}
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <Form.Item
-                          layout="vertical"
-                          label={
-                            <span style={{ fontWeight: 500 }}>
-                              Project Type
-                            </span>
-                          }
-                          name="projecttype"
-                          required
-                        >
-                          <div className="job_nature">
-                            <button
-                              type="button"
-                              className={
-                                activeButton === "Full Time"
-                                  ? "job_nature_button_active"
-                                  : "job_nature_button"
-                              }
-                              onClick={() => {
-                                handleProjectTypeClick("Full Time");
-                                setProjectType("Full Time");
-                                setProjectTypeError("");
-                              }}
-                            >
-                              Full Time
-                            </button>
-
-                            <button
-                              type="button"
-                              className={
-                                activeButton === "Part Time"
-                                  ? "job_nature_button_active"
-                                  : "job_nature_button"
-                              }
-                              onClick={() => {
-                                handleProjectTypeClick("Part Time");
-                                setProjectType("Part Time");
-                                setProjectTypeError("");
-                              }}
-                            >
-                              Part Time
-                            </button>
-
-                            <button
-                              type="button"
-                              className={
-                                activeButton === "Freelance"
-                                  ? "job_nature_button_active"
-                                  : "job_nature_button"
-                              }
-                              onClick={() => {
-                                handleProjectTypeClick("Freelance");
-                                setProjectType("Freelance");
-                                setProjectTypeError("");
-                              }}
-                            >
-                              Freelance
-                            </button>
-                          </div>
-                          {projectTypeError && (
-                            <div
-                              style={{
-                                color: "red",
-                                marginTop: 6,
-                                fontSize: 13,
-                              }}
-                            >
-                              Project type {projectTypeError}
-                            </div>
-                          )}
-                        </Form.Item>
-                      </div>
-
-                      <div
-                        style={{ alignItems: "center", marginTop: 15 }}
-                        className="form-row"
+      <>
+        {detailsLoading ? (
+          <Skeleton active />
+        ) : (
+          <div>
+            <div>
+              {projectsList.length > 0 && !showForm ? (
+                <>
+                  <div className="projects-container">
+                    <div className="projects-header">
+                      <Button
+                        type="text"
+                        onClick={handleAddNewProject}
+                        className="add-project-btn"
+                        icon={<FiPlusCircle />}
                       >
-                        <div className="form-group">
-                          <CommonDatePicker
-                            value={projectStartDate}
-                            label="Start Date"
-                            name="enddate"
-                            placeholder="Start Date"
-                            onChange={(value) => {
-                              setProjectStartDate(value);
+                        Add New Project
+                      </Button>
+                      <div className="projects-header-decoration"></div>
+                    </div>
 
-                              if (!value || value.trim() === "") {
-                                setProjectStartDateError(" is required");
-                              } else {
-                                setProjectStartDateError("");
-                              }
-                            }}
-                            error={projectStartDateError}
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <CommonDatePicker
-                            value={projectEndDate}
-                            label="End Date"
-                            name="enddate"
-                            placeholder="End Date"
-                            onChange={(value) => {
-                              setProjectEndDate(value);
-
-                              if (!value || value.trim() === "") {
-                                setProjectEndDateError(" is required");
-                              } else {
-                                setProjectEndDateError("");
-                              }
-                            }}
-                            error={projectEndDateError}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="form-group">
-                        <CommonTextArea
-                          label={"Project Description"}
-                          placeholder={"Enter your description"}
-                          mandatory={true}
-                          name={"description"}
-                          value={projectDescription}
-                          onChange={(e) => {
-                            setProjectDescription(e.target.value);
-                            setProjectDescriptionError(
-                              descriptionValidator(e.target.value)
-                            );
+                    <div className="projects-mosaic">
+                      {projectsList.map((proj, idx) => (
+                        <motion.div
+                          key={idx}
+                          className="project-card"
+                          initial={{ opacity: 0, scale: 0.98 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{
+                            duration: 0.6,
+                            delay: idx * 0.05,
+                            ease: [0.22, 1, 0.36, 1],
                           }}
-                          error={projectDescriptionError}
-                        />
-                      </div>
-                      <div className="form-row">
-                        <div style={{ textAlign: "left" }} className="save_btn">
-                          <Button
-                            type="danger"
-                            size="large"
-                            onClick={handleProjectDiscard}
-                            className="nav-btn discard-btn"
-                          >
-                            Discard
-                            <HiMiniXMark style={{ fontSize: 22 }} />
-                          </Button>
-                        </div>
-                        <div
-                          style={{ textAlign: "-webkit-right" }}
-                          className="save_btn"
+                          whileHover={{
+                            y: -6,
+                            transition: { duration: 0.3 },
+                          }}
                         >
-                          <Button
-                            type="primary"
-                            size="large"
-                            onClick={handleProjectSave}
-                            className="nav-btn next-btn"
-                          >
-                            {projectData ? "Update" : "Save"}
-                          </Button>
-                        </div>
-                      </div>
-                    </>
-                  }
-                </div>
-              </div>
-            )
-          )}
+                          <div className="card-glow"></div>
+                          <div className="card-content">
+                            <div className="card-header">
+                              <span className="project-type-badge">
+                                {proj.project_type}
+                                <span className="badge-accent"></span>
+                              </span>
+                              <div className="card-actions">
+                                <button
+                                  className="icon-btn edit-btn"
+                                  onClick={() => {
+                                    setProjectData(proj);
+                                    setShowForm(true);
+                                  }}
+                                >
+                                  <FiEdit size={16} />
+                                </button>
+                              </div>
+                            </div>
 
-          {/* ✅ When all projects are deleted, show this as fallback */}
-          {projectsList.length === 0 && !showForm && (
-            <div style={{ marginTop: 20 }}>
-              <Button type="dashed" onClick={handleAddNewProject}>
-                + Add Project
-              </Button>
+                            <h3 className="project-title">
+                              <span className="title-text">
+                                {proj.project_title}
+                              </span>
+                              <span className="title-underline"></span>
+                            </h3>
+
+                            <div className="project-meta">
+                              <div className="meta-item company">
+                                <FiBriefcase className="meta-icon" />
+                                <span>{proj.company_name}</span>
+                              </div>
+                              <div className="meta-item timeline">
+                                <FiCalendar className="meta-icon" />
+                                <span>
+                                  {proj.start_date} — {proj.end_date}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="project-description">
+                              <p>{proj.description}</p>
+                            </div>
+
+                            <div className="card-footer">
+                              <Popconfirm
+                                title="Delete this project?"
+                                onConfirm={() => handleDeleteCompany(proj.id)}
+                                okText="Confirm"
+                                cancelText="Cancel"
+                                overlayClassName="popconfirm-overlay"
+                              >
+                                <button className="icon-btn delete-btn">
+                                  <MdDeleteForever size={18} />
+                                </button>
+                              </Popconfirm>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                showForm && (
+                  <div>
+                    <div>
+                      {
+                        <>
+                          <div className="form-group">
+                            <CommonInputField
+                              name="companyName"
+                              label="Company Name"
+                              mandotary={true}
+                              placeholder="Company Name"
+                              type="text"
+                              value={companyName}
+                              onChange={(e) => {
+                                setCompanyName(e.target.value);
+                                setCompanyNameError(
+                                  nameValidator(e.target.value)
+                                );
+                              }}
+                              error={companyNameError}
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <CommonInputField
+                              name="projectname"
+                              label="Project Name"
+                              mandotary={true}
+                              placeholder="Project Name"
+                              type="text"
+                              value={project}
+                              onChange={(e) => {
+                                setProject(e.target.value);
+                                setProjectError(nameValidator(e.target.value));
+                              }}
+                              error={projectError}
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <Form.Item
+                              layout="vertical"
+                              label={
+                                <span style={{ fontWeight: 500 }}>
+                                  Project Type
+                                </span>
+                              }
+                              name="projecttype"
+                              required
+                            >
+                              <div className="job_nature">
+                                <button
+                                  type="button"
+                                  className={
+                                    activeButton === "Full Time"
+                                      ? "job_nature_button_active"
+                                      : "job_nature_button"
+                                  }
+                                  onClick={() => {
+                                    handleProjectTypeClick("Full Time");
+                                    setProjectType("Full Time");
+                                    setProjectTypeError("");
+                                  }}
+                                >
+                                  Full Time
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className={
+                                    activeButton === "Part Time"
+                                      ? "job_nature_button_active"
+                                      : "job_nature_button"
+                                  }
+                                  onClick={() => {
+                                    handleProjectTypeClick("Part Time");
+                                    setProjectType("Part Time");
+                                    setProjectTypeError("");
+                                  }}
+                                >
+                                  Part Time
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className={
+                                    activeButton === "Freelance"
+                                      ? "job_nature_button_active"
+                                      : "job_nature_button"
+                                  }
+                                  onClick={() => {
+                                    handleProjectTypeClick("Freelance");
+                                    setProjectType("Freelance");
+                                    setProjectTypeError("");
+                                  }}
+                                >
+                                  Freelance
+                                </button>
+                              </div>
+                              {projectTypeError && (
+                                <div
+                                  style={{
+                                    color: "red",
+                                    marginTop: 6,
+                                    fontSize: 13,
+                                  }}
+                                >
+                                  Project type {projectTypeError}
+                                </div>
+                              )}
+                            </Form.Item>
+                          </div>
+
+                          <div
+                            style={{ alignItems: "center", marginTop: 15 }}
+                            className="form-row"
+                          >
+                            <div className="form-group">
+                              <CommonDatePicker
+                                value={projectStartDate}
+                                label="Start Date"
+                                name="enddate"
+                                placeholder="Start Date"
+                                onChange={(value) => {
+                                  setProjectStartDate(value);
+
+                                  if (!value || value.trim() === "") {
+                                    setProjectStartDateError(" is required");
+                                  } else {
+                                    setProjectStartDateError("");
+                                  }
+                                }}
+                                error={projectStartDateError}
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <CommonDatePicker
+                                value={projectEndDate}
+                                label="End Date"
+                                name="enddate"
+                                placeholder="End Date"
+                                onChange={(value) => {
+                                  setProjectEndDate(value);
+
+                                  if (!value || value.trim() === "") {
+                                    setProjectEndDateError(" is required");
+                                  } else {
+                                    setProjectEndDateError("");
+                                  }
+                                }}
+                                error={projectEndDateError}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="form-group">
+                            <CommonTextArea
+                              label={"Project Description"}
+                              placeholder={"Enter your description"}
+                              mandatory={true}
+                              name={"description"}
+                              value={projectDescription}
+                              onChange={(e) => {
+                                setProjectDescription(e.target.value);
+                                setProjectDescriptionError(
+                                  descriptionValidator(e.target.value)
+                                );
+                              }}
+                              error={projectDescriptionError}
+                            />
+                          </div>
+                          <div className="form-row">
+                            <div
+                              style={{ textAlign: "left" }}
+                              className="save_btn"
+                            >
+                              <Button
+                                type="danger"
+                                size="large"
+                                onClick={handleProjectDiscard}
+                                className="nav-btn discard-btn"
+                              >
+                                Discard
+                                <HiMiniXMark style={{ fontSize: 22 }} />
+                              </Button>
+                            </div>
+                            <div
+                              style={{ textAlign: "-webkit-right" }}
+                              className="save_btn"
+                            >
+                              <Button
+                                type="primary"
+                                size="large"
+                                onClick={handleProjectSave}
+                                className="nav-btn next-btn"
+                              >
+                                {projectData ? "Update" : "Save"}
+                              </Button>
+                            </div>
+                          </div>
+                        </>
+                      }
+                    </div>
+                  </div>
+                )
+              )}
+
+              {/* ✅ When all projects are deleted, show this as fallback */}
+              {projectsList.length === 0 && !showForm && (
+                <div style={{ marginTop: 20 }}>
+                  <Button type="dashed" onClick={handleAddNewProject}>
+                    + Add Project
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </>
     ),
 
     sociallinks: () => (
-      <div>
-        <div style={{ alignItems: "end" }} className="form-row">
-          <div className="form-group">
-            <CommonInputField
-              name="Linkedin"
-              label="Linkedin"
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Linkedin}
-              onChange={(e) =>
-                handleSocialLinksSave("Linkedin", e.target.value)
-              }
-              error={socialLinkErrors.Linkedin}
-            />
-          </div>
-          <div className="form-group">
-            <CommonInputField
-              name="Facebook"
-              label="Facebook"
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Facebook}
-              onChange={(e) =>
-                handleSocialLinksSave("Facebook", e.target.value)
-              }
-              error={socialLinkErrors.Facebook}
-            />
-          </div>
-        </div>
+      <>
+        {detailsLoading ? (
+          <Skeleton active />
+        ) : (
+          <div>
+            <div style={{ alignItems: "end" }} className="form-row">
+              <div className="form-group">
+                <CommonInputField
+                  name="Linkedin"
+                  label="Linkedin"
+                  placeholder="Add link"
+                  type="text"
+                  value={socialLinks.Linkedin}
+                  onChange={(e) =>
+                    handleSocialLinksSave("Linkedin", e.target.value)
+                  }
+                  error={socialLinkErrors.Linkedin}
+                />
+              </div>
+              <div className="form-group">
+                <CommonInputField
+                  name="Facebook"
+                  label="Facebook"
+                  placeholder="Add link"
+                  type="text"
+                  value={socialLinks.Facebook}
+                  onChange={(e) =>
+                    handleSocialLinksSave("Facebook", e.target.value)
+                  }
+                  error={socialLinkErrors.Facebook}
+                />
+              </div>
+            </div>
 
-        <div style={{ alignItems: "end", marginTop: 20 }} className="form-row">
-          <div className="form-group">
-            <CommonInputField
-              name="Instagram"
-              label="Instagram"
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Instagram}
-              onChange={(e) =>
-                handleSocialLinksSave("Instagram", e.target.value)
-              }
-              error={socialLinkErrors.Instagram}
-            />
-          </div>
-          <div className="form-group">
-            <CommonInputField
-              name="Twitter"
-              label="Twitter"
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Twitter}
-              error={socialLinkErrors.Twitter}
-              onChange={(e) => handleSocialLinksSave("Twitter", e.target.value)}
-            />
-          </div>
-        </div>
+            <div
+              style={{ alignItems: "end", marginTop: 20 }}
+              className="form-row"
+            >
+              <div className="form-group">
+                <CommonInputField
+                  name="Instagram"
+                  label="Instagram"
+                  placeholder="Add link"
+                  type="text"
+                  value={socialLinks.Instagram}
+                  onChange={(e) =>
+                    handleSocialLinksSave("Instagram", e.target.value)
+                  }
+                  error={socialLinkErrors.Instagram}
+                />
+              </div>
+              <div className="form-group">
+                <CommonInputField
+                  name="Twitter"
+                  label="Twitter"
+                  placeholder="Add link"
+                  type="text"
+                  value={socialLinks.Twitter}
+                  error={socialLinkErrors.Twitter}
+                  onChange={(e) =>
+                    handleSocialLinksSave("Twitter", e.target.value)
+                  }
+                />
+              </div>
+            </div>
 
-        <div style={{ alignItems: "end", marginTop: 20 }} className="form-row">
-          <div className="form-group">
-            <CommonInputField
-              name="Dribbble"
-              label="Dribbble"
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Dribbble}
-              error={socialLinkErrors.Dribbble}
-              onChange={(e) =>
-                handleSocialLinksSave("Dribbble", e.target.value)
-              }
-            />
-          </div>
-          <div className="form-group">
-            <CommonInputField
-              name="Behance"
-              label="Behance"
-              placeholder="Add link"
-              type="text"
-              value={socialLinks.Behance}
-              error={socialLinkErrors.Behance}
-              onChange={(e) => handleSocialLinksSave("Behance", e.target.value)}
-            />
-          </div>
-        </div>
+            <div
+              style={{ alignItems: "end", marginTop: 20 }}
+              className="form-row"
+            >
+              <div className="form-group">
+                <CommonInputField
+                  name="Dribbble"
+                  label="Dribbble"
+                  placeholder="Add link"
+                  type="text"
+                  value={socialLinks.Dribbble}
+                  error={socialLinkErrors.Dribbble}
+                  onChange={(e) =>
+                    handleSocialLinksSave("Dribbble", e.target.value)
+                  }
+                />
+              </div>
+              <div className="form-group">
+                <CommonInputField
+                  name="Behance"
+                  label="Behance"
+                  placeholder="Add link"
+                  type="text"
+                  value={socialLinks.Behance}
+                  error={socialLinkErrors.Behance}
+                  onChange={(e) =>
+                    handleSocialLinksSave("Behance", e.target.value)
+                  }
+                />
+              </div>
+            </div>
 
-        <div
-          style={{ textAlign: "-webkit-right", marginTop: 20 }}
-          className="save_btn"
-        >
-          <Button
-            type="primary"
-            size="large"
-            className="nav-btn next-btn"
-            onClick={handleAddSocialLinks}
-          >
-            Save Links
-          </Button>
-        </div>
-      </div>
+            <div
+              style={{ textAlign: "-webkit-right", marginTop: 20 }}
+              className="save_btn"
+            >
+              <Button
+                type="primary"
+                size="large"
+                className="nav-btn next-btn"
+                onClick={handleAddSocialLinks}
+              >
+                Save Links
+              </Button>
+            </div>
+          </div>
+        )}
+      </>
     ),
   };
   //////////////////////////////////////////////////
@@ -3609,87 +3710,120 @@ export default function MainProfile() {
               alignItems: "center",
             }}
           >
-            <div
-              className="profile-header-left"
-              style={{ display: "flex", alignItems: "center" }}
-            >
-              <div
-                style={{
-                  position: "relative",
-                  display: "inline-block",
-                  border: "1px solid #cfcfcf",
-                  borderRadius: "50%",
-                  padding: "7px",
-                }}
-              >
-                <Avatar size={90} src={profileImage || defaultAvatar} />
-
-                <Upload
-                  showUploadList={false}
-                  beforeUpload={() => false}
-                  onChange={handleUpload}
+            {isLoading ? (
+              <Skeleton avatar paragraph={{ rows: 2 }} active />
+            ) : (
+              <>
+                <div
+                  className="profile-header-left"
+                  style={{ display: "flex", alignItems: "center" }}
                 >
-                  <Button
-                    icon={<UploadOutlined />}
-                    size="small"
+                  <div
                     style={{
-                      position: "absolute",
-                      bottom: 0,
-                      right: 0,
+                      position: "relative",
+                      display: "inline-block",
+                      border: "1px solid #cfcfcf",
                       borderRadius: "50%",
-                      padding: "4px 2px",
-                      fontSize: 12,
-                      backgroundColor: "#fff",
-                      boxShadow: "0 0 4px rgba(0,0,0,0.1)",
+                      padding: "7px",
                     }}
-                  />
-                </Upload>
+                  >
+                    <Avatar size={90} src={profileImage || defaultAvatar} />
 
-                {/* Remove Button */}
-                {profileImage !== defaultAvatar && (
-                  <Button
-                    icon={<DeleteOutlined />}
-                    size="small"
-                    danger
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      right: "0px",
-                      borderRadius: "50%",
-                      padding: "4px 2px",
-                      fontSize: 12,
-                      backgroundColor: "#fff",
-                      boxShadow: "0 0 4px rgba(0,0,0,0.1)",
-                    }}
-                    onClick={handleRemove}
-                  />
-                )}
-              </div>
+                    <Upload
+                      showUploadList={false}
+                      beforeUpload={() => false}
+                      onChange={handleUpload}
+                    >
+                      <Button
+                        icon={<UploadOutlined />}
+                        size="small"
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                          right: 0,
+                          borderRadius: "50%",
+                          padding: "4px 2px",
+                          fontSize: 12,
+                          backgroundColor: "#fff",
+                          boxShadow: "0 0 4px rgba(0,0,0,0.1)",
+                        }}
+                      />
+                    </Upload>
 
-              <div style={{ marginLeft: 16, textAlign: "left" }}>
-                <h2 style={{ marginBottom: 0 }}>{`${fname} ${lname}`}</h2>
-                <p style={{ marginBottom: 10, color: "#666" }}>{email}</p>
-                {roleId === 3 ? (
-                  <div>
-                    <Tag color="blue">{organizationName}</Tag>
-                    <Tag color="purple">{organizationNameType}</Tag>
+                    {/* Remove Button */}
+                    {profileImage !== defaultAvatar && (
+                      <Button
+                        icon={<DeleteOutlined />}
+                        size="small"
+                        danger
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          right: "0px",
+                          borderRadius: "50%",
+                          padding: "4px 2px",
+                          fontSize: 12,
+                          backgroundColor: "#fff",
+                          boxShadow: "0 0 4px rgba(0,0,0,0.1)",
+                        }}
+                        onClick={handleRemove}
+                      />
+                    )}
                   </div>
-                ) : (
-                  <div>
-                    <Tag color="blue">{specialization}</Tag>
-                    <Tag color="purple">{educationCourse}</Tag>
+
+                  <div style={{ marginLeft: 16, textAlign: "left" }}>
+                    <h2 style={{ marginBottom: 0 }}>{`${fname} ${lname}`}</h2>
+                    <p style={{ marginBottom: 10, color: "#666" }}>{email}</p>
+                    {roleId === 3 ? (
+                      <div>
+                        <Tag color="blue">{organizationName}</Tag>
+                        <Tag color="purple">{organizationNameType}</Tag>
+                      </div>
+                    ) : (
+                      <div>
+                        <Tag color="blue">{specialization}</Tag>
+                        <Tag color="purple">{educationCourse}</Tag>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+              </>
+            )}
 
             <Space>
-              <Tooltip title="Share profile">
-                <Button shape="circle" icon={<LinkOutlined />} />
+              {/* <Tooltip title="Share profile">
+                <Button
+                  shape="circle"
+                  icon={<LinkOutlined />}
+                  onClick={() => {
+                    const url = window.location.href;
+
+                    if (navigator.share) {
+                      // Mobile & modern browsers
+                      navigator.share({
+                        title: document.title,
+                        text: "Check out this profile",
+                        url: url,
+                      });
+                    } else {
+                      // Fallback: copy to clipboard
+                      navigator.clipboard
+                        .writeText(url)
+                        .then(() => {
+                          message.success("Profile link copied to clipboard!");
+                        })
+                        .catch(() => {
+                          message.error("Failed to copy link.");
+                        });
+                    }
+                  }}
+                />
               </Tooltip>
+
               <Tooltip title="View as others see">
                 <Button shape="circle" icon={<EyeOutlined />} />
-              </Tooltip>
+              </Tooltip> */}
+
               <Button
                 className="userprofile-edit-profile"
                 type="primary"
@@ -3697,6 +3831,12 @@ export default function MainProfile() {
                 onClick={() => {
                   setActiveTab("basic");
                   showDrawer();
+                  setLoading(true);
+                  const timer = setTimeout(() => {
+                    setLoading(false);
+                  }, 700);
+
+                  return () => clearTimeout(timer);
                 }}
               >
                 Edit Profile
@@ -3705,205 +3845,941 @@ export default function MainProfile() {
           </div>
         </Card>
 
-        <div className="profile-sections">
-          {/* About Section */}
-          <Card title="About" className="profile-section-card">
-            <p className="profile-section-description">
-              Craft an engaging story in your bio and make meaningful
-              connections with peers and recruiters alike!
-            </p>
-
-            <Divider />
-
-            {isAbout ? (
-              <Card title="About Me" className="resume-card">
-                <p className="resume-card-title">
-                  An introduction to who I am and what I bring to the table!
-                </p>
-
-                <p
-                  style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: expanded ? "unset" : 4,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "pre-line",
-                    marginBottom: 0,
-                  }}
-                >
-                  {isAbout}
-                </p>
-
-                <Button
-                  type="link"
-                  onClick={() => setExpanded(!expanded)}
-                  style={{
-                    paddingLeft: 0,
-                    color: "#5f2eea",
-                    textDecoration: "underline",
-                  }}
-                >
-                  {expanded ? "Show Less" : "Show More"}
-                </Button>
-                <br></br>
-
-                <Button
-                  onClick={() => {
-                    setActiveTab("about");
-                    showDrawer();
-                  }}
-                  style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                  type="link"
-                >
-                  <PlusOutlined />
-                  Update About
-                </Button>
-              </Card>
-            ) : (
-              <Button
-                onClick={() => {
-                  setActiveTab("about");
-                  showDrawer();
-                }}
-                style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                type="link"
-              >
-                <PlusOutlined />
-                Add About
-              </Button>
-            )}
-          </Card>
-
-          {/* Rankings Section */}
-          <Card
-            title="Rankings"
-            className="profile-section-card rankings-card"
-            extra={
-              <Button style={{ color: "#5f2eea" }} type="link">
-                How it works?
-              </Button>
-            }
+        <div className="profile-page-details">
+          <div
+            className="hide-scrollbar"
+            style={{
+              flex: 1,
+              overflowY: "auto",
+              height: "100vh",
+            }}
           >
-            <div className="stats-container">
-              <div className="stat-item">
-                <div className="stat-label">Total Badges</div>
-                <div className="stat-value">2</div>
-              </div>
-            </div>
-
-            <Divider />
-
-            <div className="badges-container">
-              <Avatar
-                size={50}
-                icon={<StarOutlined />}
-                className="badge-avatar gold-badge"
-              />
-              <Avatar
-                size={50}
-                icon={<StarOutlined />}
-                className="badge-avatar silver-badge"
-              />
-
-              <Avatar
-                size={50}
-                icon={<StarOutlined />}
-                className="badge-avatar silver-badge"
-              />
-              <Avatar
-                size={50}
-                icon={<StarOutlined />}
-                className="badge-avatar silver-badge"
-              />
-            </div>
-          </Card>
-        </div>
-
-        {/* Resume upload  Sections */}
-        <div style={{ marginTop: 25 }} className="profile-sections">
-          <div className="profile-section-card userprofile_cards">
-            <div className="skills_card">
-              <div style={{ textAlign: "left" }}>
-                <h3>Resume</h3>
-                <p className="profile-section-description">
-                  Adding your Resume helps you to tell who you are and what
-                  makes you different to employers and recruiters.
-                </p>
-                {!isResume && (
-                  <Button
-                    onClick={() => {
-                      setActiveTab("resume");
-                      showDrawer();
-                    }}
-                    style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                    type="link"
-                  >
-                    <PlusOutlined />
-                    Add Resume
-                  </Button>
-                )}
-
-                {isResume && (
-                  <>
-                    <Button
-                      onClick={() => {
-                        setActiveTab("resume");
-                        showDrawer();
-                      }}
-                      style={{
-                        color: "#5f2eea",
-                        paddingLeft: 0,
-                        paddingTop: 10,
-                      }}
-                      type="link"
-                    >
-                      <PlusOutlined />
-                      Replace Resume
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-            <Divider />
-          </div>
-        </div>
-
-        {/* Profile Sections */}
-        <div style={{ marginTop: 25 }} className="profile-sections">
-          <div className="profile-section-card userprofile_cards">
-            <div className="skills_card">
-              <div style={{ textAlign: "left" }}>
-                <h3>Skills</h3>
+            <div className="profile-sections">
+              <Card title="About" className="profile-section-card">
                 <p className="profile-section-description">
                   Craft an engaging story in your bio and make meaningful
                   connections with peers and recruiters alike!
                 </p>
-                {isSkills && (
-                  <>
-                    {isSkills.map((skill, index) => (
-                      <Tag
-                        key={index}
-                        style={{
-                          color: "#5f2eead4",
-                          background: "rgb(233, 224, 254)",
-                          border: "none",
-                          fontSize: 13,
-                          fontWeight: "600",
-                          padding: "5px 10px",
-                          marginTop: 10,
-                          borderRadius: "50px",
-                        }}
-                      >
-                        {skill}
-                      </Tag>
-                    ))}
-                    <br />
 
+                <Divider />
+                {userProfileLoading ? (
+                  <Skeleton active />
+                ) : (
+                  <>
+                    {isAbout ? (
+                      <Card title="About Me" className="resume-card">
+                        <p className="resume-card-title">
+                          An introduction to who I am and what I bring to the
+                          table!
+                        </p>
+
+                        <p
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: expanded ? "unset" : 4,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "pre-line",
+                            marginBottom: 0,
+                          }}
+                        >
+                          {isAbout}
+                        </p>
+
+                        <Button
+                          type="link"
+                          onClick={() => setExpanded(!expanded)}
+                          style={{
+                            paddingLeft: 0,
+                            color: "#5f2eea",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          {expanded ? "Show Less" : "Show More"}
+                        </Button>
+                        <br></br>
+
+                        <Button
+                          onClick={() => {
+                            setActiveTab("about");
+                            showDrawer();
+                            setLoading(true);
+                            const timer = setTimeout(() => {
+                              setLoading(false);
+                            }, 700);
+
+                            return () => clearTimeout(timer);
+                          }}
+                          style={{
+                            color: "#5f2eea",
+                            paddingLeft: 0,
+                            paddingTop: 10,
+                          }}
+                          type="link"
+                        >
+                          <PlusOutlined />
+                          Update About
+                        </Button>
+                      </Card>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          setActiveTab("about");
+                          showDrawer();
+                          setLoading(true);
+                          const timer = setTimeout(() => {
+                            setLoading(false);
+                          }, 700);
+
+                          return () => clearTimeout(timer);
+                        }}
+                        style={{
+                          color: "#5f2eea",
+                          paddingLeft: 0,
+                          paddingTop: 10,
+                        }}
+                        type="link"
+                      >
+                        <PlusOutlined />
+                        Add About
+                      </Button>
+                    )}
+                  </>
+                )}
+              </Card>
+            </div>
+
+            {/* Resume upload  Sections */}
+            <div style={{ marginTop: 25 }} className="profile-sections">
+              <div className="profile-section-card userprofile_cards">
+                <div className="skills_card">
+                  <div style={{ textAlign: "left" }}>
+                    <h3>Resume</h3>
+                    <p className="profile-section-description">
+                      Adding your Resume helps you to tell who you are and what
+                      makes you different to employers and recruiters.
+                    </p>
+                    {userProfileLoading ? (
+                      <Skeleton active />
+                    ) : (
+                      <>
+                        {!isResume && (
+                          <Button
+                            onClick={() => {
+                              setActiveTab("resume");
+                              showDrawer();
+                              setLoading(true);
+                              const timer = setTimeout(() => {
+                                setLoading(false);
+                              }, 700);
+
+                              return () => clearTimeout(timer);
+                            }}
+                            style={{
+                              color: "#5f2eea",
+                              paddingLeft: 0,
+                              paddingTop: 10,
+                            }}
+                            type="link"
+                          >
+                            <PlusOutlined />
+                            Add Resume
+                          </Button>
+                        )}
+
+                        {isResume && (
+                          <>
+                            <Button
+                              onClick={() => {
+                                setActiveTab("resume");
+                                showDrawer();
+                                setLoading(true);
+                                const timer = setTimeout(() => {
+                                  setLoading(false);
+                                }, 700);
+
+                                return () => clearTimeout(timer);
+                              }}
+                              style={{
+                                color: "#5f2eea",
+                                paddingLeft: 0,
+                                paddingTop: 10,
+                              }}
+                              type="link"
+                            >
+                              <PlusOutlined />
+                              Replace Resume
+                            </Button>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <Divider />
+              </div>
+            </div>
+
+            {/* Profile Sections */}
+            <div style={{ marginTop: 25 }} className="profile-sections">
+              <div className="profile-section-card userprofile_cards">
+                <div className="skills_card">
+                  <div style={{ textAlign: "left" }}>
+                    <h3>Skills</h3>
+                    <p className="profile-section-description">
+                      Craft an engaging story in your bio and make meaningful
+                      connections with peers and recruiters alike!
+                    </p>
+                    {userProfileLoading ? (
+                      <Skeleton active />
+                    ) : (
+                      <>
+                        {isSkills && (
+                          <>
+                            {isSkills.map((skill, index) => (
+                              <Tag
+                                key={index}
+                                style={{
+                                  color: "#5f2eead4",
+                                  background: "rgb(233, 224, 254)",
+                                  border: "none",
+                                  fontSize: 13,
+                                  fontWeight: "600",
+                                  padding: "5px 10px",
+                                  marginTop: 10,
+                                  borderRadius: "50px",
+                                }}
+                              >
+                                {skill}
+                              </Tag>
+                            ))}
+                            <br />
+
+                            <Button
+                              onClick={() => {
+                                setActiveTab("skills");
+                                showDrawer();
+                                setLoading(true);
+                                const timer = setTimeout(() => {
+                                  setLoading(false);
+                                }, 700);
+
+                                return () => clearTimeout(timer);
+                              }}
+                              style={{
+                                color: "#5f2eea",
+                                paddingLeft: 0,
+                                paddingTop: 10,
+                              }}
+                              type="link"
+                            >
+                              <PlusOutlined />
+                              Update Skills
+                            </Button>
+                          </>
+                        )}
+
+                        {!isSkills && (
+                          <Button
+                            onClick={() => {
+                              setActiveTab("skills");
+                              showDrawer();
+                              setLoading(true);
+                              const timer = setTimeout(() => {
+                                setLoading(false);
+                              }, 700);
+
+                              return () => clearTimeout(timer);
+                            }}
+                            style={{
+                              color: "#5f2eea",
+                              paddingLeft: 0,
+                              paddingTop: 10,
+                            }}
+                            type="link"
+                          >
+                            <PlusOutlined />
+                            Add Skills
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <Divider />
+              </div>
+            </div>
+
+            {/* workexperience Sections */}
+            <div style={{ marginTop: 25 }} className="profile-sections">
+              <div className="profile-section-card userprofile_cards">
+                <div className="skills_card">
+                  <div style={{ textAlign: "left" }}>
+                    <h3>Work Experience</h3>
+                    <p className="profile-section-description">
+                      Narrate your professional journey and fast-track your way
+                      to new career heights!
+                    </p>
+                    {userProfileLoading ? (
+                      <Skeleton active />
+                    ) : (
+                      <>
+                        {isWorkExp && (
+                          <div className="work-experience-section">
+                            {isWorkExp === "Fresher" ? (
+                              <div className="empty-state">
+                                <div className="empty-icon">
+                                  <svg
+                                    width="48"
+                                    height="48"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                      stroke="#5f2eea"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                    <path
+                                      d="M12 8V12"
+                                      stroke="#5f2eea"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                    <path
+                                      d="M12 16H12.01"
+                                      stroke="#5f2eea"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </div>
+                                <h3 className="empty-title">
+                                  No Work Experience Added
+                                </h3>
+                                <p className="empty-description">
+                                  You're currently marked as a fresher. Add your
+                                  first work experience to showcase your
+                                  professional journey.
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="experience-timeline">
+                                {companies.map((company, index) => (
+                                  <div
+                                    key={company.id || index}
+                                    className="experience-card"
+                                  >
+                                    <div className="card-header">
+                                      <div className="company-info">
+                                        <h3 className="company-name">
+                                          {company.workingCompanyName ||
+                                            "Not specified"}
+                                        </h3>
+                                        <span className="job-title">
+                                          {company.jobTitle || "Not specified"}
+                                        </span>
+                                      </div>
+                                      <div className="company-logo-placeholder">
+                                        {company.workingCompanyName
+                                          ?.charAt(0)
+                                          .toUpperCase() || "C"}
+                                      </div>
+                                    </div>
+
+                                    <div className="card-details">
+                                      <div className="detail-item">
+                                        <svg
+                                          className="detail-icon"
+                                          width="16"
+                                          height="16"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21L21 21M19 21H14M5 21L3 21M5 21H10M9 6.99998H10M9 11H10M14 6.99998H15M14 11H15"
+                                            stroke="#5f2eea"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                        </svg>
+                                        <span>
+                                          {company.jobTitle || "Not specified"}
+                                        </span>
+                                      </div>
+
+                                      <div className="detail-item">
+                                        <svg
+                                          className="detail-icon"
+                                          width="16"
+                                          height="16"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            d="M3 9H21M7 3V5M17 3V5M6 12H8M11 12H13M16 12H18M6 15H8M11 15H13M16 15H18M6 18H8M11 18H13M16 18H18M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z"
+                                            stroke="#5f2eea"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                        </svg>
+                                        <span>
+                                          {company.workingStartDate ||
+                                            "Not specified"}{" "}
+                                          -{" "}
+                                          {company.workingEndDate || "Present"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            <Button
+                              onClick={() => {
+                                setActiveTab("experience");
+                                showDrawer();
+                                setLoading(true);
+                                const timer = setTimeout(() => {
+                                  setLoading(false);
+                                }, 700);
+
+                                return () => clearTimeout(timer);
+                              }}
+                              style={{
+                                color: "#5f2eea",
+                                paddingLeft: 0,
+                                paddingTop: 10,
+                              }}
+                              type="link"
+                            >
+                              <PlusOutlined />
+                              Add Work Experience
+                            </Button>
+                          </div>
+                        )}
+                        {!isWorkExp && (
+                          <Button
+                            onClick={() => {
+                              setActiveTab("experience");
+                              showDrawer();
+                              setLoading(true);
+                              const timer = setTimeout(() => {
+                                setLoading(false);
+                              }, 700);
+
+                              return () => clearTimeout(timer);
+                            }}
+                            style={{
+                              color: "#5f2eea",
+                              paddingLeft: 0,
+                              paddingTop: 10,
+                            }}
+                            type="link"
+                          >
+                            <PlusOutlined />
+                            Add Work Experience
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <Divider />
+              </div>
+            </div>
+
+            {/* Profile Sections */}
+            <div style={{ marginTop: 25 }} className="profile-sections">
+              {/* Education Section */}
+
+              <div className="profile-section-card userprofile_cards">
+                <div className="skills_card">
+                  <div style={{ textAlign: "left" }}>
+                    <h3>Education</h3>
+                    <p className="profile-section-description">
+                      Showcase your academic journey and open doors to your
+                      dream career opportunities!
+                    </p>
+                    {userProfileLoading ? (
+                      <Skeleton active />
+                    ) : (
+                      <>
+                        {isEducation && isEducation.length > 0 ? (
+                          <div className="education-section">
+                            <div className="education-grid">
+                              {isEducation.map((edu, index) => (
+                                <div key={index} className="education-card">
+                                  <div className="education-header1">
+                                    <div className="education-icon">
+                                      <svg
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          d="M22 10V16M22 10L12 5L2 10L12 15L22 10Z"
+                                          stroke="#5f2eea"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                        <path
+                                          d="M6 12V16C6 16.8 6.93333 17.6 8 18L12 20L16 18C17.0667 17.6 18 16.8 18 16V12"
+                                          stroke="#5f2eea"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
+                                    </div>
+                                    <div className="education-titles">
+                                      <h3 className="education-degree">
+                                        {edu.qualification || "Not specified"}
+                                        <br></br>
+                                        {edu.specialization && (
+                                          <span className="education-specialization">
+                                            {edu.specialization}
+                                          </span>
+                                        )}
+                                      </h3>
+                                      <p className="education-institution">
+                                        {edu.college || "Not specified"}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="education-details">
+                                    <div className="detail-row">
+                                      <svg
+                                        className="detail-icon"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                                          stroke="#5f2eea"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                        <path
+                                          d="M12 6V12L16 14"
+                                          stroke="#5f2eea"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
+                                      <span>
+                                        {educationStartDate || "Not specified"}{" "}
+                                        - {educationEndDate || "Present"}
+                                      </span>
+                                    </div>
+
+                                    {edu.course && (
+                                      <div className="detail-row">
+                                        <svg
+                                          className="detail-icon"
+                                          width="16"
+                                          height="16"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21L21 21M19 21H14M5 21L3 21M5 21H10M9 6.99998H10M9 11H10M14 6.99998H15M14 11H15"
+                                            stroke="#5f2eea"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                        </svg>
+                                        <span>{edu.course}</span>
+                                      </div>
+                                    )}
+
+                                    {edu.grade && (
+                                      <div className="detail-row">
+                                        <svg
+                                          className="detail-icon"
+                                          width="16"
+                                          height="16"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                                            stroke="#5f2eea"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                          <path
+                                            d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
+                                            stroke="#5f2eea"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                        </svg>
+                                        <span>Grade: {edu.grade}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            <Button
+                              onClick={() => {
+                                setActiveTab("education");
+                                showDrawer();
+                                setLoading(true);
+                                const timer = setTimeout(() => {
+                                  setLoading(false);
+                                }, 700);
+
+                                return () => clearTimeout(timer);
+                              }}
+                              style={{
+                                color: "#5f2eea",
+                                paddingLeft: 0,
+                                paddingTop: 10,
+                              }}
+                              type="link"
+                            >
+                              <PlusOutlined />
+                              Add Another Education
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="empty-state education-empty">
+                            <div className="empty-illustration">
+                              <svg
+                                width="120"
+                                height="120"
+                                viewBox="0 0 200 200"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M50 75L100 50L150 75V125L100 150L50 125V75Z"
+                                  stroke="#5f2eea"
+                                  strokeWidth="8"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M50 75L100 100L150 75M100 100V150"
+                                  stroke="#5f2eea"
+                                  strokeWidth="8"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M75 62.5L100 75L125 62.5"
+                                  stroke="#5f2eea"
+                                  strokeWidth="8"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </div>
+                            <h3 className="empty-title">
+                              No Education Added Yet
+                            </h3>
+                            <p className="empty-description">
+                              Showcase your academic achievements by adding your
+                              education history. This helps employers understand
+                              your qualifications.
+                            </p>
+                            <Button
+                              onClick={() => {
+                                setActiveTab("education");
+                                showDrawer();
+                                setLoading(true);
+                                const timer = setTimeout(() => {
+                                  setLoading(false);
+                                }, 700);
+
+                                return () => clearTimeout(timer);
+                              }}
+                              style={{
+                                color: "#5f2eea",
+                                paddingLeft: 0,
+                                paddingTop: 10,
+                              }}
+                              type="link"
+                            >
+                              <PlusOutlined />
+                              Add Education
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <Divider />
+              </div>
+            </div>
+
+            <div style={{ marginTop: 25 }} className="profile-sections">
+              {/* Projects Section */}
+
+              <div className="profile-section-card userprofile_cards profile_result">
+                <div className="skills_card">
+                  <div style={{ textAlign: "left" }}>
+                    <h3>Projects</h3>
+                    <p className="profile-section-description">
+                      Unveil your projects to the world and pave your path to
+                      <br></br>
+                      professional greatness!
+                    </p>
+                    {userProfileLoading ? (
+                      <Skeleton active />
+                    ) : (
+                      <>
+                        {isProjects && isProjects.length > 0 ? (
+                          <div className="projects-section">
+                            <div className="projects-grid">
+                              {isProjects.map((projects, index) => (
+                                <motion.div
+                                  key={index}
+                                  className="project-card"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{
+                                    duration: 0.3,
+                                    delay: index * 0.1,
+                                  }}
+                                >
+                                  <div className="project-header">
+                                    <div className="project-icon">
+                                      <svg
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                      >
+                                        <path
+                                          d="M3 9L12 3L21 9V19L12 23L3 19V9Z"
+                                          stroke="#5f2eea"
+                                          strokeWidth="2"
+                                        />
+                                        <path
+                                          d="M3 9L12 13L21 9M12 13V23"
+                                          stroke="#5f2eea"
+                                          strokeWidth="2"
+                                        />
+                                      </svg>
+                                    </div>
+                                    <h3 className="project-title">
+                                      {projects.project_title ||
+                                        "Untitled Project"}
+                                      <span className="project-status-badge">
+                                        {projects.current
+                                          ? "Ongoing"
+                                          : "Completed"}
+                                      </span>
+                                    </h3>
+                                  </div>
+
+                                  <div className="project-meta">
+                                    <div className="project-date">
+                                      <CalendarOutlined
+                                        style={{ color: "#5f2eea" }}
+                                      />
+                                      <span>
+                                        {projects.start_date || "Not specified"}{" "}
+                                        - {projects.end_date || "Present"}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <p className="project-description">
+                                    {projects.description ||
+                                      "No description provided."}
+                                  </p>
+                                </motion.div>
+                              ))}
+                            </div>
+
+                            <Button
+                              onClick={() => {
+                                setActiveTab("projects");
+                                showDrawer();
+                                setLoading(true);
+                                const timer = setTimeout(() => {
+                                  setLoading(false);
+                                }, 700);
+
+                                return () => clearTimeout(timer);
+                              }}
+                              style={{
+                                color: "#5f2eea",
+                                paddingLeft: 0,
+                                paddingTop: 10,
+                              }}
+                              type="link"
+                            >
+                              <PlusOutlined />
+                              Add Another Project
+                            </Button>
+                          </div>
+                        ) : (
+                          <motion.div
+                            className="empty-state projects-empty"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            <div className="empty-illustration">
+                              <svg
+                                width="100"
+                                height="100"
+                                viewBox="0 0 200 200"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <defs>
+                                  <linearGradient
+                                    id="projectGradient"
+                                    x1="0%"
+                                    y1="0%"
+                                    x2="100%"
+                                    y2="100%"
+                                  >
+                                    <stop offset="0%" stopColor="#5f2eea" />
+                                    <stop offset="100%" stopColor="#8a63f7" />
+                                  </linearGradient>
+                                </defs>
+                                <path
+                                  d="M50 75L100 50L150 75V125L100 150L50 125V75Z"
+                                  stroke="url(#projectGradient)"
+                                  strokeWidth="8"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M50 75L100 100L150 75M100 100V150"
+                                  stroke="url(#projectGradient)"
+                                  strokeWidth="8"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M75 62.5L100 75L125 62.5"
+                                  stroke="url(#projectGradient)"
+                                  strokeWidth="8"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </div>
+                            <h3 className="empty-title">
+                              Your Project Showcase Awaits
+                            </h3>
+                            <p className="empty-description">
+                              Transform your portfolio with stunning project
+                              displays. Highlight your work with rich details,
+                              technologies used, and impressive visuals to
+                              captivate your audience.
+                            </p>
+
+                            <Button
+                              onClick={() => {
+                                setActiveTab("projects");
+                                showDrawer();
+                                setLoading(true);
+                                const timer = setTimeout(() => {
+                                  setLoading(false);
+                                }, 700);
+
+                                return () => clearTimeout(timer);
+                              }}
+                              style={{
+                                color: "#5f2eea",
+                                paddingLeft: 0,
+                                paddingTop: 10,
+                              }}
+                              type="link"
+                            >
+                              <PlusOutlined />
+                              Create Your First Project
+                            </Button>
+                          </motion.div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <Divider />
+              </div>
+            </div>
+
+            <div style={{ marginTop: 25 }} className="profile-sections">
+              {/* Social Links Section */}
+              <div className="profile-section-card userprofile_cards">
+                <div className="skills_card">
+                  <div style={{ textAlign: "left" }}>
+                    <h3>Social Links</h3>
+                  </div>
+                </div>
+                {userProfileLoading ? (
+                  <Skeleton active />
+                ) : (
+                  <>
+                    <div className="userprofile_social">
+                      {socialIcons.map(({ key, icon, color }) => {
+                        const link = isSocialLinks?.[key] || null;
+
+                        return link ? (
+                          <a
+                            key={key}
+                            href={link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="social-icon active"
+                            style={{ backgroundColor: color }}
+                          >
+                            {icon}
+                          </a>
+                        ) : (
+                          <Tooltip key={key} title="Not yet added">
+                            <div className="social-icon inactive">{icon}</div>
+                          </Tooltip>
+                        );
+                      })}
+                    </div>
                     <Button
                       onClick={() => {
-                        setActiveTab("skills");
+                        setActiveTab("sociallinks");
                         showDrawer();
+                        setLoading(true);
+                        const timer = setTimeout(() => {
+                          setLoading(false);
+                        }, 700);
+
+                        return () => clearTimeout(timer);
                       }}
                       style={{
                         color: "#5f2eea",
@@ -3913,632 +4789,15 @@ export default function MainProfile() {
                       type="link"
                     >
                       <PlusOutlined />
-                      Update Skills
+                      Update Links
                     </Button>
                   </>
                 )}
 
-                {!isSkills && (
-                  <Button
-                    onClick={() => {
-                      setActiveTab("skills");
-                      showDrawer();
-                    }}
-                    style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                    type="link"
-                  >
-                    <PlusOutlined />
-                    Add Skills
-                  </Button>
-                )}
-              </div>
-            </div>
-            <Divider />
-          </div>
-        </div>
+                <Divider />
 
-        {/* workexperience Sections */}
-        <div style={{ marginTop: 25 }} className="profile-sections">
-          <div className="profile-section-card userprofile_cards">
-            <div className="skills_card">
-              <div style={{ textAlign: "left" }}>
-                <h3>Work Experience</h3>
-                <p className="profile-section-description">
-                  Narrate your professional journey and fast-track your way to
-                  new career heights!
-                </p>
-                {isWorkExp && (
-                  <div className="work-experience-section">
-                    {isWorkExp === "Fresher" ? (
-                      <div className="empty-state">
-                        <div className="empty-icon">
-                          <svg
-                            width="48"
-                            height="48"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                              stroke="#5f2eea"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <path
-                              d="M12 8V12"
-                              stroke="#5f2eea"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <path
-                              d="M12 16H12.01"
-                              stroke="#5f2eea"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </div>
-                        <h3 className="empty-title">
-                          No Work Experience Added
-                        </h3>
-                        <p className="empty-description">
-                          You're currently marked as a fresher. Add your first
-                          work experience to showcase your professional journey.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="experience-timeline">
-                        {companies.map((company, index) => (
-                          <div
-                            key={company.id || index}
-                            className="experience-card"
-                          >
-                            <div className="card-header">
-                              <div className="company-info">
-                                <h3 className="company-name">
-                                  {company.workingCompanyName ||
-                                    "Not specified"}
-                                </h3>
-                                <span className="job-title">
-                                  {company.jobTitle || "Not specified"}
-                                </span>
-                              </div>
-                              <div className="company-logo-placeholder">
-                                {company.workingCompanyName
-                                  ?.charAt(0)
-                                  .toUpperCase() || "C"}
-                              </div>
-                            </div>
-
-                            <div className="card-details">
-                              <div className="detail-item">
-                                <svg
-                                  className="detail-icon"
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21L21 21M19 21H14M5 21L3 21M5 21H10M9 6.99998H10M9 11H10M14 6.99998H15M14 11H15"
-                                    stroke="#5f2eea"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                                <span>
-                                  {company.jobTitle || "Not specified"}
-                                </span>
-                              </div>
-
-                              <div className="detail-item">
-                                <svg
-                                  className="detail-icon"
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M3 9H21M7 3V5M17 3V5M6 12H8M11 12H13M16 12H18M6 15H8M11 15H13M16 15H18M6 18H8M11 18H13M16 18H18M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z"
-                                    stroke="#5f2eea"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                                <span>
-                                  {company.workingStartDate || "Not specified"}{" "}
-                                  - {company.workingEndDate || "Present"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <Button
-                      onClick={() => {
-                        setActiveTab("experience");
-                        showDrawer();
-                      }}
-                      style={{
-                        color: "#5f2eea",
-                        paddingLeft: 0,
-                        paddingTop: 10,
-                      }}
-                      type="link"
-                    >
-                      <PlusOutlined />
-                      Add Work Experience
-                    </Button>
-                  </div>
-                )}
-                {!isWorkExp && (
-                  <Button
-                    onClick={() => {
-                      setActiveTab("experience");
-                      showDrawer();
-                    }}
-                    style={{ color: "#5f2eea", paddingLeft: 0, paddingTop: 10 }}
-                    type="link"
-                  >
-                    <PlusOutlined />
-                    Add Work Experience
-                  </Button>
-                )}
-              </div>
-            </div>
-            <Divider />
-          </div>
-        </div>
-
-        {/* Profile Sections */}
-        <div style={{ marginTop: 25 }} className="profile-sections">
-          {/* Education Section */}
-
-          <div className="profile-section-card userprofile_cards">
-            <div className="skills_card">
-              <div style={{ textAlign: "left" }}>
-                <h3>Education</h3>
-                <p className="profile-section-description">
-                  Showcase your academic journey and open doors to your dream
-                  career opportunities!
-                </p>
-                {isEducation && isEducation.length > 0 ? (
-                  <div className="education-section">
-                    <div className="education-grid">
-                      {isEducation.map((edu, index) => (
-                        <div key={index} className="education-card">
-                          <div className="education-header1">
-                            <div className="education-icon">
-                              <svg
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M22 10V16M22 10L12 5L2 10L12 15L22 10Z"
-                                  stroke="#5f2eea"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                                <path
-                                  d="M6 12V16C6 16.8 6.93333 17.6 8 18L12 20L16 18C17.0667 17.6 18 16.8 18 16V12"
-                                  stroke="#5f2eea"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </div>
-                            <div className="education-titles">
-                              <h3 className="education-degree">
-                                {edu.qualification || "Not specified"}
-                                <br></br>
-                                {edu.specialization && (
-                                  <span className="education-specialization">
-                                    {edu.specialization}
-                                  </span>
-                                )}
-                              </h3>
-                              <p className="education-institution">
-                                {edu.college || "Not specified"}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="education-details">
-                            <div className="detail-row">
-                              <svg
-                                className="detail-icon"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                                  stroke="#5f2eea"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                                <path
-                                  d="M12 6V12L16 14"
-                                  stroke="#5f2eea"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                              <span>
-                                {educationStartDate || "Not specified"} -{" "}
-                                {educationEndDate || "Present"}
-                              </span>
-                            </div>
-
-                            {edu.course && (
-                              <div className="detail-row">
-                                <svg
-                                  className="detail-icon"
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21L21 21M19 21H14M5 21L3 21M5 21H10M9 6.99998H10M9 11H10M14 6.99998H15M14 11H15"
-                                    stroke="#5f2eea"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                                <span>{edu.course}</span>
-                              </div>
-                            )}
-
-                            {edu.grade && (
-                              <div className="detail-row">
-                                <svg
-                                  className="detail-icon"
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
-                                    stroke="#5f2eea"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
-                                    stroke="#5f2eea"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                                <span>Grade: {edu.grade}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Button
-                      onClick={() => {
-                        setActiveTab("education");
-                        showDrawer();
-                      }}
-                      style={{
-                        color: "#5f2eea",
-                        paddingLeft: 0,
-                        paddingTop: 10,
-                      }}
-                      type="link"
-                    >
-                      <PlusOutlined />
-                      Add Another Education
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="empty-state education-empty">
-                    <div className="empty-illustration">
-                      <svg
-                        width="120"
-                        height="120"
-                        viewBox="0 0 200 200"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M50 75L100 50L150 75V125L100 150L50 125V75Z"
-                          stroke="#5f2eea"
-                          strokeWidth="8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M50 75L100 100L150 75M100 100V150"
-                          stroke="#5f2eea"
-                          strokeWidth="8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M75 62.5L100 75L125 62.5"
-                          stroke="#5f2eea"
-                          strokeWidth="8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
-                    <h3 className="empty-title">No Education Added Yet</h3>
-                    <p className="empty-description">
-                      Showcase your academic achievements by adding your
-                      education history. This helps employers understand your
-                      qualifications.
-                    </p>
-                    <Button
-                      onClick={() => {
-                        setActiveTab("education");
-                        showDrawer();
-                      }}
-                      style={{
-                        color: "#5f2eea",
-                        paddingLeft: 0,
-                        paddingTop: 10,
-                      }}
-                      type="link"
-                    >
-                      <PlusOutlined />
-                      Add Education
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-            <Divider />
-          </div>
-        </div>
-
-        <div style={{ marginTop: 25 }} className="profile-sections">
-          {/* Projects Section */}
-
-          <div className="profile-section-card userprofile_cards profile_result">
-            <div className="skills_card">
-              <div style={{ textAlign: "left" }}>
-                <h3>Projects</h3>
-                <p className="profile-section-description">
-                  Unveil your projects to the world and pave your path to
-                  <br></br>
-                  professional greatness!
-                </p>
-                {isProjects && isProjects.length > 0 ? (
-                  <div className="projects-section">
-                    <div className="projects-grid">
-                      {isProjects.map((projects, index) => (
-                        <motion.div
-                          key={index}
-                          className="project-card"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                        >
-                          <div className="project-header">
-                            <div className="project-icon">
-                              <svg
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                              >
-                                <path
-                                  d="M3 9L12 3L21 9V19L12 23L3 19V9Z"
-                                  stroke="#5f2eea"
-                                  strokeWidth="2"
-                                />
-                                <path
-                                  d="M3 9L12 13L21 9M12 13V23"
-                                  stroke="#5f2eea"
-                                  strokeWidth="2"
-                                />
-                              </svg>
-                            </div>
-                            <h3 className="project-title">
-                              {projects.project_title || "Untitled Project"}
-                              <span className="project-status-badge">
-                                {projects.current ? "Ongoing" : "Completed"}
-                              </span>
-                            </h3>
-                          </div>
-
-                          <div className="project-meta">
-                            <div className="project-date">
-                              <CalendarOutlined style={{ color: "#5f2eea" }} />
-                              <span>
-                                {projects.start_date || "Not specified"} -{" "}
-                                {projects.end_date || "Present"}
-                              </span>
-                            </div>
-                          </div>
-
-                          <p className="project-description">
-                            {projects.description || "No description provided."}
-                          </p>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    <Button
-                      onClick={() => {
-                        setActiveTab("projects");
-                        showDrawer();
-                      }}
-                      style={{
-                        color: "#5f2eea",
-                        paddingLeft: 0,
-                        paddingTop: 10,
-                      }}
-                      type="link"
-                    >
-                      <PlusOutlined />
-                      Add Another Project
-                    </Button>
-                  </div>
-                ) : (
-                  <motion.div
-                    className="empty-state projects-empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <div className="empty-illustration">
-                      <svg
-                        width="100"
-                        height="100"
-                        viewBox="0 0 200 200"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <defs>
-                          <linearGradient
-                            id="projectGradient"
-                            x1="0%"
-                            y1="0%"
-                            x2="100%"
-                            y2="100%"
-                          >
-                            <stop offset="0%" stopColor="#5f2eea" />
-                            <stop offset="100%" stopColor="#8a63f7" />
-                          </linearGradient>
-                        </defs>
-                        <path
-                          d="M50 75L100 50L150 75V125L100 150L50 125V75Z"
-                          stroke="url(#projectGradient)"
-                          strokeWidth="8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M50 75L100 100L150 75M100 100V150"
-                          stroke="url(#projectGradient)"
-                          strokeWidth="8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M75 62.5L100 75L125 62.5"
-                          stroke="url(#projectGradient)"
-                          strokeWidth="8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
-                    <h3 className="empty-title">
-                      Your Project Showcase Awaits
-                    </h3>
-                    <p className="empty-description">
-                      Transform your portfolio with stunning project displays.
-                      Highlight your work with rich details, technologies used,
-                      and impressive visuals to captivate your audience.
-                    </p>
-
-                    <Button
-                      onClick={() => {
-                        setActiveTab("projects");
-                        showDrawer();
-                      }}
-                      style={{
-                        color: "#5f2eea",
-                        paddingLeft: 0,
-                        paddingTop: 10,
-                      }}
-                      type="link"
-                    >
-                      <PlusOutlined />
-                      Create Your First Project
-                    </Button>
-                  </motion.div>
-                )}
-              </div>
-            </div>
-            <Divider />
-          </div>
-        </div>
-
-        <div style={{ marginTop: 25 }} className="profile-sections">
-          {/* Social Links Section */}
-          <div className="profile-section-card userprofile_cards">
-            <div className="skills_card">
-              <div style={{ textAlign: "left" }}>
-                <h3>Social Links</h3>
-              </div>
-            </div>
-            <div className="userprofile_social">
-              {socialIcons.map(({ key, icon, color }) => {
-                const link = isSocialLinks?.[key] || null;
-
-                return link ? (
-                  <a
-                    key={key}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="social-icon active"
-                    style={{ backgroundColor: color }}
-                  >
-                    {icon}
-                  </a>
-                ) : (
-                  <Tooltip key={key} title="Not yet added">
-                    <div className="social-icon inactive">{icon}</div>
-                  </Tooltip>
-                );
-              })}
-            </div>
-            <Button
-              onClick={() => {
-                setActiveButton("sociallinks");
-                showDrawer();
-              }}
-              style={{
-                color: "#5f2eea",
-                paddingLeft: 0,
-                paddingTop: 10,
-              }}
-              type="link"
-            >
-              <PlusOutlined />
-              Update Links
-            </Button>
-
-            <Divider />
-
-            {/* Streak Section */}
-            <motion.div
+                {/* Streak Section */}
+                {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -4771,73 +5030,183 @@ export default function MainProfile() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </motion.div> */}
 
-            {/* drawer */}
-            <Drawer
-              title={null}
-              placement="right"
-              onClose={resetFormFields}
-              open={open}
-              width={1100}
-              className="user_details_drawer"
-            >
-              <div style={{ display: "flex", gap: 24 }}>
-                {/* Sidebar */}
-                <div
-                  style={{
-                    width: 300,
-                    background: "#f9f9f9",
-                    padding: 16,
-                    borderRight: "1px solid #eee",
-                  }}
+                {/* drawer */}
+                <Drawer
+                  title={null}
+                  placement="right"
+                  onClose={resetFormFields}
+                  open={open}
+                  width={1100}
+                  className="user_details_drawer"
                 >
-                  <div style={{ marginBottom: 16 }}>
-                    <Text strong>Enhance your Profile</Text>
-                    <Text
-                      type="secondary"
-                      style={{ display: "block", marginTop: 4 }}
-                    >
-                      Stay ahead of the competition by regularly updating your
-                      profile.
-                    </Text>
+                  {loading ? (
+                    <Skeleton active />
+                  ) : (
+                    <>
+                      <div style={{ display: "flex", gap: 24 }}>
+                        {/* Sidebar */}
+                        <div
+                          style={{
+                            width: 300,
+                            background: "#f9f9f9",
+                            padding: 16,
+                            borderRight: "1px solid #eee",
+                          }}
+                        >
+                          <div style={{ marginBottom: 16 }}>
+                            <Text strong>Enhance your Profile</Text>
+                            <Text
+                              type="secondary"
+                              style={{ display: "block", marginTop: 4 }}
+                            >
+                              Stay ahead of the competition by regularly
+                              updating your profile.
+                            </Text>
+                            <Progress
+                              percent={78}
+                              size="small"
+                              style={{ marginTop: 8 }}
+                            />
+                          </div>
+                          <Menu
+                            mode="vertical"
+                            selectedKeys={[activeTab]}
+                            onClick={(e) => {
+                              setActiveTab(e.key);
+                              setDetailsLoading(true);
+                              const timer = setTimeout(() => {
+                                setDetailsLoading(false);
+                              }, 700);
+
+                              return () => clearTimeout(timer);
+                            }}
+                            items={items}
+                          />
+                        </div>
+
+                        {/* Dynamic Content */}
+                        <div
+                          style={{
+                            flex: 1,
+                            padding: 5,
+                            height: 700,
+                            overflowY: "scroll",
+                            scrollbarWidth: "none",
+                            msOverflowStyle: "none",
+                          }}
+                          className="hide-scrollbar"
+                        >
+                          {TabContent[activeTab] ? (
+                            TabContent[activeTab]()
+                          ) : (
+                            <p>Section not found</p>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </Drawer>
+              </div>
+            </div>
+          </div>
+          <div
+            style={{
+              position: "sticky",
+              top: 30,
+              overflowY: "auto",
+              paddingLeft: "24px",
+            }}
+          >
+            <Card
+              title={
+                <div className="premium-card-header">
+                  <TrophyFilled
+                    style={{ color: "#FFD700", fontSize: "24px" }}
+                  />
+                  <span style={{ marginLeft: 12, color: "#fff" }}>
+                    Achievement Rankings
+                  </span>
+                </div>
+              }
+              className="profile-section-card premium-rankings-card"
+              headStyle={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}
+              bodyStyle={{ padding: "24px" }}
+            >
+              <div className="premium-stats-container">
+                <div className="premium-stat-item">
+                  <div className="premium-stat-label">Total Badges</div>
+                  <div className="premium-stat-value">12</div>
+                  <div className="premium-stat-progress">
                     <Progress
-                      percent={78}
-                      size="small"
-                      style={{ marginTop: 8 }}
+                      percent={75}
+                      showInfo={false}
+                      strokeColor={{
+                        "0%": "#5F2EEA",
+                        "100%": "#8E6BF1",
+                      }}
+                      strokeWidth={4}
                     />
                   </div>
-                  <Menu
-                    mode="vertical"
-                    selectedKeys={[activeTab]}
-                    onClick={(e) => {
-                      // resetFormFields();
-                      setActiveTab(e.key);
-                    }}
-                    items={items}
-                  />
+                  <div className="premium-stat-subtext">75% to next level</div>
                 </div>
 
-                {/* Dynamic Content */}
-                <div
-                  style={{
-                    flex: 1,
-                    padding: 5,
-                    height: 700,
-                    overflowY: "scroll",
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none",
-                  }}
-                  className="hide-scrollbar"
-                >
-                  {TabContent[activeTab] ? (
-                    TabContent[activeTab]()
-                  ) : (
-                    <p>Section not found</p>
-                  )}
+                <div className="premium-stat-divider"></div>
+
+                <div className="premium-stat-item">
+                  <div className="premium-stat-label">Global Rank</div>
+                  <div className="premium-stat-value">#1,243</div>
+                  <div className="premium-stat-subtext">Top 8% worldwide</div>
                 </div>
               </div>
-            </Drawer>
+
+              <Divider className="premium-divider" />
+
+              <div className="premium-badges-header">
+                <span className="premium-section-title">Your Badges</span>
+                <Tag className="premium-view-all" icon={<EyeOutlined />}>
+                  View All
+                </Tag>
+              </div>
+
+              <div className="premium-badges-container">
+                <Tooltip title="Elite Contributor (Gold)" placement="top">
+                  <Badge count={1} color="gold">
+                    <Avatar
+                      size={64}
+                      icon={<CrownFilled />}
+                      className="premium-badge-avatar gold-badge"
+                    />
+                  </Badge>
+                </Tooltip>
+
+                <Tooltip title="Expert Contributor (Silver)" placement="top">
+                  <Badge count={3} color="silver">
+                    <Avatar
+                      size={64}
+                      icon={<StarFilled />}
+                      className="premium-badge-avatar silver-badge"
+                    />
+                  </Badge>
+                </Tooltip>
+
+                <Tooltip title="Rising Star (Bronze)" placement="top">
+                  <Badge count={8} color="#cd7f32">
+                    <Avatar
+                      size={64}
+                      icon={<RocketFilled />}
+                      className="premium-badge-avatar bronze-badge"
+                    />
+                  </Badge>
+                </Tooltip>
+
+                <div className="premium-badge-placeholder">
+                  <PlusOutlined />
+                  <span>Earn more</span>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       </Content>

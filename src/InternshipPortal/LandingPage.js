@@ -61,51 +61,6 @@ const gradientColors = [
   "linear-gradient(to right, #141e30, #243b55)", // Moody Blue
 ];
 
-const rightRole = [
-  {
-    id: 1,
-    title: "Data Analyst",
-    openings: "370+ Openings",
-    logo: right_role1,
-    bgColor: "#fff",
-  },
-  {
-    id: 2,
-    title: "Frontend",
-    openings: "250+ Openings",
-    logo: right_role2,
-    bgColor: "#fff",
-  },
-  {
-    id: 3,
-    title: "Full-Stack Roles",
-    openings: "300+ Openings",
-    logo: right_role3,
-    bgColor: "#fff",
-  },
-  {
-    id: 4,
-    title: "Project Management",
-    openings: "246+ Openings",
-    logo: right_role4,
-    bgColor: "#fff",
-  },
-  {
-    id: 5,
-    title: "Marketing",
-    openings: "300+ Openings",
-    logo: right_role5,
-    bgColor: "#fff",
-  },
-  {
-    id: 6,
-    title: "Finance",
-    openings: "230+ Openings",
-    logo: right_role6,
-    bgColor: "#fff",
-  },
-];
-
 const companies = [
   {
     id: 1,
@@ -203,56 +158,6 @@ const NextArrow = ({ onClick }) => (
   </div>
 );
 
-const settings = {
-  dots: true,
-  infinite: true,
-  arrows: true,
-  autoplay: true,
-  autoplaySpeed: 4000,
-  slidesToShow: 3.8,
-  prevArrow: <PrevArrow />,
-  nextArrow: <NextArrow />,
-  responsive: [
-    {
-      breakpoint: 1200,
-      settings: {
-        slidesToShow: 2,
-      },
-    },
-    {
-      breakpoint: 768,
-      settings: {
-        slidesToShow: 1,
-      },
-    },
-  ],
-};
-
-const rightRolesettings = {
-  dots: false,
-  infinite: true,
-  arrows: true,
-  autoplay: true,
-  autoplaySpeed: 4000,
-  slidesToShow: 4,
-  prevArrow: <PrevArrow />,
-  nextArrow: <NextArrow />,
-  responsive: [
-    {
-      breakpoint: 1200,
-      settings: {
-        slidesToShow: 2,
-      },
-    },
-    {
-      breakpoint: 768,
-      settings: {
-        slidesToShow: 1,
-      },
-    },
-  ],
-};
-
 const companiesSettings = {
   dots: false,
   infinite: true,
@@ -281,6 +186,34 @@ export default function JobPortalLandingPage() {
   const [roleId, setRoleId] = useState(null);
   const [loginUserId, setLoginUserId] = useState(null);
   const navigate = useNavigate();
+  const jobTypeJobs = backendJobs.filter(
+    (jobs) => jobs.job_nature === "Internship"
+  );
+
+  const settings = {
+    dots: true,
+    infinite: backendJobs.length > 3,
+    arrows: true,
+    autoplay: true,
+    autoplaySpeed: 4000,
+    slidesToShow: 3.8,
+    prevArrow: <PrevArrow />,
+    nextArrow: <NextArrow />,
+    responsive: [
+      {
+        breakpoint: 1200,
+        settings: {
+          slidesToShow: 2,
+        },
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+    ],
+  };
 
   useEffect(() => {
     document.title = "CareerFast | Internship Portal";
@@ -603,7 +536,7 @@ export default function JobPortalLandingPage() {
           </div>
         </div>
 
-        {backendJobs.length > 0 ? (
+        {jobTypeJobs.length > 0 ? (
           <Slider {...settings} className="elite-job-carousel">
             {backendJobs
               .filter((jobs) => jobs.job_nature === "Internship")
@@ -708,7 +641,7 @@ export default function JobPortalLandingPage() {
       {/*  */}
 
       {/* Right role */}
-      <div className="elite-carousel-rightRole-container">
+      {/* <div className="elite-carousel-rightRole-container">
         <div className="elite-carousel-header">
           <div className="elite-title-wrapper">
             <Title level={2} className="elite-title">
@@ -795,7 +728,7 @@ export default function JobPortalLandingPage() {
             ))}
           </Slider>
         </div>
-      </div>
+      </div> */}
       {/*  */}
 
       {/* Jobs */}

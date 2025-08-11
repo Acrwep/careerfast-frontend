@@ -11,7 +11,7 @@ import {
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoMdCloseCircleOutline } from "react-icons/io";
-import { Menu, Dropdown, message, Button } from "antd";
+import { Menu, Dropdown, message, Card, Typography } from "antd";
 import {
   closeRegistration,
   getJobPostByUserId,
@@ -21,6 +21,7 @@ import { FaEye } from "react-icons/fa";
 import moment from "moment/moment";
 import { useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
+const { Title, Text } = Typography;
 
 export default function ListingDashboard() {
   const [activeTab, setActiveTab] = useState("All");
@@ -305,7 +306,22 @@ export default function ListingDashboard() {
                   })}
                 </AnimatePresence>
               ) : (
-                <div className="no-data">No opportunities found</div>
+                <Card style={{ textAlign: "center", padding: 40 }}>
+                  <Title level={4} style={{ color: "#bfbfbf" }}>
+                    No opportunities found
+                  </Title>
+                  <Text
+                    style={{
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                      color: "#5f2eea",
+                    }}
+                    onClick={() => navigate("/post-jobs")}
+                    type="secondary"
+                  >
+                    Post new jobs
+                  </Text>
+                </Card>
               )}
             </div>
           )}

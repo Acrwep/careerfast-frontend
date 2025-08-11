@@ -20,12 +20,6 @@ import logo4 from "../images/logo4.svg";
 import logo5 from "../images/tesla-pure.svg";
 import logo6 from "../images/samsung-8.svg";
 import logo7 from "../images/tata-1.svg";
-import right_role1 from "../images/right_role1.png";
-import right_role2 from "../images/right_role2.png";
-import right_role3 from "../images/right_role3.png";
-import right_role4 from "../images/right_role4.png";
-import right_role5 from "../images/right_role5.png";
-import right_role6 from "../images/right_role6.png";
 import need_guidence from "../images/need_guidence.webp";
 import recruiter1 from "../images/recruiter1.png";
 import counter_box1 from "../images/counter_box1.png";
@@ -59,51 +53,6 @@ const gradientColors = [
   "linear-gradient(to right, #1e3c72, #2a5298)", // Cool Royal Blue
   "linear-gradient(to right, #0f2027, #203a43, #2c5364)", // Deep Space
   "linear-gradient(to right, #141e30, #243b55)", // Moody Blue
-];
-
-const rightRole = [
-  {
-    id: 1,
-    title: "Data Analyst",
-    openings: "370+ Openings",
-    logo: right_role1,
-    bgColor: "#fff",
-  },
-  {
-    id: 2,
-    title: "Frontend",
-    openings: "250+ Openings",
-    logo: right_role2,
-    bgColor: "#fff",
-  },
-  {
-    id: 3,
-    title: "Full-Stack Roles",
-    openings: "300+ Openings",
-    logo: right_role3,
-    bgColor: "#fff",
-  },
-  {
-    id: 4,
-    title: "Project Management",
-    openings: "246+ Openings",
-    logo: right_role4,
-    bgColor: "#fff",
-  },
-  {
-    id: 5,
-    title: "Marketing",
-    openings: "300+ Openings",
-    logo: right_role5,
-    bgColor: "#fff",
-  },
-  {
-    id: 6,
-    title: "Finance",
-    openings: "230+ Openings",
-    logo: right_role6,
-    bgColor: "#fff",
-  },
 ];
 
 const companies = [
@@ -203,56 +152,6 @@ const NextArrow = ({ onClick }) => (
   </div>
 );
 
-const settings = {
-  dots: true,
-  infinite: true,
-  arrows: true,
-  autoplay: true,
-  autoplaySpeed: 4000,
-  slidesToShow: 3.8,
-  prevArrow: <PrevArrow />,
-  nextArrow: <NextArrow />,
-  responsive: [
-    {
-      breakpoint: 1200,
-      settings: {
-        slidesToShow: 2,
-      },
-    },
-    {
-      breakpoint: 768,
-      settings: {
-        slidesToShow: 1,
-      },
-    },
-  ],
-};
-
-const rightRolesettings = {
-  dots: false,
-  infinite: true,
-  arrows: true,
-  autoplay: true,
-  autoplaySpeed: 4000,
-  slidesToShow: 4,
-  prevArrow: <PrevArrow />,
-  nextArrow: <NextArrow />,
-  responsive: [
-    {
-      breakpoint: 1200,
-      settings: {
-        slidesToShow: 2,
-      },
-    },
-    {
-      breakpoint: 768,
-      settings: {
-        slidesToShow: 1,
-      },
-    },
-  ],
-};
-
 const companiesSettings = {
   dots: false,
   infinite: true,
@@ -282,6 +181,32 @@ export default function JobPortalLandingPage() {
   const [loginUserId, setLoginUserId] = useState(null);
   const navigate = useNavigate();
 
+  const settings = {
+    dots: true,
+    infinite: backendJobs.length > 3,
+    arrows: true,
+    autoplay: true,
+    autoplaySpeed: 4000,
+    slidesToShow: 3.8,
+    prevArrow: <PrevArrow />,
+    nextArrow: <NextArrow />,
+    responsive: [
+      {
+        breakpoint: 1200,
+        settings: {
+          slidesToShow: 2,
+        },
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+    ],
+  };
+  const jobTypeJobs = backendJobs.filter((jobs) => jobs.job_nature === "Job");
+
   useEffect(() => {
     document.title = "CareerFast | Job Portal";
     getJobPostsData();
@@ -305,9 +230,13 @@ export default function JobPortalLandingPage() {
     try {
       const response = await getJobPosts(payload);
       const jobs = response?.data?.data?.data;
-      console.log("get job posttt", jobs);
+
       if (Array.isArray(jobs)) {
-        setBackendJobs(jobs);
+        const uniqueJobs = jobs.filter(
+          (job, index, self) => index === self.findIndex((j) => j.id === job.id)
+        );
+        console.warn("Unexpected job data format", uniqueJobs);
+        setBackendJobs(uniqueJobs);
       } else {
         console.warn("Unexpected job data format", response);
       }
@@ -606,7 +535,7 @@ export default function JobPortalLandingPage() {
           </div>
         </div>
 
-        {backendJobs.length > 0 ? (
+        {jobTypeJobs.length > 0 ? (
           <Slider {...settings} className="elite-job-carousel">
             {backendJobs
               .filter((jobs) => jobs.job_nature === "Job")
@@ -708,203 +637,6 @@ export default function JobPortalLandingPage() {
           </div>
         )}
       </div>
-      {/*  */}
-
-      {/* Right role */}
-      <div className="elite-carousel-rightRole-container">
-        <div className="elite-carousel-header">
-          <div className="elite-title-wrapper">
-            <Title level={2} className="elite-title">
-              <motion.span
-                className="elite-title-text"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                Find The Right Role For You
-              </motion.span>
-              <motion.span
-                className="elite-badge"
-                animate={{
-                  background: [
-                    "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
-                  ],
-                  boxShadow: [
-                    "0 4px 15px rgba(200, 210, 230, 0.7)",
-                    "0 4px 15px rgba(200, 210, 250, 0.7)",
-                    "0 4px 15px rgba(230, 210, 200, 0.7)",
-                  ],
-                }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              >
-                EXCLUSIVE SELECTION
-              </motion.span>
-            </Title>
-            <motion.div
-              className="elite-subtitle-wrapper"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-            >
-              <Text className="elite-subtitle">
-                Apply to roles matching your skills from 500+ trending options.
-              </Text>
-              <div className="elite-decoration-line"></div>
-            </motion.div>
-          </div>
-        </div>
-        <div className="right_role">
-          <Slider {...rightRolesettings} className="elite-job-carousel">
-            {rightRole.map((rightRole, index) => (
-              <motion.div
-                key={rightRole.id}
-                className="elite-job-slide"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card
-                  className="elite-rightRole-card"
-                  style={{
-                    background: rightRole.bgColor,
-                  }}
-                  bordered={false}
-                >
-                  <div className="elite-rightRole-content">
-                    <Title level={4} className="elite-rightRole-title">
-                      {rightRole.title}
-                    </Title>
-                    <Text className="elite-rightRole-company-name">
-                      {rightRole.openings}
-                    </Text>
-                  </div>
-                  <div className="elite-rightRole-logo-wrapper">
-                    <img
-                      src={rightRole.logo}
-                      alt={rightRole.company}
-                      className="elite-rightRole-company-logo"
-                    />
-                  </div>
-
-                  <motion.div
-                    className="elite-rightRole-cta"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <ArrowRightOutlined className="elite-rightRole-cta-icon" />
-                  </motion.div>
-                </Card>
-              </motion.div>
-            ))}
-          </Slider>
-        </div>
-      </div>
-      {/*  */}
-
-      {/* Jobs */}
-      {/* <div className="elite-carousel-container">
-        <div className="elite-carousel-header">
-          <div className="elite-title-wrapper">
-            <Title level={2} className="elite-title">
-              <motion.span
-                className="elite-title-text"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                Curated Opportunities
-              </motion.span>
-            </Title>
-            <motion.div
-              className="elite-subtitle-wrapper"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-            >
-              <Text className="elite-subtitle">
-                Handpicked positions from industry leaders, tailored for
-                top-tier professionals like yourself.
-              </Text>
-              <div className="elite-decoration-line"></div>
-            </motion.div>
-          </div>
-        </div>
-
-        <Slider {...settings} className="elite-job-carousel">
-          {jobs.map((job, index) => (
-            <motion.div
-              key={job.id}
-              className="elite-job-slide"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <Card
-                className="elite-job-card"
-                style={{
-                  background: job.bgColor,
-                }}
-                bordered={false}
-              >
-                <div className="elite-job-tag">{job.tag}</div>
-
-                <div className="elite-logo-wrapper">
-                  <img
-                    src={job.logo}
-                    alt={job.company}
-                    className="elite-company-logo"
-                  />
-                  <div className="elite-logo-backdrop"></div>
-                </div>
-
-                <div className="elite-job-content">
-                  <Title level={4} className="elite-job-title">
-                    {job.title}
-                  </Title>
-                  <Text className="elite-company-name">{job.company}</Text>
-
-                  <div className="elite-job-details">
-                    <div className="elite-detail-item">
-                      <EnvironmentOutlined className="elite-detail-icon" />
-                      <div>
-                        <span className="elite-detail-label">Location</span>
-                        <span>{job.location}</span>
-                      </div>
-                    </div>
-                    <div className="elite-detail-item">
-                      <StarOutlined className="elite-detail-icon" />
-                      <div>
-                        <span className="elite-detail-label">Level</span>
-                        <span>{job.experience}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="elite-job-meta">
-                    <div className="elite-meta-item">
-                      <TeamOutlined />
-                      <span>{job.applicants}+ applicants</span>
-                    </div>
-                    <div className="elite-meta-item elite-salary">
-                      <PiCurrencyDollarDuotone />
-                      <span>{job.salary}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <motion.div
-                  className="elite-job-cta"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <ArrowRightOutlined className="elite-cta-icon" />
-                  <span>View Details</span>
-                </motion.div>
-              </Card>
-            </motion.div>
-          ))}
-        </Slider>
-      </div> */}
       {/*  */}
 
       {/* Need Guidence */}

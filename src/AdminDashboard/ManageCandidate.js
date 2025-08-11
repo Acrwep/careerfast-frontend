@@ -48,6 +48,7 @@ import {
 import {
   getJobAppliedCandidates,
   getJobPosts,
+  getUserJobPostStatus,
   getUserProfile,
   updateUserAppliedJobStatus,
 } from "../ApiService/action";
@@ -71,6 +72,7 @@ export default function ManageCandidate() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobTitle, setJobTitle] = useState("");
+  const [appliedUserId, setAppliedUserId] = useState(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("loginDetails");
@@ -119,31 +121,55 @@ export default function ManageCandidate() {
 
     try {
       const response = await getJobAppliedCandidates({ post_id: id });
-
       const users = response?.data?.data[0]?.users;
 
-      if (Array.isArray(users)) {
-        const formattedUsers = users.map((user, index) => ({
-          ...user,
-          key: user.id || index,
-          name: `${user.first_name} ${user.last_name}`,
-          email: user.email,
-          college: user.college_name,
-          avatarColor: "#1890ff",
-          profile_image: user.image || null,
-          status: user.registration_status || "Pending",
-          score: user.score || 0,
-        }));
-        setTimeout(() => {
-          setAppliedUser(formattedUsers);
-          setLoading(false);
-        }, 800);
-      } else {
-        setTimeout(() => {
-          setAppliedUser([]);
-          setLoading(false);
-        }, 800);
+      if (!Array.isArray(users)) {
+        setAppliedUser([]);
+        setLoading(false);
+        return;
       }
+
+      const formattedUsers = await Promise.all(
+        users.map(async (user, index) => {
+          let latestStatus = "Pending";
+          let latestUpdatedAt = null;
+
+          try {
+            const statusRes = await getUserJobPostStatus({
+              applied_job_id: user.applied_jobs_id,
+            });
+
+            const statusList = statusRes?.data?.data;
+            if (Array.isArray(statusList) && statusList.length > 0) {
+              statusList.sort(
+                (a, b) => new Date(b.changed_at) - new Date(a.changed_at)
+              );
+              latestStatus = statusList[0]?.status || "Pending";
+              latestUpdatedAt = statusList[0]?.changed_at || null;
+            }
+          } catch (err) {
+            console.error(`Status fetch failed for user ${user.id}`, err);
+          }
+
+          return {
+            ...user,
+            key: user.id || index,
+            name: `${user.first_name} ${user.last_name}`,
+            email: user.email,
+            college: user.college_name,
+            avatarColor: "#1890ff",
+            profile_image: user.image || null,
+            status: latestStatus, // ✅ correct
+            status_updated_at: latestUpdatedAt, // ✅ include updated time
+            score: user.score || 0,
+          };
+        })
+      );
+
+      setTimeout(() => {
+        setAppliedUser(formattedUsers);
+        setLoading(false);
+      }, 800);
     } catch (error) {
       console.error("Error fetching applied candidates:", error);
       setTimeout(() => {
@@ -181,19 +207,45 @@ export default function ManageCandidate() {
       setJobTitle(jobTitleData);
     } catch (error) {
       console.log("applied candidate", error);
+    } finally {
+      getUserJobPostStatusData();
     }
   };
 
-  const handleJobStatus = async () => {
+  const getUserJobPostStatusData = async () => {
+    const payload = {
+      applied_job_id: appliedUserId,
+    };
+    try {
+      const response = await getUserJobPostStatus(payload);
+      console.log("getUserJobPostStatus", response);
+    } catch (error) {
+      console.log("getUserJobPostStatus", error);
+    }
+  };
+
+  const handleJobStatus = async (status, userId) => {
     const payload = {
       post_id: id,
-      user_id: loginUserId,
-      status: "",
+      user_id: userId,
+      status: status,
     };
 
     try {
       const response = await updateUserAppliedJobStatus(payload);
       console.log("updateUserAppliedJobStatus", response);
+
+      setAppliedUser((prev) =>
+        prev.map((user) =>
+          user.id === userId
+            ? {
+                ...user,
+                status: status,
+                status_updated_at: new Date().toISOString(),
+              }
+            : user
+        )
+      );
     } catch (error) {
       console.log("updateUserAppliedJobStatus", error);
     }
@@ -246,49 +298,86 @@ export default function ManageCandidate() {
       ),
     },
     {
+      title: <Text type="secondary">CANDIDATE STATUS</Text>,
+      dataIndex: "status",
+      render: (status, record) => {
+        let color = "default";
+        const lower = status?.toLowerCase();
+
+        if (lower === "shortlist") color = "green";
+        else if (lower === "rejected") color = "red";
+        else if (lower === "sent mail") color = "blue";
+        else if (lower === "pending") color = "orange";
+
+        return (
+          <Tooltip
+            title={`Last updated: ${new Date(
+              record.status_updated_at
+            ).toLocaleString()}`}
+          >
+            <Tag color={color} style={{ fontWeight: 500, borderRadius: 6 }}>
+              {status?.charAt(0).toUpperCase() + status?.slice(1)}
+            </Tag>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: <Text type="secondary">REG STATUS</Text>,
       key: "regStatus",
-      render: (text, record) => (
-        <Space>
-          <Tooltip title="Shortlist">
-            <Button
-              onClick={handleJobStatus("Shortlist")}
-              shape="circle"
-              icon={<CheckOutlined />}
-              style={{
-                background: "#f6ffed",
-                borderColor: "#b7eb8f",
-                color: "#52c41a",
-              }}
-            />
-          </Tooltip>
-          <Tooltip title="Reject">
-            <Button
-              onClick={handleJobStatus("Reject")}
-              shape="circle"
-              icon={<StopOutlined />}
-              style={{
-                background: "#fff1f0",
-                borderColor: "#ffa39e",
-                color: "#f5222d",
-              }}
-            />
-          </Tooltip>
+      render: (text, record) => {
+        const lowerStatus = record.status?.toLowerCase();
 
-          <Tooltip title="Send Email">
-            <Button
-              onClick={handleJobStatus("Send Email")}
-              shape="circle"
-              icon={<MailOutlined />}
-              style={{
-                background: "#f5f5f5",
-                borderColor: "#d9d9d9",
-                color: "#000",
-              }}
-            />
-          </Tooltip>
-        </Space>
-      ),
+        return (
+          <Space>
+            <Tooltip title="Shortlist">
+              <Button
+                onClick={() => handleJobStatus("Shortlist", record.id)}
+                shape="circle"
+                icon={<CheckOutlined />}
+                disabled={
+                  lowerStatus === "rejected" || lowerStatus === "sent mail"
+                }
+                style={{
+                  background: "#f6ffed",
+                  borderColor: "#b7eb8f",
+                  color: "#52c41a",
+                  opacity:
+                    lowerStatus === "rejected" || lowerStatus === "sent mail"
+                      ? 0.5
+                      : 1,
+                }}
+              />
+            </Tooltip>
+
+            <Tooltip title="Reject">
+              <Button
+                onClick={() => handleJobStatus("Rejected", record.id)}
+                shape="circle"
+                icon={<StopOutlined />}
+                style={{
+                  background: "#fff1f0",
+                  borderColor: "#ffa39e",
+                  color: "#f5222d",
+                }}
+              />
+            </Tooltip>
+
+            <Tooltip title="Send Email">
+              <Button
+                onClick={() => handleJobStatus("Sent Mail", record.id)}
+                shape="circle"
+                icon={<MailOutlined />}
+                style={{
+                  background: "#e6f4ff",
+                  borderColor: "#91caff",
+                  color: "#0958d9",
+                }}
+              />
+            </Tooltip>
+          </Space>
+        );
+      },
     },
     {
       title: <Text type="secondary">COMPATIBILITY</Text>,
@@ -317,36 +406,7 @@ export default function ManageCandidate() {
         </div>
       ),
     },
-    {
-      title: <Text type="secondary">PROGRESS</Text>,
-      render: () => (
-        <Space>
-          <Tag
-            style={{
-              background: "#f6ffed",
-              borderColor: "#b7eb8f",
-              color: "#389e0d",
-              borderRadius: 12,
-              fontWeight: 500,
-            }}
-          >
-            R1
-          </Tag>
-          <ArrowRightOutlined style={{ color: "#888" }} />
-          <Tag
-            style={{
-              background: "#e6f7ff",
-              borderColor: "#91d5ff",
-              color: "#1890ff",
-              borderRadius: 12,
-              fontWeight: 500,
-            }}
-          >
-            R2
-          </Tag>
-        </Space>
-      ),
-    },
+
     {
       title: "",
       key: "action",
@@ -444,10 +504,11 @@ export default function ManageCandidate() {
                   value={statusFilter}
                   onChange={(value) => setStatusFilter(value)}
                 >
-                  <Option value="all">All Statuses</Option>
+                  <Option value="all">All Status</Option>
                   <Option value="pending">Pending</Option>
-                  <Option value="shortlisted">Shortlisted</Option>
+                  <Option value="shortlist">Shortlisted</Option>
                   <Option value="rejected">Rejected</Option>
+                  <Option value="sent mail">Sent Mail</Option>
                 </Select>
               </Space>
 

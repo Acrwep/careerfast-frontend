@@ -2,15 +2,23 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Input, Card, Tag, Typography, Badge, Spin } from "antd";
 import { SearchOutlined, CalendarOutlined } from "@ant-design/icons";
 import { debounce } from "lodash";
-import { getUserAppliedJobs } from "../ApiService/action";
 import { useNavigate } from "react-router-dom";
+import {
+  getJobAppliedCandidates,
+  getUserAppliedJobs,
+  getUserJobPostStatus,
+} from "../ApiService/action";
 import { FaCheckCircle } from "react-icons/fa";
 import Header from "../Header/Header";
 
 const { Title, Text } = Typography;
 
-const OpportunityCard = ({ opportunity }) => {
+const OpportunityCard = ({ opportunity, appliedJobStatus }) => {
   const navigate = useNavigate();
+
+  const statusForThisJob = appliedJobStatus.find(
+    (item) => item.post_id === opportunity.post_id
+  );
 
   return (
     <Card
@@ -49,9 +57,25 @@ const OpportunityCard = ({ opportunity }) => {
             <Title level={5} style={{ margin: 0 }}>
               {opportunity.job_title}
             </Title>
-            <div>
-              <FaCheckCircle color="green" />
-            </div>
+            {statusForThisJob ? (
+              <Tag
+                color={
+                  statusForThisJob.status === "Shortlist"
+                    ? "green"
+                    : statusForThisJob.status === "Rejected"
+                    ? "red"
+                    : statusForThisJob.status === "Sent mail"
+                    ? "blue"
+                    : statusForThisJob.status === "Pending"
+                    ? "orange"
+                    : "default"
+                }
+              >
+                {statusForThisJob.status}
+              </Tag>
+            ) : (
+              <Tag>Pending</Tag>
+            )}
           </div>
 
           <Text strong style={{ display: "block", marginBottom: 8 }}>
@@ -93,6 +117,8 @@ export default function AppliedJobs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [loginUserId, setLoginUserId] = useState(null);
+  const [appliedJobStatus, setAppliedJobStatus] = useState([]);
+  const navigate = useNavigate("");
 
   useEffect(() => {
     const stored = localStorage.getItem("loginDetails");
@@ -116,14 +142,33 @@ export default function AppliedJobs() {
     setLoading(true);
     try {
       const response = await getUserAppliedJobs({ userId: loginUserId });
-      const jobs = response?.data?.data;
-      if (Array.isArray(jobs)) {
-        setOpportunities(jobs);
+      const jobs = response?.data?.data || [];
+
+      setOpportunities(jobs);
+
+      if (jobs.length > 0) {
+        await fetchAllJobStatuses(jobs.map((job) => job.post_id));
       }
     } catch (error) {
       console.error("Error fetching applied jobs:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllJobStatuses = async (jobIds) => {
+    try {
+      const statusResults = await Promise.all(
+        jobIds.map(async (id) => {
+          const res = await getUserJobPostStatus({ applied_job_id: id });
+          const statusData = res?.data?.data?.[0];
+          return { post_id: id, status: statusData?.status || null };
+        })
+      );
+
+      setAppliedJobStatus(statusResults);
+    } catch (error) {
+      console.error("Error fetching job statuses:", error);
     }
   };
 
@@ -192,14 +237,28 @@ export default function AppliedJobs() {
           </div>
         ) : filteredOpportunities.length > 0 ? (
           filteredOpportunities.map((opp) => (
-            <OpportunityCard key={opp.id} opportunity={opp} />
+            <OpportunityCard
+              key={opp.id}
+              opportunity={opp}
+              appliedJobStatus={appliedJobStatus}
+            />
           ))
         ) : (
           <Card style={{ textAlign: "center", padding: 40 }}>
             <Title level={4} style={{ color: "#bfbfbf" }}>
               No opportunities found
             </Title>
-            <Text type="secondary">Try adjusting your search query</Text>
+            <Text
+              style={{
+                cursor: "pointer",
+                textDecoration: "underline",
+                color: "#5f2eea",
+              }}
+              onClick={() => navigate("/job-filter")}
+              type="secondary"
+            >
+              Apply some jobs
+            </Text>
           </Card>
         )}
       </section>

@@ -770,7 +770,7 @@ body {
   background: linear-gradient(135deg, #faf5ff, #f5f0ff);
   padding: 28px;
   border-radius: 18px;
-  margin: 32px 0;
+  margin: 10px 0px 32px 0;
   border: 1px solid #f0e5ff;
   position: relative;
   overflow: hidden;
@@ -1349,6 +1349,11 @@ body {
 
 .job_posting_submit .button-group {
   justify-content: space-between;
+}
+
+.profile-page-details {
+  display: flex;
+  gap: 44px;
 }
 
 /* Responsive Adjustments */

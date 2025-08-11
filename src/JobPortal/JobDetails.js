@@ -11,13 +11,14 @@ import {
   Drawer,
   Button,
   message,
+  Tooltip,
 } from "antd";
 import {
   FaRegBuilding,
   FaRegCalendarAlt,
   FaMapMarkerAlt,
-  FaCrown,
   FaHeart,
+  FaLink,
 } from "react-icons/fa";
 import {
   StarFilled,
@@ -31,7 +32,6 @@ import { CommonToaster } from "../Common/CommonToaster";
 import {
   applyForJob,
   checkIsJobApplied,
-  getJobAppliedCandidates,
   checkIsJobSaved,
   getJobPosts,
   saveJobPost,
@@ -42,8 +42,18 @@ import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
 import { FaTransgender } from "react-icons/fa6";
 import { FaCheckCircle } from "react-icons/fa";
 import Header from "../Header/Header";
+import additional1 from "../images/additional1.png";
+import additional2 from "../images/additional2.png";
+import additional3 from "../images/additional3.png";
+import additional4 from "../images/additional4.png";
+import additional5 from "../images/additional5.png";
+import additional6 from "../images/additional6.png";
 
-const tabs = ["Job Description", "Dates & Deadlines", "FAQs & Discussions"];
+const tabs = [
+  "Job Description",
+  "Additional Informations",
+  "FAQs & Discussions",
+];
 
 export default function JobDetails() {
   const [wishlisted, setWishlisted] = useState(false);
@@ -154,6 +164,9 @@ export default function JobDetails() {
       logo: job.company_logo,
       created_date: job.created_at,
       job_description: job.job_description,
+      benefits: job.benefits,
+      openings: job.openings,
+      job_category: job.job_category,
       postedDate,
       working_days: job.working_days,
       daysLeft: daysLeft > 0 ? `${daysLeft} days left` : "Expired",
@@ -185,6 +198,12 @@ export default function JobDetails() {
   };
 
   const applyForJobData = async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      message.error("Please login before applying.");
+      return;
+    }
+
     const jobId = postDetails[0]?.id;
     const questionsWithIds = postDetails[0]?.questions_with_ids || [];
 
@@ -209,7 +228,7 @@ export default function JobDetails() {
     };
 
     try {
-      const response = await applyForJob(payload);
+      const response = await applyForJob(payload, token); // pass token to API helper
       console.log("apply jobs", response);
       message.success("Job applied successfully");
       setIsApplied((prev) => ({
@@ -348,6 +367,38 @@ export default function JobDetails() {
     }
   };
 
+  const handleShare = (job) => {
+    const jobLink = `${window.location.origin}/job-details/${job.id}`;
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title: job.title,
+          text: `Check out this job at ${job.company}!`,
+          url: jobLink,
+        })
+        .then(() => console.log("Share successful"))
+        .catch((err) => console.error("Share failed:", err));
+    } else {
+      navigator.clipboard.writeText(jobLink).then(() => {
+        alert("Job link copied to clipboard!");
+      });
+    }
+  };
+
+  const handleCopy = (job) => {
+    const jobUrl = `${window.location.origin}/job-details/${job.id}`;
+
+    navigator.clipboard
+      .writeText(jobUrl)
+      .then(() => {
+        message.success("Job link copied to clipboard!");
+      })
+      .catch(() => {
+        message.error("Failed to copy job link");
+      });
+  };
+
   const text = `
   A dog is a type of domesticated animal.
   Known for its loyalty and faithfulness,
@@ -441,18 +492,39 @@ export default function JobDetails() {
                       <div className="side_job_action_icons">
                         <span className="side_job_action_icon">
                           {isSaved[job.id] ? (
-                            <FaHeart className="side_job_action_icon heart active" />
+                            <FaHeart
+                              size={20}
+                              className="side_job_action_icon heart active"
+                            />
                           ) : (
-                            <FaRegHeart className="side_job_action_icon heart" />
+                            <FaRegHeart
+                              size={20}
+                              className="side_job_action_icon heart"
+                            />
                           )}
                         </span>
                         <span className="side_job_action_icon">
-                          <IoMdCalendar className="side_job_action_icon calendar" />
+                          <IoMdCalendar
+                            size={20}
+                            className="side_job_action_icon calendar"
+                          />
                         </span>
                       </div>
-                      <button className="side_job_share_button">
-                        <IoIosShareAlt /> Share
-                      </button>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <Tooltip title="Copy link">
+                          <span className="side_job_action_icon">
+                            <FaLink size={20} onClick={() => handleCopy(job)} />
+                          </span>
+                        </Tooltip>
+                        <span className="side_job_action_icon">
+                          <Tooltip title="Share link">
+                            <IoIosShareAlt
+                              size={20}
+                              onClick={() => handleShare(job)}
+                            />{" "}
+                          </Tooltip>
+                        </span>
+                      </div>
                     </div>
                     <div style={{ display: "flex", justifyContent: "center" }}>
                       {isApplied[job.id] === true ? (
@@ -570,44 +642,71 @@ export default function JobDetails() {
               </div>
             )}
 
-            {activeTab === "Dates & Deadlines" && (
+            {activeTab === "Additional Informations" && (
               <div className="job_filter">
                 <div className="section-card">
                   <h2 className="section-title">Additional Information</h2>
 
                   <div className="info-card">
                     <div className="info-card-content">
-                      <h4>Job Location(s)</h4>
-                      <p>{job.location}</p>
+                      <h4>Skills Required</h4>
+                      <p>
+                        {job.skills.map((skill, index) => (
+                          <span key={index} className="premium-skill">
+                            {skill}
+                            {index < job.skills.length - 1 && (
+                              <span className="skill-separator"> | </span>
+                            )}
+                          </span>
+                        ))}
+                      </p>
                     </div>
+
                     <img
                       className="info-card-image"
-                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/66702737c9e5c_location.png"
+                      src={additional1}
                       alt="Location"
                     />
                   </div>
-
                   <div className="info-card">
                     <div className="info-card-content">
-                      <h4>Experience</h4>
-                      <p>{job.eligibility}</p>
+                      <h4>Job Benefits</h4>
+                      <p>
+                        {(job.benefits || []).map((benefit, index) => (
+                          <span key={index} className="premium-skill">
+                            {benefit}
+                          </span>
+                        ))}
+                      </p>
                     </div>
                     <img
                       className="info-card-image"
-                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/66710a39d5851_experience.png"
-                      alt="Experience"
+                      src={additional3}
+                      alt="Salary"
                     />
                   </div>
 
                   <div className="info-card">
                     <div className="info-card-content">
-                      <h4>Salary</h4>
-                      <p>{job.salary}</p>
+                      <h4>Job Catergory</h4>
+                      <p>{job.job_category}</p>
                     </div>
                     <img
                       className="info-card-image"
-                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109f58b243_salary.png"
-                      alt="Salary"
+                      src={additional4}
+                      alt="Work Details"
+                    />
+                  </div>
+
+                  <div className="info-card">
+                    <div className="info-card-content">
+                      <h4>Job Openings</h4>
+                      <p>{job.openings}</p>
+                    </div>
+                    <img
+                      className="info-card-image"
+                      src={additional2}
+                      alt="Experience"
                     />
                   </div>
 
@@ -620,7 +719,7 @@ export default function JobDetails() {
                     </div>
                     <img
                       className="info-card-image"
-                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109d710a09_work_detail.png"
+                      src={additional5}
                       alt="Work Details"
                     />
                   </div>
@@ -637,7 +736,7 @@ export default function JobDetails() {
                     </div>
                     <img
                       className="info-card-image"
-                      src="https://d8it4huxumps7.cloudfront.net/uploads/images/667109c430518_job_typetiming.png?d=240x172"
+                      src={additional6}
                       alt="Work Details"
                     />
                   </div>

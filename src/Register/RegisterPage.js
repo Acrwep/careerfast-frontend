@@ -127,8 +127,8 @@ const RegisterPage = () => {
       phone: phone,
       email: activeTab === "recruiter" ? officialEmail : email,
       password: password,
-      organization: orgName,
-      organization_type_id: orgType,
+      organization: activeTab === "recruiter" ? orgName : null,
+      organization_type_id: activeTab === "recruiter" ? orgType : null,
       role_id:
         activeTab === "candidate" ? 2 : activeTab === "recruiter" ? 3 : 1,
     };

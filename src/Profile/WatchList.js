@@ -1,20 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
-import {
-  Input,
-  Button,
-  Card,
-  Tag,
-  Typography,
-  Dropdown,
-  Menu,
-  Badge,
-  Spin,
-} from "antd";
+import { Input, Button, Card, Tag, Typography, Badge, Spin } from "antd";
 import {
   SearchOutlined,
   CalendarOutlined,
-  ShareAltOutlined,
-  EllipsisOutlined,
   HeartOutlined,
   HeartFilled,
 } from "@ant-design/icons";
@@ -154,18 +142,6 @@ const OpportunityCard = ({ opportunity, onSave }) => {
               <CalendarOutlined /> Created at: {opportunity.created_date}
             </Text>
           </div>
-
-          {/* <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <Dropdown overlay={menu} placement="bottomRight">
-            <Button type="text" icon={<EllipsisOutlined />} />
-          </Dropdown>
-        </div> */}
         </div>
       </Card>
     </>
@@ -177,6 +153,7 @@ export default function WatchList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [loginUserId, setLoginUserId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const stored = localStorage.getItem("loginDetails");
@@ -289,9 +266,19 @@ export default function WatchList() {
         ) : (
           <Card style={{ textAlign: "center", padding: 40 }}>
             <Title level={4} style={{ color: "#bfbfbf" }}>
-              No opportunities found
+              No wishlist opportunities found
             </Title>
-            <Text type="secondary">Try adjusting your search query</Text>
+            <Text
+              style={{
+                cursor: "pointer",
+                textDecoration: "underline",
+                color: "#5f2eea",
+              }}
+              onClick={() => navigate("/job-filter")}
+              type="secondary"
+            >
+              Try to add your wishlist
+            </Text>
           </Card>
         )}
       </section>

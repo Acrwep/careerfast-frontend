@@ -46,6 +46,8 @@ import {
   ArrowRightOutlined,
   LogoutOutlined,
   RightOutlined,
+  HeartFilled,
+  HeartOutlined,
 } from "@ant-design/icons";
 
 import { Skeleton, Tag } from "antd";
@@ -124,7 +126,7 @@ export default function Header() {
       setEmail(response?.data?.data?.email || "");
       setLname(response?.data?.data?.last_name || "");
 
-      localStorage.setItem("profileImage", image);
+      // localStorage.setItem("profileImage", image);
     } catch (error) {
       console.log("getuserprofile errorddd", error);
     } finally {
@@ -235,9 +237,12 @@ export default function Header() {
         <Container>
           <div className="d-flex gap-3 global_search">
             <Navbar.Brand href="#">
-              <a href="job-portal">
-                <img src={logo} alt="Logo" className="main-logo" />
-              </a>
+              <img
+                onClick={() => navigate("/job-portal")}
+                src={logo}
+                alt="Logo"
+                className="main-logo"
+              />
             </Navbar.Brand>
             <AutoComplete
               options={suggestions}
@@ -402,7 +407,7 @@ export default function Header() {
       </Navbar>
 
       <Drawer
-        title={null} // We'll customize our own header
+        title={null}
         placement="right"
         width={380}
         onClose={onClose}
@@ -484,7 +489,10 @@ export default function Header() {
               </Text>
               <div style={{ marginTop: 12 }}>
                 <Button
-                  onClick={() => navigate("/admin-profile")}
+                  onClick={() => {
+                    localStorage.setItem("activeAdminTab", "mainprofile");
+                    navigate("/admin-profile");
+                  }}
                   type="text"
                   style={{
                     color: "#8d3ffb",
@@ -575,15 +583,48 @@ export default function Header() {
               itemLayout="horizontal"
               dataSource={[
                 {
-                  title: "Manage Listings",
+                  title: (
+                    <span
+                      style={{ cursor: "pointer", color: "#4f46e5" }}
+                      onClick={() => {
+                        localStorage.setItem("activeAdminTab", "listing");
+                        navigate("/admin-profile");
+                      }}
+                    >
+                      Manage Listings
+                    </span>
+                  ),
                   icon: <AppstoreOutlined style={{ color: "#4f46e5" }} />,
                 },
                 {
-                  title: "My Festivals",
-                  icon: <CalendarOutlined style={{ color: "#4f46e5" }} />,
+                  title: (
+                    <span
+                      style={{ cursor: "pointer", color: "#4f46e5" }}
+                      onClick={() => {
+                        localStorage.setItem("activeAdminTab", "wishlist");
+                        navigate("/admin-profile");
+                      }}
+                    >
+                      Wishlist
+                    </span>
+                  ),
+                  icon: <HeartOutlined style={{ color: "#4f46e5" }} />,
                 },
                 {
-                  title: "Account Settings",
+                  title: (
+                    <span
+                      style={{ cursor: "pointer", color: "#4f46e5" }}
+                      onClick={() => {
+                        localStorage.setItem(
+                          "activeAdminTab",
+                          "accountsettings"
+                        );
+                        navigate("/admin-profile");
+                      }}
+                    >
+                      Account Settings
+                    </span>
+                  ),
                   icon: <SettingOutlined style={{ color: "#4f46e5" }} />,
                 },
               ]}
@@ -624,31 +665,24 @@ export default function Header() {
             />
           </div>
 
-          <div className="premium-menu-section" style={{ marginTop: 24 }}>
-            <Text
-              type="secondary"
-              style={{
-                fontSize: 11,
-                textTransform: "uppercase",
-                letterSpacing: 1,
-                marginBottom: 12,
-                display: "block",
-              }}
-            >
-              For Users
-            </Text>
-
+          <div className="premium-menu-section" style={{ marginTop: 0 }}>
             <List
               size="large"
               itemLayout="horizontal"
               dataSource={[
                 {
-                  title: "Registrations / Applications",
+                  title: (
+                    <span
+                      style={{ cursor: "pointer", color: "#4f46e5" }}
+                      onClick={() => {
+                        localStorage.setItem("activeAdminTab", "applied");
+                        navigate("/admin-profile");
+                      }}
+                    >
+                      Applied Jobs
+                    </span>
+                  ),
                   icon: <UserAddOutlined style={{ color: "#4f46e5" }} />,
-                },
-                {
-                  title: "Referrals",
-                  icon: <ShareAltOutlined style={{ color: "#4f46e5" }} />,
                 },
               ]}
               renderItem={(item) => (
