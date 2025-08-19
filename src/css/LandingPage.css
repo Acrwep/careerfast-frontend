@@ -583,7 +583,7 @@
 }
 
 .ant-empty .ant-empty-image {
-  height: 260px;
+  height: auto;
   margin-bottom: 8px;
   opacity: 1;
 }

@@ -39,6 +39,7 @@ import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
 import { getJobPosts } from "../ApiService/action";
 import Footer from "../Footer/Footer";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const { Title, Text } = Typography;
 

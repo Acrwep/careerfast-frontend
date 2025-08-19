@@ -33,6 +33,8 @@ import {
   sendOtp,
   getRoles,
 } from "../ApiService/action";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 const { Title, Text, Link } = Typography;
 
 const LoginPage = () => {
@@ -213,7 +215,6 @@ const LoginPage = () => {
     }
     try {
       const payload = {
-        email: email,
         email: otpEmail,
       };
       setLoading(true);
@@ -498,6 +499,17 @@ const LoginPage = () => {
                     marginBottom: 14,
                   }}
                 >
+                  {/* ✅ Google Login */}
+                  <GoogleLogin
+                    onSuccess={(credentialResponse) => {
+                      console.log(credentialResponse);
+                      console.log(jwtDecode(credentialResponse.credential));
+                      navigate("/job-portal");
+                    }}
+                    onError={() => {
+                      console.log("Login error");
+                    }}
+                  />
                   <Button
                     shape="circle"
                     size="large"

@@ -797,3 +797,53 @@ export const getUserJobPostStatus = async (payload) => {
     throw error;
   }
 };
+
+// changePassword
+
+export const changePassword = async (payload) => {
+  try {
+    const response = await api.put("api/changePassword", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getAppliedCandidatesCount
+
+export const getAppliedCandidatesCount = async (payload) => {
+  try {
+    const response = await api.get("api/getAppliedCandidatesCount", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// StatsOfPost
+
+export const StatsOfPost = async (payload) => {
+  try {
+    const response = await api.get("api/StatsOfPost", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// getAllCandidateByRecruiter
+
+export const getAllCandidateByRecruiter = async (payload) => {
+  try {
+    const response = await api.get("api/getAllCandidateByRecruiter", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

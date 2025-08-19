@@ -22,11 +22,13 @@ import {
   Empty,
   Skeleton,
   Badge,
+  Dropdown,
+  Modal,
+  Input,
 } from "antd";
+
 import {
-  StarOutlined,
   EyeOutlined,
-  LinkOutlined,
   EditOutlined,
   CheckCircleFilled,
   PlusOutlined,
@@ -34,10 +36,11 @@ import {
   DeleteOutlined,
   CalendarOutlined,
   TrophyFilled,
-  QuestionCircleOutlined,
   CrownFilled,
   StarFilled,
   RocketFilled,
+  BgColorsOutlined,
+  PictureOutlined,
 } from "@ant-design/icons";
 import { IoIosMale } from "react-icons/io";
 import { IoFemaleOutline } from "react-icons/io5";
@@ -66,9 +69,7 @@ import { IoLocationSharp } from "react-icons/io5";
 import { LiaSchoolSolid } from "react-icons/lia";
 import { MdFileDownloadDone } from "react-icons/md";
 
-import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
-import { addDays, subDays, format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
@@ -85,7 +86,6 @@ import {
   MdOutlineCalculate,
   MdConfirmationNumber,
   MdSwapHoriz,
-  MdOutlineWork,
   MdOutlineWorkHistory,
 } from "react-icons/md";
 import CommonTextArea from "../Common/CommonTextArea";
@@ -127,11 +127,6 @@ import {
 } from "../ApiService/action";
 
 const { Title, Text } = Typography;
-const { Dragger } = Upload;
-
-// Calculate streaks
-const currentStreak = 2;
-const maxStreak = 3;
 
 const { Sider, Content } = Layout;
 const { Meta } = Card;
@@ -185,7 +180,6 @@ const workingStartDateOptions = workingYearOptions;
 const workingEndDateOptions = workingYearOptions;
 
 export default function MainProfile() {
-  const [certifications, setCertification] = useState([]);
   const [activeTab, setActiveTab] = useState("basic");
   const [aboutText, setAboutText] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
@@ -314,7 +308,7 @@ export default function MainProfile() {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
-  const [userProfileLoading, setUserProfileLoading] = useState(false);
+  const [userProfileLoading, setUserProfileLoading] = useState(true);
   const [companies, setCompanies] = useState([
     {
       id: Date.now(),
@@ -332,6 +326,81 @@ export default function MainProfile() {
       workingEndDateError: "",
     },
   ]);
+
+  const [bannerStyle, setBannerStyle] = useState({
+    backgroundColor: "#481eaf",
+    backgroundImage: "none",
+  });
+
+  const [isColorModalVisible, setColorModalVisible] = useState(false);
+  const [isImageModalVisible, setImageModalVisible] = useState(false);
+  const [tempColor, setTempColor] = useState("#481eaf");
+  const [tempImage, setTempImage] = useState("");
+
+  const handleMenuClick = ({ key }) => {
+    if (key === "color") {
+      setColorModalVisible(true);
+    } else if (key === "image") {
+      setImageModalVisible(true);
+    }
+  };
+
+  const menu = (
+    <Menu
+      onClick={handleMenuClick}
+      style={{
+        borderRadius: "12px",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+        padding: "5px 0",
+        minWidth: "220px",
+      }}
+    >
+      <Menu.Item
+        key="color"
+        icon={
+          <BgColorsOutlined style={{ color: "#5f2eea", fontSize: "16px" }} />
+        }
+        style={{
+          padding: "10px 16px",
+          margin: "4px 8px",
+          borderRadius: "8px",
+          transition: "all 0.2s ease",
+        }}
+        className="menu-item-hover"
+      >
+        <span style={{ fontWeight: 500 }}>Change Background Color</span>
+      </Menu.Item>
+      <Menu.Divider style={{ margin: "4px 0" }} />
+      <Menu.Item
+        key="image"
+        icon={
+          <PictureOutlined style={{ color: "#5f2eea", fontSize: "16px" }} />
+        }
+        style={{
+          padding: "10px 16px",
+          margin: "4px 8px",
+          borderRadius: "8px",
+          transition: "all 0.2s ease",
+        }}
+        className="menu-item-hover"
+      >
+        <span style={{ fontWeight: 500 }}>Change Background Image</span>
+      </Menu.Item>
+    </Menu>
+  );
+
+  function getContrastColor(hexColor) {
+    // Convert hex to RGB
+    const r = parseInt(hexColor.substr(1, 2), 16);
+    const g = parseInt(hexColor.substr(3, 2), 16);
+    const b = parseInt(hexColor.substr(5, 2), 16);
+
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // Return dark or light color based on luminance
+    return luminance > 0.5 ? "#000000" : "#ffffff";
+  }
 
   //
   const [customSkillError, setCustomSkillError] = useState("");
@@ -469,7 +538,6 @@ export default function MainProfile() {
     };
 
     try {
-      setUserProfileLoading(true);
       const response = await getUserProfile(payload);
       const image = response?.data?.data?.profile_image || "";
       setProfileImage(image || defaultAvatar);
@@ -593,11 +661,9 @@ export default function MainProfile() {
       setShowWorkExpForm(true);
       setShowForm(true);
     } finally {
-      const timer = setUserProfileLoading(() => {
+      setTimeout(() => {
         setUserProfileLoading(false);
-      }, 1700);
-
-      return () => clearTimeout(timer);
+      }, 1000);
     }
   };
 
@@ -1353,8 +1419,6 @@ export default function MainProfile() {
     console.log("Selected Lateral Entry Option:", value);
   };
 
-  const today = new Date();
-
   const formatDateTime = (date) => {
     return new Date(date).toISOString().slice(0, 19).replace("T", " "); // 'YYYY-MM-DD HH:MM:SS'
   };
@@ -1387,22 +1451,6 @@ export default function MainProfile() {
       return () => clearTimeout(timer);
     }
   }, []);
-
-  const streakData = [
-    { date: "2025-05-08", count: 4 },
-    { date: "2025-05-18", count: 1 },
-    { date: "2025-05-19", count: 1 },
-    { date: "2025-05-20", count: 1 },
-    { date: "2025-05-30", count: 1 },
-    { date: "2025-05-31", count: 1 },
-  ];
-
-  const getClassForValue = (value) => {
-    if (!value) return "color-empty";
-    if (value.count >= 3) return "color-scale-3";
-    if (value.count >= 2) return "color-scale-2";
-    return "color-scale-1";
-  };
 
   const [open, setOpen] = useState(false);
   const showDrawer = () => {
@@ -1516,7 +1564,6 @@ export default function MainProfile() {
       reader.onloadend = async () => {
         const imageDataUrl = reader.result;
         setProfileImage(imageDataUrl);
-        // localStorage.setItem("profileAvatar", imageDataUrl);
         message.success("Profile image updated!");
 
         const payload = {
@@ -1541,7 +1588,6 @@ export default function MainProfile() {
 
   const handleRemove = () => {
     setProfileImage(defaultAvatar);
-    // localStorage.removeItem("profileAvatar");
     message.error("Profile image removed.");
   };
 
@@ -3686,17 +3732,256 @@ export default function MainProfile() {
   return (
     <>
       <Header />
-      <div className="profile-banner">
-        <div className="banner-content">
-          <Tooltip title="Edit Background">
-            <Button
-              style={{ color: "rgb(95, 46, 234)" }}
-              shape="circle"
-              icon={<EditOutlined />}
-              className="edit-banner-btn"
-            />
-          </Tooltip>
+      <div
+        className="profile-banner"
+        style={{
+          ...bannerStyle,
+          height: "180px",
+          borderRadius: "0px 0px 10px 10px",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div
+          className="banner-content"
+          style={{
+            textAlign: "right",
+            padding: "16px 24px",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
+          <Dropdown
+            overlay={menu}
+            trigger={["click"]}
+            placement="bottomRight"
+            overlayStyle={{
+              borderRadius: "12px",
+            }}
+          >
+            <Tooltip
+              title="Edit Background"
+              placement="left"
+              overlayStyle={{
+                borderRadius: "8px",
+                fontSize: "14px",
+              }}
+            >
+              <Button
+                style={{
+                  backgroundColor: "#fff",
+                  border: "none",
+                  width: "40px",
+                  height: "40px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 8px rgba(95, 46, 234, 0.2)",
+                }}
+                shape="circle"
+                icon={
+                  <EditOutlined
+                    style={{
+                      color: "rgb(95, 46, 234)",
+                      fontSize: "16px",
+                    }}
+                  />
+                }
+                className="edit-banner-btn"
+              />
+            </Tooltip>
+          </Dropdown>
         </div>
+
+        {/* Color Modal */}
+        <Modal
+          style={{ zIndex: 1999 }}
+          title={
+            <span style={{ fontWeight: 500, fontSize: "1.2rem" }}>
+              Customize Background Color
+            </span>
+          }
+          open={isColorModalVisible}
+          onOk={() => {
+            setBannerStyle({
+              backgroundColor: tempColor,
+              backgroundImage: "none",
+            });
+            setColorModalVisible(false);
+          }}
+          onCancel={() => setColorModalVisible(false)}
+          okButtonProps={{
+            style: {
+              backgroundColor: "#5f2eea",
+              borderColor: "#5f2eea",
+              borderRadius: "6px",
+              fontWeight: 500,
+            },
+          }}
+          cancelButtonProps={{
+            style: {
+              borderRadius: "6px",
+              fontWeight: 500,
+            },
+          }}
+          bodyStyle={{ padding: "24px" }}
+          width={450}
+          centered
+          destroyOnClose
+        >
+          <div style={{ marginBottom: "16px", color: "#666" }}>
+            Select your preferred background color
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+            }}
+          >
+            <input
+              type="color"
+              value={tempColor}
+              onChange={(e) => setTempColor(e.target.value)}
+              style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "8px",
+                border: "2px solid #f0f0f0",
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              }}
+            />
+            <div
+              style={{
+                padding: "12px 16px",
+                backgroundColor: "#f9f9f9",
+                borderRadius: "8px",
+                flex: 1,
+                fontFamily: "monospace",
+                fontWeight: 500,
+              }}
+            >
+              {tempColor}
+            </div>
+          </div>
+        </Modal>
+
+        {/* Image Modal */}
+        <Modal
+          title={
+            <span style={{ fontWeight: 500, fontSize: "1.2rem" }}>
+              Upload Background Image
+            </span>
+          }
+          open={isImageModalVisible}
+          onOk={() => {
+            if (tempImage) {
+              setBannerStyle({
+                backgroundImage: `url(${tempImage})`,
+                backgroundColor: "transparent",
+              });
+            }
+            setImageModalVisible(false);
+          }}
+          onCancel={() => {
+            setTempImage(null);
+            setImageModalVisible(false);
+          }}
+          okButtonProps={{
+            style: {
+              backgroundColor: "#5f2eea",
+              borderColor: "#5f2eea",
+              borderRadius: "6px",
+              fontWeight: 500,
+              color: "#fff",
+            },
+            disabled: !tempImage,
+          }}
+          cancelButtonProps={{
+            style: {
+              borderRadius: "6px",
+              fontWeight: 500,
+            },
+          }}
+          bodyStyle={{ padding: "24px" }}
+          width={600}
+          centered
+          destroyOnClose
+        >
+          <div style={{ marginBottom: "24px", color: "#666" }}>
+            Upload an image or select from gallery
+          </div>
+
+          <Upload.Dragger
+            accept="image/*"
+            beforeUpload={(file) => {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                setTempImage(e.target.result);
+              };
+              reader.readAsDataURL(file);
+              return false;
+            }}
+            showUploadList={false}
+            style={{
+              padding: "40px 20px",
+              borderRadius: "8px",
+              border: "2px dashed #d9d9d9",
+              backgroundColor: "#fafafa",
+              marginBottom: "24px",
+            }}
+          >
+            <div style={{ color: "#5f2eea", fontSize: "48px" }}>
+              <UploadOutlined />
+            </div>
+            <p
+              style={{
+                margin: "16px 0 8px",
+                fontSize: "16px",
+                fontWeight: 500,
+              }}
+            >
+              Click or drag file to this area
+            </p>
+            <p style={{ color: "#999", fontSize: "14px" }}>
+              Support for PNG, JPG, JPEG up to 5MB
+            </p>
+          </Upload.Dragger>
+
+          {tempImage && (
+            <div style={{ marginTop: "24px" }}>
+              <div
+                style={{
+                  marginBottom: "12px",
+                  color: "#666",
+                  fontWeight: 500,
+                }}
+              >
+                Image Preview:
+              </div>
+              <div
+                style={{
+                  border: "1px solid #f0f0f0",
+                  borderRadius: "8px",
+                  padding: "8px",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                }}
+              >
+                <img
+                  src={tempImage}
+                  alt="Preview"
+                  style={{
+                    width: "100%",
+                    borderRadius: "4px",
+                    maxHeight: "300px",
+                    objectFit: "contain",
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </Modal>
       </div>
 
       <Content className="profile-main-content">
@@ -3727,7 +4012,7 @@ export default function MainProfile() {
                       padding: "7px",
                     }}
                   >
-                    <Avatar size={90} src={profileImage || defaultAvatar} />
+                    <Avatar size={85} src={profileImage || defaultAvatar} />
 
                     <Upload
                       showUploadList={false}
@@ -3772,7 +4057,9 @@ export default function MainProfile() {
                   </div>
 
                   <div style={{ marginLeft: 16, textAlign: "left" }}>
-                    <h2 style={{ marginBottom: 0 }}>{`${fname} ${lname}`}</h2>
+                    <h2 style={{ marginBottom: 0, fontSize: 26 }}>
+                      {`${fname} ${lname}`}
+                    </h2>
                     <p style={{ marginBottom: 10, color: "#666" }}>{email}</p>
                     {roleId === 3 ? (
                       <div>

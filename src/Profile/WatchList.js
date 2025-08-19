@@ -1,5 +1,14 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Input, Button, Card, Tag, Typography, Badge, Spin } from "antd";
+import {
+  Input,
+  Button,
+  Card,
+  Tag,
+  Typography,
+  Badge,
+  Spin,
+  Skeleton,
+} from "antd";
 import {
   SearchOutlined,
   CalendarOutlined,
@@ -151,7 +160,7 @@ const OpportunityCard = ({ opportunity, onSave }) => {
 export default function WatchList() {
   const [opportunities, setOpportunities] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [loginUserId, setLoginUserId] = useState(null);
   const navigate = useNavigate();
 
@@ -174,15 +183,15 @@ export default function WatchList() {
   }, [loginUserId]);
 
   const getSavedJobsData = async () => {
-    setLoading(true);
     try {
       const response = await getSavedJobs({ user_id: loginUserId });
-      // console.log("kjshdfshhd", response);
       setOpportunities(response?.data?.data || []);
     } catch (error) {
       console.error("Error fetching jobs", error);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
     }
   };
 
@@ -253,7 +262,7 @@ export default function WatchList() {
 
         {loading ? (
           <div style={{ textAlign: "center", padding: 40 }}>
-            <Spin size="large" />
+            <Skeleton active />
           </div>
         ) : filteredOpportunities.length > 0 ? (
           filteredOpportunities.map((opp) => (

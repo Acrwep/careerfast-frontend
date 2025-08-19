@@ -1858,6 +1858,7 @@ const EditOpportunity = () => {
             overflowY: "auto",
             maxHeight: "calc(100vh - 48px)",
             paddingRight: 8,
+            cursor: "no-drop",
           }}
         >
           {postDetails.map((job) => (
@@ -1867,6 +1868,21 @@ const EditOpportunity = () => {
               ) : (
                 <>
                   <div className="premium-job-card">
+                    <Alert
+                      style={{
+                        marginTop: 0,
+                        marginBottom: 6,
+                        fontSize: 12,
+                        border: "none",
+                        position: "absolute",
+                        top: 0,
+                        left: 15,
+                        padding: "5px 10px",
+                      }}
+                      message="For Display Purposes Only!"
+                      type="warning"
+                      showIcon
+                    />
                     <div className="">
                       <div className="premium-border"></div>
                       <div className="premium-indicator">
@@ -1934,12 +1950,8 @@ const EditOpportunity = () => {
                             </div>
                           ) : (
                             <button
-                              disabled={job.status !== "Live"}
-                              className={
-                                job.status === "Live"
-                                  ? "side_job_apply_button primary"
-                                  : "side_job_apply_button disabled"
-                              }
+                              disabled
+                              className={"side_job_apply_button disabled"}
                             >
                               Apply Now
                             </button>

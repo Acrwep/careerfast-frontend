@@ -1,24 +1,28 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Input, Card, Tag, Typography, Badge, Spin } from "antd";
+import { Input, Card, Tag, Typography, Badge, Skeleton } from "antd";
 import { SearchOutlined, CalendarOutlined } from "@ant-design/icons";
 import { debounce } from "lodash";
 import { useNavigate } from "react-router-dom";
-import {
-  getJobAppliedCandidates,
-  getUserAppliedJobs,
-  getUserJobPostStatus,
-} from "../ApiService/action";
-import { FaCheckCircle } from "react-icons/fa";
+import { getUserAppliedJobs, getUserJobPostStatus } from "../ApiService/action";
 import Header from "../Header/Header";
 
 const { Title, Text } = Typography;
 
-const OpportunityCard = ({ opportunity, appliedJobStatus }) => {
+const OpportunityCard = ({ opportunity, status }) => {
   const navigate = useNavigate();
 
-  const statusForThisJob = appliedJobStatus.find(
-    (item) => item.post_id === opportunity.post_id
-  );
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Shortlist":
+        return "green";
+      case "Rejected":
+        return "red";
+      case "Sent Mail":
+        return "blue";
+      default:
+        return "orange";
+    }
+  };
 
   return (
     <Card
@@ -57,25 +61,15 @@ const OpportunityCard = ({ opportunity, appliedJobStatus }) => {
             <Title level={5} style={{ margin: 0 }}>
               {opportunity.job_title}
             </Title>
-            {statusForThisJob ? (
-              <Tag
-                color={
-                  statusForThisJob.status === "Shortlist"
-                    ? "green"
-                    : statusForThisJob.status === "Rejected"
-                    ? "red"
-                    : statusForThisJob.status === "Sent mail"
-                    ? "blue"
-                    : statusForThisJob.status === "Pending"
-                    ? "orange"
-                    : "default"
-                }
-              >
-                {statusForThisJob.status}
-              </Tag>
-            ) : (
-              <Tag>Pending</Tag>
-            )}
+            <Tag
+              style={{
+                fontWeight: 500,
+                borderRadius: 6,
+              }}
+              color={getStatusColor(status)}
+            >
+              {status || "Pending"}
+            </Tag>
           </div>
 
           <Text strong style={{ display: "block", marginBottom: 8 }}>
@@ -115,10 +109,11 @@ const OpportunityCard = ({ opportunity, appliedJobStatus }) => {
 export default function AppliedJobs() {
   const [opportunities, setOpportunities] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [loginUserId, setLoginUserId] = useState(null);
-  const [appliedJobStatus, setAppliedJobStatus] = useState([]);
-  const navigate = useNavigate("");
+  const [userAppliedJobStatus, setUserAppliedJobStatus] = useState([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const stored = localStorage.getItem("loginDetails");
@@ -138,37 +133,59 @@ export default function AppliedJobs() {
     }
   }, [loginUserId]);
 
+  useEffect(() => {
+    if (userAppliedJobStatus?.length > 0) {
+      getUserJobPostStatusData();
+    }
+  }, [userAppliedJobStatus]);
+
   const fetchAppliedJobs = async () => {
-    setLoading(true);
     try {
       const response = await getUserAppliedJobs({ userId: loginUserId });
       const jobs = response?.data?.data || [];
 
+      console.log("getUserAppliedJobs", response);
+
       setOpportunities(jobs);
 
-      if (jobs.length > 0) {
-        await fetchAllJobStatuses(jobs.map((job) => job.post_id));
-      }
+      const jobIds = jobs.map((job) => job.id);
+      console.log("jobIds", jobIds);
+
+      setUserAppliedJobStatus(jobIds);
     } catch (error) {
       console.error("Error fetching applied jobs:", error);
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 500);
     }
   };
 
-  const fetchAllJobStatuses = async (jobIds) => {
+  const getUserJobPostStatusData = async () => {
     try {
-      const statusResults = await Promise.all(
-        jobIds.map(async (id) => {
-          const res = await getUserJobPostStatus({ applied_job_id: id });
-          const statusData = res?.data?.data?.[0];
-          return { post_id: id, status: statusData?.status || null };
-        })
+      const promises = userAppliedJobStatus.map((id) =>
+        getUserJobPostStatus({ applied_job_id: id })
       );
 
-      setAppliedJobStatus(statusResults);
+      const responses = await Promise.all(promises);
+
+      const statusMap = {};
+      responses.forEach((res) => {
+        const jobStatuses = res?.data?.data || [];
+        if (jobStatuses.length > 0) {
+          // Pick latest by changed_at
+          const latestStatus = jobStatuses.reduce((latest, current) =>
+            new Date(current.changed_at) > new Date(latest.changed_at)
+              ? current
+              : latest
+          );
+
+          statusMap[latestStatus.applied_job_id] = latestStatus.status;
+        }
+      });
+
+      setUserAppliedJobStatus(statusMap);
+      console.log("Final Status Map:", statusMap);
     } catch (error) {
-      console.error("Error fetching job statuses:", error);
+      console.log("getUserJobPostStatus error", error);
     }
   };
 
@@ -233,14 +250,14 @@ export default function AppliedJobs() {
 
         {loading ? (
           <div style={{ textAlign: "center", padding: 40 }}>
-            <Spin size="large" />
+            <Skeleton active />
           </div>
         ) : filteredOpportunities.length > 0 ? (
           filteredOpportunities.map((opp) => (
             <OpportunityCard
-              key={opp.id}
+              key={opp.applied_job_id}
               opportunity={opp}
-              appliedJobStatus={appliedJobStatus}
+              status={userAppliedJobStatus[opp.id]}
             />
           ))
         ) : (

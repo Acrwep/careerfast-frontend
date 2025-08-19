@@ -126,10 +126,17 @@
   margin-left: 80px;
 }
 
+.ant-modal-root .ant-modal-mask {
+  z-index: 1999 !important;
+}
+
+.ant-modal-root .ant-modal-wrap {
+  z-index: 2000 !important;
+}
+
 .profile-banner {
-  height: 200px;
+  height: 150px;
   padding: 0;
-  background: linear-gradient(135deg, #7c25eb 0%, #481eaf 100%);
   position: relative;
   border-radius: 0 0 12px 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -1263,14 +1270,12 @@
 /* ListingDashboard.css */
 
 .dashboard-container {
-  max-width: 1440px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0rem;
 }
 
 .dashboard-inner {
   background: white;
-  border-radius: 16px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   padding: 2rem;
@@ -1314,7 +1319,7 @@
 
 .tabs-container {
   display: flex;
-  gap: 0.5rem;
+  gap: 15px;
   overflow-x: auto;
   padding-bottom: 0rem;
   margin-bottom: 0rem;
@@ -1332,13 +1337,13 @@
 }
 
 .tab-btn {
-  padding: 0.75rem 1.5rem;
+  padding: 8px 25px;
   border-radius: 8px;
   border: none;
   background: #f8f9fa;
   color: #6c757d;
   font-weight: 500;
-  font-size: 0.85rem;
+  font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
@@ -1540,11 +1545,12 @@
 }
 
 .company-logo {
-  width: 60px;
-  height: 60px;
+  width: 55px;
+  height: 55px;
   border-radius: 8px;
   object-fit: cover;
   border: 1px solid #e9ecef;
+  padding: 7px;
 }
 
 .listing-info {

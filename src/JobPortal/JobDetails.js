@@ -198,7 +198,7 @@ export default function JobDetails() {
   };
 
   const applyForJobData = async () => {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("AccessToken");
     if (!token) {
       message.error("Please login before applying.");
       return;

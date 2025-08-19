@@ -29,6 +29,7 @@ import RegistrationChart from "../AdminDashboard/RegistrationChart";
 import ManageNotification from "../AdminDashboard/ManageNotification";
 import { useDispatch } from "react-redux";
 import { storeLoginStatus } from "../Redux/Slice";
+import AllAppliedCandidates from "../AdminDashboard/AllAppliedCandidates";
 
 const Layout = () => {
   const location = useLocation();
@@ -118,6 +119,10 @@ const Layout = () => {
         <Route path="/manage-candidate" element={<ManageCandidate />} />
         <Route path="/registration-chart" element={<RegistrationChart />} />
         <Route path="/manage-notification" element={<ManageNotification />} />
+        <Route
+          path="/applied-candidates-all"
+          element={<AllAppliedCandidates />}
+        />
       </Routes>
     </div>
   );

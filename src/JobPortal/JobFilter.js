@@ -433,7 +433,7 @@ export default function JobFilter() {
   };
 
   const applyForJobData = async () => {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("AccessToken");
     if (!token) {
       message.error("Please login before applying.");
       return;
@@ -1358,7 +1358,12 @@ export default function JobFilter() {
                               <div className="job-meta-item">
                                 <FaRegCalendarAlt className="meta-icon premium-icon" />
                                 <span className="meta-text">
-                                  Updated On: {job.created_date}
+                                  Updated On:{" "}
+                                  {job.created_date
+                                    ? new Date(
+                                        job.created_date
+                                      ).toLocaleDateString()
+                                    : "-"}
                                 </span>
                               </div>
 

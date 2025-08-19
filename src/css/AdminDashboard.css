@@ -400,7 +400,6 @@
 }
 
 .recent-candidates:hover {
-  transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
 }
 
@@ -414,6 +413,10 @@
   color: #1a1a1a;
   font-weight: 500;
   font-size: 15px;
+}
+
+.recent-candidates .candidate-name:hover {
+  color: #1a1a1a !important;
 }
 
 .recent-candidates .candidate-info {

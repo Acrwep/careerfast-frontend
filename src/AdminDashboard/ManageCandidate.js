@@ -73,6 +73,7 @@ export default function ManageCandidate() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobTitle, setJobTitle] = useState("");
   const [appliedUserId, setAppliedUserId] = useState(null);
+  const [postDetails, setPostDetails] = useState([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("loginDetails");
@@ -203,8 +204,12 @@ export default function ManageCandidate() {
     const payload = {};
     try {
       const response = await getJobPosts(payload);
-      const jobTitleData = response?.data?.data?.data[0]?.job_title;
-      setJobTitle(jobTitleData);
+      const jobs = response?.data?.data?.data || [];
+      setPostDetails(jobs);
+      if (id) {
+        const matchedJob = jobs.find((job) => String(job.id) === String(id));
+        setJobTitle(matchedJob ? matchedJob.job_title : "");
+      }
     } catch (error) {
       console.log("applied candidate", error);
     } finally {
@@ -313,7 +318,7 @@ export default function ManageCandidate() {
           <Tooltip
             title={`Last updated: ${new Date(
               record.status_updated_at
-            ).toLocaleString()}`}
+            ).toLocaleDateString()}`}
           >
             <Tag color={color} style={{ fontWeight: 500, borderRadius: 6 }}>
               {status?.charAt(0).toUpperCase() + status?.slice(1)}

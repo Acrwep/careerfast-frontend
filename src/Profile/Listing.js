@@ -11,9 +11,10 @@ import {
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoMdCloseCircleOutline } from "react-icons/io";
-import { Menu, Dropdown, message, Card, Typography } from "antd";
+import { Menu, Dropdown, message, Card, Typography, Skeleton } from "antd";
 import {
   closeRegistration,
+  getAppliedCandidatesCount,
   getJobPostByUserId,
   getJobPosts,
 } from "../ApiService/action";
@@ -32,6 +33,8 @@ export default function ListingDashboard() {
   const [loginUserId, setLoginUserId] = useState(null);
   const navigate = useNavigate();
   const [postId, setPostId] = useState(null);
+  const [totalAppliedCandidates, setTotalAppliedCandidates] = useState(null);
+  const [listLoading, setListLoading] = useState(true);
 
   useEffect(() => {
     getJobPostByUserIdData();
@@ -57,10 +60,29 @@ export default function ListingDashboard() {
     const payload = {};
     try {
       const response = await getJobPosts(payload);
-      setPostId(response?.data?.data?.data.id || null);
-      console.log("job post", response);
+      const jobPosts = response?.data?.data?.data || [];
+      const firstId = jobPosts[0]?.id || null;
+      setPostId(firstId);
+      getAppliedCandidatesCountData(firstId);
     } catch (error) {
       console.log("applied candidate", error);
+    } finally {
+      setTimeout(() => setListLoading(false), 600);
+    }
+  };
+
+  const getAppliedCandidatesCountData = async (postId) => {
+    const payload = {
+      user_id: loginUserId,
+      id: postId,
+    };
+    try {
+      const response = await getAppliedCandidatesCount(payload);
+      setTotalAppliedCandidates(response?.data?.data?.candidatesCount || 0);
+      console.log("applied candidates count", response);
+    } catch (error) {
+      console.log("applied candidates count", error);
+      setTotalAppliedCandidates(0);
     }
   };
 
@@ -91,12 +113,12 @@ export default function ListingDashboard() {
   const handleCloseRegistration = async (jobId) => {
     const payload = {
       id: jobId,
-      status: "Expired", // set status explicitly
+      status: "Expired",
     };
     try {
-      const response = await closeRegistration(payload); // backend should handle the update
+      const response = await closeRegistration(payload);
       message.success("Job marked as expired.");
-      getJobPostByUserIdData(); // Refresh listing
+      getJobPostByUserIdData();
     } catch (error) {
       message.error("Failed to close registration.");
       console.error("Close Registration Error:", error);
@@ -147,27 +169,39 @@ export default function ListingDashboard() {
           </div>
 
           <div className="stats-container">
-            <StatCard
-              title="Total Opportunities"
-              value={listings.length}
-              change="+12% from last month"
-              icon={<FiBriefcase />}
-              bgColor="purple"
-            />
-            <StatCard
-              title="Total Impressions"
-              value={totalImpressions}
-              change="+24% from last month"
-              icon={<FiAward />}
-              bgColor="blue"
-            />
-            <StatCard
-              title="Total View"
-              value={totalRegistrations}
-              change="+8% from last month"
-              icon={<FiBook />}
-              bgColor="orange"
-            />
+            {listLoading ? (
+              <Skeleton active />
+            ) : (
+              <StatCard
+                title="Total Opportunities"
+                value={listings.length}
+                change="+12% from last month"
+                icon={<FiBriefcase />}
+                bgColor="purple"
+              />
+            )}
+            {listLoading ? (
+              <Skeleton active />
+            ) : (
+              <StatCard
+                title="Total Applied Candidates"
+                value={totalAppliedCandidates}
+                change="+24% from last month"
+                icon={<FiAward />}
+                bgColor="blue"
+              />
+            )}
+            {listLoading ? (
+              <Skeleton active />
+            ) : (
+              <StatCard
+                title="Total View"
+                value={totalRegistrations}
+                change="+8% from last month"
+                icon={<FiBook />}
+                bgColor="orange"
+              />
+            )}
           </div>
 
           <div className="filter-container">
@@ -337,7 +371,7 @@ const StatCard = ({ title, value, change, icon, bgColor }) => {
       <div className="stat-header">
         <div>
           <p className="stat-title">{title}</p>
-          <p className="stat-value">{value.toLocaleString()}</p>
+          <p className="stat-value">{value}</p>
           <p className="stat-change">{change}</p>
         </div>
         <div className="stat-icon">{icon}</div>

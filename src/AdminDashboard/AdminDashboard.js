@@ -8,7 +8,11 @@ import {
   IoLogOutOutline,
   IoPersonCircleOutline,
 } from "react-icons/io5";
-import { ArrowRightOutlined } from "@ant-design/icons";
+import {
+  ArrowRightOutlined,
+  PieChartOutlined,
+  BarChartOutlined,
+} from "@ant-design/icons";
 import { FaInstagram, FaTwitter } from "react-icons/fa";
 import {
   FaClipboardUser,
@@ -17,10 +21,24 @@ import {
   FaDribbble,
 } from "react-icons/fa6";
 import { MdOutlineModeEdit, MdDashboard } from "react-icons/md";
-import { FaSearch, FaChevronDown } from "react-icons/fa";
+import { FaChevronDown } from "react-icons/fa";
 import { VscGraph } from "react-icons/vsc";
 import "../css/AdminDashboard.css";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import {
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Bar,
+  LabelList,
+} from "recharts";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -47,7 +65,6 @@ import {
   Badge,
   Button,
   Dropdown,
-  Input,
   Layout,
   Menu,
   Space,
@@ -56,7 +73,6 @@ import {
   Card,
   Col,
   Row,
-  Progress,
   Statistic,
   Tag,
   List,
@@ -65,6 +81,8 @@ import {
   Drawer,
   message,
   Skeleton,
+  Alert,
+  Tooltip,
 } from "antd";
 import ManageCandidate from "./ManageCandidate";
 import EditOpportunity from "./EditOpportunity";
@@ -72,9 +90,11 @@ import JobDetails from "../JobPortal/JobDetails";
 import RegistrationChart from "./RegistrationChart";
 import ManageNotification from "./ManageNotification";
 import {
+  getAppliedCandidatesCount,
   getJobAppliedCandidates,
   getJobPosts,
   getUserProfile,
+  StatsOfPost,
 } from "../ApiService/action";
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -95,9 +115,17 @@ export default function AdminDashboard() {
   const [appliedUser, setAppliedUser] = useState([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("1");
   const [selectedUser, setSelectedUser] = useState(null);
   const navigate = useNavigate();
+  const [jobTitle, setJobTitle] = useState([]);
+  const [postDetails, setPostDetails] = useState([]);
+  const [maleCount, setMaleCount] = useState(null);
+  const [femaleCount, setFemaleCount] = useState(null);
+  const [othersCount, setOthersCount] = useState(null);
+  const [totalAppliedCandidates, setTotalAppliedCandidates] = useState(null);
+  const [domainCount, setDomainCount] = useState([]);
 
   useEffect(() => {
     console.log("Post ID from URL:", id);
@@ -107,6 +135,10 @@ export default function AdminDashboard() {
     document.title = "CareerFast | Admin Dashboard";
     getJobPostsData();
   }, []);
+
+  useEffect(() => {
+    getAppliedCandidatesCountData();
+  }, [loginUserId]);
 
   useEffect(() => {
     try {
@@ -143,7 +175,23 @@ export default function AdminDashboard() {
       const image = response?.data?.data?.profile_image || "";
       setProfileImage(image);
     } catch (error) {
-      console.log("getuserprofile error", error);
+      console.log("getuserprofile erroxxr", error);
+    }
+  };
+
+  const getJobPostsData = async () => {
+    const payload = {};
+    try {
+      const response = await getJobPosts(payload);
+      const jobs = response?.data?.data?.data || [];
+      setPostDetails(jobs);
+      if (id) {
+        const matchedJob = jobs.find((job) => String(job.id) === String(id));
+        setJobTitle(matchedJob ? matchedJob.job_title : "");
+      }
+      console.log("job post", response);
+    } catch (error) {
+      console.log("applied candidate", error);
     }
   };
 
@@ -152,16 +200,6 @@ export default function AdminDashboard() {
       getJobAppliedCandidatesData();
     }
   }, [activeTab, id]);
-
-  const getJobPostsData = async () => {
-    const payload = {};
-    try {
-      const response = await getJobPosts(payload);
-      console.log("job post", response);
-    } catch (error) {
-      console.log("applied candidate", error);
-    }
-  };
 
   const getJobAppliedCandidatesData = async () => {
     setLoading(true);
@@ -189,6 +227,31 @@ export default function AdminDashboard() {
     }
   };
 
+  const getAppliedCandidatesCountData = async () => {
+    const payload = {
+      user_id: loginUserId,
+      id: id,
+    };
+
+    try {
+      const response = await getAppliedCandidatesCount(payload);
+      setTotalAppliedCandidates(response?.data?.data?.candidatesCount || 0);
+      setMaleCount(response?.data?.data?.males || null);
+      setFemaleCount(response?.data?.data?.females || null);
+      setOthersCount(response?.data?.data?.others || null);
+      setDomainCount(
+        (response?.data?.data?.domain_stats || []).map((item) => ({
+          domain: item.job_categories,
+          value: item.candidates_count,
+        }))
+      );
+
+      console.log("getAppliedCandidatesCount", response);
+    } catch (error) {
+      console.log("getAppliedCandidatesCount", error);
+    }
+  };
+
   const handleGetUserProfile = async (userId) => {
     const payload = {
       user_id: userId,
@@ -197,11 +260,11 @@ export default function AdminDashboard() {
     try {
       const response = await getUserProfile(payload);
       setOpen(true);
-      setLoading(true);
+      setDrawerLoading(true);
       setSelectedUser(response?.data?.data || null);
       console.log("User Profile data", response);
       setTimeout(() => {
-        setLoading(false);
+        setDrawerLoading(false);
       }, 2000);
     } catch (error) {
       console.log("User Profile data", error);
@@ -213,7 +276,7 @@ export default function AdminDashboard() {
     {
       key: "1",
       icon: <MdDashboard size={18} />,
-      label: "Dashboard",
+      label: "Dashboard (Overall)",
     },
     {
       key: "2",
@@ -275,33 +338,50 @@ export default function AdminDashboard() {
     />
   );
 
-  const activities = [
-    {
-      color: "blue",
-      label: "New candidate applied for Frontend Developer",
-      time: "2 mins ago",
-    },
-    {
-      color: "green",
-      label: "Interview scheduled with Sarah Johnson",
-      time: "1 hour ago",
-    },
-    {
-      color: "orange",
-      label: "New job posting approved",
-      time: "3 hours ago",
-    },
-    {
-      color: "purple",
-      label: "System update completed",
-      time: "5 hours ago",
-    },
-    {
-      color: "red",
-      label: "Urgent: 3 positions need attention",
-      time: "1 day ago",
-    },
+  const ChartCard = styled(Card)`
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+    border: none;
+    .ant-card-head {
+      border-bottom: 1px solid #f0f0f0;
+    }
+  `;
+
+  const genderData = [
+    { name: "Female", value: femaleCount || 0 },
+    { name: "Male", value: maleCount || 0 },
+    { name: "Other", value: othersCount || 0 },
   ];
+
+  const COLORS = ["#EC4899", "#6366F1", "#94A3B8"];
+  const COLORS1 = ["#6366F1", "#EC4899", "#94A3B8"];
+  const renderCustomizedLabel = ({ percent, x, y }) => (
+    <text
+      x={x}
+      y={y}
+      fill="#334155"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={12}
+      fontWeight={500}
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <Card size="small" style={{ borderRadius: 8 }}>
+          <Text strong>{payload[0].name}</Text>
+          <br />
+          <Text type="secondary">{payload[0].value}</Text>
+        </Card>
+      );
+    }
+    return null;
+  };
 
   return (
     <Layout className="admin-dashboard" style={{ minHeight: "100vh" }}>
@@ -537,7 +617,7 @@ export default function AdminDashboard() {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  marginBottom: 24,
+                  marginBottom: 5,
                 }}
               >
                 <Title level={2} style={{ margin: 0 }}>
@@ -558,6 +638,22 @@ export default function AdminDashboard() {
                   <Option value="this_month">This Month</Option>
                   <Option value="last_month">Last Month</Option>
                 </Select>
+              </div>
+              <div>
+                <Tooltip title="Overall summary details">
+                  <Alert
+                    style={{
+                      marginTop: 3,
+                      marginBottom: 20,
+                      fontSize: 12,
+                      border: "none",
+                      display: "inline-flex",
+                    }}
+                    message="Here is the summary of overall performance"
+                    type="warning"
+                    showIcon
+                  />
+                </Tooltip>
               </div>
 
               <Row gutter={[24, 24]} style={{ marginBottom: 44 }}>
@@ -587,6 +683,7 @@ export default function AdminDashboard() {
                     ) : (
                       <>
                         <div
+                          onClick={() => navigate("/applied-candidates-all")}
                           style={{
                             display: "flex",
                             alignItems: "center",
@@ -609,7 +706,7 @@ export default function AdminDashboard() {
                             title={
                               <Text type="secondary">Total Candidates</Text>
                             }
-                            value={1234}
+                            value={totalAppliedCandidates}
                             valueStyle={{
                               color: colorPrimary,
                               fontWeight: 600,
@@ -617,7 +714,7 @@ export default function AdminDashboard() {
                             }}
                           />
                         </div>
-                        <div style={{ marginTop: 16 }}>
+                        <div style={{ marginTop: 6 }}>
                           <Text type="secondary">
                             <span
                               style={{ color: "#52c41a", fontWeight: "bold" }}
@@ -687,7 +784,7 @@ export default function AdminDashboard() {
                             }}
                           />
                         </div>
-                        <div style={{ marginTop: 16 }}>
+                        <div style={{ marginTop: 6 }}>
                           <Text type="secondary">
                             <span
                               style={{ color: "#52c41a", fontWeight: "bold" }}
@@ -757,7 +854,7 @@ export default function AdminDashboard() {
                             }}
                           />
                         </div>
-                        <div style={{ marginTop: 16 }}>
+                        <div style={{ marginTop: 6 }}>
                           <Text type="secondary">
                             <span
                               style={{ color: "#ff4d4f", fontWeight: "bold" }}
@@ -829,7 +926,7 @@ export default function AdminDashboard() {
                             }}
                           />
                         </div>
-                        <div style={{ marginTop: 16 }}>
+                        <div style={{ marginTop: 6 }}>
                           <Text type="secondary">
                             <span
                               style={{ color: "#ff4d4f", fontWeight: "bold" }}
@@ -856,6 +953,20 @@ export default function AdminDashboard() {
                             <span className="card-title">
                               Applied Candidates
                             </span>
+                            <Alert
+                              style={{
+                                marginTop: 0,
+                                marginLeft: 10,
+                                marginBottom: 6,
+                                fontSize: 13,
+                                border: "none",
+                                padding: "6px 10px",
+                                display: "inline-flex",
+                              }}
+                              message={<span>{jobTitle}</span>}
+                              type="success"
+                              showIcon
+                            />
                           </div>
                         }
                         style={{
@@ -870,372 +981,238 @@ export default function AdminDashboard() {
                         }}
                         bodyStyle={{ padding: "8px 0" }}
                       >
-                        <div style={{ maxHeight: "500px", overflowY: "auto" }}>
-                          <List
-                            itemLayout="horizontal"
-                            dataSource={appliedUser.slice(0, 5)}
-                            renderItem={(item, index) => (
-                              <List.Item
-                                className="candidate-item"
-                                style={{
-                                  padding: "16px 24px",
-                                  transition: "all 0.3s ease",
-                                  borderBottom: "1px solid rgba(0, 0, 0, 0.03)",
-                                }}
-                                actions={[
-                                  <Button
-                                    onClick={() =>
-                                      handleGetUserProfile(item.id)
-                                    }
-                                    type="text"
-                                    className="view-btn"
-                                    style={{
-                                      color: "#6a5cff",
-                                      background: "rgba(106, 92, 255, 0.1)",
-                                      borderRadius: "8px",
-                                      fontWeight: 500,
-                                      padding: "4px 12px",
-                                      transition: "all 0.2s ease",
-                                    }}
-                                    onMouseEnter={(e) =>
-                                      (e.currentTarget.style.transform =
-                                        "translateX(2px)")
-                                    }
-                                    onMouseLeave={(e) =>
-                                      (e.currentTarget.style.transform =
-                                        "translateX(0)")
-                                    }
-                                  >
-                                    View{" "}
-                                    <ArrowRightOutlined
-                                      style={{ fontSize: "12px" }}
-                                    />
-                                  </Button>,
-                                ]}
-                              >
-                                {selectedUser && (
-                                  <Drawer
-                                    className="userDetails_drawer"
-                                    closable
-                                    width={900}
-                                    title={
-                                      <div className="drawer-title">
-                                        <Avatar
-                                          size={36}
-                                          src={selectedUser.profile_image}
-                                          style={{
-                                            border: "2px solid #6a5cff",
-                                          }}
-                                        />
-                                        <span>User Profile</span>
-                                      </div>
-                                    }
-                                    placement="right"
-                                    open={open}
-                                    loading={loading}
-                                    onClose={() => setOpen(false)}
-                                  >
-                                    <div className="drawer-body">
-                                      {/* LEFT PROFILE */}
-                                      <div className="profile-left">
-                                        <div className="avatar-container">
+                        {appliedUser.length > 0 ? (
+                          <div
+                            style={{ maxHeight: "500px", overflowY: "auto" }}
+                          >
+                            <List
+                              itemLayout="horizontal"
+                              dataSource={appliedUser.slice(0, 5)}
+                              renderItem={(item, index) => (
+                                <List.Item
+                                  className="candidate-item"
+                                  style={{
+                                    padding: "16px 24px",
+                                    transition: "all 0.3s ease",
+                                    borderBottom:
+                                      "1px solid rgba(0, 0, 0, 0.03)",
+                                  }}
+                                  actions={[
+                                    <Button
+                                      onClick={() =>
+                                        handleGetUserProfile(item.id)
+                                      }
+                                      type="text"
+                                      className="view-btn"
+                                      style={{
+                                        color: "#6a5cff",
+                                        background: "rgba(106, 92, 255, 0.1)",
+                                        borderRadius: "8px",
+                                        fontWeight: 500,
+                                        padding: "4px 12px",
+                                        transition: "all 0.2s ease",
+                                      }}
+                                      onMouseEnter={(e) =>
+                                        (e.currentTarget.style.transform =
+                                          "translateX(2px)")
+                                      }
+                                      onMouseLeave={(e) =>
+                                        (e.currentTarget.style.transform =
+                                          "translateX(0)")
+                                      }
+                                    >
+                                      View{" "}
+                                      <ArrowRightOutlined
+                                        style={{ fontSize: "12px" }}
+                                      />
+                                    </Button>,
+                                  ]}
+                                >
+                                  {selectedUser && (
+                                    <Drawer
+                                      className="userDetails_drawer"
+                                      closable
+                                      width={900}
+                                      title={
+                                        <div className="drawer-title">
                                           <Avatar
-                                            size={100}
+                                            size={36}
                                             src={selectedUser.profile_image}
+                                            style={{
+                                              border: "2px solid #6a5cff",
+                                            }}
                                           />
-                                          <div className="status-indicator"></div>
+                                          <span>User Profile</span>
                                         </div>
-                                        <div className="name">
-                                          {selectedUser.first_name}{" "}
-                                          {selectedUser.last_name}
+                                      }
+                                      placement="right"
+                                      open={open}
+                                      loading={drawerLoading}
+                                      onClose={() => setOpen(false)}
+                                    >
+                                      <div className="drawer-body">
+                                        {/* LEFT PROFILE */}
+                                        <div className="profile-left">
+                                          <div className="avatar-container">
+                                            <Avatar
+                                              size={100}
+                                              src={selectedUser.profile_image}
+                                            />
+                                            <div className="status-indicator"></div>
+                                          </div>
+                                          <div className="name">
+                                            {selectedUser.first_name}{" "}
+                                            {selectedUser.last_name}
+                                          </div>
+                                          <div className="role">
+                                            {selectedUser.role_name}
+                                          </div>
+                                          <div
+                                            style={{ display: "flex", gap: 10 }}
+                                          >
+                                            <div className="location">
+                                              <EnvironmentOutlined />
+                                              <span>
+                                                {selectedUser.location}
+                                              </span>
+                                            </div>
+
+                                            <div className="verification-badge">
+                                              {selectedUser.is_email_verified ? (
+                                                <Tag
+                                                  icon={
+                                                    <CheckCircleOutlined
+                                                      style={{
+                                                        color: "#52c41a",
+                                                      }}
+                                                    />
+                                                  }
+                                                  color="success"
+                                                >
+                                                  Verified
+                                                </Tag>
+                                              ) : (
+                                                <Tag
+                                                  icon={
+                                                    <ExclamationCircleOutlined />
+                                                  }
+                                                  color="error"
+                                                >
+                                                  Unverified
+                                                </Tag>
+                                              )}
+                                            </div>
+                                          </div>
+                                          {selectedUser.social_links && (
+                                            <div className="social-links">
+                                              <div className="social-icons">
+                                                {[
+                                                  "linkedin",
+                                                  "facebook",
+                                                  "instagram",
+                                                  "behance",
+                                                  "twitter",
+                                                  "dribble",
+                                                ].map((key) => {
+                                                  const value =
+                                                    selectedUser.social_links[
+                                                      key
+                                                    ];
+                                                  return (
+                                                    <a
+                                                      key={key}
+                                                      href={value || "#"}
+                                                      target="_blank"
+                                                      rel="noreferrer"
+                                                      className={`social-icon ${key}`}
+                                                      style={{
+                                                        opacity: value
+                                                          ? 1
+                                                          : 0.3,
+                                                        pointerEvents: value
+                                                          ? "auto"
+                                                          : "none",
+                                                      }}
+                                                    >
+                                                      {key === "linkedin" && (
+                                                        <LinkedinOutlined />
+                                                      )}
+                                                      {key === "facebook" && (
+                                                        <FaFacebook />
+                                                      )}
+                                                      {key === "instagram" && (
+                                                        <FaInstagram />
+                                                      )}
+                                                      {key === "behance" && (
+                                                        <FaBehance />
+                                                      )}
+                                                      {key === "twitter" && (
+                                                        <FaTwitter />
+                                                      )}
+                                                      {key === "dribble" && (
+                                                        <FaDribbble />
+                                                      )}
+                                                    </a>
+                                                  );
+                                                })}
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
-                                        <div className="role">
-                                          {selectedUser.role_name}
-                                        </div>
-                                        <div
-                                          style={{ display: "flex", gap: 10 }}
-                                        >
-                                          <div className="location">
-                                            <EnvironmentOutlined />
-                                            <span>{selectedUser.location}</span>
-                                          </div>
 
-                                          <div className="verification-badge">
-                                            {selectedUser.is_email_verified ? (
-                                              <Tag
-                                                icon={
-                                                  <CheckCircleOutlined
-                                                    style={{ color: "#52c41a" }}
-                                                  />
-                                                }
-                                                color="success"
-                                              >
-                                                Verified
-                                              </Tag>
-                                            ) : (
-                                              <Tag
-                                                icon={
-                                                  <ExclamationCircleOutlined />
-                                                }
-                                                color="error"
-                                              >
-                                                Unverified
-                                              </Tag>
-                                            )}
-                                          </div>
-                                        </div>
-                                        {selectedUser.social_links && (
-                                          <div className="social-links">
-                                            <div className="social-icons">
-                                              {[
-                                                "linkedin",
-                                                "facebook",
-                                                "instagram",
-                                                "behance",
-                                                "twitter",
-                                                "dribble",
-                                              ].map((key) => {
-                                                const value =
-                                                  selectedUser.social_links[
-                                                    key
-                                                  ];
-                                                return (
-                                                  <a
-                                                    key={key}
-                                                    href={value || "#"}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className={`social-icon ${key}`}
-                                                    style={{
-                                                      opacity: value ? 1 : 0.3,
-                                                      pointerEvents: value
-                                                        ? "auto"
-                                                        : "none",
-                                                    }}
-                                                  >
-                                                    {key === "linkedin" && (
-                                                      <LinkedinOutlined />
-                                                    )}
-                                                    {key === "facebook" && (
-                                                      <FaFacebook />
-                                                    )}
-                                                    {key === "instagram" && (
-                                                      <FaInstagram />
-                                                    )}
-                                                    {key === "behance" && (
-                                                      <FaBehance />
-                                                    )}
-                                                    {key === "twitter" && (
-                                                      <FaTwitter />
-                                                    )}
-                                                    {key === "dribble" && (
-                                                      <FaDribbble />
-                                                    )}
-                                                  </a>
-                                                );
-                                              })}
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-
-                                      {/* RIGHT DETAILS */}
-                                      <div className="user-details-cards">
-                                        <Card
-                                          title="Basic Information"
-                                          className="info-card"
-                                        >
-                                          <div className="info-grid">
-                                            <div className="info-item">
-                                              <div className="info-icon">
-                                                <MailOutlined />
-                                              </div>
-                                              <div className="info-content">
-                                                <div className="info-label">
-                                                  Email
-                                                </div>
-                                                <div className="info-value">
-                                                  {selectedUser.email}
-                                                </div>
-                                              </div>
-                                            </div>
-
-                                            <div className="info-item">
-                                              <div className="info-icon">
-                                                <PhoneOutlined />
-                                              </div>
-                                              <div className="info-content">
-                                                <div className="info-label">
-                                                  Phone
-                                                </div>
-                                                <div className="info-value">
-                                                  {selectedUser.phone || (
-                                                    <span className="na-text">
-                                                      N/A
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-
-                                            <div className="info-item">
-                                              <div className="info-icon">
-                                                <UserOutlined />
-                                              </div>
-                                              <div className="info-content">
-                                                <div className="info-label">
-                                                  Gender
-                                                </div>
-                                                <div className="info-value">
-                                                  {selectedUser.gender || (
-                                                    <span className="na-text">
-                                                      N/A
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-
-                                            <div className="info-item">
-                                              <div className="info-icon">
-                                                <CalendarOutlined />
-                                              </div>
-                                              <div className="info-content">
-                                                <div className="info-label">
-                                                  Start Year
-                                                </div>
-                                                <div className="info-value">
-                                                  {selectedUser.start_year || (
-                                                    <span className="na-text">
-                                                      N/A
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </Card>
-
-                                        <Card
-                                          title="Professional Information"
-                                          className="info-card"
-                                        >
-                                          <div className="info-grid">
-                                            <div className="info-item">
-                                              <div className="info-icon">
-                                                <BankOutlined />
-                                              </div>
-                                              <div className="info-content">
-                                                <div className="info-label">
-                                                  Organization
-                                                </div>
-                                                <div className="info-value">
-                                                  {selectedUser.organization || (
-                                                    <span className="na-text">
-                                                      N/A
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-
-                                            <div className="info-item">
-                                              <div className="info-icon">
-                                                <ApartmentOutlined />
-                                              </div>
-                                              <div className="info-content">
-                                                <div className="info-label">
-                                                  Org Type
-                                                </div>
-                                                <div className="info-value">
-                                                  {selectedUser.organization_type || (
-                                                    <span className="na-text">
-                                                      N/A
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-
-                                            <div className="info-item">
-                                              <div className="info-icon">
-                                                <ExperimentOutlined />
-                                              </div>
-                                              <div className="info-content">
-                                                <div className="info-label">
-                                                  Experience
-                                                </div>
-                                                <div className="info-value">
-                                                  {selectedUser.experince_type || (
-                                                    <span className="na-text">
-                                                      N/A
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-
-                                            <div className="info-item">
-                                              <div className="info-icon">
-                                                <FieldTimeOutlined />
-                                              </div>
-                                              <div className="info-content">
-                                                <div className="info-label">
-                                                  Experience Duration
-                                                </div>
-                                                <div className="info-value">
-                                                  {selectedUser.total_years ||
-                                                  selectedUser.total_months ? (
-                                                    <>
-                                                      {selectedUser.total_years ||
-                                                        0}{" "}
-                                                      {selectedUser.total_months
-                                                        ? ` ${selectedUser.total_months}`
-                                                        : ""}
-                                                    </>
-                                                  ) : (
-                                                    <span className="na-text">
-                                                      N/A
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </Card>
-
-                                        <Card
-                                          title="Education"
-                                          className="info-card"
-                                        >
-                                          {selectedUser.education &&
-                                          selectedUser.education.length > 0 ? (
+                                        {/* RIGHT DETAILS */}
+                                        <div className="user-details-cards">
+                                          <Card
+                                            title="Basic Information"
+                                            className="info-card"
+                                          >
                                             <div className="info-grid">
                                               <div className="info-item">
                                                 <div className="info-icon">
-                                                  <FileTextOutlined />
+                                                  <MailOutlined />
                                                 </div>
                                                 <div className="info-content">
                                                   <div className="info-label">
-                                                    Course & College
+                                                    Email
                                                   </div>
                                                   <div className="info-value">
-                                                    {`${selectedUser.education[0].course} at ${selectedUser.education[0].college}`}
+                                                    {selectedUser.email}
                                                   </div>
                                                 </div>
                                               </div>
 
                                               <div className="info-item">
                                                 <div className="info-icon">
-                                                  <TagsOutlined />
+                                                  <PhoneOutlined />
                                                 </div>
                                                 <div className="info-content">
                                                   <div className="info-label">
-                                                    Specialization
+                                                    Phone
                                                   </div>
                                                   <div className="info-value">
-                                                    {selectedUser.education[0]
-                                                      .specialization || "N/A"}
+                                                    {selectedUser.phone || (
+                                                      <span className="na-text">
+                                                        N/A
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+
+                                              <div className="info-item">
+                                                <div className="info-icon">
+                                                  <UserOutlined />
+                                                </div>
+                                                <div className="info-content">
+                                                  <div className="info-label">
+                                                    Gender
+                                                  </div>
+                                                  <div className="info-value">
+                                                    {selectedUser.gender || (
+                                                      <span className="na-text">
+                                                        N/A
+                                                      </span>
+                                                    )}
                                                   </div>
                                                 </div>
                                               </div>
@@ -1246,249 +1223,442 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div className="info-content">
                                                   <div className="info-label">
-                                                    Duration
+                                                    Start Year
                                                   </div>
                                                   <div className="info-value">
-                                                    {`${selectedUser.education[0].start_date} - ${selectedUser.education[0].end_date}`}
-                                                  </div>
-                                                </div>
-                                              </div>
-
-                                              <div className="info-item">
-                                                <div className="info-icon">
-                                                  <CalendarOutlined />
-                                                </div>
-                                                <div className="info-content">
-                                                  <div className="info-label">
-                                                    CGPA / Percentage
-                                                  </div>
-                                                  <div className="info-value">
-                                                    {`CGPA: ${selectedUser.education[0].cgpa}, Percentage: ${selectedUser.education[0].percentage}`}
-                                                  </div>
-                                                </div>
-                                              </div>
-
-                                              <div className="info-item">
-                                                <div className="info-icon">
-                                                  <TrophyOutlined />
-                                                </div>
-                                                <div className="info-content">
-                                                  <div className="info-label">
-                                                    Qualification
-                                                  </div>
-                                                  <div className="info-value">
-                                                    {
-                                                      selectedUser.education[0]
-                                                        .qualification
-                                                    }
-                                                  </div>
-                                                </div>
-                                              </div>
-
-                                              <div className="info-item">
-                                                <div className="info-icon">
-                                                  <SwapOutlined />
-                                                </div>
-                                                <div className="info-content">
-                                                  <div className="info-label">
-                                                    Lateral Entry
-                                                  </div>
-                                                  <div className="info-value">
-                                                    {
-                                                      selectedUser.education[0]
-                                                        .lateral_entry
-                                                    }
+                                                    {selectedUser.start_year || (
+                                                      <span className="na-text">
+                                                        N/A
+                                                      </span>
+                                                    )}
                                                   </div>
                                                 </div>
                                               </div>
                                             </div>
-                                          ) : (
-                                            // <div className="info-item full-width">
-                                            //   <div className="info-content">
+                                          </Card>
 
-                                            //     <div className="info-label">
-                                            //       <TrophyOutlined
-                                            //         style={{
-                                            //           marginRight: 6,
-                                            //           color: "#6a5cff",
-                                            //         }}
-                                            //       />
-                                            //       Qualification
-                                            //     </div>
-                                            //     <div className="info-value">
-                                            //       {
-                                            //         selectedUser.education[0]
-                                            //           .qualification
-                                            //       }
-                                            //     </div>
-                                            //   </div>
-                                            // </div>
-                                            <span className="na-text">N/A</span>
-                                          )}
-                                        </Card>
-
-                                        {selectedUser.skills?.length > 0 && (
                                           <Card
-                                            title="Skills"
+                                            title="Professional Information"
                                             className="info-card"
                                           >
-                                            <div className="skills-container">
-                                              {selectedUser.skills.map(
-                                                (skill, idx) => (
-                                                  <div
-                                                    key={idx}
-                                                    className="skill-pill"
-                                                  >
-                                                    {skill}
+                                            <div className="info-grid">
+                                              <div className="info-item">
+                                                <div className="info-icon">
+                                                  <BankOutlined />
+                                                </div>
+                                                <div className="info-content">
+                                                  <div className="info-label">
+                                                    Organization
                                                   </div>
-                                                )
+                                                  <div className="info-value">
+                                                    {selectedUser.organization || (
+                                                      <span className="na-text">
+                                                        N/A
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+
+                                              <div className="info-item">
+                                                <div className="info-icon">
+                                                  <ApartmentOutlined />
+                                                </div>
+                                                <div className="info-content">
+                                                  <div className="info-label">
+                                                    Org Type
+                                                  </div>
+                                                  <div className="info-value">
+                                                    {selectedUser.organization_type || (
+                                                      <span className="na-text">
+                                                        N/A
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+
+                                              <div className="info-item">
+                                                <div className="info-icon">
+                                                  <ExperimentOutlined />
+                                                </div>
+                                                <div className="info-content">
+                                                  <div className="info-label">
+                                                    Experience
+                                                  </div>
+                                                  <div className="info-value">
+                                                    {selectedUser.experince_type || (
+                                                      <span className="na-text">
+                                                        N/A
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+
+                                              <div className="info-item">
+                                                <div className="info-icon">
+                                                  <FieldTimeOutlined />
+                                                </div>
+                                                <div className="info-content">
+                                                  <div className="info-label">
+                                                    Experience Duration
+                                                  </div>
+                                                  <div className="info-value">
+                                                    {selectedUser.total_years ||
+                                                    selectedUser.total_months ? (
+                                                      <>
+                                                        {selectedUser.total_years ||
+                                                          0}{" "}
+                                                        {selectedUser.total_months
+                                                          ? ` ${selectedUser.total_months}`
+                                                          : ""}
+                                                      </>
+                                                    ) : (
+                                                      <span className="na-text">
+                                                        N/A
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </Card>
+
+                                          <Card
+                                            title="Education"
+                                            className="info-card"
+                                          >
+                                            {selectedUser.education &&
+                                            selectedUser.education.length >
+                                              0 ? (
+                                              <div className="info-grid">
+                                                <div className="info-item">
+                                                  <div className="info-icon">
+                                                    <FileTextOutlined />
+                                                  </div>
+                                                  <div className="info-content">
+                                                    <div className="info-label">
+                                                      Course & College
+                                                    </div>
+                                                    <div className="info-value">
+                                                      {`${selectedUser.education[0].course} at ${selectedUser.education[0].college}`}
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                                <div className="info-item">
+                                                  <div className="info-icon">
+                                                    <TagsOutlined />
+                                                  </div>
+                                                  <div className="info-content">
+                                                    <div className="info-label">
+                                                      Specialization
+                                                    </div>
+                                                    <div className="info-value">
+                                                      {selectedUser.education[0]
+                                                        .specialization ||
+                                                        "N/A"}
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                                <div className="info-item">
+                                                  <div className="info-icon">
+                                                    <CalendarOutlined />
+                                                  </div>
+                                                  <div className="info-content">
+                                                    <div className="info-label">
+                                                      Duration
+                                                    </div>
+                                                    <div className="info-value">
+                                                      {`${selectedUser.education[0].start_date} - ${selectedUser.education[0].end_date}`}
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                                <div className="info-item">
+                                                  <div className="info-icon">
+                                                    <CalendarOutlined />
+                                                  </div>
+                                                  <div className="info-content">
+                                                    <div className="info-label">
+                                                      CGPA / Percentage
+                                                    </div>
+                                                    <div className="info-value">
+                                                      {`CGPA: ${selectedUser.education[0].cgpa}, Percentage: ${selectedUser.education[0].percentage}`}
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                                <div className="info-item">
+                                                  <div className="info-icon">
+                                                    <TrophyOutlined />
+                                                  </div>
+                                                  <div className="info-content">
+                                                    <div className="info-label">
+                                                      Qualification
+                                                    </div>
+                                                    <div className="info-value">
+                                                      {
+                                                        selectedUser
+                                                          .education[0]
+                                                          .qualification
+                                                      }
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                                <div className="info-item">
+                                                  <div className="info-icon">
+                                                    <SwapOutlined />
+                                                  </div>
+                                                  <div className="info-content">
+                                                    <div className="info-label">
+                                                      Lateral Entry
+                                                    </div>
+                                                    <div className="info-value">
+                                                      {
+                                                        selectedUser
+                                                          .education[0]
+                                                          .lateral_entry
+                                                      }
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ) : (
+                                              // <div className="info-item full-width">
+                                              //   <div className="info-content">
+
+                                              //     <div className="info-label">
+                                              //       <TrophyOutlined
+                                              //         style={{
+                                              //           marginRight: 6,
+                                              //           color: "#6a5cff",
+                                              //         }}
+                                              //       />
+                                              //       Qualification
+                                              //     </div>
+                                              //     <div className="info-value">
+                                              //       {
+                                              //         selectedUser.education[0]
+                                              //           .qualification
+                                              //       }
+                                              //     </div>
+                                              //   </div>
+                                              // </div>
+                                              <span className="na-text">
+                                                N/A
+                                              </span>
+                                            )}
+                                          </Card>
+
+                                          {selectedUser.skills?.length > 0 && (
+                                            <Card
+                                              title="Skills"
+                                              className="info-card"
+                                            >
+                                              <div className="skills-container">
+                                                {selectedUser.skills.map(
+                                                  (skill, idx) => (
+                                                    <div
+                                                      key={idx}
+                                                      className="skill-pill"
+                                                    >
+                                                      {skill}
+                                                    </div>
+                                                  )
+                                                )}
+                                              </div>
+                                            </Card>
+                                          )}
+
+                                          {selectedUser.about && (
+                                            <Card
+                                              title="About"
+                                              className="info-card"
+                                            >
+                                              <div className="about-container">
+                                                <div className="about-text">
+                                                  {selectedUser.about}
+                                                </div>
+                                              </div>
+                                            </Card>
+                                          )}
+
+                                          {selectedUser.resume && (
+                                            <Card
+                                              title="Resume"
+                                              className="info-card"
+                                            >
+                                              <iframe
+                                                src={selectedUser.resume}
+                                                title="Resume"
+                                                width="100%"
+                                                height="500px"
+                                                style={{
+                                                  border: "1px solid #ddd",
+                                                  borderRadius: "8px",
+                                                  marginBottom: 0,
+                                                }}
+                                              />
+                                            </Card>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </Drawer>
+                                  )}
+                                  {loading ? (
+                                    <Skeleton
+                                      avatar={{
+                                        size: "large",
+                                        shape: "circle",
+                                      }}
+                                      active
+                                      paragraph={{ rows: 5 }}
+                                      title={false}
+                                      style={{ padding: "24px 0" }}
+                                    />
+                                  ) : (
+                                    <List.Item.Meta
+                                      avatar={
+                                        <Badge
+                                          dot
+                                          color="#52c41a"
+                                          offset={[-4, 40]}
+                                          className="online-badge"
+                                        >
+                                          <Avatar
+                                            className="profile_image"
+                                            size={48}
+                                            src={
+                                              item.image ||
+                                              "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                                            }
+                                            style={{
+                                              border: "2px solid #fff",
+                                              boxShadow:
+                                                "0 2px 8px rgba(0, 0, 0, 0.1)",
+                                            }}
+                                          />
+                                        </Badge>
+                                      }
+                                      title={
+                                        <a className="candidate-name">{`${item.first_name} ${item.last_name}`}</a>
+                                      }
+                                      description={
+                                        <div className="candidate-info">
+                                          <span>
+                                            {item.email || item.phone}
+                                          </span>
+                                          {item.skills && (
+                                            <div className="skill-tags">
+                                              {item.skills
+                                                .slice(0, 2)
+                                                .map((skill) => (
+                                                  <Tag className="skill-tag">
+                                                    {skill}
+                                                  </Tag>
+                                                ))}
+                                              {item.skills.length > 2 && (
+                                                <Tag className="skill-tag">
+                                                  +{item.skills.length - 2}
+                                                </Tag>
                                               )}
                                             </div>
-                                          </Card>
-                                        )}
-
-                                        {selectedUser.about && (
-                                          <Card
-                                            title="About"
-                                            className="info-card"
-                                          >
-                                            <div className="about-container">
-                                              <div className="about-text">
-                                                {selectedUser.about}
-                                              </div>
-                                            </div>
-                                          </Card>
-                                        )}
-
-                                        {selectedUser.resume && (
-                                          <Card
-                                            title="Resume"
-                                            className="info-card"
-                                          >
-                                            <iframe
-                                              src={selectedUser.resume}
-                                              title="Resume"
-                                              width="100%"
-                                              height="500px"
-                                              style={{
-                                                border: "1px solid #ddd",
-                                                borderRadius: "8px",
-                                                marginBottom: 0,
-                                              }}
-                                            />
-                                          </Card>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </Drawer>
-                                )}
-                                {loading ? (
-                                  <Skeleton
-                                    avatar={{ size: "large", shape: "circle" }}
-                                    active
-                                    paragraph={{ rows: 5 }}
-                                    title={false}
-                                    style={{ padding: "24px 0" }}
-                                  />
-                                ) : (
-                                  <List.Item.Meta
-                                    avatar={
-                                      <Badge
-                                        dot
-                                        color="#52c41a"
-                                        offset={[-4, 40]}
-                                        className="online-badge"
-                                      >
-                                        <Avatar
-                                          className="profile_image"
-                                          size={48}
-                                          src={
-                                            item.image ||
-                                            "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                                          }
-                                          style={{
-                                            border: "2px solid #fff",
-                                            boxShadow:
-                                              "0 2px 8px rgba(0, 0, 0, 0.1)",
-                                          }}
-                                        />
-                                      </Badge>
-                                    }
-                                    title={
-                                      <a className="candidate-name">{`${item.first_name} ${item.last_name}`}</a>
-                                    }
-                                    description={
-                                      <div className="candidate-info">
-                                        <span>{item.email || item.phone}</span>
-                                        {item.skills && (
-                                          <div className="skill-tags">
-                                            {item.skills
-                                              .slice(0, 2)
-                                              .map((skill) => (
-                                                <Tag className="skill-tag">
-                                                  {skill}
-                                                </Tag>
-                                              ))}
-                                            {item.skills.length > 2 && (
-                                              <Tag className="skill-tag">
-                                                +{item.skills.length - 2}
-                                              </Tag>
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
-                                    }
-                                    style={{
-                                      alignItems: "center",
-                                      display: "flex",
-                                    }}
-                                  />
-                                )}
-                              </List.Item>
-                            )}
-                          />
-                        </div>
+                                          )}
+                                        </div>
+                                      }
+                                      style={{
+                                        alignItems: "center",
+                                        display: "flex",
+                                      }}
+                                    />
+                                  )}
+                                </List.Item>
+                              )}
+                            />
+                          </div>
+                        ) : (
+                          <Card style={{ textAlign: "center", padding: 40 }}>
+                            <Title level={4} style={{ color: "#bfbfbf" }}>
+                              No Candidates found
+                            </Title>
+                          </Card>
+                        )}
                       </Card>
                     </Col>
                     <Col xs={24}>
-                      <Card
-                        title="Hiring Analytics"
-                        extra={
-                          <Button type="text" style={{ color: "#6a5cff" }}>
-                            View Details
-                          </Button>
-                        }
-                        style={{ borderRadius: 12 }}
-                        headStyle={{ border: "none" }}
-                        bodyStyle={{ paddingTop: 0 }}
-                      >
-                        <div style={{ height: 300 }}>
-                          {/* Chart would go here */}
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              height: "100%",
-                              background:
-                                "linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%)",
-                              borderRadius: 8,
-                            }}
-                          >
-                            <div
+                      <ChartCard
+                        title={
+                          <span style={{ padding: "20px 10px" }}>
+                            <Title level={5} style={{ margin: 0 }}>
+                              <PieChartOutlined style={{ marginRight: 8 }} />
+                              Gender Distribution
+                            </Title>
+                            <Alert
                               style={{
-                                textAlign: "center",
-                                color: "#666",
+                                marginTop: 7,
+                                marginBottom: 15,
+                                fontSize: 12,
+                                padding: "3px 5px",
+                                border: "none",
+                                display: "inline-flex",
                               }}
-                            >
-                              <Title level={4} style={{ color: "#666" }}>
-                                Hiring Metrics Chart
-                              </Title>
-                              <Text>Applications, Interviews, Hires</Text>
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
+                              message="Here is the gender distribution chart for overall posts"
+                              type="warning"
+                              showIcon
+                            />
+                          </span>
+                        }
+                      >
+                        {genderData.some((item) => item.value > 0) ? (
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={genderData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={100}
+                                paddingAngle={2}
+                                dataKey="value"
+                                label={renderCustomizedLabel}
+                                labelLine={false}
+                              >
+                                {genderData.map((entry, index) => (
+                                  <Cell
+                                    key={`cell-${index}`}
+                                    fill={COLORS[index % COLORS.length]}
+                                  />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                content={<CustomTooltip />}
+                                wrapperStyle={{ zIndex: 1000 }}
+                              />
+                              <Legend
+                                layout="vertical"
+                                verticalAlign="middle"
+                                align="right"
+                                iconType="circle"
+                                formatter={(value, entry) => (
+                                  <span style={{ color: "#334155" }}>
+                                    {value}: {entry.payload.value}
+                                  </span>
+                                )}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <Card style={{ textAlign: "center", padding: 40 }}>
+                            <Title level={4} style={{ color: "#bfbfbf" }}>
+                              No gender data available
+                            </Title>
+                          </Card>
+                        )}
+                      </ChartCard>
                     </Col>
                   </Row>
                 </Col>
@@ -1497,75 +1667,258 @@ export default function AdminDashboard() {
                   <Row gutter={[24, 24]}>
                     <Col xs={24}>
                       <Card
-                        title="Hiring Progress"
-                        style={{ borderRadius: 12 }}
-                        headStyle={{ border: "none" }}
+                        title={
+                          <Text
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 600,
+                              color: "#1d1f2f",
+                            }}
+                          >
+                            Recent Listings
+                          </Text>
+                        }
+                        style={{
+                          borderRadius: 16,
+                          background: "rgba(255, 255, 255, 0.8)",
+                          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+                          backdropFilter: "blur(10px)",
+                          border: "1px solid rgba(255,255,255,0.3)",
+                          padding: "12px 14px",
+                        }}
+                        headStyle={{ border: "none", padding: "12px 0" }}
+                        extra={
+                          postDetails.length > 0 && (
+                            <Button
+                              onClick={() => {
+                                localStorage.setItem(
+                                  "activeAdminTab",
+                                  "listing"
+                                );
+                                navigate("/admin-profile");
+                              }}
+                              type="text"
+                              style={{ color: "#6a5cff" }}
+                            >
+                              See All
+                            </Button>
+                          )
+                        }
                       >
-                        <Space
-                          direction="vertical"
-                          size="middle"
-                          style={{ width: "100%" }}
-                        >
-                          {[
-                            {
-                              title: "Frontend",
-                              percent: 65,
-                              color: colorPrimary,
-                            },
-                            { title: "Backend", percent: 45, color: "#52c41a" },
-                            {
-                              title: "UX Design",
-                              percent: 80,
-                              color: "#faad14",
-                            },
-                            { title: "Product", percent: 30, color: "#eb2f2f" },
-                            { title: "DevOps", percent: 55, color: "#722ed1" },
-                          ].map((item) => (
-                            <div key={item.title}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  marginBottom: 4,
-                                }}
-                              >
-                                <Text strong>{item.title}</Text>
-                                <Text>{item.percent}%</Text>
-                              </div>
-                              <Progress
-                                percent={item.percent}
-                                strokeColor={item.color}
-                                showInfo={false}
-                              />
-                            </div>
-                          ))}
-                        </Space>
+                        {loading ? (
+                          <Skeleton active />
+                        ) : postDetails.length > 0 ? (
+                          <Timeline
+                            style={{ marginTop: 8 }}
+                            items={postDetails.slice(0, 4).map((job) => {
+                              const createdDate = new Date(job.created_at);
+                              const currentDate = new Date();
+                              const diffDays =
+                                (currentDate - createdDate) /
+                                (1000 * 60 * 60 * 24);
+                              const isActive = diffDays <= 15;
+
+                              return {
+                                color: "transparent",
+                                dot: (
+                                  <div
+                                    style={{
+                                      width: 14,
+                                      height: 14,
+                                      borderRadius: "50%",
+                                      background:
+                                        "linear-gradient(135deg, #6a5cff, #836fff)",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      boxShadow:
+                                        "0 2px 6px rgba(106,92,255,0.4)",
+                                    }}
+                                  >
+                                    <CheckCircleOutlined
+                                      style={{ fontSize: 12, color: "#fff" }}
+                                    />
+                                  </div>
+                                ),
+                                children: (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 4,
+                                      paddingBottom: 8,
+                                    }}
+                                  >
+                                    <Text
+                                      strong
+                                      style={{ fontSize: 15, color: "#1d1f2f" }}
+                                    >
+                                      {job.job_title}
+                                    </Text>
+                                    <Text
+                                      type="secondary"
+                                      style={{ fontSize: 12 }}
+                                    >
+                                      📅 Posted on:{" "}
+                                      {createdDate.toLocaleDateString()}
+                                    </Text>
+                                    <div
+                                      style={{
+                                        marginTop: 4,
+                                        display: "flex",
+                                        gap: 6,
+                                        flexWrap: "wrap",
+                                      }}
+                                    >
+                                      <Tag
+                                        style={{
+                                          borderRadius: 20,
+                                          background:
+                                            "linear-gradient(135deg, #dfe9ff, #f0f4ff)",
+                                          color: "#334",
+                                          fontWeight: 500,
+                                        }}
+                                      >
+                                        {job.job_nature}
+                                      </Tag>
+                                      <Tag
+                                        style={{
+                                          borderRadius: 20,
+                                          background:
+                                            "linear-gradient(135deg, #e0f0ff, #f0f8ff)",
+                                          color: "#004a8f",
+                                          fontWeight: 500,
+                                        }}
+                                      >
+                                        {job.workplace_type}
+                                      </Tag>
+                                      {isActive ? (
+                                        <Tag
+                                          style={{
+                                            borderRadius: 20,
+                                            background:
+                                              "linear-gradient(135deg, #d4fcd5, #b4f0b9)",
+                                            color: "#0f5132",
+                                            fontWeight: 500,
+                                          }}
+                                        >
+                                          Active
+                                        </Tag>
+                                      ) : (
+                                        <Tag
+                                          style={{
+                                            borderRadius: 20,
+                                            background:
+                                              "linear-gradient(135deg, #ffe0e0, #ffcccc)",
+                                            color: "#842029",
+                                            fontWeight: 500,
+                                          }}
+                                        >
+                                          Closed
+                                        </Tag>
+                                      )}
+                                    </div>
+                                  </div>
+                                ),
+                              };
+                            })}
+                          />
+                        ) : (
+                          <Card style={{ textAlign: "center", padding: 40 }}>
+                            <Title level={4} style={{ color: "#bfbfbf" }}>
+                              No listings available
+                            </Title>
+                          </Card>
+                        )}
                       </Card>
                     </Col>
                     <Col xs={24}>
-                      <Card
-                        title="Recent Activities"
-                        style={{ borderRadius: 12 }}
-                        headStyle={{ border: "none" }}
-                        extra={
-                          <Button type="text" style={{ color: "#6a5cff" }}>
-                            See All
-                          </Button>
+                      <ChartCard
+                        title={
+                          <span style={{ padding: "20px 10px" }}>
+                            <Title level={5} style={{ margin: 0 }}>
+                              <PieChartOutlined style={{ marginRight: 8 }} />
+                              Domain Distribution
+                            </Title>
+                            <Alert
+                              style={{
+                                marginTop: 7,
+                                marginBottom: 15,
+                                fontSize: 12,
+                                padding: "3px 5px",
+                                border: "none",
+                                display: "inline-flex",
+                              }}
+                              message="Here is the domain distribution chart for overall posts"
+                              type="warning"
+                              showIcon
+                            />
+                          </span>
                         }
                       >
-                        <Timeline>
-                          {activities.map((activity, index) => (
-                            <Timeline.Item key={index} color={activity.color}>
-                              <div>
-                                <Text strong>{activity.label}</Text>
-                                <div>
-                                  <Text type="secondary">{activity.time}</Text>
-                                </div>
-                              </div>
-                            </Timeline.Item>
-                          ))}
-                        </Timeline>
-                      </Card>
+                        {domainCount.length > 0 &&
+                        domainCount.some((item) => item.value > 0) ? (
+                          <ResponsiveContainer width="100%" height={280}>
+                            <BarChart
+                              data={domainCount}
+                              layout="vertical"
+                              margin={{
+                                top: 5,
+                                right: 30,
+                                left: -30,
+                                bottom: 5,
+                              }}
+                            >
+                              <CartesianGrid
+                                horizontal
+                                vertical={false}
+                                stroke="#f0f0f0"
+                              />
+                              <XAxis
+                                type="number"
+                                tick={{ fill: "#64748b" }}
+                                tickLine={false}
+                                axisLine={false}
+                              />
+                              <YAxis
+                                type="category"
+                                dataKey="domain"
+                                tick={{ fill: "#64748b", fontSize: 12 }}
+                                tickLine={false}
+                                axisLine={false}
+                                width={200}
+                              />
+                              <Tooltip
+                                content={<CustomTooltip />}
+                                wrapperStyle={{ zIndex: 1000 }}
+                              />
+                              <Bar
+                                dataKey="value"
+                                name="Registrations"
+                                radius={[0, 4, 4, 0]}
+                              >
+                                {domainCount.map((entry, index) => (
+                                  <Cell
+                                    key={`cell-${index}`}
+                                    fill={COLORS1[index % COLORS1.length]}
+                                  />
+                                ))}
+                                <LabelList
+                                  dataKey="value"
+                                  position="right"
+                                  fill="#000"
+                                />
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <Card style={{ textAlign: "center", padding: 40 }}>
+                            <Title level={4} style={{ color: "#bfbfbf" }}>
+                              No domain data available
+                            </Title>
+                          </Card>
+                        )}
+                      </ChartCard>
                     </Col>
                   </Row>
                 </Col>

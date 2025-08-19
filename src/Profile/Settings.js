@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import Header from "../Header/Header";
 import {
   Switch,
   Typography,
@@ -7,216 +8,349 @@ import {
   Form,
   Button,
   Select,
+  message,
+  Card,
+  Divider,
+  Space,
+  Tabs,
 } from "antd";
-import CommonInputField from "../Common/CommonInputField";
-import CommonSelectField from "../Common/CommonSelectField";
+import {
+  EyeInvisibleOutlined,
+  EyeTwoTone,
+  BellOutlined,
+  LockOutlined,
+  UserOutlined,
+  SafetyOutlined,
+} from "@ant-design/icons";
+import styled from "styled-components";
+import { motion } from "framer-motion";
+import { changePassword } from "../ApiService/action";
+
 const { Title, Text } = Typography;
-const { Option } = Select;
-const onChange = (checked) => {
-  console.log(`switch to ${checked}`);
-};
+const { TabPane } = Tabs;
 
-const text1 = [
-  {
-    key: "1",
-    texted: (
-      <>
-        <div className="settings_page">
-          <div style={{ textAlign: "left" }}>
-            {" "}
-            <h5>Newsletter Preference</h5>
-            <p>
-              Our newsletter will gain you access to the latest updates
-              regarding the hiring challenges of top recruiters (like Walmart,
-              Flipkart, Uber, Amazon, etc.), jobs & internships, competitions,
-              quizzes, and hackathons from elite colleges across the world.
-            </p>
-          </div>
-          <div>
-            <Switch onChange={onChange} />
-          </div>
-        </div>
+/* ---------- Premium Styled Components ---------- */
+const SettingsContainer = styled(motion.div)`
+  padding: 40px;
+  background: linear-gradient(145deg, #f8fafc, #f8fafc);
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+`;
 
-        <div className="settings_page">
-          <div style={{ textAlign: "left" }}>
-            {" "}
-            <h5>Email Notification Preferences</h5>
-            <p>
-              Automated reminders are sent in case of incomplete registration
-              (incomplete extended form or incomplete payment), daily quiz and
-              hackathon reminders, submission reminders, and reminder to submit
-              a review.
-            </p>
-          </div>
-          <div>
-            <Switch size="small" onChange={onChange} />
-          </div>
-        </div>
+const SectionTitle = styled(Title)`
+  font-weight: 700 !important;
+  margin-bottom: 8px !important;
+  font-size: 26px !important;
+`;
 
-        <div className="settings_page">
-          <div style={{ textAlign: "left" }}>
-            {" "}
-            <p>
-              You can turn on the emails sent by the organizers for a
-              single/multiple competitions from the My Registration page.
-            </p>
-          </div>
-          <div>
-            <Switch size="small" onChange={onChange} />
-          </div>
-        </div>
+const SectionDescription = styled(Text)`
+  color: #6c6f85;
+  font-size: 15px;
+  display: block;
+  margin-bottom: 28px;
+`;
 
-        <div className="settings_page">
-          <div style={{ textAlign: "left" }}>
-            {" "}
-            <p>Relevant Jobs notifications</p>
-          </div>
-          <div>
-            <Switch size="small" onChange={onChange} />
-          </div>
-        </div>
-      </>
-    ),
-  },
-  {
-    key: "2",
-    texted: (
-      <>
-        <div className="settings_page">
-          <div style={{ textAlign: "left" }}>
-            {" "}
-            <h5>Change Password</h5>
-            <p>
-              If you wish to change your password, you can change from here.
-            </p>
-          </div>
-        </div>
-        <Form name="passform" autoComplete="off">
-          <div style={{ display: "flex" }}>
-            <CommonInputField
-              name="currentpass"
-              label="Enter current password"
-              mandotary={true}
-              placeholder="******"
-              type="password"
-              // error={"Please enter your current password"}
-            />
-          </div>
+const SettingCard = styled(motion(Card))`
+  border-radius: 16px;
+  margin-bottom: 20px;
+  border: none;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 24px rgba(95, 46, 234, 0.08);
 
-          <div className="form-row">
-            <CommonInputField
-              name="newpass"
-              label="Enter New password"
-              mandotary={true}
-              placeholder="******"
-              type="password"
-              // error={"Please enter your new password"}
-            />
+  .ant-card-body {
+    padding: 28px;
+  }
+`;
 
-            <CommonInputField
-              name="confirmpass"
-              label="Enter Confirm password"
-              mandotary={true}
-              placeholder="******"
-              type="password"
-              // error={"Please enter your confirm password"}
-            />
-          </div>
-          <div style={{ display: "flex", paddingTop: 26 }}>
-            <Button
-              className="additional_details_btn"
-              type="primary"
-              htmlType="submit"
-            >
-              Submit
-            </Button>
-          </div>
-        </Form>
-      </>
-    ),
-  },
-  {
-    key: "3",
-    texted: (
-      <>
-        <div className="settings_page">
-          <div style={{ textAlign: "left" }}>
-            {" "}
-            <h5>Profile Visibility</h5>
-            <p>
-              You can choose to make your profile public (searchable on Google)
-              or private (hidden from search engines).
-            </p>
-          </div>
-          <div>
-            <CommonSelectField
-              style={{
-                borderRadius: "5px",
-                backgroundColor: "rgb(147 134 255)",
-              }}
-              name="profilevisibility"
-              defaultValue="Public"
-              options={[
-                {
-                  value: "Public",
-                  label: "Public",
-                },
-                {
-                  value: "Private",
-                  label: "Private",
-                },
-              ]}
-              showSearch={true}
-            />
-          </div>
-        </div>
-      </>
-    ),
-  },
-];
+const SettingItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 18px 0;
 
-const items = text1.map(({ key, texted }) => ({
-  key,
-  label:
-    key === "1"
-      ? "Notifications"
-      : key === "2"
-      ? "Password"
-      : key === "4"
-      ? "Profile"
-      : "Manage Devices",
-  children: texted,
-}));
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+`;
 
+const SettingContent = styled.div`
+  flex: 1;
+  margin-right: 24px;
+`;
+
+const SettingTitle = styled.h4`
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1a1a1a;
+  font-size: 18px;
+`;
+
+const SettingDescription = styled.p`
+  color: #777;
+  margin: 0;
+  font-size: 14px;
+`;
+
+const PremiumButton = styled(Button)`
+  background: linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%);
+  border: none;
+  font-weight: 600;
+  height: 42px;
+  padding: 0 26px;
+  border-radius: 8px;
+  color: #fff;
+
+  &:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%) !important;
+    opacity: 0.95;
+  }
+`;
+
+const PasswordInput = styled(Input.Password)`
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+`;
+
+/* ---------- Component ---------- */
 export default function Settings() {
-  return (
-    <section
-      style={{
-        padding: "24px 32px",
-        background: "#fff",
-        borderRadius: 12,
-        boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.03)",
-      }}
-    >
-      <div
-        style={{
-          marginBottom: 24,
-          textAlign: "left",
-        }}
-      >
-        {" "}
-        <Title level={3} style={{ margin: 0 }}>
-          Settings
-        </Title>
-        <hr></hr>
-      </div>
+  const [loginUserId, setLoginUserId] = useState(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [activeTab, setActiveTab] = useState("notifications");
 
-      <Collapse
-        className="settings_collapse"
-        items={items}
-        bordered={false}
-        defaultActiveKey={["1"]}
-      />
-    </section>
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, []);
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      message.error("Passwords do not match");
+      return;
+    }
+
+    const payload = {
+      user_id: loginUserId,
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    };
+
+    try {
+      await changePassword(payload);
+      message.success("Password changed successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      message.error("Invalid current password!");
+    }
+  };
+
+  return (
+    <div>
+      <Header />
+      <SettingsContainer
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <SectionTitle level={2}>Account Settings</SectionTitle>
+        <SectionDescription>
+          Manage your account preferences and security settings
+        </SectionDescription>
+
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          tabPosition="left"
+          style={{ minHeight: 500 }}
+          tabBarStyle={{ fontWeight: "600" }}
+        >
+          <TabPane
+            tab={
+              <span>
+                <BellOutlined style={{ marginRight: 6 }} />
+                Notifications
+              </span>
+            }
+            key="notifications"
+          >
+            <SettingCard>
+              {[
+                {
+                  title: "Newsletter Preference",
+                  desc: "Access the latest updates on jobs, internships, and competitions.",
+                },
+                {
+                  title: "Email Notification Preferences",
+                  desc: "Get reminders for quizzes, hackathons, and incomplete registrations.",
+                },
+                {
+                  title: "Competition Updates",
+                  desc: "Turn on emails for specific competitions from My Registration page.",
+                },
+                {
+                  title: "Relevant Jobs Notifications",
+                  desc: "Receive job notifications that match your profile.",
+                },
+              ].map((item, i) => (
+                <SettingItem key={i}>
+                  <SettingContent>
+                    <SettingTitle>{item.title}</SettingTitle>
+                    <SettingDescription>{item.desc}</SettingDescription>
+                  </SettingContent>
+                  <Switch />
+                </SettingItem>
+              ))}
+            </SettingCard>
+          </TabPane>
+
+          <TabPane
+            tab={
+              <span>
+                <LockOutlined style={{ marginRight: 6 }} />
+                Password
+              </span>
+            }
+            key="password"
+          >
+            <SettingCard>
+              <SettingContent>
+                <SettingTitle>Change Password</SettingTitle>
+                <SettingDescription>
+                  Use a strong, unique password for better security.
+                </SettingDescription>
+              </SettingContent>
+              <Divider />
+              <Form layout="vertical" style={{ maxWidth: 500 }}>
+                <Form.Item label="Current Password">
+                  <PasswordInput
+                    placeholder="Enter current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    iconRender={(visible) =>
+                      visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                    }
+                  />
+                </Form.Item>
+                <Form.Item label="New Password">
+                  <PasswordInput
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    iconRender={(visible) =>
+                      visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                    }
+                  />
+                </Form.Item>
+                <Form.Item label="Confirm New Password">
+                  <PasswordInput
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    iconRender={(visible) =>
+                      visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                    }
+                  />
+                </Form.Item>
+                <Space>
+                  <PremiumButton
+                    type="primary"
+                    onClick={handleChangePassword}
+                    disabled={
+                      !currentPassword || !newPassword || !confirmPassword
+                    }
+                  >
+                    Update Password
+                  </PremiumButton>
+                  <Button
+                    onClick={() => {
+                      setCurrentPassword("");
+                      setNewPassword("");
+                      setConfirmPassword("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </Space>
+              </Form>
+            </SettingCard>
+          </TabPane>
+
+          <TabPane
+            tab={
+              <span>
+                <UserOutlined style={{ marginRight: 6 }} />
+                Profile
+              </span>
+            }
+            key="profile"
+          >
+            <SettingCard>
+              <SettingItem>
+                <SettingContent>
+                  <SettingTitle>Profile Visibility</SettingTitle>
+                  <SettingDescription>
+                    Choose whether your profile is visible to search engines.
+                  </SettingDescription>
+                </SettingContent>
+                <Select
+                  defaultValue="Public"
+                  style={{ width: 140 }}
+                  options={[
+                    { value: "Public", label: "Public" },
+                    { value: "Private", label: "Private" },
+                  ]}
+                />
+              </SettingItem>
+            </SettingCard>
+          </TabPane>
+
+          <TabPane
+            tab={
+              <span>
+                <SafetyOutlined style={{ marginRight: 6 }} />
+                Security
+              </span>
+            }
+            key="security"
+          >
+            <SettingCard>
+              <SettingItem>
+                <SettingContent>
+                  <SettingTitle>Two-Factor Authentication</SettingTitle>
+                  <SettingDescription>
+                    Add an extra layer of protection to your account.
+                  </SettingDescription>
+                </SettingContent>
+                <Switch checked={false} />
+              </SettingItem>
+              <SettingItem>
+                <SettingContent>
+                  <SettingTitle>Login Activity</SettingTitle>
+                  <SettingDescription>
+                    View recent login history and sessions.
+                  </SettingDescription>
+                </SettingContent>
+                <Button style={{ color: "#5f2eea" }} type="link">
+                  View Activity
+                </Button>
+              </SettingItem>
+            </SettingCard>
+          </TabPane>
+        </Tabs>
+      </SettingsContainer>
+    </div>
   );
 }
