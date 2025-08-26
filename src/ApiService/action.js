@@ -120,6 +120,18 @@ export const login = async (payload) => {
   }
 };
 
+export const googleLogin = async (data) => {
+  try {
+    const response = await axios.post(
+      `${process.env.REACT_APP_API_URL}/auth/google`,
+      data
+    );
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const register = async (registerload) => {
   try {
     const response = await api.post("/api/createUser", registerload);

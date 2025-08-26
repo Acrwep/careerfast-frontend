@@ -430,7 +430,6 @@ const EditOpportunity = () => {
   const [jobCategoryOptions, setJobCategoryOptions] = useState([]);
   const [value, setValue] = useState(defaultContent);
   const MAX_LENGTH = 3000;
-  const [touched, setTouched] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [jobOpenings, setJobOpenings] = useState("");
   const [workingDays, setWorkingDays] = useState([]);
@@ -438,7 +437,6 @@ const EditOpportunity = () => {
   const [workplaceLocation, setWorkplaceLocation] = useState("");
   const [workLocationActiveButton, setWorkLocationActiveButton] = useState("");
   const [specificLocation, setSpecificLocation] = useState("");
-  const [specificLocationName, setSpecificLocationName] = useState("");
   const [workLocationOption, setWorkLocationOption] = useState([]);
   const [eligibilityData, setEligibilityData] = useState([]);
   const [experienceRequiredActiveButton, setExperienceRequiredActiveButton] =
@@ -463,7 +461,6 @@ const EditOpportunity = () => {
   const [weeksActiveButton, setWeeksActiveButton] = useState(null);
   const [workTypeActiveButton, setWorkTypeActiveButton] = useState(null);
   const [workplaceType, setWorkplaceType] = useState("");
-  const [isSaved, setIsSaved] = useState({});
   const [backendJobs, setBackendJobs] = useState([]);
   const [postDetails, setPostDetails] = useState([]);
   const [loginUserId, setLoginUserId] = useState(null);
@@ -870,7 +867,6 @@ const EditOpportunity = () => {
 
   const handleChange = (content, delta, source, editor) => {
     if (editor.getLength() <= MAX_LENGTH + 1) {
-      setTouched(true);
       setValue(content);
       setJobDescription(content);
       localStorage.setItem("jobDescription", content); // Save to localStorage
@@ -1343,7 +1339,6 @@ const EditOpportunity = () => {
                       value={specificLocation}
                       onChange={(value, option) => {
                         setSpecificLocation(value);
-                        setSpecificLocationName(option.label);
                       }}
                       options={workLocationOption}
                     />
@@ -1544,7 +1539,7 @@ const EditOpportunity = () => {
                             }
                             onClick={() => {
                               handleFresherPassClick(item);
-                              setEligibilityYear(item.id);
+                              // setEligibilityYear(item.id);
                             }}
                           >
                             {item.year === "All" ? (

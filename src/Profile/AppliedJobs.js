@@ -5,6 +5,7 @@ import { debounce } from "lodash";
 import { useNavigate } from "react-router-dom";
 import { getUserAppliedJobs, getUserJobPostStatus } from "../ApiService/action";
 import Header from "../Header/Header";
+import { FiClock } from "react-icons/fi";
 
 const { Title, Text } = Typography;
 
@@ -42,8 +43,8 @@ const OpportunityCard = ({ opportunity, status }) => {
             alt={`${opportunity.company_name || opportunity.company} logo`}
             style={{
               borderRadius: 8,
-              width: 80,
-              height: 80,
+              width: 63,
+              height: 70,
               objectFit: "contain",
             }}
           />
@@ -68,7 +69,14 @@ const OpportunityCard = ({ opportunity, status }) => {
               }}
               color={getStatusColor(status)}
             >
-              {status || "Pending"}
+              {status ? (
+                status
+              ) : (
+                <>
+                  <FiClock style={{ marginRight: 4 }} />
+                  Pending
+                </>
+              )}
             </Tag>
           </div>
 

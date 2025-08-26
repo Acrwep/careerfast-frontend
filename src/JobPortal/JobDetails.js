@@ -493,11 +493,13 @@ export default function JobDetails() {
                         <span className="side_job_action_icon">
                           {isSaved[job.id] ? (
                             <FaHeart
+                              style={{ cursor: "no-drop" }}
                               size={20}
                               className="side_job_action_icon heart active"
                             />
                           ) : (
                             <FaRegHeart
+                              style={{ cursor: "no-drop" }}
                               size={20}
                               className="side_job_action_icon heart"
                             />
@@ -505,6 +507,7 @@ export default function JobDetails() {
                         </span>
                         <span className="side_job_action_icon">
                           <IoMdCalendar
+                            style={{ cursor: "no-drop" }}
                             size={20}
                             className="side_job_action_icon calendar"
                           />

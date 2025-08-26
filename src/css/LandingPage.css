@@ -152,6 +152,16 @@
   border: 1px solid rgb(0 0 0 / 11%);
   text-align: center;
   place-content: center;
+  height: 200px;
+}
+
+.job-categories .slick-prev:before,
+.slick-next:before {
+  color: #5f2eea !important;
+}
+
+.job-categories .slick-slide {
+  padding: 10px;
 }
 
 .category-card:hover {
@@ -745,7 +755,7 @@
 .elite-job-meta {
   margin-top: auto;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.8);
@@ -1266,9 +1276,9 @@
 }
 
 .premium-search-input {
-  height: 40px;
+  height: 45px;
   border-radius: 12px;
-  padding: 2px 5px 4px 28px !important;
+  padding: 4px 0px 4px 28px !important;
   width: 230px !important;
   font-size: 16px;
   border: 1px solid #e9e9e9b3;

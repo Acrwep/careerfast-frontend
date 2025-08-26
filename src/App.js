@@ -7,9 +7,8 @@ import Layout from "./Layout/Layout";
 import { Provider } from "react-redux";
 import { store } from "./Redux/store";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-
+import ScrollToTop from "./ScrollTop/ScrollToTop";
 function App() {
-  //hide console and errors in the production
   if (process.env.NODE_ENV === "production") {
     console.log = () => {};
     console.debug = () => {};
@@ -26,6 +25,7 @@ function App() {
       <GoogleOAuthProvider clientId={CLIENT_ID}>
         <Provider store={store}>
           <BrowserRouter>
+            <ScrollToTop />
             <Layout />
             <ToastContainer
               position="top-right"

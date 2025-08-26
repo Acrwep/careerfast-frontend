@@ -16,7 +16,6 @@ import {
   Dropdown,
   Drawer,
   Space,
-  Divider,
   List,
   Typography,
   Progress,
@@ -28,25 +27,18 @@ import { useLocation, Link } from "react-router-dom";
 
 import {
   BellOutlined,
-  LockOutlined,
   UserOutlined,
   PlusOutlined,
   SearchOutlined,
-  TrophyOutlined,
   BookOutlined,
-  TeamOutlined,
   CodeOutlined,
   SettingOutlined,
   AppstoreOutlined,
-  CalendarOutlined,
   UserAddOutlined,
-  ShareAltOutlined,
-  DownOutlined,
   CloseOutlined,
   ArrowRightOutlined,
   LogoutOutlined,
   RightOutlined,
-  HeartFilled,
   HeartOutlined,
 } from "@ant-design/icons";
 
@@ -55,11 +47,11 @@ import {
   CrownFilled,
   StarFilled,
   EnvironmentOutlined,
-  ClockCircleOutlined,
 } from "@ant-design/icons";
 import { getUserProfile, searchByKeyword } from "../ApiService/action";
 import { IoChevronDownOutline } from "react-icons/io5";
 import { CommonToaster } from "../Common/CommonToaster";
+import { FcApproval } from "react-icons/fc";
 
 const { Title, Text } = Typography;
 
@@ -75,9 +67,8 @@ export default function Header() {
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
   const [email, setEmail] = useState("");
-  const [searchText, setSearchText] = useState(""); // input field state
+  const [searchText, setSearchText] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  // const [isLoggedIn, setIsLoggedIn] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -97,7 +88,6 @@ export default function Header() {
 
   const handleLogOut = () => {
     localStorage.removeItem("loginDetails");
-    // setLoginUserId(null);
     dispatch(storeLoginStatus(false));
     setRoleId(null);
     navigate("/login");
@@ -214,13 +204,14 @@ export default function Header() {
       path: "/internship",
     },
     { key: "practice", label: "Practice", icon: <CodeOutlined />, path: "#" },
+    // { key: "more", label: "More", icon: <CodeOutlined />, path: "#" },
   ];
 
   const moreMenuItems = [
     { key: "scholarships", label: "Scholarships", path: "#" },
     { key: "events", label: "Events", path: "#" },
     { key: "resources", label: "Resources", path: "#" },
-    { key: "blog", label: "Blog", path: "#" },
+    { key: "blog", label: "Blog", path: "/blogs" },
   ];
 
   const location = useLocation();
@@ -236,10 +227,11 @@ export default function Header() {
       >
         <Container>
           <div className="d-flex gap-3 global_search">
-            <Navbar.Brand href="#">
+            <Navbar.Brand>
               <img
                 onClick={() => navigate("/job-portal")}
                 src={logo}
+                style={{ cursor: "pointer" }}
                 alt="Logo"
                 className="main-logo"
               />
@@ -311,12 +303,28 @@ export default function Header() {
                   </Nav.Link>
                 ))}
                 <Dropdown
-                  disabled
-                  menu={{ items: moreMenuItems }}
-                  trigger={["click"]}
+                  menu={{
+                    items: moreMenuItems,
+                    onClick: ({ key }) => {
+                      const selectedItem = moreMenuItems.find(
+                        (item) => item.key === key
+                      );
+                      if (selectedItem?.path) {
+                        navigate(selectedItem.path);
+                        onClose();
+                      }
+                    },
+                  }}
+                  trigger={["hover"]}
                   placement="bottomLeft"
                 >
-                  <Nav.Link className="nav-item">
+                  <Nav.Link
+                    className={`nav-item ${
+                      moreMenuItems.some((menu) => menu.path === currentPath)
+                        ? "active"
+                        : ""
+                    }`}
+                  >
                     More <IoChevronDownOutline />
                   </Nav.Link>
                 </Dropdown>
@@ -513,56 +521,6 @@ export default function Header() {
 
         {/* Premium Content */}
         <div style={{ padding: "24px" }}>
-          {/* Completion Card */}
-          {/* <div
-            className=""
-            style={{
-              background:
-                "linear-gradient(135deg, rgb(234 222 255) 0%, rgb(255, 255, 255) 100%)",
-              borderRadius: 12,
-              padding: 16,
-              border: "1px solid rgb(209 204 255)",
-              boxShadow: "0 2px 12px rgba(255, 152, 0, 0.08)",
-              marginBottom: 24,
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: -20,
-                right: -20,
-                width: 80,
-                height: 80,
-                background: "rgb(100 0 255 / 5%)",
-                borderRadius: "50%",
-              }}
-            />
-            <Text strong style={{ display: "block", marginBottom: 4 }}>
-              Complete your profile
-            </Text>
-            <Text
-              type="secondary"
-              style={{ fontSize: 13, display: "block", marginBottom: 12 }}
-            >
-              Unlock all features by completing your profile
-            </Text>
-            <Button
-              type="primary"
-              ghost
-              size="small"
-              style={{
-                border: "none",
-                color: "#fff",
-                fontWeight: 500,
-                background: "linear-gradient(90deg, #6a5cff 0%, #a992ff 100%)",
-              }}
-            >
-              Finish Setup
-            </Button>
-          </div> */}
-
           {/* Menu Sections */}
           <div className="premium-menu-section">
             <Text
@@ -575,27 +533,31 @@ export default function Header() {
                 display: "block",
               }}
             >
-              For Organizers
+              {roleId === 2 ? " For Users" : "For Organizers"}
             </Text>
 
             <List
               size="large"
               itemLayout="horizontal"
               dataSource={[
-                {
-                  title: (
-                    <span
-                      style={{ cursor: "pointer", color: "#4f46e5" }}
-                      onClick={() => {
-                        localStorage.setItem("activeAdminTab", "listing");
-                        navigate("/admin-profile");
-                      }}
-                    >
-                      Manage Listings
-                    </span>
-                  ),
-                  icon: <AppstoreOutlined style={{ color: "#4f46e5" }} />,
-                },
+                ...(roleId !== 2
+                  ? [
+                      {
+                        title: (
+                          <span
+                            style={{ cursor: "pointer", color: "#4f46e5" }}
+                            onClick={() => {
+                              localStorage.setItem("activeAdminTab", "listing");
+                              navigate("/admin-profile");
+                            }}
+                          >
+                            Manage Listings
+                          </span>
+                        ),
+                        icon: <AppstoreOutlined style={{ color: "#4f46e5" }} />,
+                      },
+                    ]
+                  : []),
                 {
                   title: (
                     <span
@@ -626,6 +588,23 @@ export default function Header() {
                     </span>
                   ),
                   icon: <SettingOutlined style={{ color: "#4f46e5" }} />,
+                },
+                {
+                  title: (
+                    <span
+                      style={{ cursor: "pointer", color: "#4f46e5" }}
+                      onClick={() => {
+                        localStorage.setItem(
+                          "activeAdminTab",
+                          "prosubscription"
+                        );
+                        navigate("/admin-profile");
+                      }}
+                    >
+                      Pro Subscription
+                    </span>
+                  ),
+                  icon: <FcApproval style={{ color: "#4f46e5" }} />,
                 },
               ]}
               renderItem={(item) => (

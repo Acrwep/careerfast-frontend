@@ -10,7 +10,6 @@ import {
   Drawer,
   Radio,
   Divider,
-  List,
   Input,
   Checkbox,
   message,
@@ -18,16 +17,16 @@ import {
   Empty,
   Skeleton,
   Tooltip,
+  Badge,
 } from "antd";
 import {
   ClockCircleOutlined,
   ThunderboltFilled,
   CrownFilled,
-  ThunderboltOutlined,
   DownOutlined,
   CloseOutlined,
   EnvironmentOutlined,
-  SearchOutlined,
+  FilterOutlined,
 } from "@ant-design/icons";
 import "../css/JobFilter.css";
 import { FaTransgender } from "react-icons/fa6";
@@ -55,7 +54,6 @@ import { FaHeart, FaRegHeart } from "react-icons/fa6";
 import { IoMdCalendar } from "react-icons/io";
 import { IoIosShareAlt } from "react-icons/io";
 import { LuCalendarDays } from "react-icons/lu";
-import { State, City } from "country-state-city";
 import { HiOutlineStatusOnline } from "react-icons/hi";
 import { GrLocation } from "react-icons/gr";
 import { CgWorkAlt } from "react-icons/cg";
@@ -67,6 +65,7 @@ import additional3 from "../images/additional3.png";
 import additional4 from "../images/additional4.png";
 import additional5 from "../images/additional5.png";
 import additional6 from "../images/additional6.png";
+import cities from "cities-list";
 
 const { Text } = Typography;
 
@@ -81,16 +80,16 @@ export default function JobFilter() {
   const [jobNatureSelected, setJobNatureSelected] = useState("");
 
   const [visible, setVisible] = useState(false);
-  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState([]);
+  const [newWorkLocation, setNewWorkLocation] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [tempSelected, setTempSelected] = useState([]);
   const [workTypevisible, setWorkTypeVisible] = useState(false);
   const [statusVisible, setStatusVisible] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedType, setSelectedType] = useState(null);
   const [workingDaysVisible, setWorkingDaysVisible] = useState(false);
   const [selectedWorkingDays, setSelectedWorkingDays] = useState("");
-  const [userTypevisible, setUserTypeVisible] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState("");
   const [jobCategoryOptions, setJobCategoryOptions] = useState([]);
   const [userCatergoryvisible, setUserCatergoryVisible] = useState(false);
@@ -101,7 +100,6 @@ export default function JobFilter() {
   const [loginUserId, setLoginUserId] = useState(null);
   const [answers, setAnswers] = useState("");
   const [loading, setLoading] = useState(false);
-  const [workLocationOption, setWorkLocationOption] = useState([]);
   const [isApplied, setIsApplied] = useState({});
   const [savedJobMap, setSavedJobMap] = useState({});
   const [isSaved, setIsSaved] = useState({});
@@ -111,23 +109,51 @@ export default function JobFilter() {
   const [tempWorkingDays, setTempWorkingDays] = useState("");
   const [tempTypes, setTempTypes] = useState([]);
   const [tempCategories, setTempCategories] = useState([]);
-  const [tempSelected, setTempSelected] = useState([]);
+
+  const [activeFilters, setActiveFilters] = useState({
+    jobNature: false,
+    salary: false,
+    status: false,
+    workingDays: false,
+    location: false,
+    workType: false,
+    category: false,
+  });
+  const activeFilterCount = Object.values(activeFilters).filter(Boolean).length;
+
+  useEffect(() => {
+    setActiveFilters({
+      jobNature: !!jobNatureSelected,
+      salary: !!selectedSort,
+      status: !!selectedStatus,
+      workingDays: !!selectedWorkingDays,
+      location: selected.length > 0,
+      workType: selectedTypes.length > 0,
+      category: selectedCategories.length > 0,
+    });
+  }, [
+    jobNatureSelected,
+    selectedSort,
+    selectedStatus,
+    selectedWorkingDays,
+    selected,
+    selectedTypes,
+    selectedCategories,
+  ]);
 
   useEffect(() => {
     document.title = "CareerFast | Find Jobs";
-    const loadCities = () => {
-      const states = State.getStatesOfCountry("IN");
-      const cities = states.flatMap((state) =>
-        City.getCitiesOfState("IN", state.isoCode)
-      );
-      const formatted = cities.map((city) => ({
-        label: city.name,
-        value: city.name,
-      }));
-      setWorkLocationOption(formatted);
-    };
+  }, []);
 
-    loadCities();
+  useEffect(() => {
+    const allCities = Object.keys(cities).map((city) => ({
+      label: city,
+      value: city,
+      country: cities[city].country,
+    }));
+
+    console.log("allCities", allCities);
+    setNewWorkLocation(allCities);
   }, []);
 
   useEffect(() => {
@@ -490,49 +516,12 @@ export default function JobFilter() {
     setAnswers("");
   };
 
-  const handleLocationCheck = (value) => {
-    setSelected((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
-  };
-
-  const handleTempLocationCheck = (value) => {
-    setTempSelected((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-    );
-  };
-
-  const applyLocationFilter = () => {
-    setSelected(tempSelected); // Commit UI choice
-    console.log("Selected Locations:", tempSelected);
-    setVisible(false);
-    fetchJobs();
-  };
-
-  // Clear filter
-  const handleLocationClear = () => {
-    setTempSelected([]);
-    setSelected([]);
-    fetchJobs();
-    setSearch("");
-    setVisible(false);
-  };
-
   const handleJobNatureChange = (checkedValue) => {
-    setJobNatureSelected((prev) =>
-      prev.includes(checkedValue)
-        ? prev.filter((item) => item !== checkedValue)
-        : [...prev, checkedValue]
-    );
+    setJobNatureSelected(checkedValue);
   };
 
   const handleJobNatureClear = () => {
     setJobNatureSelected("");
-    fetchJobs();
-    setJobNatureVisible(false);
-  };
-
-  const handleJobNatureFilter = () => {
     fetchJobs();
     setJobNatureVisible(false);
   };
@@ -552,27 +541,20 @@ export default function JobFilter() {
         </a>
       </div>
       <div>
-        {jobNature.map((type) => (
-          <div key={type} style={{ marginBottom: 8 }}>
-            <Checkbox
-              checked={jobNatureSelected.includes(type)}
-              onChange={() => handleJobNatureChange(type)}
-            >
+        <Radio.Group
+          className="custom-radio"
+          onChange={(e) => handleJobNatureChange(e.target.value)}
+          value={jobNatureSelected}
+          style={{ display: "flex", flexDirection: "column", gap: 0 }}
+        >
+          {jobNature.map((type) => (
+            <Radio key={type} value={type} style={{ marginBottom: 8 }}>
               {type}
-            </Checkbox>
-          </div>
-        ))}
+            </Radio>
+          ))}
+        </Radio.Group>
       </div>
       <Divider style={{ margin: "12px 0" }} />
-      <Button
-        className="apply_filter"
-        type="primary"
-        shape="round"
-        block
-        onClick={handleJobNatureFilter}
-      >
-        Apply Filter
-      </Button>
     </div>
   );
 
@@ -665,8 +647,23 @@ export default function JobFilter() {
   };
 
   const renderLocation = () => {
+    const applyLocationFilter = () => {
+      setSelected(tempSelected); // Commit UI choice
+      console.log("Selected Locations:", tempSelected);
+      setVisible(false);
+    };
+
+    // Clear filter
+    const handleLocationClear = () => {
+      setTempSelected([]);
+      setSelected([]);
+      setVisible(false);
+    };
     return (
-      <div style={{ width: 300, padding: 16, background: "#fff" }}>
+      <div
+        className="allCities"
+        style={{ width: 300, padding: 16, background: "#fff" }}
+      >
         <div
           style={{
             display: "flex",
@@ -679,38 +676,22 @@ export default function JobFilter() {
             Clear
           </Button>
         </div>
-
-        <Input
-          placeholder="Search location"
-          prefix={<SearchOutlined />}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ marginBottom: 12 }}
+        <CommonSelectField
+          showSearch
+          allowClear
+          style={{ width: "100%" }}
+          placeholder="Select location(s)"
+          value={tempSelected}
+          onChange={(values) => setTempSelected(values)}
+          optionLabelProp="label"
+          optionFilterProp="label"
+          options={newWorkLocation.map((item) => ({
+            value: item.value,
+            label: item.label,
+            customLabel: <span>{item.label}</span>,
+          }))}
         />
-
-        <List
-          dataSource={workLocationOption.filter((item) =>
-            item.label.toLowerCase().includes(search.toLowerCase())
-          )}
-          style={{ maxHeight: 200, overflowY: "auto" }}
-          renderItem={(item) => (
-            <List.Item style={{ padding: "4px 0" }} key={item.value}>
-              <Checkbox
-                checked={tempSelected.includes(item.value)}
-                onChange={() => handleTempLocationCheck(item.value)}
-              >
-                <Text>
-                  <EnvironmentOutlined style={{ marginRight: 6 }} />
-                  {item.label}
-                </Text>
-              </Checkbox>
-            </List.Item>
-          )}
-        />
-
-        <Divider style={{ margin: "12px 0" }} />
-
-        <div style={{ textAlign: "right" }}>
+        <div style={{ textAlign: "right", paddingTop: 15 }}>
           <Button
             type="primary"
             onClick={applyLocationFilter}
@@ -831,14 +812,6 @@ export default function JobFilter() {
     );
   };
 
-  const handleCheckboxChange = (checkedValue) => {
-    setSelectedTypes((prev) =>
-      prev.includes(checkedValue)
-        ? prev.filter((item) => item !== checkedValue)
-        : [...prev, checkedValue]
-    );
-  };
-
   const handleTempCheckboxChange = (type) => {
     setTempTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
@@ -917,7 +890,6 @@ export default function JobFilter() {
   const handleUserTypeApply = () => {
     console.log("Selected User Type:", selectedType);
     fetchJobs();
-    setUserTypeVisible(false);
   };
 
   const userType = (
@@ -1040,7 +1012,7 @@ export default function JobFilter() {
             flexWrap: "wrap",
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
             borderRadius: "12px 12px 0 0",
-            marginBottom: 15,
+            marginBottom: 25,
           }}
         >
           {/* Primary Filter Dropdown */}
@@ -1056,29 +1028,40 @@ export default function JobFilter() {
               padding: "8px 0",
             }}
           >
-            <Button
-              className="job-filter-job"
-              shape="round"
-              type="primary"
-              onClick={() => setJobNatureVisible(!jobNatureVisible)}
+            <Badge
+              count={activeFilters.jobNature ? "•" : 0}
+              offset={[-6, 2]}
+              color="green"
             >
-              <Space>
-                <span style={{ fontWeight: 500 }}>Jobs</span>
-                <DownOutlined style={{ fontSize: 12 }} />
-              </Space>
-            </Button>
+              <Button
+                className="job-filter-job"
+                shape="round"
+                type={activeFilters.jobNature ? "primary" : "default"}
+                onClick={() => setJobNatureVisible(!jobNatureVisible)}
+              >
+                <Space>
+                  <span style={{ fontWeight: 500, color: "#fff" }}>Jobs</span>
+                  <DownOutlined style={{ fontSize: 12, color: "#fff" }} />
+                </Space>
+              </Button>
+            </Badge>
           </Dropdown>
 
           {/* Salary Filter */}
-          <>
+          <Badge
+            count={activeFilters.salary ? "•" : 0}
+            offset={[-4, 2]}
+            color="green"
+          >
             {selectedSort ? (
               <Button
+                className="salaryFilterBtn"
                 shape="round"
-                type="default"
+                type="primary"
                 style={{
                   border: "1px solid #4f46e5",
-                  backgroundColor: "#fff",
-                  color: "#1e293b",
+                  backgroundColor: "#f3f2ff",
+                  color: "#6a5cff",
                   fontWeight: 500,
                   padding: "0 12px",
                   height: 36,
@@ -1095,8 +1078,10 @@ export default function JobFilter() {
             ) : (
               <CommonSelectField
                 style={{
-                  border: "1px solid rgba(0, 0, 0, 0.08)",
-                  background: "#fff",
+                  border: activeFilters.salary
+                    ? "1px solid #4f46e5"
+                    : "1px solid rgba(0, 0, 0, 0.08)",
+                  background: activeFilters.salary ? "#f0f7ff" : "#fff",
                   padding: "0 5px",
                   height: 36,
                   borderRadius: 20,
@@ -1121,7 +1106,7 @@ export default function JobFilter() {
                 showSearch={true}
               />
             )}
-          </>
+          </Badge>
 
           {/* Status Filter */}
           <Dropdown
@@ -1135,27 +1120,42 @@ export default function JobFilter() {
               padding: "8px 0",
             }}
           >
-            <Button
-              shape="round"
-              style={{
-                border: "1px solid rgba(0, 0, 0, 0.08)",
-                background: "#fff",
-                padding: "0 16px",
-                height: 36,
-                color: "#2d3748",
-                fontWeight: 500,
-              }}
+            <Badge
+              count={activeFilters.status ? "•" : 0}
+              offset={[-6, 2]}
+              color="green"
             >
-              <Space>
-                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <HiOutlineStatusOnline /> Status
-                </div>
-                <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
-              </Space>
-            </Button>
+              <Button
+                shape="round"
+                style={{
+                  border: activeFilters.status
+                    ? "1px solid #4f46e5"
+                    : "1px solid rgba(0, 0, 0, 0.08)",
+                  background: activeFilters.status ? "#f3f2ff" : "#fff",
+                  padding: "0 16px",
+                  height: 36,
+                  color: activeFilters.status ? "#6a5cff" : "#2d3748",
+                  fontWeight: 500,
+                }}
+              >
+                <Space>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 3 }}
+                  >
+                    <HiOutlineStatusOnline /> Status
+                  </div>
+                  <DownOutlined
+                    style={{
+                      fontSize: 12,
+                      color: activeFilters.status ? "#6a5cff" : "#2d3748",
+                    }}
+                  />
+                </Space>
+              </Button>
+            </Badge>
           </Dropdown>
 
-          {/* Status Filter */}
+          {/* Working days Filter */}
           <Dropdown
             popupRender={renderWorkingDays}
             trigger={["click"]}
@@ -1167,24 +1167,39 @@ export default function JobFilter() {
               padding: "8px 0",
             }}
           >
-            <Button
-              shape="round"
-              style={{
-                border: "1px solid rgba(0, 0, 0, 0.08)",
-                background: "#fff",
-                padding: "0 16px",
-                height: 36,
-                color: "#2d3748",
-                fontWeight: 500,
-              }}
+            <Badge
+              count={activeFilters.workingDays ? "•" : 0}
+              offset={[-6, 2]}
+              color="green"
             >
-              <Space>
-                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <LuCalendarDays /> Working Days
-                </div>
-                <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
-              </Space>
-            </Button>
+              <Button
+                shape="round"
+                style={{
+                  border: activeFilters.workingDays
+                    ? "1px solid #4f46e5"
+                    : "1px solid rgba(0, 0, 0, 0.08)",
+                  background: activeFilters.workingDays ? "#f3f2ff" : "#fff",
+                  padding: "0 16px",
+                  height: 36,
+                  color: activeFilters.workingDays ? "#6a5cff" : "#2d3748",
+                  fontWeight: 500,
+                }}
+              >
+                <Space>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 3 }}
+                  >
+                    <LuCalendarDays /> Working Days
+                  </div>
+                  <DownOutlined
+                    style={{
+                      fontSize: 12,
+                      color: activeFilters.workingDays ? "#6a5cff" : "#2d3748",
+                    }}
+                  />
+                </Space>
+              </Button>
+            </Badge>
           </Dropdown>
 
           {/* Location Filter */}
@@ -1199,25 +1214,39 @@ export default function JobFilter() {
               padding: "8px 0",
             }}
           >
-            <Button
-              shape="round"
-              style={{
-                border: "1px solid rgba(0, 0, 0, 0.08)",
-                background: "#fff",
-                padding: "0 16px",
-                height: 36,
-                color: "#2d3748",
-                fontWeight: 500,
-              }}
+            <Badge
+              count={activeFilters.location ? "•" : 0}
+              offset={[-6, 2]}
+              color="green"
             >
-              <Space>
-                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <GrLocation /> Location
-                </div>
-
-                <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
-              </Space>
-            </Button>
+              <Button
+                shape="round"
+                style={{
+                  border: activeFilters.location
+                    ? "1px solid #4f46e5"
+                    : "1px solid rgba(0, 0, 0, 0.08)",
+                  background: activeFilters.location ? "#f3f2ff" : "#fff",
+                  padding: "0 16px",
+                  height: 36,
+                  color: activeFilters.location ? "#6a5cff" : "#2d3748",
+                  fontWeight: 500,
+                }}
+              >
+                <Space>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 3 }}
+                  >
+                    <GrLocation /> Location
+                  </div>
+                  <DownOutlined
+                    style={{
+                      fontSize: 12,
+                      color: activeFilters.location ? "#6a5cff" : "#2d3748",
+                    }}
+                  />
+                </Space>
+              </Button>
+            </Badge>
           </Dropdown>
 
           {/* Work Type Filter */}
@@ -1232,25 +1261,39 @@ export default function JobFilter() {
               padding: "8px 0",
             }}
           >
-            <Button
-              shape="round"
-              style={{
-                border: "1px solid rgba(0, 0, 0, 0.08)",
-                background: "#fff",
-                padding: "0 16px",
-                height: 36,
-                color: "#2d3748",
-                fontWeight: 500,
-              }}
+            <Badge
+              count={activeFilters.workType ? "•" : 0}
+              offset={[-6, 2]}
+              color="green"
             >
-              <Space>
-                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <CgWorkAlt /> Work Type
-                </div>
-
-                <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
-              </Space>
-            </Button>
+              <Button
+                shape="round"
+                style={{
+                  border: activeFilters.workType
+                    ? "1px solid #4f46e5"
+                    : "1px solid rgba(0, 0, 0, 0.08)",
+                  background: activeFilters.workType ? "#f3f2ff" : "#fff",
+                  padding: "0 16px",
+                  height: 36,
+                  color: activeFilters.workType ? "#6a5cff" : "#2d3748",
+                  fontWeight: 500,
+                }}
+              >
+                <Space>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 3 }}
+                  >
+                    <CgWorkAlt /> Work Type
+                  </div>
+                  <DownOutlined
+                    style={{
+                      fontSize: 12,
+                      color: activeFilters.workType ? "#6a5cff" : "#2d3748",
+                    }}
+                  />
+                </Space>
+              </Button>
+            </Badge>
           </Dropdown>
 
           {/*Category */}
@@ -1265,25 +1308,65 @@ export default function JobFilter() {
               padding: "8px 0",
             }}
           >
-            <Button
-              shape="round"
+            <Badge
+              count={activeFilters.category ? "•" : 0}
+              offset={[-6, 2]}
+              color="green"
+            >
+              <Button
+                shape="round"
+                style={{
+                  border: activeFilters.category
+                    ? "1px solid #4f46e5"
+                    : "1px solid rgba(0, 0, 0, 0.08)",
+                  background: activeFilters.category ? "#f3f2ff" : "#fff",
+                  padding: "0 16px",
+                  height: 36,
+                  color: activeFilters.category ? "#6a5cff" : "#2d3748",
+                  fontWeight: 500,
+                }}
+              >
+                <Space>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 3 }}
+                  >
+                    <BiCategoryAlt /> Category
+                  </div>
+                  <DownOutlined
+                    style={{
+                      fontSize: 12,
+                      color: activeFilters.category ? "#6a5cff" : "#2d3748",
+                    }}
+                  />
+                </Space>
+              </Button>
+            </Badge>
+          </Dropdown>
+          {/* Active Filters Indicator */}
+          {activeFilterCount > 0 && (
+            <div
               style={{
-                border: "1px solid rgba(0, 0, 0, 0.08)",
-                background: "#fff",
-                padding: "0 16px",
-                height: 36,
-                color: "#2d3748",
-                fontWeight: 500,
+                marginLeft: "auto",
+                display: "flex",
+                alignItems: "center",
               }}
             >
-              <Space>
-                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <BiCategoryAlt /> Category
-                </div>
-                <DownOutlined style={{ fontSize: 12, color: "#64748b" }} />
-              </Space>
-            </Button>
-          </Dropdown>
+              <Badge
+                count={activeFilterCount}
+                size="small"
+                style={{ backgroundColor: "#52c41a" }}
+              >
+                <FilterOutlined
+                  style={{ color: "#52c41a", fontSize: "16px" }}
+                />
+              </Badge>
+              <span
+                style={{ marginLeft: "8px", fontSize: "14px", color: "#666" }}
+              >
+                filter{activeFilterCount !== 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
         </div>
 
         <div>

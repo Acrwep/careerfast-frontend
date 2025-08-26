@@ -41,7 +41,6 @@ import {
   SearchOutlined,
   FilterOutlined,
   MoreOutlined,
-  ArrowRightOutlined,
   CheckOutlined,
   StopOutlined,
 } from "@ant-design/icons";
@@ -54,17 +53,13 @@ import {
 } from "../ApiService/action";
 import { useParams } from "react-router-dom";
 
-const { Header, Sider, Content } = Layout;
+const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 export default function ManageCandidate() {
   const [postId, setPostId] = useState(null);
-  const [loginUserId, setLoginUserId] = useState(null);
-  const [fname, setFname] = useState("");
-  const [lname, setLname] = useState("");
   const [open, setOpen] = useState(false);
-  const [roleName, setRoleName] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [appliedUser, setAppliedUser] = useState([]);
   const { id } = useParams();
@@ -80,11 +75,6 @@ export default function ManageCandidate() {
     if (stored) {
       try {
         const loginDetails = JSON.parse(stored);
-        setLoginUserId(loginDetails.id);
-        setFname(loginDetails.first_name);
-        setLname(loginDetails.last_name);
-        setRoleName(loginDetails.role_name);
-
         getUserProfileData(loginDetails.id);
       } catch (error) {
         console.error("Invalid JSON in localStorage", error);

@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { SearchOutlined } from "@ant-design/icons";
 import { Typography, Input, Card } from "antd";
-import right_role5 from "../images/right_role5.png";
 import {
   FiBookmark,
   FiMapPin,

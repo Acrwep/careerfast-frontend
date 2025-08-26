@@ -10,7 +10,6 @@ import {
   LeftOutlined,
   RightOutlined,
 } from "@ant-design/icons";
-import { darken, lighten } from "polished";
 import "../css/LandingPage.css";
 import { motion } from "framer-motion";
 import ParticlesBg from "particles-bg";
@@ -23,12 +22,6 @@ import logo5 from "../images/tesla-pure.svg";
 import logo6 from "../images/samsung-8.svg";
 import logo7 from "../images/tata-1.svg";
 import { LockOutlined } from "@ant-design/icons";
-import right_role1 from "../images/right_role1.png";
-import right_role2 from "../images/right_role2.png";
-import right_role3 from "../images/right_role3.png";
-import right_role4 from "../images/right_role4.png";
-import right_role5 from "../images/right_role5.png";
-import right_role6 from "../images/right_role6.png";
 import need_guidence from "../images/need_guidence.webp";
 import recruiter1 from "../images/recruiter1.png";
 import counter_box1 from "../images/counter_box1.png";
@@ -184,8 +177,9 @@ const companiesSettings = {
 export default function JobPortalLandingPage() {
   const [backendJobs, setBackendJobs] = useState([]);
   const [roleId, setRoleId] = useState(null);
-  const [loginUserId, setLoginUserId] = useState(null);
   const navigate = useNavigate();
+  const [category, setCategory] = useState([]);
+  const [categoryCounts, setCategoryCounts] = useState({});
   const jobTypeJobs = backendJobs.filter(
     (jobs) => jobs.job_nature === "Internship"
   );
@@ -215,6 +209,38 @@ export default function JobPortalLandingPage() {
     ],
   };
 
+  const sliderSettings = {
+    dots: false,
+    infinite: true,
+    autoplay: true,
+    autoplaySpeed: 4000,
+    slidesToShow: 6,
+    slidesToScroll: 1,
+    arrows: true,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 3,
+        },
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 2,
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+    ],
+  };
+
+  const icons = ["💻", "📊", "🎨", "📢", "💰", "🏥", "⚙️", "✈️", "📚", "🔬"];
+
   useEffect(() => {
     document.title = "CareerFast | Internship Portal";
     getJobPostsData();
@@ -225,7 +251,6 @@ export default function JobPortalLandingPage() {
       const stored = localStorage.getItem("loginDetails");
       if (stored) {
         const loginDetails = JSON.parse(stored);
-        setLoginUserId(loginDetails.id);
         setRoleId(loginDetails.role_id);
       }
     } catch (error) {
@@ -237,10 +262,27 @@ export default function JobPortalLandingPage() {
     const payload = {};
     try {
       const response = await getJobPosts(payload);
-      const jobs = response?.data?.data?.data;
-      console.log("get job posttt", jobs);
+      console.log("getJobPosts", response);
+
+      const jobs = response?.data?.data?.data || [];
+      const jobCategories = [
+        ...new Set(jobs.flatMap((job) => job.job_category || [])),
+      ];
+      setCategory(jobCategories);
+
+      const categoryCounts = jobs.reduce((acc, job) => {
+        (job.job_category || []).forEach((cat) => {
+          acc[cat] = (acc[cat] || 0) + 1;
+        });
+        return acc;
+      }, {});
+      setCategoryCounts(categoryCounts);
+
       if (Array.isArray(jobs)) {
-        setBackendJobs(jobs);
+        const uniqueJobs = jobs.filter(
+          (job, index, self) => index === self.findIndex((j) => j.id === job.id)
+        );
+        setBackendJobs(uniqueJobs);
       } else {
         console.warn("Unexpected job data format", response);
       }
@@ -448,46 +490,26 @@ export default function JobPortalLandingPage() {
         </Col>
       </Row>
 
-      <Col className="">
+      <Col>
         <div className="job-categories">
           <div className="section-header">
-            <h4>Internships Category</h4>
-            <a href="#" className="view-all">
+            <h4>Explore Categories</h4>
+            <a onClick={() => navigate("/job-filter")} className="view-all">
               View all
             </a>
           </div>
-          <div className="categories-grid">
-            <div className="category-card">
-              <div className="card-icon">💻</div>
-              <h5>Software Development</h5>
-              <p className="job-count">12,345 jobs</p>
-            </div>
-            <div className="category-card">
-              <div className="card-icon">📊</div>
-              <h5>Data Science</h5>
-              <p className="job-count">8,742 jobs</p>
-            </div>
-            <div className="category-card">
-              <div className="card-icon">🎨</div>
-              <h5>UX/UI Design</h5>
-              <p className="job-count">5,321 jobs</p>
-            </div>
-            <div className="category-card">
-              <div className="card-icon">📢</div>
-              <h5>Digital Marketing</h5>
-              <p className="job-count">7,856 jobs</p>
-            </div>
-            <div className="category-card">
-              <div className="card-icon">💰</div>
-              <h5>Finance</h5>
-              <p className="job-count">9,123 jobs</p>
-            </div>
-            <div className="category-card">
-              <div className="card-icon">🏥</div>
-              <h5>Healthcare</h5>
-              <p className="job-count">6,789 jobs</p>
-            </div>
-          </div>
+
+          <Slider {...sliderSettings}>
+            {category.map((cat, index) => (
+              <div key={index} className="category-card">
+                <div className="card-icon">{icons[index % icons.length]}</div>
+                <h5>{cat}</h5>
+                <p className="job-count">
+                  {categoryCounts[cat] || 0} jobs found
+                </p>
+              </div>
+            ))}
+          </Slider>
         </div>
       </Col>
 

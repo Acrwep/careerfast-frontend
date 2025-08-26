@@ -181,6 +181,8 @@ export default function JobPortalLandingPage() {
   const [roleId, setRoleId] = useState(null);
   const [loginUserId, setLoginUserId] = useState(null);
   const navigate = useNavigate();
+  const [categoryCounts, setCategoryCounts] = useState({});
+  const [category, setCategory] = useState([]);
 
   const settings = {
     dots: true,
@@ -206,6 +208,37 @@ export default function JobPortalLandingPage() {
       },
     ],
   };
+
+  const sliderSettings = {
+    dots: false,
+    infinite: true,
+    autoplay: true,
+    autoplaySpeed: 4000,
+    slidesToShow: 6,
+    slidesToScroll: 1,
+    arrows: true,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 3,
+        },
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 2,
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+    ],
+  };
+  const icons = ["💻", "📊", "🎨", "📢", "💰", "🏥", "⚙️", "✈️", "📚", "🔬"];
   const jobTypeJobs = backendJobs.filter((jobs) => jobs.job_nature === "Job");
 
   useEffect(() => {
@@ -230,13 +263,26 @@ export default function JobPortalLandingPage() {
     const payload = {};
     try {
       const response = await getJobPosts(payload);
-      const jobs = response?.data?.data?.data;
+      console.log("getJobPosts", response);
+
+      const jobs = response?.data?.data?.data || [];
+      const jobCategories = [
+        ...new Set(jobs.flatMap((job) => job.job_category || [])),
+      ];
+      setCategory(jobCategories);
+
+      const categoryCounts = jobs.reduce((acc, job) => {
+        (job.job_category || []).forEach((cat) => {
+          acc[cat] = (acc[cat] || 0) + 1;
+        });
+        return acc;
+      }, {});
+      setCategoryCounts(categoryCounts);
 
       if (Array.isArray(jobs)) {
         const uniqueJobs = jobs.filter(
           (job, index, self) => index === self.findIndex((j) => j.id === job.id)
         );
-        console.warn("Unexpected job data format", uniqueJobs);
         setBackendJobs(uniqueJobs);
       } else {
         console.warn("Unexpected job data format", response);
@@ -448,46 +494,26 @@ export default function JobPortalLandingPage() {
         </Col>
       </Row>
 
-      <Col className="">
+      <Col>
         <div className="job-categories">
           <div className="section-header">
             <h4>Explore Categories</h4>
-            <a href="#" className="view-all">
+            <a onClick={() => navigate("/job-filter")} className="view-all">
               View all
             </a>
           </div>
-          <div className="categories-grid">
-            <div className="category-card">
-              <div className="card-icon">💻</div>
-              <h5>Software Development</h5>
-              <p className="job-count">12,345 jobs</p>
-            </div>
-            <div className="category-card">
-              <div className="card-icon">📊</div>
-              <h5>Data Science</h5>
-              <p className="job-count">8,742 jobs</p>
-            </div>
-            <div className="category-card">
-              <div className="card-icon">🎨</div>
-              <h5>UX/UI Design</h5>
-              <p className="job-count">5,321 jobs</p>
-            </div>
-            <div className="category-card">
-              <div className="card-icon">📢</div>
-              <h5>Digital Marketing</h5>
-              <p className="job-count">7,856 jobs</p>
-            </div>
-            <div className="category-card">
-              <div className="card-icon">💰</div>
-              <h5>Finance</h5>
-              <p className="job-count">9,123 jobs</p>
-            </div>
-            <div className="category-card">
-              <div className="card-icon">🏥</div>
-              <h5>Healthcare</h5>
-              <p className="job-count">6,789 jobs</p>
-            </div>
-          </div>
+
+          <Slider {...sliderSettings}>
+            {category.map((cat, index) => (
+              <div key={index} className="category-card">
+                <div className="card-icon">{icons[index % icons.length]}</div>
+                <h5>{cat}</h5>
+                <p className="job-count">
+                  {categoryCounts[cat] || 0} jobs found
+                </p>
+              </div>
+            ))}
+          </Slider>
         </div>
       </Col>
 
@@ -521,6 +547,7 @@ export default function JobPortalLandingPage() {
                 for you
               </motion.span>
             </Title>
+
             <motion.div
               className="elite-subtitle-wrapper"
               initial={{ opacity: 0 }}
@@ -535,7 +562,6 @@ export default function JobPortalLandingPage() {
             </motion.div>
           </div>
         </div>
-
         {jobTypeJobs.length > 0 ? (
           <Slider {...settings} className="elite-job-carousel">
             {backendJobs

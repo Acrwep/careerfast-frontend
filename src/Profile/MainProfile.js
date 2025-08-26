@@ -21,24 +21,16 @@ import {
   Popconfirm,
   Empty,
   Skeleton,
-  Badge,
   Dropdown,
   Modal,
-  Input,
 } from "antd";
-
+import { Check, Clock, Briefcase, FileText, Award } from "lucide-react";
 import {
-  EyeOutlined,
   EditOutlined,
   CheckCircleFilled,
   PlusOutlined,
   UploadOutlined,
-  DeleteOutlined,
   CalendarOutlined,
-  TrophyFilled,
-  CrownFilled,
-  StarFilled,
-  RocketFilled,
   BgColorsOutlined,
   PictureOutlined,
 } from "@ant-design/icons";
@@ -125,10 +117,14 @@ import {
   updateSkills,
   updateSocialLinks,
 } from "../ApiService/action";
+import { useNavigate } from "react-router-dom";
+import { TbShare3 } from "react-icons/tb";
+import { format, subDays, parseISO } from "date-fns";
+import CalendarHeatmap from "react-calendar-heatmap";
 
 const { Title, Text } = Typography;
 
-const { Sider, Content } = Layout;
+const { Content } = Layout;
 const { Meta } = Card;
 
 const items = [
@@ -154,6 +150,19 @@ const suggestions = [
   "Education Law",
   "Substance Designer",
 ];
+
+const today = new Date();
+const streakData = [];
+
+const getClassForValue = (value) => {
+  if (!value || value.count === 0) {
+    return "color-empty";
+  }
+  return `color-scale-${Math.min(value.count, 4)}`;
+};
+
+const currentStreak = 5;
+const maxStreak = 12;
 
 const yearOptions = Array.from({ length: 2025 - 1990 + 1 }, (_, i) => {
   const year = (1990 + i).toString();
@@ -228,6 +237,8 @@ export default function MainProfile() {
   const [organizationName, setOrganisationName] = useState("");
   const [organizationNameType, setOrganizationType] = useState("");
   const [resumeError, setResumeError] = useState("");
+  const [isVisible, setIsVisible] = useState(false);
+  const [createdAt, setCreatedAt] = useState("");
 
   //
   const [showEducationForm, setShowEducationForm] = useState(true);
@@ -344,6 +355,12 @@ export default function MainProfile() {
       setImageModalVisible(true);
     }
   };
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   const menu = (
     <Menu
@@ -388,19 +405,6 @@ export default function MainProfile() {
       </Menu.Item>
     </Menu>
   );
-
-  function getContrastColor(hexColor) {
-    // Convert hex to RGB
-    const r = parseInt(hexColor.substr(1, 2), 16);
-    const g = parseInt(hexColor.substr(3, 2), 16);
-    const b = parseInt(hexColor.substr(5, 2), 16);
-
-    // Calculate luminance
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-    // Return dark or light color based on luminance
-    return luminance > 0.5 ? "#000000" : "#ffffff";
-  }
 
   //
   const [customSkillError, setCustomSkillError] = useState("");
@@ -539,6 +543,7 @@ export default function MainProfile() {
 
     try {
       const response = await getUserProfile(payload);
+      console.log("getUserProfilegetUserProfile", response);
       const image = response?.data?.data?.profile_image || "";
       setProfileImage(image || defaultAvatar);
       setIsResume(response?.data?.data?.resume || "");
@@ -561,6 +566,7 @@ export default function MainProfile() {
       const fetchSkills = response?.data?.data?.skills || [];
       setSelectedSkills(Array.isArray(fetchSkills) ? fetchSkills : []);
       setIsSkills(fetchSkills);
+      setCreatedAt(response?.data?.data?.created_date || "");
 
       if (response?.data?.data) {
         const profile = response.data.data;
@@ -1575,6 +1581,9 @@ export default function MainProfile() {
           const response = await updateProfileImage(payload);
           console.log("Profile updated:", response);
           getUserProfileData();
+
+          // Hard refresh the page
+          window.location.reload();
         } catch (error) {
           console.error("Failed to update profile:", error);
         }
@@ -1586,10 +1595,70 @@ export default function MainProfile() {
     }
   };
 
-  const handleRemove = () => {
-    setProfileImage(defaultAvatar);
-    message.error("Profile image removed.");
-  };
+  const [profileStats, setProfileStats] = useState({
+    completionPercentage: 0,
+    lastUpdated: "",
+    jobPreferences: [],
+    applicationStats: {
+      jobsThisMonth: 0,
+      interviewsScheduled: 0,
+    },
+  });
+
+  useEffect(() => {
+    // Calculate profile completion percentage
+    const calculateCompletion = () => {
+      const sections = [
+        isAbout,
+        isResume,
+        isSkills.length > 0,
+        isWorkExp,
+        isEducation.length > 0,
+        isProjects.length > 0,
+        Object.values(isSocialLinks).some((link) => link),
+      ];
+
+      const completedSections = sections.filter(Boolean).length;
+      return Math.round((completedSections / sections.length) * 100);
+    };
+
+    // Extract job preferences from profile data
+    const extractJobPreferences = () => {
+      const preferences = [];
+
+      if (userTypeactiveButton) {
+        preferences.push(userTypeactiveButton);
+      }
+
+      if (location) {
+        preferences.push(location);
+      }
+
+      return preferences;
+    };
+
+    // Set the profile stats
+    setProfileStats({
+      completionPercentage: calculateCompletion(),
+      lastUpdated: createdAt || new Date().toISOString(),
+      jobPreferences: extractJobPreferences(),
+      applicationStats: {
+        jobsThisMonth: 0, // You would need to implement this
+        interviewsScheduled: 0, // You would need to implement this
+      },
+    });
+  }, [
+    isAbout,
+    isResume,
+    isSkills,
+    isWorkExp,
+    isEducation,
+    isProjects,
+    isSocialLinks,
+    userTypeactiveButton,
+    location,
+    createdAt,
+  ]);
 
   // --- Tab Content Components ---
   const TabContent = {
@@ -4036,30 +4105,51 @@ export default function MainProfile() {
                     </Upload>
 
                     {/* Remove Button */}
-                    {profileImage !== defaultAvatar && (
-                      <Button
-                        icon={<DeleteOutlined />}
-                        size="small"
-                        danger
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          right: "0px",
-                          borderRadius: "50%",
-                          padding: "4px 2px",
-                          fontSize: 12,
-                          backgroundColor: "#fff",
-                          boxShadow: "0 0 4px rgba(0,0,0,0.1)",
-                        }}
-                        onClick={handleRemove}
-                      />
-                    )}
                   </div>
 
-                  <div style={{ marginLeft: 16, textAlign: "left" }}>
-                    <h2 style={{ marginBottom: 0, fontSize: 26 }}>
-                      {`${fname} ${lname}`}
-                    </h2>
+                  <div
+                    style={{
+                      marginLeft: 16,
+                      textAlign: "left",
+                      position: "relative",
+                      zIndex: 9,
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <h2 style={{ marginBottom: 0, fontSize: 26 }}>
+                        {`${fname} ${lname}`}
+                      </h2>
+                      <Tooltip title="Share profile">
+                        <TbShare3
+                          style={{ cursor: "pointer" }}
+                          color="#5f2eea"
+                          size={18}
+                          onClick={() => {
+                            const url = window.location.href;
+
+                            if (navigator.share) {
+                              navigator.share({
+                                title: document.title,
+                                text: "Check out this profile",
+                                url: url,
+                              });
+                            } else {
+                              navigator.clipboard
+                                .writeText(url)
+                                .then(() => {
+                                  message.success(
+                                    "Profile link copied to clipboard!"
+                                  );
+                                })
+                                .catch(() => {
+                                  message.error("Failed to copy link.");
+                                });
+                            }
+                          }}
+                        />
+                      </Tooltip>
+                    </div>
+
                     <p style={{ marginBottom: 10, color: "#666" }}>{email}</p>
                     {roleId === 3 ? (
                       <div>
@@ -4078,39 +4168,6 @@ export default function MainProfile() {
             )}
 
             <Space>
-              {/* <Tooltip title="Share profile">
-                <Button
-                  shape="circle"
-                  icon={<LinkOutlined />}
-                  onClick={() => {
-                    const url = window.location.href;
-
-                    if (navigator.share) {
-                      // Mobile & modern browsers
-                      navigator.share({
-                        title: document.title,
-                        text: "Check out this profile",
-                        url: url,
-                      });
-                    } else {
-                      // Fallback: copy to clipboard
-                      navigator.clipboard
-                        .writeText(url)
-                        .then(() => {
-                          message.success("Profile link copied to clipboard!");
-                        })
-                        .catch(() => {
-                          message.error("Failed to copy link.");
-                        });
-                    }
-                  }}
-                />
-              </Tooltip>
-
-              <Tooltip title="View as others see">
-                <Button shape="circle" icon={<EyeOutlined />} />
-              </Tooltip> */}
-
               <Button
                 className="userprofile-edit-profile"
                 type="primary"
@@ -5084,240 +5141,244 @@ export default function MainProfile() {
                 <Divider />
 
                 {/* Streak Section */}
-                {/* <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="streak-container"
-              style={{
-                background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
-                borderRadius: "16px",
-                padding: "24px",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.2)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                marginBottom: "32px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "24px",
-                }}
-              >
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: "1.5rem",
-                    fontWeight: 600,
-                    color: "#fff",
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  Activity Streak
-                </h3>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "16px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "12px",
-                        height: "12px",
-                        borderRadius: "3px",
-                        background: "var(--color-scale-1)",
-                      }}
-                    />
-                    <span
-                      style={{
-                        color: "rgba(255, 255, 255, 0.8)",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      1 Activity
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "12px",
-                        height: "12px",
-                        borderRadius: "3px",
-                        background: "var(--color-scale-3)",
-                      }}
-                    />
-                    <span
-                      style={{
-                        color: "rgba(255, 255, 255, 0.8)",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      3+ Activities
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {isLoading ? (
-                <div
-                  style={{
-                    height: "160px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <div className="loading-pulse" />
-                </div>
-              ) : (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="streak-container"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
+                    borderRadius: "16px",
+                    padding: "24px",
+                    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.2)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    marginBottom: "32px",
+                  }}
                 >
-                  <CalendarHeatmap
-                    startDate={subDays(today, 365)}
-                    endDate={today}
-                    values={streakData}
-                    classForValue={getClassForValue}
-                    showWeekdayLabels={true}
-                    gutterSize={3}
-                    monthLabels={[
-                      "Jan",
-                      "Feb",
-                      "Mar",
-                      "Apr",
-                      "May",
-                      "Jun",
-                      "Jul",
-                      "Aug",
-                      "Sep",
-                      "Oct",
-                      "Nov",
-                      "Dec",
-                    ]}
-                    weekdayLabels={[
-                      "Sun",
-                      "Mon",
-                      "Tue",
-                      "Wed",
-                      "Thu",
-                      "Fri",
-                      "Sat",
-                    ]}
-                    transformDayElement={(el, value) => {
-                      if (!value || !value.date) return el;
-                      const date = format(parseISO(value.date), "MMMM d, yyyy");
-                      return (
-                        <Tooltip
-                          title={`${date} | ${value.count} ${
-                            value.count > 1 ? "Activities" : "Activity"
-                          }`}
-                          arrow
-                          placement="top"
-                          componentsProps={{
-                            tooltip: {
-                              sx: {
-                                bgcolor: "#0f3460",
-                                color: "white",
-                                fontSize: "0.85rem",
-                                "& .MuiTooltip-arrow": {
-                                  color: "#0f3460",
-                                },
-                              },
-                            },
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "24px",
+                    }}
+                  >
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: "1.5rem",
+                        fontWeight: 600,
+                        color: "#fff",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      Activity Streak
+                    </h3>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "16px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "12px",
+                            height: "12px",
+                            borderRadius: "3px",
+                            background: "var(--color-scale-1)",
+                          }}
+                        />
+                        <span
+                          style={{
+                            color: "rgba(255, 255, 255, 0.8)",
+                            fontSize: "0.85rem",
                           }}
                         >
-                          {el}
-                        </Tooltip>
-                      );
-                    }}
-                  />
-                </motion.div>
-              )}
+                          1 Activity
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "12px",
+                            height: "12px",
+                            borderRadius: "3px",
+                            background: "var(--color-scale-3)",
+                          }}
+                        />
+                        <span
+                          style={{
+                            color: "rgba(255, 255, 255, 0.8)",
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          3+ Activities
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: "32px",
-                  marginTop: "10px",
-                }}
-              >
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: "12px 20px",
-                    background: "rgba(255, 255, 255, 0.05)",
-                    borderRadius: "12px",
-                    minWidth: "120px",
-                  }}
-                >
+                  {isLoading ? (
+                    <div
+                      style={{
+                        height: "160px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <div className="loading-pulse" />
+                    </div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <CalendarHeatmap
+                        startDate={subDays(today, 365)}
+                        endDate={today}
+                        values={streakData}
+                        classForValue={getClassForValue}
+                        showWeekdayLabels={true}
+                        gutterSize={3}
+                        monthLabels={[
+                          "Jan",
+                          "Feb",
+                          "Mar",
+                          "Apr",
+                          "May",
+                          "Jun",
+                          "Jul",
+                          "Aug",
+                          "Sep",
+                          "Oct",
+                          "Nov",
+                          "Dec",
+                        ]}
+                        weekdayLabels={[
+                          "Sun",
+                          "Mon",
+                          "Tue",
+                          "Wed",
+                          "Thu",
+                          "Fri",
+                          "Sat",
+                        ]}
+                        transformDayElement={(el, value) => {
+                          if (!value || !value.date) return el;
+                          const date = format(
+                            parseISO(value.date),
+                            "MMMM d, yyyy"
+                          );
+                          return (
+                            <Tooltip
+                              title={`${date} | ${value.count} ${
+                                value.count > 1 ? "Activities" : "Activity"
+                              }`}
+                              arrow
+                              placement="top"
+                              componentsProps={{
+                                tooltip: {
+                                  sx: {
+                                    bgcolor: "#0f3460",
+                                    color: "white",
+                                    fontSize: "0.85rem",
+                                    "& .MuiTooltip-arrow": {
+                                      color: "#0f3460",
+                                    },
+                                  },
+                                },
+                              }}
+                            >
+                              {el}
+                            </Tooltip>
+                          );
+                        }}
+                      />
+                    </motion.div>
+                  )}
+
                   <div
                     style={{
-                      color: "rgba(255, 255, 255, 0.6)",
-                      fontSize: "0.9rem",
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: "32px",
+                      marginTop: "10px",
                     }}
                   >
-                    Current Streak
+                    <div
+                      style={{
+                        textAlign: "center",
+                        padding: "12px 20px",
+                        background: "rgba(255, 255, 255, 0.05)",
+                        borderRadius: "12px",
+                        minWidth: "120px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: "rgba(255, 255, 255, 0.6)",
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        Current Streak
+                      </div>
+                      <div
+                        style={{
+                          color: "#4cc9f0",
+                          fontSize: "16px",
+                          fontWeight: 700,
+                          marginTop: "1px",
+                        }}
+                      >
+                        {currentStreak} {currentStreak === 1 ? "Day" : "Days"}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        textAlign: "center",
+                        padding: "12px 20px",
+                        background: "rgba(255, 255, 255, 0.05)",
+                        borderRadius: "12px",
+                        minWidth: "120px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: "rgba(255, 255, 255, 0.6)",
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        Max Streak
+                      </div>
+                      <div
+                        style={{
+                          color: "#f72585",
+                          fontSize: "16px",
+                          fontWeight: 700,
+                          marginTop: "1px",
+                        }}
+                      >
+                        {maxStreak} {maxStreak === 1 ? "Day" : "Days"}
+                      </div>
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      color: "#4cc9f0",
-                      fontSize: "16px",
-                      fontWeight: 700,
-                      marginTop: "1px",
-                    }}
-                  >
-                    {currentStreak} {currentStreak === 1 ? "Day" : "Days"}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: "12px 20px",
-                    background: "rgba(255, 255, 255, 0.05)",
-                    borderRadius: "12px",
-                    minWidth: "120px",
-                  }}
-                >
-                  <div
-                    style={{
-                      color: "rgba(255, 255, 255, 0.6)",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    Max Streak
-                  </div>
-                  <div
-                    style={{
-                      color: "#f72585",
-                      fontSize: "16px",
-                      fontWeight: 700,
-                      marginTop: "1px",
-                    }}
-                  >
-                    {maxStreak} {maxStreak === 1 ? "Day" : "Days"}
-                  </div>
-                </div>
-              </div>
-            </motion.div> */}
+                </motion.div>
 
                 {/* drawer */}
                 <Drawer
@@ -5398,102 +5459,102 @@ export default function MainProfile() {
               </div>
             </div>
           </div>
-          <div
-            style={{
-              position: "sticky",
-              top: 30,
-              overflowY: "auto",
-              paddingLeft: "24px",
-            }}
-          >
-            <Card
-              title={
-                <div className="premium-card-header">
-                  <TrophyFilled
-                    style={{ color: "#FFD700", fontSize: "24px" }}
-                  />
-                  <span style={{ marginLeft: 12, color: "#fff" }}>
-                    Achievement Rankings
-                  </span>
-                </div>
-              }
-              className="profile-section-card premium-rankings-card"
-              headStyle={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}
-              bodyStyle={{ padding: "24px" }}
+          <div className="premium-profile-container">
+            <div
+              className={`premium-profile-card ${
+                isVisible ? "premium-visible" : ""
+              }`}
             >
-              <div className="premium-stats-container">
-                <div className="premium-stat-item">
-                  <div className="premium-stat-label">Total Badges</div>
-                  <div className="premium-stat-value">12</div>
-                  <div className="premium-stat-progress">
-                    <Progress
-                      percent={75}
-                      showInfo={false}
-                      strokeColor={{
-                        "0%": "#5F2EEA",
-                        "100%": "#8E6BF1",
-                      }}
-                      strokeWidth={4}
-                    />
+              <h3 className="premium-titles">Profile Overview</h3>
+
+              {/* Profile completion */}
+              <div className="premium-section">
+                <div className="premium-section-header">
+                  <Award size={18} className="premium-icon" />
+                  <strong className="premium-section-title">
+                    Profile Completion:
+                  </strong>
+                </div>
+                <div className="premium-progress-container">
+                  <div className="premium-progress-bar">
+                    <div
+                      className="premium-progress-fill"
+                      style={{ width: `${profileStats.completionPercentage}%` }}
+                    ></div>
+                    <div className="premium-progress-shimmer"></div>
                   </div>
-                  <div className="premium-stat-subtext">75% to next level</div>
                 </div>
-
-                <div className="premium-stat-divider"></div>
-
-                <div className="premium-stat-item">
-                  <div className="premium-stat-label">Global Rank</div>
-                  <div className="premium-stat-value">#1,243</div>
-                  <div className="premium-stat-subtext">Top 8% worldwide</div>
-                </div>
+                <p className="premium-progress-text">
+                  <span className="premium-percentage">
+                    {profileStats.completionPercentage}% complete
+                  </span>
+                </p>
               </div>
 
-              <Divider className="premium-divider" />
-
-              <div className="premium-badges-header">
-                <span className="premium-section-title">Your Badges</span>
-                <Tag className="premium-view-all" icon={<EyeOutlined />}>
-                  View All
-                </Tag>
-              </div>
-
-              <div className="premium-badges-container">
-                <Tooltip title="Elite Contributor (Gold)" placement="top">
-                  <Badge count={1} color="gold">
-                    <Avatar
-                      size={64}
-                      icon={<CrownFilled />}
-                      className="premium-badge-avatar gold-badge"
-                    />
-                  </Badge>
-                </Tooltip>
-
-                <Tooltip title="Expert Contributor (Silver)" placement="top">
-                  <Badge count={3} color="silver">
-                    <Avatar
-                      size={64}
-                      icon={<StarFilled />}
-                      className="premium-badge-avatar silver-badge"
-                    />
-                  </Badge>
-                </Tooltip>
-
-                <Tooltip title="Rising Star (Bronze)" placement="top">
-                  <Badge count={8} color="#cd7f32">
-                    <Avatar
-                      size={64}
-                      icon={<RocketFilled />}
-                      className="premium-badge-avatar bronze-badge"
-                    />
-                  </Badge>
-                </Tooltip>
-
-                <div className="premium-badge-placeholder">
-                  <PlusOutlined />
-                  <span>Earn more</span>
+              {/* Last updated */}
+              <div className="premium-section">
+                <div className="premium-section-header">
+                  <Clock size={18} className="premium-icon" />
+                  <strong className="premium-section-title">
+                    Last Updated:
+                  </strong>
                 </div>
+                <p className="premium-detail-text">
+                  {new Date(profileStats.lastUpdated).toLocaleDateString()}
+                </p>
               </div>
-            </Card>
+
+              {/* Job preferences */}
+              {profileStats.jobPreferences.length > 0 && (
+                <div className="premium-section">
+                  <div className="premium-section-header">
+                    <Briefcase size={18} className="premium-icon" />
+                    <strong className="premium-section-title">
+                      Job Preferences:
+                    </strong>
+                  </div>
+                  <ul className="premium-list">
+                    {profileStats.jobPreferences.map((pref, index) => (
+                      <li key={index}>
+                        <Check size={14} className="premium-check-icon" />{" "}
+                        {pref}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Application activity */}
+              {(profileStats.applicationStats.jobsThisMonth > 0 ||
+                profileStats.applicationStats.interviewsScheduled > 0) && (
+                <div className="premium-section">
+                  <div className="premium-section-header">
+                    <FileText size={18} className="premium-icon" />
+                    <strong className="premium-section-title">
+                      Application Activity:
+                    </strong>
+                  </div>
+                  <div className="premium-activity-grid">
+                    <div className="premium-activity-item">
+                      <span className="premium-activity-number">
+                        {profileStats.applicationStats.jobsThisMonth}
+                      </span>
+                      <span className="premium-activity-label">
+                        jobs this month
+                      </span>
+                    </div>
+                    <div className="premium-activity-item">
+                      <span className="premium-activity-number">
+                        {profileStats.applicationStats.interviewsScheduled}
+                      </span>
+                      <span className="premium-activity-label">
+                        interviews scheduled
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Content>

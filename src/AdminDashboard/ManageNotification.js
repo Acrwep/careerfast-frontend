@@ -1,18 +1,6 @@
 import React, { useState } from "react";
-import {
-  Checkbox,
-  Divider,
-  Tooltip,
-  Card,
-  Typography,
-  Space,
-  Switch,
-} from "antd";
-import {
-  InfoCircleOutlined,
-  BellOutlined,
-  ClockCircleOutlined,
-} from "@ant-design/icons";
+import { Divider, Tooltip, Card, Typography, Space, Switch } from "antd";
+import { BellOutlined, ClockCircleOutlined } from "@ant-design/icons";
 
 import {
   MdOutlineSend,

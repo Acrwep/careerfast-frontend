@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Row,
   Col,
-  Avatar,
   Button,
   Modal,
   Typography,
@@ -21,8 +20,6 @@ import {
   Upload,
 } from "antd";
 import {
-  UserOutlined,
-  EditOutlined,
   LineChartOutlined,
   MedicineBoxOutlined,
   CarOutlined,
@@ -50,11 +47,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
-import {
-  nameValidator,
-  selectValidator,
-  userTypeValidator,
-} from "../Common/Validation";
+import { nameValidator, selectValidator } from "../Common/Validation";
 import { useNavigate } from "react-router-dom"; // For navigation
 import { State, City } from "country-state-city";
 import {
@@ -73,17 +66,14 @@ import {
   createJobPost,
 } from "../ApiService/action";
 import Header from "../Header/Header";
+import currencyCodes from "currency-codes";
 const { Option } = Select;
-const { Group: InputGroup } = Input;
 export default function PostJobs() {
-  const [profileImage, setProfileImage] = useState(""); // This will now store Base64
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [jobNatureId, setJobNatureId] = useState(null);
   const [workTypeActiveButton, setWorkTypeActiveButton] = useState(null);
-  const [weeksActiveButton, setWeeksActiveButton] = useState(null);
   const [workLocationActiveButton, setWorkLocationActiveButton] =
     useState(null);
-  const { Title, Text } = Typography;
+  const { Text } = Typography;
   const [experienceRequiredActiveButton, setExperienceRequiredActiveButton] =
     useState(null);
   const [selectedFresherPass, setSelectedFresherPass] = useState([]);
@@ -128,7 +118,7 @@ export default function PostJobs() {
   const [workLocation, setWorkLocation] = useState("");
   const [workLocationError, setWorkLocationError] = useState("");
   const [specificLocation, setSpecificLocation] = useState("");
-  const [specificLocationName, setSpecificLocationName] = useState("");
+  // const [specificLocationName, setSpecificLocationName] = useState("");
   const [otherBenifits, setOtherBenifits] = useState([]);
   const [gender, setGender] = useState([]);
   const [salaryData, setSalaryData] = useState([]);
@@ -153,7 +143,7 @@ export default function PostJobs() {
   const [logoUrl, setLogoUrl] = useState(
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
   );
-  const [logoFile, setLogoFile] = useState(null);
+  // const [logoFile, setLogoFile] = useState(null);
   const [questions, setQuestions] = useState([
     {
       id: Date.now(),
@@ -162,8 +152,7 @@ export default function PostJobs() {
       isrequired: false,
     },
   ]);
-
-  const [touched, setTouched] = useState(false); // to control initial error
+  // const [touched, setTouched] = useState(false);
 
   const navigate = useNavigate();
   const now = new Date();
@@ -364,25 +353,6 @@ export default function PostJobs() {
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-
-    if (file) {
-      const reader = new FileReader();
-
-      reader.onloadend = () => {
-        const base64String = reader.result;
-        setProfileImage(base64String);
-      };
-
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const openModal = () => {
-    setIsModalVisible(true);
-  };
-
   const toggleBenefitSelection = (key) => {
     setSelectedBenefits((prevSelected) =>
       prevSelected.includes(key)
@@ -425,7 +395,7 @@ export default function PostJobs() {
 
   const handleChange = (content, delta, source, editor) => {
     if (editor.getLength() <= MAX_LENGTH + 1) {
-      setTouched(true);
+      // setTouched(true);
       setValue(content);
       setJobDescription(content);
     }
@@ -803,7 +773,7 @@ export default function PostJobs() {
                         const reader = new FileReader();
                         reader.onload = (e) => setLogoUrl(e.target.result);
                         reader.readAsDataURL(file);
-                        setLogoFile(file);
+                        // setLogoFile(file);
                         return false;
                       }}
                     >
@@ -839,7 +809,7 @@ export default function PostJobs() {
                         }}
                         onClick={() => {
                           setLogoUrl(null);
-                          setLogoFile(null);
+                          // setLogoFile(null);
                         }}
                       >
                         Remove
@@ -1029,7 +999,7 @@ export default function PostJobs() {
                               : "weeks_button"
                           }
                           onClick={() => {
-                            setWeeksActiveButton(item.id);
+                            // setWeeksActiveButton(item.id);
                             setSelectedDurationId(item.id);
                           }}
                         >
@@ -1149,7 +1119,7 @@ export default function PostJobs() {
                         value={specificLocation}
                         onChange={(value, option) => {
                           setSpecificLocation(value);
-                          setSpecificLocationName(option.label);
+                          // setSpecificLocationName(option.label);
                         }}
                         options={workLocationOption}
                       />
@@ -1391,13 +1361,17 @@ export default function PostJobs() {
                     </p>
                     <div className="job_nature">
                       <Select
+                        showSearch
                         value={currency}
                         onChange={(value) => setCurrency(value)}
-                        style={{ border: "none" }}
+                        style={{ width: 100 }}
+                        optionFilterProp="children"
                       >
-                        <Option value="INR">₹ (INR)</Option>
-                        <Option value="USD">$ (USD)</Option>
-                        <Option value="EUR">€ (EUR)</Option>
+                        {currencyCodes.data.map((c) => (
+                          <Option key={c.code} value={c.code}>
+                            {c.symbol_native || c.symbol || c.code} ({c.code})
+                          </Option>
+                        ))}
                       </Select>
 
                       <Input
@@ -1418,13 +1392,17 @@ export default function PostJobs() {
                     </p>
                     <div className="job_nature">
                       <Select
+                        showSearch
                         value={currency}
                         onChange={(value) => setCurrency(value)}
                         style={{ width: 100 }}
+                        optionFilterProp="children"
                       >
-                        <Option value="INR">₹ (INR)</Option>
-                        <Option value="USD">$ (USD)</Option>
-                        <Option value="EUR">€ (EUR)</Option>
+                        {currencyCodes.data.map((c) => (
+                          <Option key={c.code} value={c.code}>
+                            {c.symbol_native || c.symbol || c.code} ({c.code})
+                          </Option>
+                        ))}
                       </Select>
 
                       <InputNumber

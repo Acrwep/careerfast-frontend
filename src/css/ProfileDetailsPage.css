@@ -570,7 +570,7 @@ body {
   content: "";
   position: absolute;
   left: 0;
-  top: 50%;
+  top: 35%;
   transform: translateY(-50%);
   height: 60%;
   width: 4px;
@@ -1353,7 +1353,7 @@ body {
 
 .profile-page-details {
   display: flex;
-  gap: 44px;
+  gap: 24px;
 }
 
 /* Responsive Adjustments */

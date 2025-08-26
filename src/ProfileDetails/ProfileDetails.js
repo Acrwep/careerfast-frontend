@@ -79,7 +79,6 @@ const ProfileDetails = () => {
   const [emailVerified, setEmailVerified] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [numberVerified, setNumberVerified] = useState("");
   const [number, setNumber] = useState("");
   const [numberError, setNumberError] = useState("");
   const [pincode, setPincode] = useState("");

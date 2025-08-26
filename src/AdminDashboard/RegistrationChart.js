@@ -22,7 +22,6 @@ import {
   Col,
   Statistic,
   Typography,
-  Divider,
   Alert,
   Skeleton,
 } from "antd";
@@ -35,10 +34,9 @@ import {
 import styled from "styled-components";
 import { getAppliedCandidatesCount, StatsOfPost } from "../ApiService/action";
 import { useParams } from "react-router-dom";
-import { IoIosMale } from "react-icons/io";
 
 const { RangePicker } = DatePicker;
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 const RegistrationDashboard = () => {
   const { id } = useParams();
@@ -194,14 +192,6 @@ const RegistrationDashboard = () => {
     { name: "Female", value: femaleCount || 0 },
     { name: "Male", value: maleCount || 0 },
     { name: "Other", value: othersCount || 0 },
-  ];
-
-  const domainData = [
-    { domain: "Software IT", value: 683 },
-    { domain: "Mechanical", value: 7 },
-    { domain: "Arts", value: 12 },
-    { domain: "Science", value: 25 },
-    { domain: "Other", value: 5 },
   ];
 
   const COLORS = ["#EC4899", "#6366F1", "#94A3B8"];

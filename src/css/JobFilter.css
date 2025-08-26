@@ -180,8 +180,8 @@ a {
   background: rgba(120, 51, 255, 0.1);
   border: 1px solid rgba(120, 51, 255, 0.2);
   color: #5f2eead4;
-  border-radius: 8px;
-  padding: 5px 10px;
+  border-radius: 50px;
+  padding: 2px 7px;
   font-size: 12px;
   font-weight: 600;
 }
@@ -559,7 +559,7 @@ a {
   background: white;
   border-radius: 16px;
   padding: 40px 50px;
-  margin-top: 40px;
+  margin-top: 0px;
   position: relative;
   margin-bottom: 30px;
   text-align: left;
@@ -617,7 +617,7 @@ a {
 .premium-job-details .premium-logo {
   width: 85px;
   height: 85px;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .job-questions-section {
@@ -843,7 +843,7 @@ a {
 
 /* ===== APPLY BUTTON ===== */
 .side_job_apply_button {
-  width: 100%;
+  width: 85%;
   padding: 13px;
   border-radius: 16px;
   font-weight: 650;
@@ -856,6 +856,19 @@ a {
   overflow: hidden;
   z-index: 1;
   border: none;
+}
+
+.salaryFilterBtn:hover {
+  transform: translateY(0px) !important;
+  box-shadow: none !important;
+}
+
+.allCities .ant-form-item .ant-form-item-label {
+  display: none !important;
+}
+
+.allCities .ant-select.ant-select-in-form-item {
+  height: 43px !important;
 }
 
 .side_job_apply_button.primary {

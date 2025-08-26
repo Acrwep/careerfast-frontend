@@ -3,9 +3,8 @@ import { FiCalendar, FiChevronRight } from "react-icons/fi";
 import { FaRegBookmark, FaBookmark } from "react-icons/fa";
 import { CiLocationOn } from "react-icons/ci";
 import { CommonToaster } from "../Common/CommonToaster";
+import Header from "../Header/Header";
 const RecentlyViewed = () => {
-  const [savedJobs, setSavedJobs] = React.useState([]);
-
   const [recentlyViewed, setRecentlyViewed] = useState([
     {
       id: 1,

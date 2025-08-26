@@ -8,11 +8,7 @@ import {
   IoLogOutOutline,
   IoPersonCircleOutline,
 } from "react-icons/io5";
-import {
-  ArrowRightOutlined,
-  PieChartOutlined,
-  BarChartOutlined,
-} from "@ant-design/icons";
+import { ArrowRightOutlined, PieChartOutlined } from "@ant-design/icons";
 import { FaInstagram, FaTwitter } from "react-icons/fa";
 import {
   FaClipboardUser,
@@ -94,7 +90,6 @@ import {
   getJobAppliedCandidates,
   getJobPosts,
   getUserProfile,
-  StatsOfPost,
 } from "../ApiService/action";
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -150,6 +145,11 @@ export default function AdminDashboard() {
         setFname(loginDetails.first_name);
         setLname(loginDetails.last_name);
         setRoleName(loginDetails.role_name);
+
+        if (loginDetails.role_id === 2) {
+          navigate("/job-portal");
+          return;
+        }
       }
     } catch (error) {
       console.error("Invalid JSON in localStorage", error);

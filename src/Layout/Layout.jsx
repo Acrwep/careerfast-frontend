@@ -29,12 +29,20 @@ import RegistrationChart from "../AdminDashboard/RegistrationChart";
 import ManageNotification from "../AdminDashboard/ManageNotification";
 import { useDispatch } from "react-redux";
 import { storeLoginStatus } from "../Redux/Slice";
+import Blogs from "../Blogs/blogs";
+import BlogContent from "../Blogs/BlogContent";
 import AllAppliedCandidates from "../AdminDashboard/AllAppliedCandidates";
+import useFetch from "../hooks/useFetch";
+import Location from "../JobPortal/Location";
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  let { loading, data, error } = useFetch(
+    "http://localhost:1337/api/blogs?populate=*"
+  );
 
   useEffect(() => {
     //handle navigate to login page when token expire
@@ -64,7 +72,8 @@ const Layout = () => {
       } else if (
         pathName.includes("job-details") ||
         pathName.includes("admin-dashboard") ||
-        pathName.includes("edit-opportunity")
+        pathName.includes("edit-opportunity") ||
+        pathName.includes("blog")
       ) {
         return;
       } else {
@@ -87,7 +96,6 @@ const Layout = () => {
       }
     }
   }, [location.pathname]);
-
   return (
     <div>
       {" "}
@@ -115,9 +123,27 @@ const Layout = () => {
         <Route path="/accountsetting" element={<AccountSettings />} />
         <Route path="/pro-subscription" element={<ProSubscription />} />
         <Route path="/admin-dashboard/:id" element={<AdminDashboard />} />
-        <Route path="/edit-opportunity/:id" element={<EditOpportunity />} />
-        <Route path="/manage-candidate" element={<ManageCandidate />} />
-        <Route path="/registration-chart" element={<RegistrationChart />} />
+        <Route path="/admin-dashboard/:id" element={<EditOpportunity />} />
+        <Route path="/admin-dashboard/:id" element={<ManageCandidate />} />
+        <Route path="/admin-dashboard/:id" element={<RegistrationChart />} />
+        <Route path="/location" element={<Location />} />
+        <Route
+          path="/blogs"
+          element={
+            <Blogs loading={loading} error={error} blogs={data ? data : ""} />
+          }
+        />
+        <Route
+          path="/blog/:slug"
+          element={
+            <BlogContent
+              loading={loading}
+              error={error}
+              blogs={data ? data : ""}
+            />
+          }
+        />
+
         <Route path="/manage-notification" element={<ManageNotification />} />
         <Route
           path="/applied-candidates-all"

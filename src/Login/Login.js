@@ -12,9 +12,8 @@ import {
   Col,
   Row,
   Modal,
-  Flex,
 } from "antd";
-import { LockOutlined, MailOutlined } from "@ant-design/icons";
+import { LockOutlined } from "@ant-design/icons";
 import "../css/LoginPage.css";
 import loginImage from "../images/login_image.png";
 import { useNavigate } from "react-router-dom"; // For navigation
@@ -33,7 +32,7 @@ import {
   sendOtp,
   getRoles,
 } from "../ApiService/action";
-import { GoogleLogin } from "@react-oauth/google";
+import { GoogleLogin, googleLogout } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 const { Title, Text, Link } = Typography;
 
@@ -313,6 +312,37 @@ const LoginPage = () => {
     },
   ];
 
+  // const handleGoogleLoginSuccess = async (credentialResponse) => {
+  //   try {
+  //     const { credential } = credentialResponse;
+
+  //     const response = await googleLogin({ token: credential });
+
+  //     const token = response.data.token;
+  //     const userData = response.data.user;
+
+  //     localStorage.setItem("AccessToken", token);
+  //     localStorage.setItem("loginDetails", JSON.stringify(userData));
+
+  //     message.success("Google login successful!");
+
+  //     const profileResponse = await isProfileUpdated({ email: userData.email });
+
+  //     if (profileResponse?.data?.data === true) {
+  //       navigate("/job-portal");
+  //     } else {
+  //       navigate("/profiledetails");
+  //     }
+  //   } catch (error) {
+  //     console.error("Google login error:", error);
+  //     message.error("Google login failed. Please try again.");
+  //   }
+  // };
+
+  // const handleGoogleLoginError = () => {
+  //   console.log("Google login failed");
+  //   message.error("Google login failed. Please try again.");
+  // };
   return (
     <div className="loginpage_container">
       <Row>
@@ -499,17 +529,12 @@ const LoginPage = () => {
                     marginBottom: 14,
                   }}
                 >
-                  {/* ✅ Google Login */}
-                  <GoogleLogin
-                    onSuccess={(credentialResponse) => {
-                      console.log(credentialResponse);
-                      console.log(jwtDecode(credentialResponse.credential));
-                      navigate("/job-portal");
-                    }}
-                    onError={() => {
-                      console.log("Login error");
-                    }}
-                  />
+                  {/* <GoogleLogin
+                    onSuccess={handleGoogleLoginSuccess}
+                    onError={handleGoogleLoginError}
+                    auto_select={true}
+                    useOneTap={true}
+                  /> */}
                   <Button
                     shape="circle"
                     size="large"

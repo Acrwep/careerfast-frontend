@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   FiEdit,
-  FiSettings,
-  FiMoreVertical,
   FiSearch,
   FiCalendar,
   FiBriefcase,
@@ -10,13 +8,12 @@ import {
   FiBook,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoMdCloseCircleOutline } from "react-icons/io";
-import { Menu, Dropdown, message, Card, Typography, Skeleton } from "antd";
+import { Card, Typography, Skeleton } from "antd";
 import {
-  closeRegistration,
   getAppliedCandidatesCount,
   getJobPostByUserId,
   getJobPosts,
+  StatsOfPost,
 } from "../ApiService/action";
 import { FaEye } from "react-icons/fa";
 import moment from "moment/moment";
@@ -35,10 +32,8 @@ export default function ListingDashboard() {
   const [postId, setPostId] = useState(null);
   const [totalAppliedCandidates, setTotalAppliedCandidates] = useState(null);
   const [listLoading, setListLoading] = useState(true);
-
-  useEffect(() => {
-    getJobPostByUserIdData();
-  }, []);
+  const [appliedCounts, setAppliedCounts] = useState({});
+  const [visibleCount, setVisibleCount] = useState(10);
 
   useEffect(() => {
     try {
@@ -50,6 +45,10 @@ export default function ListingDashboard() {
     } catch (error) {
       console.error("Invalid JSON in localStorage", error);
     }
+  }, []);
+
+  useEffect(() => {
+    getJobPostByUserIdData();
   }, []);
 
   useEffect(() => {
@@ -79,10 +78,25 @@ export default function ListingDashboard() {
     try {
       const response = await getAppliedCandidatesCount(payload);
       setTotalAppliedCandidates(response?.data?.data?.candidatesCount || 0);
-      console.log("applied candidates count", response);
     } catch (error) {
       console.log("applied candidates count", error);
       setTotalAppliedCandidates(0);
+    } finally {
+      StatsOfPostData();
+    }
+  };
+
+  const StatsOfPostData = async () => {
+    const payload = {
+      user_id: loginUserId,
+      job_post_id: postId,
+    };
+
+    try {
+      const response = await StatsOfPost(payload);
+      console.log("StatsOfPost", response);
+    } catch (error) {
+      console.log("StatsOfPost", error);
     }
   };
 
@@ -98,30 +112,28 @@ export default function ListingDashboard() {
 
     try {
       const response = await getJobPostByUserId(payload);
-      console.log("getJobPostByUserId", response);
+      const jobs = response?.data?.data || [];
+      setListings(jobs);
 
-      setListings(response?.data?.data || []);
+      // fetch applied count for each job
+      const counts = {};
+      for (let job of jobs) {
+        try {
+          const statPayload = {
+            user_id: getUserDetails.id,
+            job_post_id: job.id,
+          };
+          const res = await StatsOfPost(statPayload);
+          counts[job.id] = res?.data?.data?.candidatesCount || 0;
+        } catch (err) {
+          counts[job.id] = 0;
+        }
+      }
+      setAppliedCounts(counts);
     } catch (error) {
       console.error("Error fetching job posts:", error);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 300);
-    }
-  };
-
-  const handleCloseRegistration = async (jobId) => {
-    const payload = {
-      id: jobId,
-      status: "Expired",
-    };
-    try {
-      const response = await closeRegistration(payload);
-      message.success("Job marked as expired.");
-      getJobPostByUserIdData();
-    } catch (error) {
-      message.error("Failed to close registration.");
-      console.error("Close Registration Error:", error);
+      setTimeout(() => setLoading(false), 300);
     }
   };
 
@@ -135,10 +147,6 @@ export default function ListingDashboard() {
     return matchesTab && matchesFilter && matchesSearch;
   });
 
-  const totalImpressions = listings.reduce(
-    (sum, listing) => sum + listing.impressions,
-    0
-  );
   const totalRegistrations = listings.reduce(
     (sum, listing) => sum + listing.registrations,
     0
@@ -234,110 +242,99 @@ export default function ListingDashboard() {
             <div className="listing-list">
               {filteredListings.length > 0 ? (
                 <AnimatePresence>
-                  {filteredListings.map((listing) => {
-                    const isClosed =
-                      moment().diff(moment(listing.created_at), "days") > 15;
-                    const moreOptions = (
-                      <Menu
-                        items={[
-                          {
-                            key: "1",
-                            label: (
-                              <span
-                                onClick={() =>
-                                  handleCloseRegistration(listing.id)
-                                }
-                              >
-                                Close Registration
-                              </span>
-                            ),
-                            danger: true,
-                            icon: <IoMdCloseCircleOutline />,
-                          },
-                        ]}
-                      />
-                    );
-                    return (
-                      <motion.div
-                        key={listing.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
-                        className="listing-card"
-                      >
-                        <div className="card-inner">
-                          <img
-                            src={listing.company_logo}
-                            alt={listing.company_name}
-                            className="company-logo"
-                          />
-                          <div className="listing-info">
-                            <div className="listing-header">
-                              <div style={{ textAlign: "left" }}>
-                                <h3>{listing.job_title}</h3>
-                                <p>{listing.company_name}</p>
+                  {[...filteredListings]
+                    .sort(
+                      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                    )
+                    .slice(0, visibleCount)
+                    .map((listing) => {
+                      const isClosed =
+                        moment().diff(moment(listing.created_at), "days") > 15;
+                      return (
+                        <motion.div
+                          key={listing.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ duration: 0.3 }}
+                          className="listing-card"
+                        >
+                          <div className="card-inner">
+                            <img
+                              src={listing.company_logo}
+                              alt={listing.company_name}
+                              className="company-logo"
+                            />
+                            <div className="listing-info">
+                              <div className="listing-header">
+                                <div style={{ textAlign: "left" }}>
+                                  <h3>{listing.job_title}</h3>
+                                  <p>{listing.company_name}</p>
+                                </div>
+                                <div className="listing-type">
+                                  {getTypeIcon(listing.job_nature)}
+                                  <span>{listing.job_nature}</span>
+                                </div>
                               </div>
-                              <div className="listing-type">
-                                {getTypeIcon(listing.job_nature)}
-                                <span>{listing.job_nature}</span>
+
+                              <div className="activeClosed">
+                                <button className={isClosed ? "clo" : "act"}>
+                                  {isClosed ? "Closed" : "Active"}
+                                </button>
                               </div>
-                            </div>
 
-                            <div className="activeClosed">
-                              <button className={isClosed ? "clo" : "act"}>
-                                {isClosed ? "Closed" : "Active"}
-                              </button>
-                            </div>
-
-                            <div className="listing-meta">
-                              <span>
-                                <span
-                                  style={{ color: isClosed ? "red" : "green" }}
-                                >
-                                  Posted on:{" "}
-                                </span>
-                                <b>
-                                  {moment(listing.created_at).format(
-                                    "DD MMM YYYY"
-                                  )}
-                                </b>
-                              </span>
-                            </div>
-
-                            <div className="listing-footer">
-                              <div>
+                              <div className="listing-meta">
                                 <span>
-                                  <strong>{listing.impressions}</strong>{" "}
-                                  Impressions
-                                </span>
-                                <span>
-                                  <strong>{listing.registrations}</strong>{" "}
-                                  Registrations
+                                  <span
+                                    style={{
+                                      color: isClosed ? "red" : "green",
+                                    }}
+                                  >
+                                    Posted on:{" "}
+                                  </span>
+                                  <b>
+                                    {moment(listing.created_at).format(
+                                      "DD MMM YYYY"
+                                    )}
+                                  </b>
                                 </span>
                               </div>
-                              <div className="listing-actions">
-                                <FaEye
-                                  size={18}
-                                  onClick={() =>
-                                    navigate(`/job-details/${listing.id}`)
-                                  }
-                                  style={{ cursor: "pointer" }}
-                                />
-                                <FiEdit
-                                  size={16}
-                                  onClick={() =>
-                                    navigate(`/admin-dashboard/${listing.id}`)
-                                  }
-                                  style={{ cursor: "pointer" }}
-                                />
+
+                              <div className="listing-footer">
+                                <div>
+                                  <span>
+                                    <strong>{listing.impressions}</strong>{" "}
+                                    Impressions
+                                  </span>
+                                  <span>
+                                    <strong>
+                                      {appliedCounts[listing.id] || 0}
+                                    </strong>{" "}
+                                    : Registrations
+                                  </span>
+                                </div>
+                                <div className="listing-actions">
+                                  <FaEye
+                                    size={18}
+                                    onClick={() =>
+                                      navigate(`/job-details/${listing.id}`)
+                                    }
+                                    style={{ cursor: "pointer" }}
+                                  />
+                                  <FiEdit
+                                    size={16}
+                                    onClick={() =>
+                                      navigate(`/admin-dashboard/${listing.id}`)
+                                    }
+                                    style={{ cursor: "pointer" }}
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                        </motion.div>
+                      );
+                    })}
                 </AnimatePresence>
               ) : (
                 <Card style={{ textAlign: "center", padding: 40 }}>
@@ -356,6 +353,16 @@ export default function ListingDashboard() {
                     Post new jobs
                   </Text>
                 </Card>
+              )}
+              {visibleCount < filteredListings.length && (
+                <div style={{ textAlign: "center", marginTop: "20px" }}>
+                  <button
+                    onClick={() => setVisibleCount(visibleCount + 10)}
+                    className="see-more-btn"
+                  >
+                    See More
+                  </button>
+                </div>
               )}
             </div>
           )}

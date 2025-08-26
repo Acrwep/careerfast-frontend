@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from "react";
 import { getAllCandidateByRecruiter } from "../ApiService/action";
 import { useParams } from "react-router-dom";
 import {
-  Divider,
   Table,
   Card,
   Input,
@@ -112,7 +111,6 @@ export default function AllAppliedCandidates() {
   const [loginUserId, setLoginUserId] = useState(null);
   const { id } = useParams();
   const [appliedUsers, setAppliedUsers] = useState([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);

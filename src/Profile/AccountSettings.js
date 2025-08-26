@@ -1,9 +1,6 @@
 import React, { useState } from "react";
-import { IoMdCall } from "react-icons/io";
-import { HiOutlineMail } from "react-icons/hi";
 import { GoDotFill } from "react-icons/go";
-import { Drawer, Input, Form, message } from "antd";
-import CommonInputField from "../Common/CommonInputField";
+import { message } from "antd";
 import {
   emailValidator,
   nameValidator,
