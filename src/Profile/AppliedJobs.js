@@ -1,9 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Input, Card, Tag, Typography, Badge, Skeleton } from "antd";
+import { Input, Card, Tag, Typography, Badge, Skeleton, Button } from "antd";
 import { SearchOutlined, CalendarOutlined } from "@ant-design/icons";
 import { debounce } from "lodash";
 import { useNavigate } from "react-router-dom";
-import { getUserAppliedJobs, getUserJobPostStatus } from "../ApiService/action";
+import {
+  applyForJob,
+  getUserAppliedJobs,
+  getUserJobPostStatus,
+} from "../ApiService/action";
 import Header from "../Header/Header";
 import { FiClock } from "react-icons/fi";
 
@@ -150,15 +154,16 @@ export default function AppliedJobs() {
   const fetchAppliedJobs = async () => {
     try {
       const response = await getUserAppliedJobs({ userId: loginUserId });
+      console.log("getUserAppliedJobs", response);
       const jobs = response?.data?.data || [];
 
-      console.log("getUserAppliedJobs", response);
+      const sortedJobs = jobs.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
 
-      setOpportunities(jobs);
+      setOpportunities(sortedJobs);
 
-      const jobIds = jobs.map((job) => job.id);
-      console.log("jobIds", jobIds);
-
+      const jobIds = sortedJobs.map((job) => job.id);
       setUserAppliedJobStatus(jobIds);
     } catch (error) {
       console.error("Error fetching applied jobs:", error);
@@ -191,7 +196,6 @@ export default function AppliedJobs() {
       });
 
       setUserAppliedJobStatus(statusMap);
-      console.log("Final Status Map:", statusMap);
     } catch (error) {
       console.log("getUserJobPostStatus error", error);
     }

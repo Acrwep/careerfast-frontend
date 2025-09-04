@@ -8,7 +8,7 @@ import {
   FiBook,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, Typography, Skeleton } from "antd";
+import { Card, Typography, Skeleton, Tooltip } from "antd";
 import {
   getAppliedCandidatesCount,
   getJobPostByUserId,
@@ -34,6 +34,7 @@ export default function ListingDashboard() {
   const [listLoading, setListLoading] = useState(true);
   const [appliedCounts, setAppliedCounts] = useState({});
   const [visibleCount, setVisibleCount] = useState(10);
+  const [postedOn, setPostedOn] = useState(0);
 
   useEffect(() => {
     try {
@@ -60,6 +61,14 @@ export default function ListingDashboard() {
     try {
       const response = await getJobPosts(payload);
       const jobPosts = response?.data?.data?.data || [];
+
+      const postedMap = {};
+      jobPosts.forEach((job) => {
+        postedMap[job.id] = job.date_posted;
+      });
+
+      setPostedOn(postedMap);
+
       const firstId = jobPosts[0]?.id || null;
       setPostId(firstId);
       getAppliedCandidatesCountData(firstId);
@@ -166,6 +175,7 @@ export default function ListingDashboard() {
         return <FiCalendar className="icon-gray" />;
     }
   };
+  const listingOrder = localStorage.getItem("listingOrder"); // get the order
 
   return (
     <>
@@ -243,9 +253,16 @@ export default function ListingDashboard() {
               {filteredListings.length > 0 ? (
                 <AnimatePresence>
                   {[...filteredListings]
-                    .sort(
-                      (a, b) => new Date(b.created_at) - new Date(a.created_at)
-                    )
+                    .sort((a, b) => {
+                      if (listingOrder === "bottomTop") {
+                        return new Date(a.created_at) - new Date(b.created_at); // oldest first
+                      }
+                      if (listingOrder === "topBottom") {
+                        return new Date(b.created_at) - new Date(a.created_at); // newest first
+                      } else {
+                        return new Date(b.created_at) - new Date(a.created_at); // newest first
+                      }
+                    })
                     .slice(0, visibleCount)
                     .map((listing) => {
                       const isClosed =
@@ -290,13 +307,9 @@ export default function ListingDashboard() {
                                       color: isClosed ? "red" : "green",
                                     }}
                                   >
-                                    Posted on:{" "}
+                                    Posted:{" "}
                                   </span>
-                                  <b>
-                                    {moment(listing.created_at).format(
-                                      "DD MMM YYYY"
-                                    )}
-                                  </b>
+                                  <b>{postedOn[listing.id] || "N/A"}</b>
                                 </span>
                               </div>
 
@@ -314,20 +327,30 @@ export default function ListingDashboard() {
                                   </span>
                                 </div>
                                 <div className="listing-actions">
-                                  <FaEye
-                                    size={18}
-                                    onClick={() =>
-                                      navigate(`/job-details/${listing.id}`)
-                                    }
-                                    style={{ cursor: "pointer" }}
-                                  />
-                                  <FiEdit
-                                    size={16}
-                                    onClick={() =>
-                                      navigate(`/admin-dashboard/${listing.id}`)
-                                    }
-                                    style={{ cursor: "pointer" }}
-                                  />
+                                  <Tooltip
+                                    title={`View ${listing.job_nature} post`}
+                                  >
+                                    <FaEye
+                                      size={18}
+                                      onClick={() =>
+                                        navigate(`/job-details/${listing.id}`)
+                                      }
+                                      style={{ cursor: "pointer" }}
+                                    />
+                                  </Tooltip>
+                                  <Tooltip
+                                    title={`Edit ${listing.job_nature} post`}
+                                  >
+                                    <FiEdit
+                                      size={16}
+                                      onClick={() =>
+                                        navigate(
+                                          `/admin-dashboard/${listing.id}`
+                                        )
+                                      }
+                                      style={{ cursor: "pointer" }}
+                                    />
+                                  </Tooltip>
                                 </div>
                               </div>
                             </div>

@@ -96,19 +96,19 @@ export default function JobFilter() {
   const [selectedSort, setSelectedSort] = useState(null);
   const [backendJobs, setBackendJobs] = useState([]);
   const [postDetails, setPostDetails] = useState([]);
-  const [wishlistedJobs, setWishlistedJobs] = useState({});
   const [loginUserId, setLoginUserId] = useState(null);
   const [answers, setAnswers] = useState("");
-  const [loading, setLoading] = useState(false);
   const [isApplied, setIsApplied] = useState({});
   const [savedJobMap, setSavedJobMap] = useState({});
   const [isSaved, setIsSaved] = useState({});
-  const [jobLoading, setJobLoading] = useState(false);
+  const [jobLoading, setJobLoading] = useState(true);
   const [jobDetailsLoading, setJobDetailsLoading] = useState(false);
   const [tempStatus, setTempStatus] = useState(selectedStatus);
   const [tempWorkingDays, setTempWorkingDays] = useState("");
   const [tempTypes, setTempTypes] = useState([]);
   const [tempCategories, setTempCategories] = useState([]);
+  const [appliedDate, setAppliedDate] = useState("");
+  const [datePosted, setDatePosted] = useState(0);
 
   const [activeFilters, setActiveFilters] = useState({
     jobNature: false,
@@ -210,9 +210,7 @@ export default function JobFilter() {
     try {
       const response = await getJobPosts(payload);
       console.log("getJobPosts response", response);
-
       const jobs = response?.data?.data?.data;
-      setJobLoading(true);
 
       if (Array.isArray(jobs)) {
         setBackendJobs(jobs);
@@ -254,6 +252,9 @@ export default function JobFilter() {
   const checkIsJobSavedData = async (postId) => {
     if (!loginUserId || !postId) return;
 
+    // Use the existing isSaved state if available
+    if (isSaved[postId] !== undefined) return;
+
     const payload = {
       user_id: loginUserId,
       job_post_id: postId,
@@ -285,35 +286,22 @@ export default function JobFilter() {
 
   const handleWishlistToggle = async (jobId) => {
     try {
-      const isWishlisted = !wishlistedJobs[jobId];
+      const currentlySaved = isSaved[jobId];
 
-      setWishlistedJobs((prev) => {
-        const updated = { ...prev, [jobId]: isWishlisted };
-        localStorage.setItem("wishlist", JSON.stringify(updated));
-        return updated;
-      });
-
-      if (isWishlisted) {
-        await saveJobPostData(jobId);
-        CommonToaster("Added to wishlist ❤️", "success");
-      } else {
+      if (currentlySaved) {
         await removeSavedJobsData(jobId);
         CommonToaster("Removed from wishlist 💔", "error");
+      } else {
+        await saveJobPostData(jobId);
+        CommonToaster("Added to wishlist ❤️", "success");
       }
 
       setIsSaved((prev) => ({
         ...prev,
-        [jobId]: !prev[jobId],
+        [jobId]: !currentlySaved,
       }));
-
-      await getSavedJobsData();
     } catch (error) {
       console.error("Wishlist toggle failed:", error);
-      setWishlistedJobs((prev) => {
-        const updated = { ...prev, [jobId]: !prev[jobId] };
-        localStorage.setItem("wishlist", JSON.stringify(updated));
-        return updated;
-      });
       CommonToaster("Failed to update wishlist", "error");
     }
   };
@@ -328,22 +316,41 @@ export default function JobFilter() {
 
     try {
       const response = await saveJobPost(payload);
+
+      if (response?.data?.data?.id) {
+        setSavedJobMap((prev) => ({
+          ...prev,
+          [jobId]: response.data.data.id,
+        }));
+      }
+
       return response;
     } catch (error) {
       throw error;
     }
   };
 
+  useEffect(() => {
+    if (loginUserId) {
+      getSavedJobsData();
+    }
+  }, [loginUserId]);
+
   const getSavedJobsData = async () => {
     try {
       const response = await getSavedJobs({ user_id: loginUserId });
       const savedJobs = response?.data?.data || [];
 
+      const savedJobIdsMap = {};
+      savedJobs.forEach((job) => {
+        savedJobIdsMap[job.job_post_id] = true;
+      });
+
+      setIsSaved(savedJobIdsMap);
       const jobMap = {};
       savedJobs.forEach((job) => {
         jobMap[job.job_post_id] = job.id;
       });
-
       setSavedJobMap(jobMap);
     } catch (error) {
       console.log("Get saved job error", error);
@@ -353,10 +360,22 @@ export default function JobFilter() {
   const removeSavedJobsData = async (jobId) => {
     try {
       const savedJobId = savedJobMap[jobId];
-      if (!savedJobId) throw new Error("Saved job ID not found");
 
-      const response = await removeSavedJobs({ id: savedJobId });
-      return response;
+      if (!savedJobId) {
+        const response = await getSavedJobs({ user_id: loginUserId });
+        const savedJobs = response?.data?.data || [];
+
+        const jobToRemove = savedJobs.find((job) => job.job_post_id === jobId);
+        if (jobToRemove) {
+          await removeSavedJobs({ id: jobToRemove.id });
+        } else {
+          throw new Error("Saved job not found");
+        }
+      } else {
+        await removeSavedJobs({ id: savedJobId });
+      }
+
+      return true;
     } catch (error) {
       console.error("Remove saved job error:", error);
       throw error;
@@ -399,6 +418,7 @@ export default function JobFilter() {
       working_days: job.working_days,
       daysLeft: daysLeft > 0 ? `${daysLeft} days left` : "Expired",
       level: job.experience_type,
+      date_posted: job.date_posted,
       salary:
         job.salary_type === "Fixed"
           ? `$${job.min_salary || "N/A"}`
@@ -489,13 +509,20 @@ export default function JobFilter() {
     };
 
     try {
-      const response = await applyForJob(payload, token); // pass token to API helper
+      const response = await applyForJob(payload, token);
       console.log("apply jobs", response);
-      message.success("Job applied successfully");
+      message.success("Job applied successfully!");
+
       setIsApplied((prev) => ({
         ...prev,
         [jobId]: true,
       }));
+
+      setAppliedDate((prev) => ({
+        ...prev,
+        [jobId]: response.data.appliedJob.created_at,
+      }));
+
       setOpenApplyNow(false);
     } catch (error) {
       console.error("apply jobs error", error);
@@ -705,9 +732,14 @@ export default function JobFilter() {
     );
   };
 
+  useEffect(() => {
+    if (statusVisible) {
+      return;
+    }
+  }, [tempStatus, statusVisible]);
+
   const handleStatusApply = () => {
     setSelectedStatus(tempStatus);
-    fetchJobs();
     setStatusVisible(false);
   };
 
@@ -736,7 +768,7 @@ export default function JobFilter() {
         <Radio.Group
           className="custom-radio"
           onChange={(e) => setTempStatus(e.target.value)}
-          value={tempStatus}
+          value={tempStatus || selectedStatus} // Use tempStatus if available, otherwise selectedStatus
           style={{ display: "flex", flexDirection: "column", gap: 8 }}
         >
           <Radio value="Live">Live</Radio>
@@ -824,22 +856,15 @@ export default function JobFilter() {
     setWorkTypeVisible(false);
   };
 
-  const handleWorkTypeFilter = async () => {
-    setSelectedTypes(tempTypes);
-    setWorkTypeVisible(false);
-
-    const startTime = Date.now();
-    try {
-      await fetchJobs();
-    } finally {
-      const elapsed = Date.now() - startTime;
-      const remainingTime = 3000 - elapsed;
-      if (remainingTime > 0) {
-        await new Promise((resolve) => setTimeout(resolve, remainingTime));
-      }
-      setLoading(false);
-      setWorkTypeVisible(false);
+  useEffect(() => {
+    if (selectedTypes.length > 0) {
+      fetchJobs(selectedTypes);
     }
+  }, [selectedTypes]);
+
+  const handleWorkTypeFilter = () => {
+    setSelectedTypes([...tempTypes]);
+    setWorkTypeVisible(false);
   };
 
   const dropdownContent = () => (
@@ -1022,11 +1047,6 @@ export default function JobFilter() {
             open={jobNatureVisible}
             onOpenChange={(visible) => setJobNatureVisible(visible)}
             placement="bottomLeft"
-            overlayStyle={{
-              borderRadius: 12,
-              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-              padding: "8px 0",
-            }}
           >
             <Badge
               count={activeFilters.jobNature ? "•" : 0}
@@ -1114,11 +1134,6 @@ export default function JobFilter() {
             trigger={["click"]}
             open={statusVisible}
             onOpenChange={setStatusVisible}
-            overlayStyle={{
-              borderRadius: 12,
-              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-              padding: "8px 0",
-            }}
           >
             <Badge
               count={activeFilters.status ? "•" : 0}
@@ -1161,11 +1176,6 @@ export default function JobFilter() {
             trigger={["click"]}
             open={workingDaysVisible}
             onOpenChange={(flag) => setWorkingDaysVisible(flag)}
-            overlayStyle={{
-              borderRadius: 12,
-              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-              padding: "8px 0",
-            }}
           >
             <Badge
               count={activeFilters.workingDays ? "•" : 0}
@@ -1208,11 +1218,6 @@ export default function JobFilter() {
             trigger={["click"]}
             open={visible}
             onOpenChange={(flag) => setVisible(flag)}
-            overlayStyle={{
-              borderRadius: 12,
-              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-              padding: "8px 0",
-            }}
           >
             <Badge
               count={activeFilters.location ? "•" : 0}
@@ -1255,11 +1260,6 @@ export default function JobFilter() {
             trigger={["click"]}
             open={workTypevisible}
             onOpenChange={(flag) => setWorkTypeVisible(flag)}
-            overlayStyle={{
-              borderRadius: 12,
-              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-              padding: "8px 0",
-            }}
           >
             <Badge
               count={activeFilters.workType ? "•" : 0}
@@ -1302,11 +1302,6 @@ export default function JobFilter() {
             trigger={["click"]}
             open={userCatergoryvisible}
             onOpenChange={(flag) => setUserCatergoryVisible(flag)}
-            overlayStyle={{
-              borderRadius: 12,
-              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.12)",
-              padding: "8px 0",
-            }}
           >
             <Badge
               count={activeFilters.category ? "•" : 0}
@@ -1375,17 +1370,11 @@ export default function JobFilter() {
               {backendJobs.length === 0 ? (
                 <Empty description="No jobs found" />
               ) : (
-                <Spin spinning={loading} size="large">
-                  <Space
-                    direction="vertical"
-                    size={24}
-                    style={{ width: "100%" }}
-                  >
-                    {backendJobs.map((job) => (
-                      <JobCard key={job.id} job={transformJob(job)} />
-                    ))}
-                  </Space>
-                </Spin>
+                <Space direction="vertical" size={24} style={{ width: "100%" }}>
+                  {backendJobs.map((job) => (
+                    <JobCard key={job.id} job={transformJob(job)} />
+                  ))}
+                </Space>
               )}
             </Col>
 
@@ -1441,12 +1430,7 @@ export default function JobFilter() {
                               <div className="job-meta-item">
                                 <FaRegCalendarAlt className="meta-icon premium-icon" />
                                 <span className="meta-text">
-                                  Updated On:{" "}
-                                  {job.created_date
-                                    ? new Date(
-                                        job.created_date
-                                      ).toLocaleDateString()
-                                    : "-"}
+                                  Posted: {job.date_posted}
                                 </span>
                               </div>
 
@@ -1526,6 +1510,16 @@ export default function JobFilter() {
                                   >
                                     Apply Now
                                   </button>
+                                )}
+                              </div>
+                              <div>
+                                {isApplied[job.id] && (
+                                  <p className="applied-info">
+                                    Applied on:{" "}
+                                    {new Date(
+                                      appliedDate[job.id]
+                                    ).toLocaleDateString()}
+                                  </p>
                                 )}
                               </div>
                               <Drawer

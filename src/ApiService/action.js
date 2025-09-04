@@ -859,3 +859,14 @@ export const getAllCandidateByRecruiter = async (payload) => {
     throw error;
   }
 };
+
+// dailyStreak
+
+export const dailyStreak = async (payload) => {
+  try {
+    const response = await api.post("api/dailyStreak", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};

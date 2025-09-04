@@ -614,6 +614,10 @@ a {
   margin-bottom: 15px;
 }
 
+.header-drawer .ant-drawer-body {
+  padding: 0;
+}
+
 .premium-job-details .premium-logo {
   width: 85px;
   height: 85px;

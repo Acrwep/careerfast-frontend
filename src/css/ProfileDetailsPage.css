@@ -1356,6 +1356,14 @@ body {
   gap: 24px;
 }
 
+.alert_message {
+  padding: 2px 8px;
+  width: 28%;
+  font-size: 12px;
+  border-radius: 20px;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
 /* Responsive Adjustments */
 @media (max-width: 1200px) {
   .post_jobs_section {

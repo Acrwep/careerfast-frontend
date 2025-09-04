@@ -467,6 +467,88 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiInternshipPortalInternshipPortal
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'internship_portals';
+  info: {
+    displayName: 'internshipPortal';
+    pluralName: 'internship-portals';
+    singularName: 'internship-portal';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    author: Schema.Attribute.Relation<'oneToOne', 'api::author.author'>;
+    companyList: Schema.Attribute.Media<
+      'images' | 'files' | 'videos' | 'audios',
+      true
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    homeBannerLeft: Schema.Attribute.Blocks;
+    homeBannerRight: Schema.Attribute.Blocks;
+    internshipCount: Schema.Attribute.Blocks;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::internship-portal.internship-portal'
+    > &
+      Schema.Attribute.Private;
+    needGuideContent: Schema.Attribute.Blocks;
+    postYours: Schema.Attribute.Blocks;
+    publishedAt: Schema.Attribute.DateTime;
+    recommendedDescription: Schema.Attribute.Text;
+    recommendedTitle: Schema.Attribute.String;
+    slug: Schema.Attribute.UID<'recommendedTitle'>;
+    stuckContent: Schema.Attribute.Blocks;
+    topCompanyContent: Schema.Attribute.Blocks;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiJobportalJobportal extends Struct.CollectionTypeSchema {
+  collectionName: 'jobportals';
+  info: {
+    displayName: 'jobportal';
+    pluralName: 'jobportals';
+    singularName: 'jobportal';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    author: Schema.Attribute.Relation<'oneToOne', 'api::author.author'>;
+    companyList: Schema.Attribute.Media<'images' | 'files', true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    homeBannerLeft: Schema.Attribute.Blocks;
+    homeBannerRight: Schema.Attribute.Blocks;
+    jobsCount: Schema.Attribute.Blocks;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::jobportal.jobportal'
+    > &
+      Schema.Attribute.Private;
+    needGuideContent: Schema.Attribute.Blocks;
+    postYours1: Schema.Attribute.Blocks;
+    publishedAt: Schema.Attribute.DateTime;
+    recommendedDescription: Schema.Attribute.Text;
+    recommendedTitle: Schema.Attribute.String;
+    slug: Schema.Attribute.UID<'recommendedTitle'>;
+    stuckContent: Schema.Attribute.Blocks;
+    topCompanyContent: Schema.Attribute.Blocks;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_releases';
@@ -979,6 +1061,8 @@ declare module '@strapi/strapi' {
       'api::author.author': ApiAuthorAuthor;
       'api::blog.blog': ApiBlogBlog;
       'api::global.global': ApiGlobalGlobal;
+      'api::internship-portal.internship-portal': ApiInternshipPortalInternshipPortal;
+      'api::jobportal.jobportal': ApiJobportalJobportal;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

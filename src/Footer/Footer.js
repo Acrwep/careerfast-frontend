@@ -11,6 +11,7 @@ export default function Footer() {
           <div className="footer-brand">
             <div className="footer-logo">
               <img
+                style={{ cursor: "pointer" }}
                 onClick={() => navigate("/job-portal")}
                 src={logo}
                 alt="Logo"
@@ -28,17 +29,29 @@ export default function Footer() {
               <h4 className="footer-menu-title">Company</h4>
               <ul className="footer-menu-list">
                 <li>
-                  <a href="/about" className="footer-menu-link">
+                  <a
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate("/job-filter")}
+                    className="footer-menu-link"
+                  >
                     About Us
                   </a>
                 </li>
                 <li>
-                  <a href="/careers" className="footer-menu-link">
+                  <a
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate("/job-filter")}
+                    className="footer-menu-link"
+                  >
                     Careers
                   </a>
                 </li>
                 <li>
-                  <a href="/blog" className="footer-menu-link">
+                  <a
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate("/job-filter")}
+                    className="footer-menu-link"
+                  >
                     Blog
                   </a>
                 </li>
@@ -82,17 +95,29 @@ export default function Footer() {
               <h4 className="footer-menu-title">Resources</h4>
               <ul className="footer-menu-list">
                 <li>
-                  <a href="/help" className="footer-menu-link">
+                  <a
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate("/job-filter")}
+                    className="footer-menu-link"
+                  >
                     Help Center
                   </a>
                 </li>
                 <li>
-                  <a href="/api" className="footer-menu-link">
+                  <a
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate("/job-filter")}
+                    className="footer-menu-link"
+                  >
                     API Docs
                   </a>
                 </li>
                 <li>
-                  <a href="/community" className="footer-menu-link">
+                  <a
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate("/job-filter")}
+                    className="footer-menu-link"
+                  >
                     Community
                   </a>
                 </li>

@@ -64,6 +64,7 @@ export default function ManageCandidate() {
   const [appliedUser, setAppliedUser] = useState([]);
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
+  const [viewProfileLoading, setViewProfileLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobTitle, setJobTitle] = useState("");
@@ -178,11 +179,11 @@ export default function ManageCandidate() {
     try {
       const response = await getUserProfile(payload);
       setOpen(true);
-      setLoading(true);
+      setViewProfileLoading(true);
       setSelectedUser(response?.data?.data || null);
       console.log("User Profile data", response);
       setTimeout(() => {
-        setLoading(false);
+        setViewProfileLoading(false);
       }, 2000);
     } catch (error) {
       console.log("User Profile data", error);
@@ -407,21 +408,23 @@ export default function ManageCandidate() {
       key: "action",
       render: (_, record) => (
         <Dropdown
-          overlay={
-            <Menu>
-              <Menu.Item
-                key="view"
-                onClick={() => handleGetUserProfile(record.id)}
-                icon={<EyeOutlined />}
-              >
-                View Profile
-              </Menu.Item>
-              <Menu.Item key="email" icon={<MailOutlined />}>
-                Send Email
-              </Menu.Item>
-            </Menu>
-          }
-          trigger={["click"]}
+          menu={{
+            items: [
+              {
+                key: "view",
+                icon: <EyeOutlined />,
+                label: "View Profile",
+                onClick: () => handleGetUserProfile(record.id),
+              },
+              {
+                key: "email",
+                icon: <MailOutlined />,
+                label: "Send Email",
+              },
+            ],
+          }}
+          trigger={["hover"]}
+          styles={{ dropdown: { boxShadow: "none" } }} // ✅ correct
         >
           <Button
             shape="circle"
@@ -445,29 +448,31 @@ export default function ManageCandidate() {
     >
       {/* Main Content */}
       <Layout style={{ padding: 20 }}>
-        <Header
-          style={{
-            borderRadius: 12,
-            background: "#fff",
-            padding: "0 32px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-            zIndex: 1,
-          }}
-        >
-          <Title level={4} style={{ margin: 0 }}>
-            <b style={{ color: "#5f2eea", fontWeight: 800 }}>{jobTitle}</b> |
-            All Registrations
-          </Title>
-        </Header>
+        {loading ? (
+          <Skeleton paragraph={{ rows: 1 }} />
+        ) : (
+          <Header
+            style={{
+              borderRadius: 12,
+              background: "#fff",
+              padding: "0 32px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+              zIndex: 1,
+            }}
+          >
+            <Title level={4} style={{ margin: 0 }}>
+              <b style={{ color: "#5f2eea", fontWeight: 800 }}>{jobTitle}</b> |
+              All Registrations
+            </Title>
+          </Header>
+        )}
 
         <Content style={{ margin: "24px", padding: 0 }}>
           <Card
-            bordered={false}
             style={{ borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
-            bodyStyle={{ padding: 24 }}
           >
             <div
               style={{
@@ -570,7 +575,7 @@ export default function ManageCandidate() {
             }
             placement="right"
             open={open}
-            loading={loading}
+            loading={viewProfileLoading}
             onClose={() => setOpen(false)}
           >
             <div className="drawer-body">

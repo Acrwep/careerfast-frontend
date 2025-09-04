@@ -34,6 +34,7 @@ import BlogContent from "../Blogs/BlogContent";
 import AllAppliedCandidates from "../AdminDashboard/AllAppliedCandidates";
 import useFetch from "../hooks/useFetch";
 import Location from "../JobPortal/Location";
+import PushNotification from "../PushNotification/PushNotification";
 
 const Layout = () => {
   const location = useLocation();
@@ -44,8 +45,19 @@ const Layout = () => {
     "http://localhost:1337/api/blogs?populate=*"
   );
 
+  let {
+    loading: jobLoading,
+    data: jobData,
+    error: jobError,
+  } = useFetch("http://localhost:1337/api/jobportals?populate=*");
+
+  let {
+    loading: internshipLoading,
+    data: internshipData,
+    error: internshipError,
+  } = useFetch("http://localhost:1337/api/internship-portals?populate=*");
+
   useEffect(() => {
-    //handle navigate to login page when token expire
     const handleTokenExpire = () => {
       navigate("/login");
     };
@@ -104,8 +116,26 @@ const Layout = () => {
         <Route path="/about" element={<About />} />
         <Route path="/profiledetails" element={<ProfileDetails />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/job-portal" element={<JobPortalLandingPage />} />
-        <Route path="/internship" element={<InternshipLandingPage />} />
+        <Route
+          path="/job-portal"
+          element={
+            <JobPortalLandingPage
+              loading={jobLoading}
+              error={jobError}
+              jobPortals={jobData || ""}
+            />
+          }
+        />
+        <Route
+          path="/internship"
+          element={
+            <InternshipLandingPage
+              loading={internshipLoading}
+              error={internshipError}
+              intershipPortals={internshipData || ""}
+            />
+          }
+        />
         <Route path="/header" element={<Header />} />
         <Route path="/footer" element={<Footer />}></Route>
         <Route path="/post-jobs" element={<PostJobs />} />
@@ -149,6 +179,7 @@ const Layout = () => {
           path="/applied-candidates-all"
           element={<AllAppliedCandidates />}
         />
+        <Route path="/push-notification" element={<PushNotification />} />
       </Routes>
     </div>
   );

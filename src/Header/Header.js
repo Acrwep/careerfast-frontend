@@ -23,7 +23,7 @@ import {
   message,
 } from "antd";
 import { AutoComplete } from "antd";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import {
   BellOutlined,
@@ -50,7 +50,6 @@ import {
 } from "@ant-design/icons";
 import { getUserProfile, searchByKeyword } from "../ApiService/action";
 import { IoChevronDownOutline } from "react-icons/io5";
-import { CommonToaster } from "../Common/CommonToaster";
 import { FcApproval } from "react-icons/fc";
 
 const { Title, Text } = Typography;
@@ -241,11 +240,11 @@ export default function Header() {
               onSearch={handleSearch}
               onSelect={handleSelect}
               style={{ width: "100%" }}
-              dropdownStyle={{
-                borderRadius: 12,
-                padding: "8px 0",
-                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-              }}
+              // dropdownStyle={{
+              //   borderRadius: 12,
+              //   padding: "8px 0",
+              //   boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+              // }}
               notFoundContent={
                 loading ? (
                   <div className="loading-container">
@@ -260,7 +259,6 @@ export default function Header() {
                   </div>
                 )
               }
-              popupClassName="premium-dropdown"
             >
               <Input
                 value={searchText}
@@ -415,14 +413,14 @@ export default function Header() {
       </Navbar>
 
       <Drawer
+        className="header-drawer"
         title={null}
         placement="right"
         width={380}
         onClose={onClose}
         open={open}
         closable={false}
-        headerStyle={{ border: "none", padding: 0 }}
-        bodyStyle={{ padding: 0 }}
+        style={{ padding: 0 }}
       >
         {/* Premium Header */}
         <div
@@ -548,6 +546,7 @@ export default function Header() {
                             style={{ cursor: "pointer", color: "#4f46e5" }}
                             onClick={() => {
                               localStorage.setItem("activeAdminTab", "listing");
+                              localStorage.setItem("listingOrder", "topBottom"); // add this
                               navigate("/admin-profile");
                             }}
                           >

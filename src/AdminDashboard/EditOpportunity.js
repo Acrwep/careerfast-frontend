@@ -2204,8 +2204,6 @@ const EditOpportunity = () => {
         open={drawerOpen}
         width={700}
         onClose={() => setDrawerOpen(false)}
-        headerStyle={{ borderBottom: "1px solid #f0f0f0" }}
-        bodyStyle={{ padding: 24 }}
         extra={
           <Space>
             <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>

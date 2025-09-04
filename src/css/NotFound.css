@@ -19,8 +19,8 @@
 }
 
 .not-found-container .logo {
-  width: 150px;
-  margin-bottom: 2rem;
+  width: 200px;
+  margin-bottom: 1rem;
 }
 
 .not-found-container .title {
@@ -78,11 +78,11 @@
   .not-found-container .title {
     font-size: 4rem;
   }
-  
+
   .not-found-container .subtitle {
     font-size: 1.2rem;
   }
-  
+
   .not-found-container .content {
     padding: 2rem;
   }

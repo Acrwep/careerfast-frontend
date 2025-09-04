@@ -215,15 +215,6 @@ export default function AllAppliedCandidates() {
     }
   }, [searchText, appliedUsers]);
 
-  const mouseClick = new Audio(
-    "https://uploads.sitepoint.com/wp-content/uploads/2023/06/1687569402mixkit-fast-double-click-on-mouse-275.wav"
-  );
-
-  const handlePlayClick = () => {
-    mouseClick.currentTime = 0;
-    mouseClick.play();
-  };
-
   return (
     <StyledContainer>
       <Layout>
@@ -244,10 +235,6 @@ export default function AllAppliedCandidates() {
                   {filteredData.length} candidates found
                 </Text>
               </Title>
-              <Button type="primary" onMouseDown={handlePlayClick}>
-                Click Me
-              </Button>
-
               <SearchContainer>
                 <Input
                   placeholder="Search candidates by name, email, phone, or job title"

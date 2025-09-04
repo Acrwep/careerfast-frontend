@@ -1,5 +1,14 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Input, Button, Card, Tag, Typography, Badge, Skeleton } from "antd";
+import {
+  Input,
+  Button,
+  Card,
+  Tag,
+  Typography,
+  Badge,
+  Skeleton,
+  Tooltip,
+} from "antd";
 import {
   SearchOutlined,
   CalendarOutlined,
@@ -11,6 +20,8 @@ import { CommonToaster } from "../Common/CommonToaster";
 import { getSavedJobs, removeSavedJobs } from "../ApiService/action";
 import { useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
+import { FaRegEye } from "react-icons/fa";
+import moment from "moment";
 
 const { Title, Text } = Typography;
 
@@ -31,47 +42,53 @@ const OpportunityCard = ({ opportunity, onSave }) => {
     }
   }, []);
 
-  const handleSave = () => {
+  const handleRemove = async () => {
     if (!loginUserId) {
-      CommonToaster("Please log in to save jobs.", "error");
+      CommonToaster("Please log in.", "error");
       return;
     }
 
-    const newSavedState = !saved;
-    onSave(opportunity.id, newSavedState);
-    setSaved(newSavedState);
+    // remove immediately from UI
+    setSaved(false);
+    onSave(opportunity.id, false);
 
-    CommonToaster(
-      newSavedState ? "Removed from favourites ❤️" : "Added to favourites ❤️",
-      newSavedState ? "error" : "success"
-    );
-
-    if (newSavedState) {
-      removeSavedJobsData(opportunity);
-    }
-  };
-
-  const removeSavedJobsData = async (opportunity) => {
     try {
       await removeSavedJobs({ id: opportunity.id });
+      CommonToaster("Removed from favourites ❤️", "error");
     } catch (error) {
       console.error("Remove saved jobs error", error);
+      CommonToaster("Failed to remove job", "error");
+      setSaved(true); // rollback if API fails
     }
   };
+
+  const isClosed = moment().diff(moment(opportunity.created_at), "days") > 15;
 
   return (
     <>
       <Card
-        onClick={() => navigate(`/job-details/${opportunity.job_post_id}`)}
         style={{
           marginBottom: 16,
           borderRadius: 12,
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
           border: "none",
-          cursor: "pointer",
         }}
       >
-        <div style={{ display: "flex", gap: 20 }}>
+        <div
+          style={{
+            paddingTop: "10px",
+            paddingBottom: 6,
+            position: "absolute",
+            left: 0,
+            top: 0,
+          }}
+          className="activeClosed"
+        >
+          <button className={isClosed ? "clo" : "act"}>
+            {isClosed ? "Closed" : "Active"}
+          </button>
+        </div>
+        <div style={{ display: "flex", gap: 20, paddingTop: 20 }}>
           <div style={{ flexShrink: 0 }}>
             <img
               src={opportunity.company_logo}
@@ -97,20 +114,28 @@ const OpportunityCard = ({ opportunity, onSave }) => {
               <Title level={5} style={{ margin: 0 }}>
                 {opportunity.job_title}
               </Title>
-
-              <Button
-                type="text"
-                style={saved ? {} : { background: "rgba(255, 0, 0, 0.1)" }}
-                icon={
-                  saved ? (
-                    <HeartOutlined style={{ color: "red" }} />
-                  ) : (
-                    <HeartFilled style={{ color: "red" }} />
-                  )
-                }
-                onClick={handleSave}
-                aria-label="Toggle favourite"
-              />
+              <div>
+                <Tooltip title={"Remove from wishlist"}>
+                  <Button
+                    type="text"
+                    style={{ background: "rgba(255, 0, 0, 0.1)" }}
+                    icon={<HeartFilled style={{ color: "red" }} />}
+                    onClick={handleRemove}
+                    aria-label="Remove from wishlist"
+                  />
+                </Tooltip>
+                <Tooltip title={"View job post"}>
+                  <Button
+                    type="text"
+                    style={{ background: "#e9e0fe", marginLeft: 10 }}
+                    icon={<FaRegEye color="#5f2eea" />}
+                    onClick={() =>
+                      navigate(`/job-details/${opportunity.job_post_id}`)
+                    }
+                    aria-label="Toggle favourite"
+                  />
+                </Tooltip>
+              </div>
             </div>
 
             <Text strong style={{ display: "block", marginBottom: 8 }}>
@@ -135,12 +160,18 @@ const OpportunityCard = ({ opportunity, onSave }) => {
               </Tag>
             </div>
 
-            <Text
-              type="secondary"
-              style={{ display: "flex", alignItems: "center", gap: 4 }}
-            >
-              <CalendarOutlined /> Created at: {opportunity.created_date}
-            </Text>
+            <div style={{ paddingTop: 6 }} className="listing-meta">
+              <span>
+                <span
+                  style={{
+                    color: isClosed ? "red" : "green",
+                  }}
+                >
+                  Posted:{" "}
+                </span>
+                <b>{opportunity.date_posted}</b>
+              </span>
+            </div>
           </div>
         </div>
       </Card>
@@ -187,9 +218,9 @@ export default function WatchList() {
   };
 
   const handleSave = (id, saved) => {
-    setOpportunities((prev) =>
-      prev.map((opp) => (opp.id === id ? { ...opp, saved } : opp))
-    );
+    if (!saved) {
+      setOpportunities((prev) => prev.filter((opp) => opp.id !== id));
+    }
   };
 
   const debouncedSearch = useMemo(

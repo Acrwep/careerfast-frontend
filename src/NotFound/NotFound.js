@@ -1,11 +1,13 @@
 import React, { useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import logo from "../images/careerfast_logo.png";
+import logo from "../images/careerfastlogofinal.png";
 import "../css/NotFound.css";
+import { useNavigate } from "react-router-dom";
 const NotFound = () => {
   const controls = useAnimation();
   const [ref, inView] = useInView();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (inView) {
@@ -165,7 +167,7 @@ const NotFound = () => {
 
         {/* Animated button */}
         <motion.div variants={itemVariants}>
-          <a href="/login">
+          <a onClick={() => navigate("/login")}>
             {" "}
             <motion.button
               className="home-button"

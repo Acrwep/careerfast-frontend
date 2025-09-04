@@ -93,6 +93,7 @@ import {
 import CommonDatePicker from "../Common/CommonDatePicker";
 import Header from "../Header/Header";
 import {
+  dailyStreak,
   deleteEducation,
   deleteExperience,
   deleteProject,
@@ -150,19 +151,6 @@ const suggestions = [
   "Education Law",
   "Substance Designer",
 ];
-
-const today = new Date();
-const streakData = [];
-
-const getClassForValue = (value) => {
-  if (!value || value.count === 0) {
-    return "color-empty";
-  }
-  return `color-scale-${Math.min(value.count, 4)}`;
-};
-
-const currentStreak = 5;
-const maxStreak = 12;
 
 const yearOptions = Array.from({ length: 2025 - 1990 + 1 }, (_, i) => {
   const year = (1990 + i).toString();
@@ -348,6 +336,147 @@ export default function MainProfile() {
   const [tempColor, setTempColor] = useState("#481eaf");
   const [tempImage, setTempImage] = useState("");
 
+  // active streak
+
+  const [streakData, setStreakData] = useState([]);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
+  const today = new Date();
+
+  // Add these CSS variables to your styles
+  const heatmapStyles = `
+  :root {
+    --color-empty: #ebedf0;
+    --color-scale-1: #9be9a8;
+    --color-scale-2: #40c463;
+    --color-scale-3: #30a14e;
+    --color-scale-4: #216e39;
+  }
+  
+  .react-calendar-heatmap text {
+    font-size: 10px;
+    fill: #aaa;
+  }
+  
+  .react-calendar-heatmap .react-calendar-heatmap-small-text {
+    font-size: 5px;
+  }
+  
+  .react-calendar-heatmap rect:hover {
+    stroke: #555;
+    stroke-width: 1px;
+  }
+  
+  .react-calendar-heatmap .color-empty {
+    fill: var(--color-empty);
+  }
+  
+  .react-calendar-heatmap .color-scale-1 {
+    fill: var(--color-scale-1);
+  }
+  
+  .react-calendar-heatmap .color-scale-2 {
+    fill: var(--color-scale-2);
+  }
+  
+  .react-calendar-heatmap .color-scale-3 {
+    fill: var(--color-scale-3);
+  }
+  
+  .react-calendar-heatmap .color-scale-4 {
+    fill: #f72585;
+  }
+`;
+
+  useEffect(() => {
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = heatmapStyles;
+    document.head.appendChild(styleSheet);
+
+    return () => {
+      document.head.removeChild(styleSheet);
+    };
+  }, []);
+
+  // Update the getClassForValue function
+  const getClassForValue = (value) => {
+    if (!value || value.count === 0) return "color-empty";
+    if (value.count === 1) return "color-scale-1";
+    if (value.count === 2) return "color-scale-2";
+    if (value.count === 3) return "color-scale-3";
+    return "color-scale-4";
+  };
+
+  useEffect(() => {
+    if (loginUserId) {
+      dailyStreakData();
+    }
+  }, [loginUserId]);
+
+  const dailyStreakData = async () => {
+    setIsLoading(true);
+    const payload = { user_id: loginUserId };
+
+    try {
+      const response = await dailyStreak(payload);
+      console.log("dailyStreak", response);
+
+      if (response?.data) {
+        const transformedData = response.data.history.map((item) => ({
+          date: item.usage_date,
+          streak: item.streak,
+        }));
+
+        setStreakData(transformedData);
+        setCurrentStreak(response.data.currentStreak || 0);
+        setMaxStreak(response.data.maxStreak || 0);
+      }
+    } catch (error) {
+      console.error("dailyStreak error", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update the LegendBox and StreakBox components
+  const LegendBox = ({ color, label }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+      <div
+        style={{
+          width: "12px",
+          height: "12px",
+          borderRadius: "3px",
+          background: color,
+        }}
+      />
+      <span style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "0.85rem" }}>
+        {label}
+      </span>
+    </div>
+  );
+
+  const StreakBox = ({ label, value, color }) => (
+    <div
+      style={{
+        textAlign: "center",
+        padding: "12px 20px",
+        background: "rgba(255, 255, 255, 0.05)",
+        borderRadius: "12px",
+        minWidth: "120px",
+      }}
+    >
+      <div style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.9rem" }}>
+        {label}
+      </div>
+      <div
+        style={{ color, fontSize: "16px", fontWeight: 700, marginTop: "1px" }}
+      >
+        {value} {value === 1 ? "Day" : "Days"}
+      </div>
+    </div>
+  );
+  //////////////
+
   const handleMenuClick = ({ key }) => {
     if (key === "color") {
       setColorModalVisible(true);
@@ -415,7 +544,6 @@ export default function MainProfile() {
   }, []);
 
   useEffect(() => {
-    console.log("loginUserId updated", loginUserId);
     if (loginUserId) {
       getUserProfileData();
       // updateProfileImageData();
@@ -624,7 +752,6 @@ export default function MainProfile() {
           response.data.data.professional.length > 0
         ) {
           const professionalData = response.data.data.professional;
-          setExperienceData(professionalData);
           setExperienceType(profile.experince_type || "");
           setTotalYearsExperience(profile.total_years || "");
           setTotalMonthsExperience(profile.total_months || "");
@@ -643,6 +770,7 @@ export default function MainProfile() {
           }));
 
           setCompanies(mappedCompanies);
+          setExperienceData(mappedCompanies[0]?.jobTitle || "");
           setShowWorkExpForm(false);
         } else {
           setExperienceData(null);
@@ -808,6 +936,7 @@ export default function MainProfile() {
       const response = await updateBasicDetails(payload);
       console.log("Saving user data:", response);
       message.success("Profile details saved successfully.");
+      resetFormFields();
     } catch (error) {
       console.log("Saving user data:", error);
     }
@@ -1222,7 +1351,8 @@ export default function MainProfile() {
       console.log("updateAbout", response);
       setAboutText(response?.data?.data || []);
       resetFormFields();
-      message.success("About details saved successfully.");
+      message.success("About details saved successfully");
+      getUserProfileData();
     } catch (error) {
       setAboutTextError(aboutTextValidate);
     }
@@ -1415,6 +1545,7 @@ export default function MainProfile() {
       console.log("social links", response);
       getUserProfileData();
       message.success("Social links saved successfully!");
+      resetFormFields();
     } catch (error) {
       message.error("Failed to save social links.");
     }
@@ -1752,6 +1883,7 @@ export default function MainProfile() {
                   {genderOptions.map((item) => {
                     return (
                       <button
+                        key={item.id || item.name}
                         type="button"
                         className={
                           activeButton === item.name
@@ -1809,6 +1941,7 @@ export default function MainProfile() {
                   {userTypeName.map((item) => {
                     return (
                       <button
+                        key={item.id || item.name}
                         type="button"
                         className={
                           userTypeactiveButton === item.name
@@ -2394,6 +2527,8 @@ export default function MainProfile() {
               to let employers notice your potential through it.
             </Text>
 
+            {/* Show uploaded resume if available */}
+
             <div
               style={{
                 border: "1px dashed #d9d9d9",
@@ -2415,7 +2550,7 @@ export default function MainProfile() {
                   icon={<UploadOutlined />}
                   type="primary"
                 >
-                  Update Resume
+                  {isResume ? "Upload New Resume" : "Upload Resume"}
                 </Button>
                 <div style={{ marginTop: 8 }}>
                   <Text type="secondary">
@@ -2446,7 +2581,7 @@ export default function MainProfile() {
                   style={{ background: "#5f2eea" }}
                   onClick={handleFileSave}
                 >
-                  Save Resume
+                  {isResume ? "Replace Resume" : "Save Resume"}
                 </Button>
               </div>
             </div>
@@ -2484,7 +2619,7 @@ export default function MainProfile() {
             </div>
 
             <CommonTextArea
-              style={{ height: 150 }}
+              style={{ height: 280 }}
               mandatory={true}
               rows={6}
               label={"About"}
@@ -3444,7 +3579,6 @@ export default function MainProfile() {
                                 onConfirm={() => handleDeleteCompany(proj.id)}
                                 okText="Confirm"
                                 cancelText="Cancel"
-                                overlayClassName="popconfirm-overlay"
                               >
                                 <button className="icon-btn delete-btn">
                                   <MdDeleteForever size={18} />
@@ -3820,22 +3954,8 @@ export default function MainProfile() {
             zIndex: 1,
           }}
         >
-          <Dropdown
-            overlay={menu}
-            trigger={["click"]}
-            placement="bottomRight"
-            overlayStyle={{
-              borderRadius: "12px",
-            }}
-          >
-            <Tooltip
-              title="Edit Background"
-              placement="left"
-              overlayStyle={{
-                borderRadius: "8px",
-                fontSize: "14px",
-              }}
-            >
+          <Dropdown overlay={menu} trigger={["click"]} placement="bottomRight">
+            <Tooltip title="Edit Background" placement="left">
               <Button
                 style={{
                   backgroundColor: "#fff",
@@ -3893,10 +4013,8 @@ export default function MainProfile() {
               fontWeight: 500,
             },
           }}
-          bodyStyle={{ padding: "24px" }}
           width={450}
           centered
-          destroyOnClose
         >
           <div style={{ marginBottom: "16px", color: "#666" }}>
             Select your preferred background color
@@ -3973,10 +4091,8 @@ export default function MainProfile() {
               fontWeight: 500,
             },
           }}
-          bodyStyle={{ padding: "24px" }}
           width={600}
           centered
-          destroyOnClose
         >
           <div style={{ marginBottom: "24px", color: "#666" }}>
             Upload an image or select from gallery
@@ -4304,6 +4420,69 @@ export default function MainProfile() {
                       Adding your Resume helps you to tell who you are and what
                       makes you different to employers and recruiters.
                     </p>
+                    {isResume && (
+                      <div
+                        style={{
+                          border: "1px solid #d9d9d9",
+                          borderRadius: 8,
+                          padding: 16,
+                          marginTop: 14,
+                          backgroundColor: "#f9f9f9",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          <FileText
+                            style={{
+                              color: "#5f2eea",
+                              fontSize: 24,
+                              marginRight: 12,
+                            }}
+                          />
+                          <div>
+                            <Text strong>Current Resume</Text>
+                            <br />
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              Uploaded resume is ready for employers to view
+                            </Text>
+                          </div>
+                        </div>
+                        <Button
+                          style={{ background: "#5f2eea", boxShadow: "none" }}
+                          type="primary"
+                          size="small"
+                          onClick={() => {
+                            if (isResume.startsWith("http")) {
+                              window.open(isResume, "_blank");
+                            } else if (
+                              isResume.startsWith("data:application/pdf")
+                            ) {
+                              const win = window.open("", "_blank");
+                              win.document.write(`
+                    <iframe 
+                      width="100%" 
+                      height="100%" 
+                      src="${isResume}" 
+                      frameborder="0"
+                    ></iframe>
+                  `);
+                            } else {
+                              const a = document.createElement("a");
+                              a.href = isResume;
+                              a.download = "resume.pdf";
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                            }
+                          }}
+                        >
+                          View Resume
+                        </Button>
+                      </div>
+                    )}
+
                     {userProfileLoading ? (
                       <Skeleton active />
                     ) : (
@@ -5156,6 +5335,7 @@ export default function MainProfile() {
                     marginBottom: "32px",
                   }}
                 >
+                  {/* Header */}
                   <div
                     style={{
                       display: "flex",
@@ -5175,63 +5355,19 @@ export default function MainProfile() {
                     >
                       Activity Streak
                     </h3>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "16px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "3px",
-                            background: "var(--color-scale-1)",
-                          }}
-                        />
-                        <span
-                          style={{
-                            color: "rgba(255, 255, 255, 0.8)",
-                            fontSize: "0.85rem",
-                          }}
-                        >
-                          1 Activity
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "3px",
-                            background: "var(--color-scale-3)",
-                          }}
-                        />
-                        <span
-                          style={{
-                            color: "rgba(255, 255, 255, 0.8)",
-                            fontSize: "0.85rem",
-                          }}
-                        >
-                          3+ Activities
-                        </span>
-                      </div>
+                    <div style={{ display: "flex", gap: "16px" }}>
+                      <LegendBox
+                        color="var(--color-scale-1)"
+                        label="1 Activity"
+                      />
+                      <LegendBox
+                        color="var(--color-scale-3)"
+                        label="3+ Activities"
+                      />
                     </div>
                   </div>
 
+                  {/* Heatmap */}
                   {isLoading ? (
                     <div
                       style={{
@@ -5245,6 +5381,7 @@ export default function MainProfile() {
                     </div>
                   ) : (
                     <motion.div
+                      className="streak-values"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.3 }}
@@ -5279,40 +5416,26 @@ export default function MainProfile() {
                           "Fri",
                           "Sat",
                         ]}
-                        transformDayElement={(el, value) => {
-                          if (!value || !value.date) return el;
+                        titleForValue={(value) => {
+                          if (!value || !value.date) return "No data";
+
                           const date = format(
                             parseISO(value.date),
                             "MMMM d, yyyy"
                           );
-                          return (
-                            <Tooltip
-                              title={`${date} | ${value.count} ${
-                                value.count > 1 ? "Activities" : "Activity"
-                              }`}
-                              arrow
-                              placement="top"
-                              componentsProps={{
-                                tooltip: {
-                                  sx: {
-                                    bgcolor: "#0f3460",
-                                    color: "white",
-                                    fontSize: "0.85rem",
-                                    "& .MuiTooltip-arrow": {
-                                      color: "#0f3460",
-                                    },
-                                  },
-                                },
-                              }}
-                            >
-                              {el}
-                            </Tooltip>
-                          );
+                          const streakText = value.streak
+                            ? `${value.streak} Day${
+                                value.streak > 0 ? "s" : ""
+                              } Streak`
+                            : "No Streak";
+
+                          return `${date} | ${streakText}`;
                         }}
                       />
                     </motion.div>
                   )}
 
+                  {/* Streak Info */}
                   <div
                     style={{
                       display: "flex",
@@ -5321,62 +5444,16 @@ export default function MainProfile() {
                       marginTop: "10px",
                     }}
                   >
-                    <div
-                      style={{
-                        textAlign: "center",
-                        padding: "12px 20px",
-                        background: "rgba(255, 255, 255, 0.05)",
-                        borderRadius: "12px",
-                        minWidth: "120px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          color: "rgba(255, 255, 255, 0.6)",
-                          fontSize: "0.9rem",
-                        }}
-                      >
-                        Current Streak
-                      </div>
-                      <div
-                        style={{
-                          color: "#4cc9f0",
-                          fontSize: "16px",
-                          fontWeight: 700,
-                          marginTop: "1px",
-                        }}
-                      >
-                        {currentStreak} {currentStreak === 1 ? "Day" : "Days"}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        textAlign: "center",
-                        padding: "12px 20px",
-                        background: "rgba(255, 255, 255, 0.05)",
-                        borderRadius: "12px",
-                        minWidth: "120px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          color: "rgba(255, 255, 255, 0.6)",
-                          fontSize: "0.9rem",
-                        }}
-                      >
-                        Max Streak
-                      </div>
-                      <div
-                        style={{
-                          color: "#f72585",
-                          fontSize: "16px",
-                          fontWeight: 700,
-                          marginTop: "1px",
-                        }}
-                      >
-                        {maxStreak} {maxStreak === 1 ? "Day" : "Days"}
-                      </div>
-                    </div>
+                    <StreakBox
+                      label="Current Streak"
+                      value={currentStreak}
+                      color="#f72585"
+                    />
+                    <StreakBox
+                      label="Max Streak"
+                      value={maxStreak}
+                      color="#4cc9f0"
+                    />
                   </div>
                 </motion.div>
 
@@ -5510,16 +5587,32 @@ export default function MainProfile() {
                   <div className="premium-section-header">
                     <Briefcase size={18} className="premium-icon" />
                     <strong className="premium-section-title">
-                      Job Preferences:
+                      Users Details:
                     </strong>
                   </div>
                   <ul className="premium-list">
-                    {profileStats.jobPreferences.map((pref, index) => (
+                    <li>
+                      <Check size={14} className="premium-check-icon" />{" "}
+                      {totalYearsExperience} {totalMonthsExperience}
+                    </li>
+                    <li>
+                      <Check size={14} className="premium-check-icon" />{" "}
+                      {experienceData}
+                    </li>
+                    <li>
+                      <Check size={14} className="premium-check-icon" />{" "}
+                      {educationCollege}
+                    </li>
+                    <li>
+                      <Check size={14} className="premium-check-icon" />{" "}
+                      {educationCourse}
+                    </li>
+                    {/* {profileStats.jobPreferences.map((pref, index) => (
                       <li key={index}>
                         <Check size={14} className="premium-check-icon" />{" "}
                         {pref}
                       </li>
-                    ))}
+                    ))} */}
                   </ul>
                 </div>
               )}

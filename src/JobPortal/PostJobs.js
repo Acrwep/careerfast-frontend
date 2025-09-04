@@ -18,6 +18,7 @@ import {
   Drawer,
   Checkbox,
   Upload,
+  Alert,
 } from "antd";
 import {
   LineChartOutlined,
@@ -67,6 +68,8 @@ import {
 } from "../ApiService/action";
 import Header from "../Header/Header";
 import currencyCodes from "currency-codes";
+import Footer from "../Footer/Footer";
+import axios from "axios";
 const { Option } = Select;
 export default function PostJobs() {
   const [jobNatureId, setJobNatureId] = useState(null);
@@ -629,6 +632,23 @@ export default function PostJobs() {
     await publish(payload);
   };
 
+  // Send a test notification
+  const sendNotification = async () => {
+    try {
+      const res = await axios.post(
+        "http://localhost:3001/api/broadcast-notification",
+        {
+          title: "New Job Post Created 🚀",
+          body: "Check out the job post details and apply now!",
+        }
+      );
+
+      console.log("✅ Broadcast notification sent:", res.data);
+    } catch (err) {
+      console.error("❌ Error sending broadcast notification:", err);
+    }
+  };
+
   const handlePublishPostWithoutQuestions = async () => {
     const payload = {
       ...generatePayload(),
@@ -644,8 +664,16 @@ export default function PostJobs() {
       console.log("posted job", response);
 
       setIsLoading(true);
-      setTimeout(() => {
+      setTimeout(async () => {
         message.success("Job Posted Successfully.");
+
+        // ✅ Trigger FCM notification after posting
+        try {
+          await sendNotification();
+        } catch (err) {
+          console.error("Failed to send notification:", err);
+        }
+
         navigate("/job-portal");
         setIsLoading(false);
       }, 1000);
@@ -1311,11 +1339,16 @@ export default function PostJobs() {
                   layout="vertical"
                   label={
                     <h5>
-                      <span style={{ color: "red" }}>*</span> Salary Type
+                      <span style={{ color: "red" }}>*</span> Salary Type{" "}
                     </h5>
                   }
                   name="internship_duration"
                 >
+                  <Alert
+                    className="alert_message"
+                    banner
+                    message={"Enter Annual Salary"}
+                  />
                   <div className="job_nature">
                     {salaryData.map((item) => {
                       return (
@@ -1690,15 +1723,6 @@ export default function PostJobs() {
                     onClose={onClose}
                     open={openDrawer}
                     width={600}
-                    headerStyle={{
-                      borderBottom: "1px solid #f0f0f0",
-                      padding: "24px",
-                      fontSize: "18px",
-                      fontWeight: 600,
-                      background: "#fafafa",
-                    }}
-                    bodyStyle={{ padding: "24px" }}
-                    maskStyle={{ background: "rgba(0, 0, 0, 0.45)" }}
                   >
                     <div
                       style={{
@@ -1863,136 +1887,112 @@ export default function PostJobs() {
             </Col>
             <Col className="guideline_right" lg={11} md={11} sm={24} xs={24}>
               <div className="guidelines">
-                <h5>Guidelines</h5>
-                <h3>Follow these guidelines for faster approval</h3>
+                <h5>Job Posting Best Practices</h5>
+                <h3>Create an effective job posting</h3>
                 <ul>
                   <li>
-                    {" "}
-                    <FaHeartCircleCheck className="heart_icon" /> User can use
-                    Job Title suggestions to auto-fill common industry terms and
-                    enhance discoverability.
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Use specific, industry-standard job titles to improve search
+                    visibility.
                   </li>
                   <li>
-                    {" "}
-                    <FaHeartCircleCheck className="heart_icon" /> Clearly define
-                    your ideal candidate using the Eligibility section for
-                    targeted applications.
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Provide a clear and detailed job description with
+                    responsibilities, requirements, and benefits.
                   </li>
                   <li>
-                    {" "}
-                    <FaHeartCircleCheck className="heart_icon" /> Select the
-                    right Job Category to ensure your listing reaches the right
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Select the most accurate job category to reach the right
                     candidates.
                   </li>
                   <li>
-                    {" "}
-                    <FaHeartCircleCheck className="heart_icon" /> Avoid
-                    restricting applications based on nationality, caste,
-                    religion, gender, etc.
-                  </li>
-                  <li>
-                    <FaHeartCircleCheck className="heart_icon" /> Do not charge
-                    any application fees.
-                  </li>
-                  <li>
-                    <FaHeartCircleCheck className="heart_icon" /> Keep the Job
-                    Description clear and specific to the role, highlighting
-                    responsibilities, required skills, and growth opportunities.
-                    Use the AI generator for quick drafts, then customize as
-                    needed.
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Be transparent about salary ranges to attract qualified
+                    applicants.
                   </li>
                 </ul>
               </div>
 
               <div className="guidelines">
-                <h5>Shortlist faster & accurately</h5>
-                <h3>
-                  Follow these guidelines & recruitment rounds on next step:
-                </h3>
+                <h5>Company Information</h5>
+                <h3>Make your company stand out</h3>
                 <ul>
                   <li>
-                    {" "}
                     <FaHeartCircleCheck className="heart_icon" />
-                    Add assessment rounds like quiz, coding, case submissions
-                    etc.
+                    Upload a high-quality company logo to increase recognition.
                   </li>
                   <li>
-                    {" "}
-                    <FaHeartCircleCheck className="heart_icon" /> Accept
-                    submissions via PPT, PDFs, DOC, CSVs, etc.
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Clearly describe your company culture and values in the job
+                    description.
                   </li>
                   <li>
-                    {" "}
-                    <FaHeartCircleCheck className="heart_icon" /> Add Video
-                    interview rounds for final selection of candidates.
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Highlight unique benefits and perks your company offers.
                   </li>
                 </ul>
               </div>
 
               <div className="guidelines">
-                <h5>Shortlist faster & accurately</h5>
-                <h3>
-                  Follow these guidelines & recruitment rounds on next step:
-                </h3>
+                <h5>Application Process</h5>
+                <h3>Streamline candidate selection</h3>
                 <ul>
                   <li>
-                    {" "}
                     <FaHeartCircleCheck className="heart_icon" />
-                    Add assessment rounds like quiz, coding, case submissions
-                    etc.
+                    Set clear eligibility criteria to filter unsuitable
+                    applicants.
                   </li>
                   <li>
-                    {" "}
-                    <FaHeartCircleCheck className="heart_icon" /> Accept
-                    submissions via PPT, PDFs, DOC, CSVs, etc.
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Consider adding screening questions to identify top
+                    candidates faster.
                   </li>
                   <li>
-                    {" "}
-                    <FaHeartCircleCheck className="heart_icon" /> Add Video
-                    interview rounds for final selection of candidates.
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Specify the hiring timeline and next steps in the process.
                   </li>
                 </ul>
               </div>
 
               <div className="guidelines">
-                <h5>Shortlist faster & accurately</h5>
-                <h3>
-                  Follow these guidelines & recruitment rounds on next step:
-                </h3>
+                <h5>Legal Compliance</h5>
+                <h3>Ensure your posting meets guidelines</h3>
                 <ul>
                   <li>
-                    {" "}
                     <FaHeartCircleCheck className="heart_icon" />
-                    Add assessment rounds like quiz, coding, case submissions
-                    etc.
+                    Avoid discriminatory language related to age, gender,
+                    religion, or ethnicity.
                   </li>
                   <li>
-                    {" "}
-                    <FaHeartCircleCheck className="heart_icon" /> Accept
-                    submissions via PPT, PDFs, DOC, CSVs, etc.
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Clearly state whether the position is remote, hybrid, or
+                    on-site.
                   </li>
                   <li>
-                    {" "}
-                    <FaHeartCircleCheck className="heart_icon" /> Add Video
-                    interview rounds for final selection of candidates.
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Ensure salary information complies with local wage
+                    transparency laws.
                   </li>
                 </ul>
               </div>
 
               <div className="guidelines">
                 <h5>Support</h5>
-                <h3>Facing an issue or need any help ?</h3>
+                <h3>Need assistance with your job posting?</h3>
                 <ul>
                   <li>
-                    {" "}
                     <FaHeartCircleCheck className="heart_icon" />
-                    Reach us at support@carrerfast.com
+                    Contact our support team at support@careerfast.com
                   </li>
                   <li>
-                    {" "}
-                    <a style={{ color: "#6a00ff" }} href="">
+                    <a style={{ color: "#6a00ff" }} href="/contact">
                       Get in touch with us here
                     </a>
+                  </li>
+                  <li>
+                    <FaHeartCircleCheck className="heart_icon" />
+                    Check our FAQ section for common questions about job
+                    postings
                   </li>
                 </ul>
               </div>
@@ -2000,6 +2000,7 @@ export default function PostJobs() {
           </Row>
         </section>
       </div>
+      <Footer />
     </>
   );
 }

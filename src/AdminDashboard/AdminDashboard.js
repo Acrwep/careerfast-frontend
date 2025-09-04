@@ -184,6 +184,7 @@ export default function AdminDashboard() {
     try {
       const response = await getJobPosts(payload);
       const jobs = response?.data?.data?.data || [];
+      console.log("jobsss", jobs);
       setPostDetails(jobs);
       if (id) {
         const matchedJob = jobs.find((job) => String(job.id) === String(id));
@@ -382,6 +383,24 @@ export default function AdminDashboard() {
     }
     return null;
   };
+
+  const recentJobs = postDetails.filter((job) => {
+    const createdDate = new Date(job.created_at);
+    const currentDate = new Date();
+    const diffDays = Math.floor(
+      (currentDate - createdDate) / (1000 * 60 * 60 * 24)
+    );
+    return diffDays <= 15;
+  });
+
+  const expiredJobs = postDetails.filter((job) => {
+    const createdDate = new Date(job.created_at);
+    const currentDate = new Date();
+    const diffDays = Math.floor(
+      (currentDate - createdDate) / (1000 * 60 * 60 * 24)
+    );
+    return diffDays >= 15;
+  });
 
   return (
     <Layout className="admin-dashboard" style={{ minHeight: "100vh" }}>
@@ -658,287 +677,331 @@ export default function AdminDashboard() {
 
               <Row gutter={[24, 24]} style={{ marginBottom: 44 }}>
                 <Col xs={24} sm={12} md={6}>
-                  <Card
-                    hoverable
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #f6faff 0%, #e6f4ff 100%)",
-                      border: "none",
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                      borderRadius: 12,
-                    }}
-                    bodyStyle={{ padding: 20 }}
+                  <Tooltip
+                    color="#f6faff"
+                    key="#000"
+                    title={
+                      <span style={{ color: "#1677ff" }}>
+                        View all applied candidates
+                      </span>
+                    }
                   >
-                    {loading ? (
-                      <>
-                        <Skeleton.Input
-                          active
-                          style={{ width: 120, height: 32, marginBottom: 12 }}
-                        />
-                        <Skeleton
-                          paragraph={{ rows: 1, width: "60%" }}
-                          active
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <div
-                          onClick={() => navigate("/applied-candidates-all")}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                          }}
-                        >
+                    <Card
+                      onClick={() => navigate("/applied-candidates-all")}
+                      hoverable
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #f6faff 0%, #e6f4ff 100%)",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                        borderRadius: 12,
+                      }}
+                    >
+                      {loading ? (
+                        <>
+                          <Skeleton.Input
+                            active
+                            style={{ width: 120, height: 32, marginBottom: 12 }}
+                          />
+                          <Skeleton
+                            paragraph={{ rows: 1, width: "60%" }}
+                            active
+                          />
+                        </>
+                      ) : (
+                        <>
                           <div
                             style={{
-                              backgroundColor: "white",
-                              padding: 8,
-                              borderRadius: "50%",
-                              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 12,
                             }}
                           >
-                            <IoQrCode
-                              style={{ color: colorPrimary, fontSize: 24 }}
+                            <div
+                              style={{
+                                backgroundColor: "white",
+                                padding: 8,
+                                borderRadius: "50%",
+                                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                              }}
+                            >
+                              <IoQrCode
+                                style={{ color: colorPrimary, fontSize: 24 }}
+                              />
+                            </div>
+                            <Statistic
+                              title={
+                                <Text type="secondary">Total Candidates</Text>
+                              }
+                              value={totalAppliedCandidates}
+                              valueStyle={{
+                                color: colorPrimary,
+                                fontWeight: 600,
+                                fontSize: 24,
+                              }}
                             />
                           </div>
-                          <Statistic
-                            title={
-                              <Text type="secondary">Total Candidates</Text>
-                            }
-                            value={totalAppliedCandidates}
-                            valueStyle={{
-                              color: colorPrimary,
-                              fontWeight: 600,
-                              fontSize: 24,
-                            }}
-                          />
-                        </div>
-                        <div style={{ marginTop: 6 }}>
-                          <Text type="secondary">
-                            <span
-                              style={{ color: "#52c41a", fontWeight: "bold" }}
-                            >
-                              +12.5%
-                            </span>{" "}
-                            from last month
-                          </Text>
-                        </div>
-                      </>
-                    )}
-                  </Card>
+                          <div style={{ marginTop: 6 }}>
+                            <Text type="secondary">
+                              <span
+                                style={{ color: "#52c41a", fontWeight: "bold" }}
+                              >
+                                +12.5%
+                              </span>{" "}
+                              from last month
+                            </Text>
+                          </div>
+                        </>
+                      )}
+                    </Card>
+                  </Tooltip>
                 </Col>
 
                 {/* Active Jobs */}
                 <Col xs={24} sm={12} md={6}>
-                  <Card
-                    hoverable
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #f6ffed 0%, #e6ffd7 100%)",
-                      border: "none",
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                      borderRadius: 12,
-                    }}
-                    bodyStyle={{ padding: 20 }}
+                  <Tooltip
+                    color="#f6ffed  "
+                    key="#000"
+                    title={
+                      <span style={{ color: "#52c41a" }}>
+                        View all active jobs
+                      </span>
+                    }
                   >
-                    {loading ? (
-                      <>
-                        <Skeleton.Input
-                          active
-                          style={{ width: 100, height: 32, marginBottom: 12 }}
-                        />
-                        <Skeleton
-                          paragraph={{ rows: 1, width: "50%" }}
-                          active
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                          }}
-                        >
+                    <Card
+                      onClick={() => {
+                        localStorage.setItem("activeAdminTab", "listing");
+                        localStorage.setItem("listingOrder", "topBottom"); // add this
+                        navigate("/admin-profile");
+                      }}
+                      hoverable
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #f6ffed 0%, #e6ffd7 100%)",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                        borderRadius: 12,
+                      }}
+                    >
+                      {loading ? (
+                        <>
+                          <Skeleton.Input
+                            active
+                            style={{ width: 100, height: 32, marginBottom: 12 }}
+                          />
+                          <Skeleton
+                            paragraph={{ rows: 1, width: "50%" }}
+                            active
+                          />
+                        </>
+                      ) : (
+                        <>
                           <div
                             style={{
-                              backgroundColor: "white",
-                              padding: 8,
-                              borderRadius: "50%",
-                              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 12,
                             }}
                           >
-                            <FaClipboardUser
-                              style={{ color: "#52c41a", fontSize: 24 }}
+                            <div
+                              style={{
+                                backgroundColor: "white",
+                                padding: 8,
+                                borderRadius: "50%",
+                                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                              }}
+                            >
+                              <FaClipboardUser
+                                style={{ color: "#52c41a", fontSize: 24 }}
+                              />
+                            </div>
+                            <Statistic
+                              title={<Text type="secondary">Active Jobs</Text>}
+                              value={recentJobs.length}
+                              valueStyle={{
+                                color: "#52c41a",
+                                fontWeight: 600,
+                                fontSize: 24,
+                              }}
                             />
                           </div>
-                          <Statistic
-                            title={<Text type="secondary">Active Jobs</Text>}
-                            value={42}
-                            valueStyle={{
-                              color: "#52c41a",
-                              fontWeight: 600,
-                              fontSize: 24,
-                            }}
-                          />
-                        </div>
-                        <div style={{ marginTop: 6 }}>
-                          <Text type="secondary">
-                            <span
-                              style={{ color: "#52c41a", fontWeight: "bold" }}
-                            >
-                              +3
-                            </span>{" "}
-                            new this week
-                          </Text>
-                        </div>
-                      </>
-                    )}
-                  </Card>
+                          <div style={{ marginTop: 6 }}>
+                            <Text type="secondary">
+                              <span
+                                style={{ color: "#52c41a", fontWeight: "bold" }}
+                              >
+                                +3
+                              </span>{" "}
+                              new this week
+                            </Text>
+                          </div>
+                        </>
+                      )}
+                    </Card>
+                  </Tooltip>
                 </Col>
 
                 {/* Interviews */}
                 <Col xs={24} sm={12} md={6}>
-                  <Card
-                    hoverable
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #fffbe6 0%, #fff1b8 100%)",
-                      border: "none",
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                      borderRadius: 12,
-                    }}
-                    bodyStyle={{ padding: 20 }}
+                  <Tooltip
+                    color="#fffbe6"
+                    key="#000"
+                    title={
+                      <span style={{ color: "#faad14" }}>
+                        View all interviews candidates
+                      </span>
+                    }
                   >
-                    {loading ? (
-                      <>
-                        <Skeleton.Input
-                          active
-                          style={{ width: 100, height: 32, marginBottom: 12 }}
-                        />
-                        <Skeleton
-                          paragraph={{ rows: 1, width: "50%" }}
-                          active
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                          }}
-                        >
+                    <Card
+                      hoverable
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #fffbe6 0%, #fff1b8 100%)",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                        borderRadius: 12,
+                      }}
+                    >
+                      {loading ? (
+                        <>
+                          <Skeleton.Input
+                            active
+                            style={{ width: 100, height: 32, marginBottom: 12 }}
+                          />
+                          <Skeleton
+                            paragraph={{ rows: 1, width: "50%" }}
+                            active
+                          />
+                        </>
+                      ) : (
+                        <>
                           <div
                             style={{
-                              backgroundColor: "white",
-                              padding: 8,
-                              borderRadius: "50%",
-                              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 12,
                             }}
                           >
-                            <VscGraph
-                              style={{ color: "#faad14", fontSize: 24 }}
+                            <div
+                              style={{
+                                backgroundColor: "white",
+                                padding: 8,
+                                borderRadius: "50%",
+                                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                              }}
+                            >
+                              <VscGraph
+                                style={{ color: "#faad14", fontSize: 24 }}
+                              />
+                            </div>
+                            <Statistic
+                              title={<Text type="secondary">Interviews</Text>}
+                              value={156}
+                              valueStyle={{
+                                color: "#faad14",
+                                fontWeight: 600,
+                                fontSize: 24,
+                              }}
                             />
                           </div>
-                          <Statistic
-                            title={<Text type="secondary">Interviews</Text>}
-                            value={156}
-                            valueStyle={{
-                              color: "#faad14",
-                              fontWeight: 600,
-                              fontSize: 24,
-                            }}
-                          />
-                        </div>
-                        <div style={{ marginTop: 6 }}>
-                          <Text type="secondary">
-                            <span
-                              style={{ color: "#ff4d4f", fontWeight: "bold" }}
-                            >
-                              -8
-                            </span>{" "}
-                            from last week
-                          </Text>
-                        </div>
-                      </>
-                    )}
-                  </Card>
+                          <div style={{ marginTop: 6 }}>
+                            <Text type="secondary">
+                              <span
+                                style={{ color: "#ff4d4f", fontWeight: "bold" }}
+                              >
+                                -8
+                              </span>{" "}
+                              from last week
+                            </Text>
+                          </div>
+                        </>
+                      )}
+                    </Card>
+                  </Tooltip>
                 </Col>
 
                 {/* Pending Actions */}
                 <Col xs={24} sm={12} md={6}>
-                  <Card
-                    hoverable
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%)",
-                      border: "none",
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
-                      borderRadius: 12,
-                    }}
-                    bodyStyle={{ padding: 20 }}
+                  <Tooltip
+                    color="#fff2f0"
+                    key="#000"
+                    title={
+                      <span style={{ color: "#ff4d4f" }}>
+                        View all expired candidates
+                      </span>
+                    }
                   >
-                    {loading ? (
-                      <>
-                        <Skeleton.Input
-                          active
-                          style={{ width: 100, height: 32, marginBottom: 12 }}
-                        />
-                        <Skeleton
-                          paragraph={{ rows: 1, width: "50%" }}
-                          active
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                          }}
-                        >
+                    <Card
+                      onClick={() => {
+                        localStorage.setItem("activeAdminTab", "listing");
+                        localStorage.setItem("listingOrder", "bottomTop"); // add this
+                        navigate("/admin-profile");
+                      }}
+                      hoverable
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%)",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.06)",
+                        borderRadius: 12,
+                      }}
+                    >
+                      {loading ? (
+                        <>
+                          <Skeleton.Input
+                            active
+                            style={{ width: 100, height: 32, marginBottom: 12 }}
+                          />
+                          <Skeleton
+                            paragraph={{ rows: 1, width: "50%" }}
+                            active
+                          />
+                        </>
+                      ) : (
+                        <>
                           <div
                             style={{
-                              backgroundColor: "white",
-                              padding: 8,
-                              borderRadius: "50%",
-                              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 12,
                             }}
                           >
-                            <IoNotifications
-                              style={{ color: "#ff4d4f", fontSize: 24 }}
+                            <div
+                              style={{
+                                backgroundColor: "white",
+                                padding: 8,
+                                borderRadius: "50%",
+                                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+                              }}
+                            >
+                              <IoNotifications
+                                style={{ color: "#ff4d4f", fontSize: 24 }}
+                              />
+                            </div>
+                            <Statistic
+                              title={<Text type="secondary">Expired Jobs</Text>}
+                              value={expiredJobs.length}
+                              valueStyle={{
+                                color: "#ff4d4f",
+                                fontWeight: 600,
+                                fontSize: 24,
+                              }}
                             />
                           </div>
-                          <Statistic
-                            title={
-                              <Text type="secondary">Pending Actions</Text>
-                            }
-                            value={28}
-                            valueStyle={{
-                              color: "#ff4d4f",
-                              fontWeight: 600,
-                              fontSize: 24,
-                            }}
-                          />
-                        </div>
-                        <div style={{ marginTop: 6 }}>
-                          <Text type="secondary">
-                            <span
-                              style={{ color: "#ff4d4f", fontWeight: "bold" }}
-                            >
-                              +5
-                            </span>{" "}
-                            urgent
-                          </Text>
-                        </div>
-                      </>
-                    )}
-                  </Card>
+                          <div style={{ marginTop: 6 }}>
+                            <Text type="secondary">
+                              <span
+                                style={{ color: "#ff4d4f", fontWeight: "bold" }}
+                              >
+                                +5
+                              </span>{" "}
+                              urgent
+                            </Text>
+                          </div>
+                        </>
+                      )}
+                    </Card>
+                  </Tooltip>
                 </Col>
               </Row>
 
@@ -979,7 +1042,6 @@ export default function AdminDashboard() {
                           border: "none",
                           padding: "20px 24px 8px",
                         }}
-                        bodyStyle={{ padding: "8px 0" }}
                       >
                         {appliedUser.length > 0 ? (
                           <div
