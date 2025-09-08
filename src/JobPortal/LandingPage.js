@@ -483,7 +483,11 @@ export default function JobPortalLandingPage({ jobPortals, loading, error }) {
                                   <span className="elite-detail-label">
                                     Location
                                   </span>
-                                  <span>{jobs.work_location}</span>
+                                  <span>
+                                    {jobs.work_location
+                                      ? jobs.work_location
+                                      : "WFH"}
+                                  </span>
                                 </div>
                               </div>
                               <div className="elite-detail-item">

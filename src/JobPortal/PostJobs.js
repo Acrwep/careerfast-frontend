@@ -617,6 +617,44 @@ export default function PostJobs() {
     return updated.every((q) => !q.error);
   };
 
+  // Send a test notification
+  const sendNotification = async () => {
+    try {
+      const res = await axios.post(
+        "http://localhost:3001/api/broadcast-notification",
+        {
+          title: "New Job Post Created 🚀",
+          body: "Check out the job post details and apply now!",
+        }
+      );
+      console.log("✅ Broadcast notification sent:", res.data);
+    } catch (err) {
+      console.error("❌ Error sending broadcast notification:", err);
+    }
+  };
+
+  // Publish job post
+  const publish = async (payload) => {
+    try {
+      const response = await createJobPost(payload);
+      console.log("posted job", response);
+
+      setIsLoading(true);
+      setTimeout(async () => {
+        message.success("Job Posted Successfully.");
+
+        // ✅ Trigger FCM notification after posting
+        await sendNotification();
+
+        navigate("/job-portal");
+        setIsLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error("Error posting job", error);
+    }
+  };
+
+  // Publish with questions
   const handlePublishPostWithQuestions = async () => {
     const isValid = validateQuestions();
     if (!isValid) {
@@ -632,54 +670,15 @@ export default function PostJobs() {
     await publish(payload);
   };
 
-  // Send a test notification
-  const sendNotification = async () => {
-    try {
-      const res = await axios.post(
-        "http://localhost:3001/api/broadcast-notification",
-        {
-          title: "New Job Post Created 🚀",
-          body: "Check out the job post details and apply now!",
-        }
-      );
-
-      console.log("✅ Broadcast notification sent:", res.data);
-    } catch (err) {
-      console.error("❌ Error sending broadcast notification:", err);
-    }
-  };
-
+  // Publish without questions
   const handlePublishPostWithoutQuestions = async () => {
     const payload = {
       ...generatePayload(),
       questions: [],
     };
     console.log("job posted", payload);
+
     await publish(payload);
-  };
-
-  const publish = async (payload) => {
-    try {
-      const response = await createJobPost(payload);
-      console.log("posted job", response);
-
-      setIsLoading(true);
-      setTimeout(async () => {
-        message.success("Job Posted Successfully.");
-
-        // ✅ Trigger FCM notification after posting
-        try {
-          await sendNotification();
-        } catch (err) {
-          console.error("Failed to send notification:", err);
-        }
-
-        navigate("/job-portal");
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error("Error posting job", error);
-    }
   };
 
   const handleFresherPassClick = (item) => {

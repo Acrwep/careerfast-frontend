@@ -20,25 +20,37 @@ function App() {
     console.error = () => {};
   }
 
-  // Google Client ID
   const CLIENT_ID =
     "288981358654-vrhl2uqu61r1ju40blnk4ibde6sbnu47.apps.googleusercontent.com";
 
   const [isTokenFound, setTokenFound] = useState(false);
 
-  // Ask for browser notification permission
+  // 1️⃣ Request notification permission & FCM token
   useEffect(() => {
-    if (Notification.permission !== "granted") {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          console.log("✅ Browser notifications allowed");
-        } else {
+    const initFCM = async () => {
+      if (Notification.permission !== "granted") {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
           console.log("❌ Notifications denied");
+          return;
         }
-      });
-    }
+      }
+      await requestForToken(setTokenFound);
+    };
+
+    initFCM();
   }, []);
 
+  // 2️⃣ Listen for foreground notifications
+  useEffect(() => {
+    onMessageListener()
+      .then((payload) => {
+        console.log("Foreground notification received:", payload);
+      })
+      .catch((err) => console.log("onMessageListener failed:", err));
+  }, []);
+
+  // 3️⃣ Subscribe token to backend topic
   useEffect(() => {
     const token = localStorage.getItem("fcm_token");
     if (token) {
@@ -47,11 +59,11 @@ function App() {
         .then(() => console.log("✅ Subscribed to allUsers"))
         .catch((err) => console.error("❌ Error subscribing:", err));
     }
-  }, []);
+  }, [isTokenFound]); // run when token is available
 
   console.log("isTokenFound", isTokenFound);
 
-  // Send a test notification
+  // 4️⃣ Test sending notification
   const sendTestNotification = async () => {
     try {
       const token = localStorage.getItem("fcm_token");

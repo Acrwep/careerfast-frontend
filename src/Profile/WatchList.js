@@ -62,7 +62,8 @@ const OpportunityCard = ({ opportunity, onSave }) => {
     }
   };
 
-  const isClosed = moment().diff(moment(opportunity.created_at), "days") > 15;
+  const isClosed =
+    moment().diff(moment(opportunity.created_date), "days") >= 15;
 
   return (
     <>
@@ -150,7 +151,11 @@ const OpportunityCard = ({ opportunity, onSave }) => {
                 flexWrap: "wrap",
               }}
             >
-              <Tag color="green">{opportunity.work_location}</Tag>
+              <Tag color="green">
+                {opportunity.work_location
+                  ? opportunity.work_location
+                  : "Work From Home"}
+              </Tag>
               <Tag color="blue">
                 {opportunity.salary_type === "Fixed"
                   ? `$${opportunity.min_salary}`
@@ -287,13 +292,15 @@ export default function WatchList() {
             <Skeleton active />
           </div>
         ) : filteredOpportunities.length > 0 ? (
-          filteredOpportunities.map((opp) => (
-            <OpportunityCard
-              key={opp.id}
-              opportunity={opp}
-              onSave={handleSave}
-            />
-          ))
+          filteredOpportunities
+            .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+            .map((opp) => (
+              <OpportunityCard
+                key={opp.id}
+                opportunity={opp}
+                onSave={handleSave}
+              />
+            ))
         ) : (
           <Card style={{ textAlign: "center", padding: 40 }}>
             <Title level={4} style={{ color: "#bfbfbf" }}>

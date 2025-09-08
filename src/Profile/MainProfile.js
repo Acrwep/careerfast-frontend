@@ -308,6 +308,7 @@ export default function MainProfile() {
   const [loading, setLoading] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [userProfileLoading, setUserProfileLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [companies, setCompanies] = useState([
     {
       id: Date.now(),
@@ -1560,11 +1561,8 @@ export default function MainProfile() {
     return new Date(date).toISOString().slice(0, 19).replace("T", " "); // 'YYYY-MM-DD HH:MM:SS'
   };
 
-  const [isLoading, setIsLoading] = useState(false);
-
   useEffect(() => {
     try {
-      setIsLoading(true);
       const stored = localStorage.getItem("loginDetails");
       if (stored) {
         const loginDetails = JSON.parse(stored);
@@ -5356,14 +5354,8 @@ export default function MainProfile() {
                       Activity Streak
                     </h3>
                     <div style={{ display: "flex", gap: "16px" }}>
-                      <LegendBox
-                        color="var(--color-scale-1)"
-                        label="1 Activity"
-                      />
-                      <LegendBox
-                        color="var(--color-scale-3)"
-                        label="3+ Activities"
-                      />
+                      <LegendBox color="#f72585" label="Active days" />
+                      <LegendBox color="#ebedf0" label="No Activity" />
                     </div>
                   </div>
 
@@ -5537,117 +5529,125 @@ export default function MainProfile() {
             </div>
           </div>
           <div className="premium-profile-container">
-            <div
-              className={`premium-profile-card ${
-                isVisible ? "premium-visible" : ""
-              }`}
-            >
-              <h3 className="premium-titles">Profile Overview</h3>
+            {userProfileLoading ? (
+              <Skeleton active />
+            ) : (
+              <>
+                <div
+                  className={`premium-profile-card ${
+                    isVisible ? "premium-visible" : ""
+                  }`}
+                >
+                  <h3 className="premium-titles">Profile Overview</h3>
 
-              {/* Profile completion */}
-              <div className="premium-section">
-                <div className="premium-section-header">
-                  <Award size={18} className="premium-icon" />
-                  <strong className="premium-section-title">
-                    Profile Completion:
-                  </strong>
-                </div>
-                <div className="premium-progress-container">
-                  <div className="premium-progress-bar">
-                    <div
-                      className="premium-progress-fill"
-                      style={{ width: `${profileStats.completionPercentage}%` }}
-                    ></div>
-                    <div className="premium-progress-shimmer"></div>
+                  {/* Profile completion */}
+                  <div className="premium-section">
+                    <div className="premium-section-header">
+                      <Award size={18} className="premium-icon" />
+                      <strong className="premium-section-title">
+                        Profile Completion:
+                      </strong>
+                    </div>
+                    <div className="premium-progress-container">
+                      <div className="premium-progress-bar">
+                        <div
+                          className="premium-progress-fill"
+                          style={{
+                            width: `${profileStats.completionPercentage}%`,
+                          }}
+                        ></div>
+                        <div className="premium-progress-shimmer"></div>
+                      </div>
+                    </div>
+                    <p className="premium-progress-text">
+                      <span className="premium-percentage">
+                        {profileStats.completionPercentage}% complete
+                      </span>
+                    </p>
                   </div>
-                </div>
-                <p className="premium-progress-text">
-                  <span className="premium-percentage">
-                    {profileStats.completionPercentage}% complete
-                  </span>
-                </p>
-              </div>
 
-              {/* Last updated */}
-              <div className="premium-section">
-                <div className="premium-section-header">
-                  <Clock size={18} className="premium-icon" />
-                  <strong className="premium-section-title">
-                    Last Updated:
-                  </strong>
-                </div>
-                <p className="premium-detail-text">
-                  {new Date(profileStats.lastUpdated).toLocaleDateString()}
-                </p>
-              </div>
-
-              {/* Job preferences */}
-              {profileStats.jobPreferences.length > 0 && (
-                <div className="premium-section">
-                  <div className="premium-section-header">
-                    <Briefcase size={18} className="premium-icon" />
-                    <strong className="premium-section-title">
-                      Users Details:
-                    </strong>
+                  {/* Last updated */}
+                  <div className="premium-section">
+                    <div className="premium-section-header">
+                      <Clock size={18} className="premium-icon" />
+                      <strong className="premium-section-title">
+                        Last Updated:
+                      </strong>
+                    </div>
+                    <p className="premium-detail-text">
+                      {new Date(profileStats.lastUpdated).toLocaleDateString()}
+                    </p>
                   </div>
-                  <ul className="premium-list">
-                    <li>
-                      <Check size={14} className="premium-check-icon" />{" "}
-                      {totalYearsExperience} {totalMonthsExperience}
-                    </li>
-                    <li>
-                      <Check size={14} className="premium-check-icon" />{" "}
-                      {experienceData}
-                    </li>
-                    <li>
-                      <Check size={14} className="premium-check-icon" />{" "}
-                      {educationCollege}
-                    </li>
-                    <li>
-                      <Check size={14} className="premium-check-icon" />{" "}
-                      {educationCourse}
-                    </li>
-                    {/* {profileStats.jobPreferences.map((pref, index) => (
+
+                  {/* Job preferences */}
+                  {profileStats.jobPreferences.length > 0 && (
+                    <div className="premium-section">
+                      <div className="premium-section-header">
+                        <Briefcase size={18} className="premium-icon" />
+                        <strong className="premium-section-title">
+                          Users Details:
+                        </strong>
+                      </div>
+                      <ul className="premium-list">
+                        <li>
+                          <Check size={14} className="premium-check-icon" />{" "}
+                          {totalYearsExperience} {totalMonthsExperience}
+                        </li>
+                        <li>
+                          <Check size={14} className="premium-check-icon" />{" "}
+                          {experienceData}
+                        </li>
+                        <li>
+                          <Check size={14} className="premium-check-icon" />{" "}
+                          {educationCollege}
+                        </li>
+                        <li>
+                          <Check size={14} className="premium-check-icon" />{" "}
+                          {educationCourse}
+                        </li>
+                        {/* {profileStats.jobPreferences.map((pref, index) => (
                       <li key={index}>
                         <Check size={14} className="premium-check-icon" />{" "}
                         {pref}
                       </li>
                     ))} */}
-                  </ul>
-                </div>
-              )}
+                      </ul>
+                    </div>
+                  )}
 
-              {/* Application activity */}
-              {(profileStats.applicationStats.jobsThisMonth > 0 ||
-                profileStats.applicationStats.interviewsScheduled > 0) && (
-                <div className="premium-section">
-                  <div className="premium-section-header">
-                    <FileText size={18} className="premium-icon" />
-                    <strong className="premium-section-title">
-                      Application Activity:
-                    </strong>
-                  </div>
-                  <div className="premium-activity-grid">
-                    <div className="premium-activity-item">
-                      <span className="premium-activity-number">
-                        {profileStats.applicationStats.jobsThisMonth}
-                      </span>
-                      <span className="premium-activity-label">
-                        jobs this month
-                      </span>
+                  {/* Application activity */}
+                  {(profileStats.applicationStats.jobsThisMonth > 0 ||
+                    profileStats.applicationStats.interviewsScheduled > 0) && (
+                    <div className="premium-section">
+                      <div className="premium-section-header">
+                        <FileText size={18} className="premium-icon" />
+                        <strong className="premium-section-title">
+                          Application Activity:
+                        </strong>
+                      </div>
+                      <div className="premium-activity-grid">
+                        <div className="premium-activity-item">
+                          <span className="premium-activity-number">
+                            {profileStats.applicationStats.jobsThisMonth}
+                          </span>
+                          <span className="premium-activity-label">
+                            jobs this month
+                          </span>
+                        </div>
+                        <div className="premium-activity-item">
+                          <span className="premium-activity-number">
+                            {profileStats.applicationStats.interviewsScheduled}
+                          </span>
+                          <span className="premium-activity-label">
+                            interviews scheduled
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="premium-activity-item">
-                      <span className="premium-activity-number">
-                        {profileStats.applicationStats.interviewsScheduled}
-                      </span>
-                      <span className="premium-activity-label">
-                        interviews scheduled
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
         </div>
       </Content>

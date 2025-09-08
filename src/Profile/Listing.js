@@ -90,10 +90,12 @@ export default function ListingDashboard() {
     } catch (error) {
       console.log("applied candidates count", error);
       setTotalAppliedCandidates(0);
-    } finally {
-      StatsOfPostData();
     }
   };
+
+  useEffect(() => {
+    StatsOfPostData();
+  }, [loginUserId]);
 
   const StatsOfPostData = async () => {
     const payload = {
