@@ -96,8 +96,8 @@ const OpportunityCard = ({ opportunity, onSave }) => {
               alt={`${opportunity.company_name || opportunity.company} logo`}
               style={{
                 borderRadius: 8,
-                width: 80,
-                height: 80,
+                width: 65,
+                height: 65,
                 objectFit: "contain",
               }}
             />
@@ -160,8 +160,8 @@ const OpportunityCard = ({ opportunity, onSave }) => {
                 {opportunity.salary_type === "Fixed"
                   ? `$${opportunity.min_salary}`
                   : opportunity.salary_type === "Range"
-                  ? `$${opportunity.min_salary} - $${opportunity.max_salary}`
-                  : ""}
+                    ? `$${opportunity.min_salary} - $${opportunity.max_salary}`
+                    : ""}
               </Tag>
             </div>
 
@@ -238,9 +238,8 @@ export default function WatchList() {
 
   const filteredOpportunities = useMemo(() => {
     return opportunities.filter((opp) => {
-      const target = `${opp.job_title} ${
-        opp.company_name || opp.company
-      }`.toLowerCase();
+      const target = `${opp.job_title} ${opp.company_name || opp.company
+        }`.toLowerCase();
       return searchQuery ? target.includes(searchQuery.toLowerCase()) : true;
     });
   }, [opportunities, searchQuery]);

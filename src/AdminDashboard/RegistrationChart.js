@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   LineChart,
   Line,
@@ -10,10 +10,10 @@ import {
   PieChart,
   Pie,
   Cell,
+  CartesianGrid,
+  Sector,
   BarChart,
   Bar,
-  CartesianGrid,
-  LabelList,
 } from "recharts";
 import {
   DatePicker,
@@ -22,41 +22,147 @@ import {
   Col,
   Statistic,
   Typography,
-  Alert,
   Skeleton,
+  Alert,
+  Select,
+  Space,
 } from "antd";
 import {
   RiseOutlined,
+  FallOutlined,
   TeamOutlined,
   BarChartOutlined,
+  UserOutlined,
+  DashboardOutlined,
+  CalendarOutlined,
   PieChartOutlined,
 } from "@ant-design/icons";
-import styled from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
 import { getAppliedCandidatesCount, StatsOfPost } from "../ApiService/action";
 import { useParams } from "react-router-dom";
 
-const { RangePicker } = DatePicker;
-const { Title } = Typography;
+const { Title, Text } = Typography;
+const { Option } = Select;
+
+/* Global styles for premium look */
+const GlobalDashboardStyle = createGlobalStyle`
+  .premium-dashboard {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  }
+  
+  .custom-tooltip {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .ant-select-dropdown{
+  width: 90px !important;
+  }
+  
+  .custom-tooltip p {
+    margin: 5px 0;
+    color: #1E293B;
+    font-weight: 500;
+  }
+  
+  .custom-tooltip .label {
+    color: #64748B;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+`;
+
+/* styled components moved outside the component so they are not recreated each render */
+const DashboardContainer = styled.div`
+  padding: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+`;
+
+const HeaderSection = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+`;
+
+const ChartCard = styled(Card)`
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  border: none;
+  overflow: hidden;
+  background: #ffffff;
+  
+  .ant-card-head {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 16px 24px;
+  }
+  
+  .ant-card-body {
+    padding: 24px;
+  }
+`;
+
+const StatCard = styled(Card)`
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  border: none;
+  background: linear-gradient(135deg, #ffffff 0%, #fcfcfc 100%);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  }
+  
+  .ant-statistic-title {
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .ant-statistic-content {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+`;
+
+const COLORS = ["#8B5CF6", "#10B981", "#EC4899", "#F59E0B", "#6366F1"];
+const CHART_COLORS = {
+  total: "#6366F1",
+  male: "#10B981",
+  female: "#EC4899",
+};
 
 const RegistrationDashboard = () => {
   const { id } = useParams();
-  const [dateRange, setDateRange] = useState(null);
   const [loginUserId, setLoginUserId] = useState(null);
-  const [maleCount, setMaleCount] = useState(null);
-  const [femaleCount, setFemaleCount] = useState(null);
-  const [othersCount, setOthersCount] = useState(null);
+
+  /* initialize to 0 to avoid NaN arithmetic issues */
+  const [maleCount, setMaleCount] = useState(0);
+  const [femaleCount, setFemaleCount] = useState(0);
+  const [othersCount, setOthersCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [impressions, setImpressions] = useState(0);
+  const [ctr, setCtr] = useState(null);
+  const [selectedMetric, setSelectedMetric] = useState("total");
+
   const [domainCount, setDomainCount] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    StatsOfPostData();
-  });
+  const [activePieIndex, setActivePieIndex] = useState(0);
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem("loginDetails");
-      console.log("login details", stored);
       if (stored) {
         const loginDetails = JSON.parse(stored);
         setLoginUserId(loginDetails.id);
@@ -64,209 +170,131 @@ const RegistrationDashboard = () => {
     } catch (error) {
       console.error("Invalid JSON in localStorage", error);
     }
-  });
+  }, []);
 
+  /* re-run when loginUserId OR selected post id changes */
   useEffect(() => {
-    StatsOfPostData();
-  });
+    if (loginUserId && id) {
+      setLoading(true);
+      Promise.all([StatsOfPostData(loginUserId, id), getAppliedCandidatesCountData(loginUserId, id)])
+        .catch((e) => console.error(e))
+        .finally(() => {
+          // ensure a small delay for smoothing skeleton-to-content transition
+          setTimeout(() => setLoading(false), 200);
+        });
+    }
+  }, [loginUserId, id]);
 
-  useEffect(() => {
-    getAppliedCandidatesCountData();
-  }, [loginUserId]);
-
-  const StatsOfPostData = async () => {
+  const StatsOfPostData = useCallback(async (userId, postId) => {
     const payload = {
-      user_id: loginUserId,
-      job_post_id: id,
+      user_id: userId,
+      job_post_id: postId,
     };
     try {
       const response = await StatsOfPost(payload);
-      setMaleCount(response?.data?.data?.males || null);
-      setFemaleCount(response?.data?.data?.females || null);
-      setOthersCount(response?.data?.data?.females || null);
-      setTotalCount(response?.data?.data?.candidatesCount || 0);
+      const data = response?.data?.data || {};
 
-      console.log("StatsOfPost", response);
+      const males = Number(data.males || 0);
+      const females = Number(data.females || 0);
+      const others = Number(data.others || 0);
+      const count = Number(data.candidatesCount || 0);
+
+      setMaleCount(males);
+      setFemaleCount(females);
+      setOthersCount(others);
+      setTotalCount(count);
+
+      /* try to detect impressions/views to calculate CTR */
+      const imp = Number(data.impressions ?? data.views ?? 0);
+      setImpressions(imp);
+
+      if (imp > 0) {
+        setCtr((count / imp) * 100);
+      } else {
+        setCtr(null); // unknown
+      }
     } catch (error) {
-      console.log("StatsOfPost", error);
-    } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 300);
+      console.log("StatsOfPost error", error);
+      setMaleCount(0);
+      setFemaleCount(0);
+      setOthersCount(0);
+      setTotalCount(0);
+      setImpressions(0);
+      setCtr(null);
     }
-  };
+  }, []);
 
-  const getAppliedCandidatesCountData = async () => {
+  const getAppliedCandidatesCountData = useCallback(async (userId, postId) => {
     const payload = {
-      user_id: loginUserId,
-      id: id,
+      user_id: userId,
+      id: postId,
     };
-
     try {
       const response = await getAppliedCandidatesCount(payload);
-      setOthersCount(response?.data?.data?.others || null);
-      setDomainCount(
-        (response?.data?.data?.domain_stats || []).map((item) => ({
-          domain: item.job_categories,
-          value: item.candidates_count,
-        }))
+      const stats = response?.data?.data?.domain_stats || [];
+
+      const reduced = stats.reduce(
+        (acc, item) => {
+          const key = item.job_categories || item.category || "Unknown";
+          acc[key] = (acc[key] || 0) + Number(item.candidates_count || 0);
+          return acc;
+        },
+        { date: "Selected Post" }
       );
 
-      console.log("getAppliedCandidatesCount", response);
+      // If there are no domain stats, keep empty array.
+      if (Object.keys(reduced).length > 1) {
+        setDomainCount([reduced]);
+      } else {
+        setDomainCount([]);
+      }
     } catch (error) {
-      console.log("getAppliedCandidatesCount", error);
+      console.log("getAppliedCandidatesCount error", error);
+      setDomainCount([]);
     }
-  };
+  }, []);
 
-  // Styled components for premium look
-  const DashboardContainer = styled.div`
-    padding: 24px;
-    background: #f8fafc;
-  `;
+  /* time series mock — make sure we guard with (maleCount || 0) etc. */
+  const timeSeriesData = useMemo(() => {
+    const m = maleCount || 0;
+    const f = femaleCount || 0;
+    const o = othersCount || 0;
+    const t = totalCount || 0;
 
-  const ChartCard = styled(Card)`
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    margin-bottom: 24px;
-    border: none;
-    .ant-card-head {
-      border-bottom: 1px solid #f0f0f0;
-    }
-  `;
+    return [
+      { date: "06-25", total: t, male: m, female: f },
+      { date: "06-26", total: t + 2, male: (m + 1), female: (f + 1) },
+      { date: "06-27", total: t + 5, male: (m + 3), female: (f + 2) },
+      { date: "06-28", total: t + 7, male: (m + 4), female: (f + 3) },
+      { date: "06-29", total: t + 10, male: (m + 6), female: (f + 4) },
+      { date: "06-30", total: t + 15, male: (m + 9), female: (f + 6) },
+    ];
+  }, [maleCount, femaleCount, othersCount, totalCount]);
 
-  const StatCard = styled(Card)`
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
-    border: none;
-    .ant-statistic-title {
-      color: #64748b;
-      font-size: 14px;
-    }
-    .ant-statistic-content {
-      font-size: 24px;
-      color: #1e293b;
-    }
-  `;
-
-  // Sample data
-  const timeSeriesData = [
-    {
-      date: "06-25",
-      total: totalCount,
-      male: maleCount || 0,
-      female: femaleCount || 0,
-    },
-    {
-      date: "06-26",
-      total: totalCount,
-      male: maleCount || 0,
-      female: femaleCount || 0,
-    },
-    {
-      date: "06-27",
-      total: totalCount,
-      male: maleCount || 0,
-      female: femaleCount || 0,
-    },
-    {
-      date: "06-28",
-      total: totalCount,
-      male: maleCount || 0,
-      female: femaleCount || 0,
-    },
-    {
-      date: "06-29",
-      total: totalCount,
-      male: maleCount || 0,
-      female: femaleCount || 0,
-    },
-    {
-      date: "06-30",
-      total: totalCount,
-      male: maleCount || 0,
-      female: femaleCount || 0,
-    },
-  ];
-
-  const genderData = [
+  const genderData = useMemo(() => [
     { name: "Female", value: femaleCount || 0 },
     { name: "Male", value: maleCount || 0 },
     { name: "Other", value: othersCount || 0 },
-  ];
+  ], [maleCount, femaleCount, othersCount]);
 
-  const COLORS = ["#EC4899", "#6366F1", "#94A3B8"];
-  const COLORS1 = ["#6366F1", "#EC4899", "#94A3B8"];
+  const totalRegistrations = genderData.reduce((acc, cur) => acc + Number(cur.value || 0), 0);
 
-  const totalRegistrations = genderData.reduce(
-    (acc, cur) => acc + cur.value,
-    0
-  );
   const lastValue = timeSeriesData[timeSeriesData.length - 1]?.total || 0;
   const prevValue = timeSeriesData[timeSeriesData.length - 2]?.total || 0;
-  const growthRate = ((lastValue - prevValue) / (prevValue || 1)) * 100;
-
-  const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-    index,
-    name,
-  }) => {
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos((-midAngle * Math.PI) / 180);
-    const y = cy + radius * Math.sin((-midAngle * Math.PI) / 180);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor="middle"
-        dominantBaseline="central"
-        style={{ fontSize: "12px", fontWeight: 500 }}
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
+  let growthRate = 0;
+  if (prevValue === 0 && lastValue > 0) {
+    growthRate = 100;
+  } else {
+    growthRate = ((lastValue - prevValue) / (prevValue || 1)) * 100;
+  }
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div
-          className="custom-tooltip"
-          style={{
-            background: "#c1a7fd94",
-            padding: "12px",
-            border: "1px solid #cbb5ffff",
-            borderRadius: "6px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <p style={{ margin: 0, fontWeight: 600 }}>{label}</p>
+        <div className="custom-tooltip">
+          <p className="label">{`Date: ${label}`}</p>
           {payload.map((entry, index) => (
-            <p
-              key={`item-${index}`}
-              style={{
-                margin: "4px 0",
-                color: entry.color,
-                display: "flex",
-                alignItems: "baseline",
-                gap: "8px",
-              }}
-            >
-              <span
-                style={{
-                  display: "inline-block",
-                  width: "10px",
-                  height: "10px",
-                  backgroundColor: entry.color,
-                  borderRadius: "2px",
-                }}
-              ></span>
+            <p key={`item-${index}`} style={{ color: entry.color }}>
               {`${entry.name}: ${entry.value}`}
             </p>
           ))}
@@ -276,294 +304,341 @@ const RegistrationDashboard = () => {
     return null;
   };
 
+  const renderActiveShape = (props) => {
+    const RADIAN = Math.PI / 180;
+    const {
+      cx,
+      cy,
+      midAngle,
+      innerRadius,
+      outerRadius,
+      startAngle,
+      endAngle,
+      fill,
+      payload,
+      percent,
+      value,
+    } = props;
+    const sin = Math.sin(-RADIAN * midAngle);
+    const cos = Math.cos(-RADIAN * midAngle);
+    const sx = cx + (outerRadius + 10) * cos;
+    const sy = cy + (outerRadius + 10) * sin;
+    const mx = cx + (outerRadius + 30) * cos;
+    const my = cy + (outerRadius + 30) * sin;
+    const ex = mx + (cos >= 0 ? 1 : -1) * 22;
+    const ey = my;
+    const textAnchor = cos >= 0 ? "start" : "end";
+
+    return (
+      <g>
+        <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} fontWeight="600">
+          {payload.name}
+        </text>
+        <Sector
+          cx={cx}
+          cy={cy}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          fill={fill}
+        />
+        <Sector
+          cx={cx}
+          cy={cy}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          innerRadius={outerRadius + 6}
+          outerRadius={outerRadius + 10}
+          fill={fill}
+        />
+        <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
+        <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
+        <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#334155" fontWeight="600">
+          {`${value} candidates`}
+        </text>
+        <text
+          x={ex + (cos >= 0 ? 1 : -1) * 12}
+          y={ey}
+          dy={18}
+          textAnchor={textAnchor}
+          fill="#64748B"
+        >
+          {`(${(percent * 100).toFixed(0)}%)`}
+        </text>
+      </g>
+    );
+  };
+
+  /* pie hover handler */
+  const onPieEnter = (_, index) => {
+    setActivePieIndex(index);
+  };
+
   return (
-    <DashboardContainer>
-      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} md={8}>
-          <StatCard>
-            {loading ? (
-              <Skeleton active />
-            ) : (
-              <Statistic
-                title="Total Registrations"
-                value={totalCount}
-                prefix={<TeamOutlined />}
-              />
-            )}
-          </StatCard>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
-          <StatCard>
-            {loading ? (
-              <Skeleton active />
-            ) : (
-              <Statistic
-                title="Daily Average"
-                value={(totalRegistrations / timeSeriesData.length).toFixed(1)}
-                prefix={<BarChartOutlined />}
-              />
-            )}
-          </StatCard>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
-          <StatCard>
-            {loading ? (
-              <Skeleton active />
-            ) : (
-              <Statistic
-                title="Growth Rate"
-                value={growthRate.toFixed(1)}
-                suffix="%"
-                prefix={<RiseOutlined />}
-                valueStyle={{ color: growthRate >= 0 ? "#10B981" : "#EF4444" }}
-              />
-            )}
-          </StatCard>
-        </Col>
-      </Row>
-
-      <ChartCard
-        title={
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ padding: "20px 10px" }}>
-              <Title level={5} style={{ margin: 0 }}>
-                <PieChartOutlined style={{ marginRight: 8 }} />
-                Registration Trends
-              </Title>
-              <Alert
-                style={{
-                  marginTop: 7,
-                  marginBottom: 0,
-                  fontSize: 12,
-                  padding: "3px 5px",
-                  border: "none",
-                  display: "inline-flex",
-                }}
-                message="Here is the registration trends for selected post"
-                type="warning"
-                showIcon
-              />
-            </span>
-            <RangePicker
-              style={{ width: 256 }}
-              value={dateRange}
-              onChange={setDateRange}
-            />
+    <>
+      <GlobalDashboardStyle />
+      <DashboardContainer className="premium-dashboard">
+        <HeaderSection>
+          <div>
+            <Title level={2} style={{ margin: 0, color: '#1E293B', fontWeight: 700 }}>
+              Registration Analytics
+            </Title>
+            <Text type="secondary" style={{ fontSize: '14px' }}>
+              Detailed insights for your selected job post
+            </Text>
           </div>
-        }
-      >
-        {loading ? (
-          <Skeleton active />
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={timeSeriesData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke="#f0f0f0"
-              />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: "#64748b" }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: "#64748b" }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend iconType="circle" wrapperStyle={{ paddingTop: 20 }} />
-              <Line
-                type="monotone"
-                dataKey="total"
-                stroke="#6366F1"
-                strokeWidth={2}
-                name="Total"
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="male"
-                stroke="#10B981"
-                strokeWidth={2}
-                name="Male"
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="female"
-                stroke="#EC4899"
-                strokeWidth={2}
-                name="Female"
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </ChartCard>
+          <Space>
+            <DatePicker size="large" />
+          </Space>
+        </HeaderSection>
 
-      <Row gutter={[24, 24]}>
-        <Col xs={24} md={12}>
-          <ChartCard
-            title={
-              <span style={{ padding: "20px 10px" }}>
-                <Title level={5} style={{ margin: 0 }}>
-                  <PieChartOutlined style={{ marginRight: 8 }} />
-                  Gender Distribution
-                </Title>
-                <Alert
-                  style={{
-                    marginTop: 7,
-                    marginBottom: 15,
-                    fontSize: 12,
-                    padding: "3px 5px",
-                    border: "none",
-                    display: "inline-flex",
-                  }}
-                  message="Here is the gender distribution chart for overall posts"
-                  type="warning"
-                  showIcon
+        <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+          <Col xs={24} sm={12} lg={8}>
+            <StatCard>
+              {loading ? (
+                <Skeleton active />
+              ) : (
+                <Statistic
+                  title="Total Registrations"
+                  value={totalCount}
+                  prefix={<TeamOutlined style={{ color: '#6366F1' }} />}
+                  valueStyle={{ color: '#6366F1' }}
                 />
-              </span>
-            }
-          >
-            {genderData.some((item) => item.value > 0) ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={genderData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={renderCustomizedLabel}
-                    labelLine={false}
-                  >
-                    {genderData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    wrapperStyle={{ zIndex: 1000 }}
-                  />
-                  <Legend
-                    layout="vertical"
-                    verticalAlign="middle"
-                    align="right"
-                    iconType="circle"
-                    formatter={(value, entry) => (
-                      <span style={{ color: "#334155" }}>
-                        {value}: {entry.payload.value}
-                      </span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <Card style={{ textAlign: "center", padding: 40 }}>
-                <Title level={4} style={{ color: "#bfbfbf" }}>
-                  No gender data available
-                </Title>
-              </Card>
-            )}
-          </ChartCard>
-        </Col>
-        <Col xs={24} md={12}>
-          <ChartCard
-            title={
-              <span style={{ padding: "20px 10px" }}>
-                <Title level={5} style={{ margin: 0 }}>
-                  <PieChartOutlined style={{ marginRight: 8 }} />
-                  Domain Distribution
-                </Title>
-                <Alert
-                  style={{
-                    marginTop: 7,
-                    marginBottom: 15,
-                    fontSize: 12,
-                    padding: "3px 5px",
-                    border: "none",
-                    display: "inline-flex",
-                  }}
-                  message="Here is the domain distribution chart for overall posts"
-                  type="warning"
-                  showIcon
+              )}
+            </StatCard>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <StatCard>
+              {loading ? (
+                <Skeleton active />
+              ) : (
+                <Statistic
+                  title="Daily Average"
+                  value={((totalCount || 0) / (timeSeriesData.length || 1)).toFixed(1)}
+                  prefix={<BarChartOutlined style={{ color: '#10B981' }} />}
+                  valueStyle={{ color: '#10B981' }}
                 />
-              </span>
-            }
-          >
-            {domainCount.length > 0 &&
-            domainCount.some((item) => item.value > 0) ? (
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart
-                  data={domainCount}
-                  layout="vertical"
-                  margin={{ top: 5, right: 30, left: -30, bottom: 5 }}
+              )}
+            </StatCard>
+          </Col>
+
+
+          <Col xs={24} sm={12} lg={8}>
+            <StatCard>
+              {loading ? (
+                <Skeleton active />
+              ) : (
+                <Statistic
+                  title="Growth Rate"
+                  value={growthRate.toFixed(1)}
+                  suffix="%"
+                  prefix={growthRate >= 0 ?
+                    <RiseOutlined style={{ color: '#10B981' }} /> :
+                    <FallOutlined style={{ color: '#EF4444' }} />
+                  }
+                  valueStyle={{ color: growthRate >= 0 ? "#10B981" : "#EF4444" }}
+                />
+              )}
+            </StatCard>
+          </Col>
+        </Row>
+
+        <Row gutter={[24, 24]}>
+          <Col xs={24} lg={14}>
+            <ChartCard
+              title={
+                <Space>
+                  <DashboardOutlined style={{ color: '#6366F1' }} />
+                  <Title level={5} style={{ margin: 0 }}>Registration Trends</Title>
+                </Space>
+              }
+              extra={
+                <Select
+                  value={selectedMetric}
+                  onChange={setSelectedMetric}
+                  size="small"
+                  bordered={false}
                 >
-                  <CartesianGrid horizontal vertical={false} stroke="#f0f0f0" />
-                  <XAxis
-                    type="number"
-                    tick={{ fill: "#64748b" }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="domain"
-                    tick={{ fill: "#64748b", fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={false}
-                    width={200}
-                  />
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    wrapperStyle={{ zIndex: 1000 }}
-                  />
-                  <Bar
-                    dataKey="value"
-                    name="Registrations"
-                    radius={[0, 4, 4, 0]}
-                  >
-                    {domainCount.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS1[index % COLORS1.length]}
+                  <Option value="total">Total</Option>
+                  <Option value="male">Male</Option>
+                  <Option value="female">Female</Option>
+                </Select>
+              }
+            >
+              {loading ? (
+                <Skeleton active />
+              ) : (
+                <ResponsiveContainer width="100%" height={350}>
+                  <LineChart data={timeSeriesData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend iconType="circle" iconSize={10} wrapperStyle={{ paddingTop: 20 }} />
+
+                    {/* Show all three when "total" is selected */}
+                    {(selectedMetric === "total" || selectedMetric === "male") && (
+                      <Line
+                        type="monotone"
+                        dataKey="male"
+                        stroke={CHART_COLORS.male}
+                        strokeWidth={3}
+                        name="Male"
+                        dot={{ r: 4, fill: CHART_COLORS.male, strokeWidth: 2, stroke: '#fff' }}
+                        activeDot={{ r: 6, fill: CHART_COLORS.male, stroke: '#fff', strokeWidth: 2 }}
                       />
-                    ))}
-                    <LabelList dataKey="value" position="right" fill="#000" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <Card style={{ textAlign: "center", padding: 40 }}>
-                <Title level={4} style={{ color: "#bfbfbf" }}>
-                  No domain data available
-                </Title>
-              </Card>
-            )}
-          </ChartCard>
-        </Col>
-      </Row>
-    </DashboardContainer>
+                    )}
+
+                    {(selectedMetric === "total" || selectedMetric === "female") && (
+                      <Line
+                        type="monotone"
+                        dataKey="female"
+                        stroke={CHART_COLORS.female}
+                        strokeWidth={3}
+                        name="Female"
+                        dot={{ r: 4, fill: CHART_COLORS.female, strokeWidth: 2, stroke: '#fff' }}
+                        activeDot={{ r: 6, fill: CHART_COLORS.female, stroke: '#fff', strokeWidth: 2 }}
+                      />
+                    )}
+
+                    {selectedMetric === "total" && (
+                      <Line
+                        type="monotone"
+                        dataKey="total"
+                        stroke={CHART_COLORS.total}
+                        strokeWidth={3}
+                        name="Total"
+                        dot={{ r: 4, fill: CHART_COLORS.total, strokeWidth: 2, stroke: '#fff' }}
+                        activeDot={{ r: 6, fill: CHART_COLORS.total, stroke: '#fff', strokeWidth: 2 }}
+                      />
+                    )}
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </ChartCard>
+          </Col>
+
+          <Col xs={24} lg={10}>
+            <ChartCard
+              title={
+                <>
+                  <Space>
+                    <UserOutlined style={{ color: '#8B5CF6' }} />
+                    <Title level={5} style={{ margin: 0 }}>Gender Distribution</Title>
+                  </Space>
+                  <div>
+                    <Alert
+                      style={{
+                        marginTop: 7,
+                        marginBottom: 0,
+                        fontSize: 12,
+                        padding: "3px 5px",
+                        border: "none",
+                        display: "inline-flex",
+                      }}
+                      message="Here is the gender distribution chart for selcted post"
+                      type="warning"
+                      showIcon
+                    />
+                  </div>
+                </>
+              }
+            >
+
+              {genderData.some((item) => item.value > 0) ? (
+                <ResponsiveContainer width="100%" height={350}>
+                  <PieChart>
+                    <Pie
+                      activeIndex={activePieIndex}
+                      activeShape={renderActiveShape}
+                      data={genderData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={100}
+                      dataKey="value"
+                      onMouseEnter={onPieEnter}
+                    >
+                      {genderData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    {/* 👇 Add legend here */}
+                    <Legend
+                      iconType="circle"
+                      iconSize={10}
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                      wrapperStyle={{ paddingTop: 20 }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+
+              ) : (
+                <div style={{ textAlign: "center", padding: 40 }}>
+                  <Title level={4} style={{ color: "#cbd5e1" }}>No gender data available</Title>
+                </div>
+              )}
+            </ChartCard>
+          </Col>
+        </Row>
+
+        <Row gutter={[24, 24]}>
+          <Col xs={24}>
+            <ChartCard
+              title={
+                <Space>
+                  <PieChartOutlined style={{ color: '#F59E0B' }} />
+                  <Title level={5} style={{ margin: 0 }}>Domain Distribution</Title>
+                </Space>
+              }
+            >
+              {domainCount.length > 0 ? (
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={domainCount} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      iconType="circle"
+                      iconSize={10}
+                      wrapperStyle={{ paddingTop: 10 }}
+                    />
+                    {Object.keys(domainCount[0] || {})
+                      .filter((k) => k !== "date")
+                      .map((key, idx) => (
+                        <Bar
+                          key={key}
+                          dataKey={key}
+                          stackId="a"
+                          fill={COLORS[idx % COLORS.length]}
+                          radius={[idx === 0 ? 4 : 0, idx === 0 ? 4 : 0, 0, 0]}
+                        />
+                      ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ textAlign: "center", padding: 40 }}>
+                  <Title level={4} style={{ color: "#cbd5e1" }}>No domain data available</Title>
+                </div>
+              )}
+            </ChartCard>
+          </Col>
+        </Row>
+      </DashboardContainer>
+    </>
   );
 };
 

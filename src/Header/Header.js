@@ -142,41 +142,52 @@ export default function Header() {
       const formattedSuggestions = data.map((item) => ({
         value: item.id,
         label: (
-          <div className={`suggestion-item ${item.isPremium ? "premium" : ""}`}>
-            {item.isPremium && (
-              <span className="premium-badge">
-                <CrownFilled /> Premium
-              </span>
-            )}
-            <img
-              src={item.company_logo}
-              alt={item.company_name}
-              className="company-logo"
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/48";
-              }}
-            />
-            <div className="suggestion-content">
-              <div className="job-title">
-                {item.job_title}
-                {item.isFeatured && <StarFilled className="featured-icon" />}
+          <div className={`elite-suggestion-item ${item.isPremium ? "elite-premium" : ""}`}>
+            <div className="elite-content-wrapper">
+              <div className="elite-logo-container">
+                <div className="elite-logo-frame">
+                  <img
+                    src={item.company_logo}
+                    alt={item.company_name}
+                    className="elite-company-logo"
+                    onError={(e) => {
+                      e.target.src = "https://via.placeholder.com/48";
+                    }}
+                  />
+                </div>
+                {item.isPremium && (
+                  <div className="elite-premium-badge">
+                    <CrownFilled className="elite-premium-icon" />
+                    <span>Elite</span>
+                  </div>
+                )}
               </div>
-              <div className="company-info">
-                <span style={{ marginBottom: "7px" }}>{item.company_name}</span>
-                <br></br>
-                <Tag
-                  style={{ marginTop: "7px" }}
-                  icon={<EnvironmentOutlined />}
-                  color="blue"
-                >
-                  {item.work_location}
-                </Tag>
-                <Tag
-                  color={item.workplace_type === "Remote" ? "green" : "purple"}
-                >
-                  {item.workplace_type}
-                </Tag>
+              <div className="elite-suggestion-content">
+                <div className="elite-job-title-header">
+                  {item.job_title}
+                  {item.isFeatured && <StarFilled className="elite-featured-icon" />}
+                </div>
+                <div className="elite-company-name-header">{item.company_name}</div>
+                <div className="elite-job-meta-header">
+                  <Tag
+                    icon={<EnvironmentOutlined />}
+                    className="elite-location-tag"
+                  >
+                    {item.work_location}
+                  </Tag>
+                  <Tag
+                    className={`elite-workplace-tag ${item.workplace_type === "Remote" ? "elite-remote" : "elite-onsite"}`}
+                  >
+                    {item.workplace_type}
+                  </Tag>
+                </div>
+                <div className="elite-salary-badge">
+                  <span className="elite-salary-text">${Math.floor(Math.random() * 50) + 60}k</span>
+                </div>
               </div>
+            </div>
+            <div className="elite-view-btn">
+              <RightOutlined />
             </div>
           </div>
         ),
@@ -222,7 +233,7 @@ export default function Header() {
         sticky="top"
         key="md"
         expand="md"
-        className="bg-white shadow-sm py-3 premium-header"
+        className="bg-white shadow-sm py-3 elite-header"
       >
         <Container>
           <div className="d-flex gap-3 global_search">
@@ -237,25 +248,35 @@ export default function Header() {
             </Navbar.Brand>
             <AutoComplete
               options={suggestions}
+              dropdownMatchSelectWidth={520}
               onSearch={handleSearch}
               onSelect={handleSelect}
               style={{ width: "100%" }}
-              // dropdownStyle={{
-              //   borderRadius: 12,
-              //   padding: "8px 0",
-              //   boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-              // }}
+              dropdownClassName="elite-search-dropdown"
               notFoundContent={
                 loading ? (
-                  <div className="loading-container">
-                    <Skeleton active paragraph={{ rows: 2 }} />
+                  <div className="elite-loading-container">
+                    <div className="elite-loading-animation">
+                      <div className="elite-loading-dot"></div>
+                      <div className="elite-loading-dot"></div>
+                      <div className="elite-loading-dot"></div>
+                    </div>
+                    <div className="elite-loading-text">Finding the best opportunities for you</div>
                   </div>
                 ) : (
-                  <div className="no-results-container">
-                    <div className="no-results-title">No results found</div>
-                    <div className="no-results-subtitle">
-                      Try different keywords or check your spelling
+                  <div className="elite-no-results-container">
+                    <div className="elite-no-results-icon">
+                      <SearchOutlined />
                     </div>
+                    <div className="elite-no-results-title">No matching opportunities found</div>
+                    <div className="elite-no-results-subtitle">
+                      Try different keywords or explore our curated collections
+                    </div>
+                    <Button onClick={() => {
+                      navigate("/job-filter")
+                    }} type="primary" className="elite-explore-btn">
+                      Explore Featured Jobs
+                    </Button>
                   </div>
                 )
               }
@@ -264,9 +285,9 @@ export default function Header() {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Search opportunities, companies, or skills"
-                prefix={<SearchOutlined className="search-icon" />}
+                prefix={<SearchOutlined className="elite-search-icon" />}
                 allowClear
-                className="premium-search-input"
+                className="elite-search-input"
                 size="large"
               />
             </AutoComplete>
@@ -317,11 +338,10 @@ export default function Header() {
                   placement="bottomLeft"
                 >
                   <Nav.Link
-                    className={`nav-item ${
-                      moreMenuItems.some((menu) => menu.path === currentPath)
-                        ? "active"
-                        : ""
-                    }`}
+                    className={`nav-item ${moreMenuItems.some((menu) => menu.path === currentPath)
+                      ? "active"
+                      : ""
+                      }`}
                   >
                     More <IoChevronDownOutline />
                   </Nav.Link>
@@ -540,22 +560,22 @@ export default function Header() {
               dataSource={[
                 ...(roleId !== 2
                   ? [
-                      {
-                        title: (
-                          <span
-                            style={{ cursor: "pointer", color: "#4f46e5" }}
-                            onClick={() => {
-                              localStorage.setItem("activeAdminTab", "listing");
-                              localStorage.setItem("listingOrder", "topBottom"); // add this
-                              navigate("/admin-profile");
-                            }}
-                          >
-                            Manage Listings
-                          </span>
-                        ),
-                        icon: <AppstoreOutlined style={{ color: "#4f46e5" }} />,
-                      },
-                    ]
+                    {
+                      title: (
+                        <span
+                          style={{ cursor: "pointer", color: "#4f46e5" }}
+                          onClick={() => {
+                            localStorage.setItem("activeAdminTab", "listing");
+                            localStorage.setItem("listingOrder", "topBottom"); // add this
+                            navigate("/admin-profile");
+                          }}
+                        >
+                          Manage Listings
+                        </span>
+                      ),
+                      icon: <AppstoreOutlined style={{ color: "#4f46e5" }} />,
+                    },
+                  ]
                   : []),
                 {
                   title: (
@@ -725,6 +745,320 @@ export default function Header() {
           </Button>
         </div>
       </Drawer>
+
+      {/* Add CSS for elite search dropdown */}
+      <style>
+        {`
+          /* Elite Search Dropdown Styles */
+          .elite-search-dropdown {
+            border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 16px;
+            margin-top: 10px;
+            max-height: 600px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+            backdrop-filter: blur(20px);
+          }
+          
+          .elite-search-dropdown .ant-select-item {
+            padding: 0;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            background: transparent;
+          }
+            
+          .rc-virtual-list-holder{
+          max-height: 340px !important;
+          }
+          
+          .elite-search-dropdown .ant-select-item-option-active {
+            background-color: rgba(79, 70, 229, 0.05);
+          }
+          
+          .elite-search-dropdown .ant-select-item-option-selected {
+            background: linear-gradient(90deg, rgba(79, 70, 229, 0.1) 0%, rgba(79, 70, 229, 0.05) 100%);
+          }
+          
+          .elite-suggestion-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(79, 70, 229, 0.1);
+            background: white;
+            position: relative;
+            overflow: hidden;
+          }
+          
+          .elite-suggestion-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 0;
+            background: linear-gradient(180deg, #8b5cf6 0%, #4f46e5 100%);
+            transition: height 0.3s ease;
+          }
+          
+          .elite-suggestion-item:hover::before {
+            height: 100%;
+          }
+          
+          .elite-suggestion-item:hover {
+            background-color: #fafbff;
+            border-color: rgba(79, 70, 229, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.15);
+          }
+          
+          .elite-content-wrapper {
+            display: flex;
+            align-items: flex-start;
+            flex: 1;
+          }
+          
+          .elite-logo-container {
+            position: relative;
+            margin-right: 16px;
+          }
+          
+          .elite-logo-frame {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            padding: 3px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #4f46e5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          .elite-company-logo {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            object-fit: contain;
+            background: white;
+            padding: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+          
+          .elite-premium-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #7c5a1a;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            z-index: 2;
+          }
+          
+          .elite-premium-icon {
+            font-size: 10px;
+            margin-right: 3px;
+          }
+          
+          .elite-suggestion-content {
+            flex: 1;
+            position: relative;
+          }
+          
+          .elite-suggestion-item .elite-job-title-header {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a1a !important;
+            margin-bottom: 0px;
+            display: flex;
+            align-items: center;
+          }
+          
+          .elite-featured-icon {
+            color: #ffc53d;
+            margin-left: 8px;
+            font-size: 14px;
+          }
+          
+          .elite-company-name-header {
+            font-size: 13px;
+            color: #595959;
+            margin-bottom: 10px;
+            font-weight: 600;
+          }
+          
+          .elite-job-meta-header {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+          }
+          
+          .elite-location-tag, .elite-workplace-tag {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin: 0;
+            border: none;
+          }
+          
+          .elite-location-tag {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+          }
+          
+          .elite-remote {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+          }
+          
+          .elite-onsite {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+          }
+          
+          .elite-salary-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+          }
+          
+          .elite-view-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(79, 70, 229, 0.1);
+            color: #4f46e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.3s ease;
+          }
+          
+          .elite-suggestion-item:hover .elite-view-btn {
+            background: #4f46e5;
+            color: white;
+            transform: translateX(3px);
+          }
+          
+          .elite-no-results-container {
+            text-align: center;
+            padding: 10px 20px;
+          }
+          
+          .elite-no-results-icon {
+            font-size: 38px;
+            color: #d9d9d9;
+            margin-bottom: 16px;
+          }
+          
+          .elite-no-results-title {
+            font-weight: 700;
+            color: #595959;
+            margin-bottom: 8px;
+            font-size: 16px;
+          }
+          
+          .elite-no-results-subtitle {
+            font-size: 14px;
+            color: #8c8c8c;
+            margin-bottom: 20px;
+          }
+          
+          .elite-explore-btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            height: auto;
+            font-weight: 600;
+          }
+          
+          .elite-loading-container {
+            text-align: center;
+            padding: 30px 20px;
+          }
+          
+          .elite-loading-animation {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+          }
+          
+          .elite-loading-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
+            margin: 0 4px;
+            animation: elite-loading 1.4s infinite ease-in-out both;
+          }
+          
+          .elite-loading-dot:nth-child(1) {
+            animation-delay: -0.32s;
+          }
+          
+          .elite-loading-dot:nth-child(2) {
+            animation-delay: -0.16s;
+          }
+          
+          @keyframes elite-loading {
+            0%, 80%, 100% { 
+              transform: scale(0.8);
+              opacity: 0.5;
+            }
+            40% { 
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+          
+          .elite-loading-text {
+            font-size: 14px;
+            color: #8c8c8c;
+            font-weight: 500;
+          }
+          
+          /* Elite search input */
+          .elite-search-input {
+            border-radius: 12px;
+            border: 1px solid #e6e8f0;
+            padding: 12px 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            background: white;
+          }
+          
+          .elite-search-input:hover, .elite-search-input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.2);
+          }
+          
+          .elite-search-icon {
+            color: #8b5cf6;
+          }
+          
+          .elite-header {
+            border-bottom: 1px solid rgba(79, 70, 229, 0.1);
+          }
+        `}
+      </style>
     </>
   );
 }

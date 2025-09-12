@@ -681,6 +681,10 @@ export default function MainProfile() {
       setIsAbout(response?.data?.data?.about || "");
       setIsEducation(response?.data?.data?.education || []);
       setIsProjects(response?.data?.data?.projects || []);
+      setTotalMonthsExperience(response?.data?.data?.total_months || "N/A");
+      setTotalYearsExperience(response?.data?.data?.total_years || "N/A");
+
+      setLocation(response?.data?.data?.location || "N/A");
       const fetchedLinks = response?.data?.data?.social_links || {};
       setSocialLinks({
         Linkedin: fetchedLinks.linkedin || "",
@@ -754,8 +758,6 @@ export default function MainProfile() {
         ) {
           const professionalData = response.data.data.professional;
           setExperienceType(profile.experince_type || "");
-          setTotalYearsExperience(profile.total_years || "");
-          setTotalMonthsExperience(profile.total_months || "");
           setLocation(profile.location || "");
 
           // Map all experiences to companies state
@@ -885,8 +887,6 @@ export default function MainProfile() {
       genderValidate,
       userTypeValidate,
       locationValidate,
-      totalMonthsExperienceValidate,
-      totalYearsExperienceValidate,
       selectExperienceTypeValidate,
 
       ...(userType === "College Student"
@@ -894,10 +894,10 @@ export default function MainProfile() {
         : []),
       ...(userType === "Fresher"
         ? [
-            fresherCourseValidate,
-            fresherStartDateValidate,
-            fresherEndtDateValidate,
-          ]
+          fresherCourseValidate,
+          fresherStartDateValidate,
+          fresherEndtDateValidate,
+        ]
         : []),
     ].some((val) => val !== "");
 
@@ -937,6 +937,7 @@ export default function MainProfile() {
       const response = await updateBasicDetails(payload);
       console.log("Saving user data:", response);
       message.success("Profile details saved successfully.");
+      getUserProfileData();
       resetFormFields();
     } catch (error) {
       console.log("Saving user data:", error);
@@ -1096,7 +1097,6 @@ export default function MainProfile() {
     setShowWorkExpForm(false);
     setEditingCompanyId(null);
 
-    // If discarding a newly added company (not an edit), remove the dummy
     setCompanies((prev) => prev.filter((company) => !company.isNew));
   };
 
@@ -1147,9 +1147,7 @@ export default function MainProfile() {
               company_name: newCompany.workingCompanyName,
               designation: newCompany.designation,
               start_date: newCompany.workingStartDate,
-              end_date: newCompany.currentlyWorking
-                ? ""
-                : newCompany.workingEndDate,
+              end_date: newCompany.currentlyWorking ? "" : newCompany.workingEndDate,
               currently_working: newCompany.currentlyWorking,
             },
           ],
@@ -1160,9 +1158,18 @@ export default function MainProfile() {
         const finalCompanies = companies.map((c) =>
           c.isNew ? { ...c, id: response.data.id, isNew: false } : c
         );
-        setCompanies(finalCompanies);
+
+        // ✅ Add immediately to state
+        const savedCompany = {
+          ...newCompany,
+          id: response.data.id,
+          isNew: false,
+        };
+
+        setCompanies((prev) => [...prev.filter((c) => !c.isNew), savedCompany]);
         message.success("Experience added successfully");
         getUserProfileData();
+
       } else {
         const companyToUpdate = companies.find(
           (company) => company.id === editingCompanyId
@@ -1498,8 +1505,8 @@ export default function MainProfile() {
         value.trim() === ""
           ? " field is required"
           : !urlPattern.test(value)
-          ? " Invalid URL"
-          : "",
+            ? " Invalid URL"
+            : "",
     }));
   };
 
@@ -1678,12 +1685,27 @@ export default function MainProfile() {
   };
 
   const handleUserTypeClick = (buttonId) => {
-    setUserTypeActiveButton((prev) => buttonId);
-    setFresherEndDate("");
-    setFresherStartDate("");
-    setEndDate("");
+    setUserTypeActiveButton(buttonId);
+
+    // Reset only the fields that are dependent on user type
+    form.resetFields([
+      "course",
+      "startyear",
+      "endyear",
+      "course1",
+      "class"
+    ]);
+
+    // Also clear local states if you’re still using them
+    setCourse("");
+    setFresherCourse("");
     setStartDate("");
+    setEndDate("");
+    setFresherStartDate("");
+    setFresherEndDate("");
+    setClass("");
   };
+
 
   const [Class, setClass] = useState(null);
   const handleClassClick = (buttonId) => {
@@ -2337,6 +2359,8 @@ export default function MainProfile() {
                   handleExperienceTypeChange(value);
                   setSelectExperienceType(value);
                   setSelectExperienceTypeError(selectValidator(value));
+                  setTotalYearsExperience("")
+                  setTotalMonthsExperience("")
                 }}
                 showSearch={true}
                 error={selectExperienceTypeError}
@@ -3309,16 +3333,20 @@ export default function MainProfile() {
                             value: experienceType,
                             icon: <MdOutlineSchool />,
                           },
-                          {
-                            label: "Years of Experience",
-                            value: totalYearsExperience,
-                            icon: <MdMenuBook />,
-                          },
-                          {
-                            label: "Months of Experience",
-                            value: totalMonthsExperience,
-                            icon: <MdLocationCity />,
-                          },
+                          ...(isWorkExp !== "Fresher"
+                            ? [
+                              {
+                                label: "Years of Experience",
+                                value: totalYearsExperience,
+                                icon: <MdMenuBook />,
+                              },
+                              {
+                                label: "Months of Experience",
+                                value: totalMonthsExperience,
+                                icon: <MdLocationCity />,
+                              },
+                            ]
+                            : []),
                           {
                             label: "Location",
                             value: location,
@@ -3329,13 +3357,12 @@ export default function MainProfile() {
                             <div className="icon-wrapper">{item.icon}</div>
                             <div>
                               <div className="item-label">{item.label}</div>
-                              <div className="item-value">
-                                {item.value || "-"}
-                              </div>
+                              <div className="item-value">{item.value || "-"}</div>
                             </div>
                           </div>
                         ))}
                       </div>
+
                     </div>
 
                     {companies.map((company) => (
@@ -3430,7 +3457,7 @@ export default function MainProfile() {
                     ))}
                   </>
                 ) : (
-                  <div className="empty-state">
+                  <div style={{ textAlign: "center" }} className="empty-state">
                     <Empty
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
                       description={
@@ -3456,7 +3483,7 @@ export default function MainProfile() {
                           },
                         ]);
                       }}
-                      style={{ marginTop: 16 }}
+                      style={{ marginTop: 16, background: "rgb(95, 46, 234)" }}
                     >
                       Add Work Experience
                     </Button>
@@ -4409,6 +4436,7 @@ export default function MainProfile() {
             </div>
 
             {/* Resume upload  Sections */}
+            {/* Resume upload  Sections */}
             <div style={{ marginTop: 25 }} className="profile-sections">
               <div className="profile-section-card userprofile_cards">
                 <div className="skills_card">
@@ -4418,74 +4446,75 @@ export default function MainProfile() {
                       Adding your Resume helps you to tell who you are and what
                       makes you different to employers and recruiters.
                     </p>
-                    {isResume && (
-                      <div
-                        style={{
-                          border: "1px solid #d9d9d9",
-                          borderRadius: 8,
-                          padding: 16,
-                          marginTop: 14,
-                          backgroundColor: "#f9f9f9",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center" }}>
-                          <FileText
-                            style={{
-                              color: "#5f2eea",
-                              fontSize: 24,
-                              marginRight: 12,
-                            }}
-                          />
-                          <div>
-                            <Text strong>Current Resume</Text>
-                            <br />
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                              Uploaded resume is ready for employers to view
-                            </Text>
-                          </div>
-                        </div>
-                        <Button
-                          style={{ background: "#5f2eea", boxShadow: "none" }}
-                          type="primary"
-                          size="small"
-                          onClick={() => {
-                            if (isResume.startsWith("http")) {
-                              window.open(isResume, "_blank");
-                            } else if (
-                              isResume.startsWith("data:application/pdf")
-                            ) {
-                              const win = window.open("", "_blank");
-                              win.document.write(`
-                    <iframe 
-                      width="100%" 
-                      height="100%" 
-                      src="${isResume}" 
-                      frameborder="0"
-                    ></iframe>
-                  `);
-                            } else {
-                              const a = document.createElement("a");
-                              a.href = isResume;
-                              a.download = "resume.pdf";
-                              document.body.appendChild(a);
-                              a.click();
-                              document.body.removeChild(a);
-                            }
-                          }}
-                        >
-                          View Resume
-                        </Button>
-                      </div>
-                    )}
 
                     {userProfileLoading ? (
-                      <Skeleton active />
+                      <Skeleton active paragraph={{ rows: 1 }} />
                     ) : (
                       <>
-                        {!isResume && (
+                        {isResume && (
+                          <div
+                            style={{
+                              border: "1px solid #d9d9d9",
+                              borderRadius: 8,
+                              padding: 16,
+                              marginTop: 14,
+                              backgroundColor: "#f9f9f9",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center" }}>
+                              <FileText
+                                style={{
+                                  color: "#5f2eea",
+                                  fontSize: 24,
+                                  marginRight: 12,
+                                }}
+                              />
+                              <div>
+                                <Text strong>Current Resume</Text>
+                                <br />
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  Uploaded resume is ready for employers to view
+                                </Text>
+                              </div>
+                            </div>
+                            <Button
+                              style={{ background: "#5f2eea", boxShadow: "none" }}
+                              type="primary"
+                              size="small"
+                              onClick={() => {
+                                if (isResume.startsWith("http")) {
+                                  window.open(isResume, "_blank");
+                                } else if (
+                                  isResume.startsWith("data:application/pdf")
+                                ) {
+                                  const win = window.open("", "_blank");
+                                  win.document.write(`
+                        <iframe 
+                          width="100%" 
+                          height="100%" 
+                          src="${isResume}" 
+                          frameborder="0"
+                        ></iframe>
+                      `);
+                                } else {
+                                  const a = document.createElement("a");
+                                  a.href = isResume;
+                                  a.download = "resume.pdf";
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                }
+                              }}
+                            >
+                              View Resume
+                            </Button>
+                          </div>
+                        )}
+
+                        {!isResume ? (
                           <Button
                             onClick={() => {
                               setActiveTab("resume");
@@ -4507,32 +4536,28 @@ export default function MainProfile() {
                             <PlusOutlined />
                             Add Resume
                           </Button>
-                        )}
+                        ) : (
+                          <Button
+                            onClick={() => {
+                              setActiveTab("resume");
+                              showDrawer();
+                              setLoading(true);
+                              const timer = setTimeout(() => {
+                                setLoading(false);
+                              }, 700);
 
-                        {isResume && (
-                          <>
-                            <Button
-                              onClick={() => {
-                                setActiveTab("resume");
-                                showDrawer();
-                                setLoading(true);
-                                const timer = setTimeout(() => {
-                                  setLoading(false);
-                                }, 700);
-
-                                return () => clearTimeout(timer);
-                              }}
-                              style={{
-                                color: "#5f2eea",
-                                paddingLeft: 0,
-                                paddingTop: 10,
-                              }}
-                              type="link"
-                            >
-                              <PlusOutlined />
-                              Replace Resume
-                            </Button>
-                          </>
+                              return () => clearTimeout(timer);
+                            }}
+                            style={{
+                              color: "#5f2eea",
+                              paddingLeft: 0,
+                              paddingTop: 10,
+                            }}
+                            type="link"
+                          >
+                            <PlusOutlined />
+                            Replace Resume
+                          </Button>
                         )}
                       </>
                     )}
@@ -4541,6 +4566,7 @@ export default function MainProfile() {
                 <Divider />
               </div>
             </div>
+
 
             {/* Profile Sections */}
             <div style={{ marginTop: 25 }} className="profile-sections">
@@ -4648,8 +4674,79 @@ export default function MainProfile() {
                       <>
                         {isWorkExp && (
                           <div className="work-experience-section">
-                            {isWorkExp === "Fresher" ? (
-                              <div className="empty-state">
+                            {companies.length > 0 ? (
+
+                              <div className="experience-timeline">
+                                <>
+                                  {companies.map((company, index) => (
+                                    <div
+                                      key={company.id || index}
+                                      className="experience-card"
+                                    >
+                                      <div className="card-header">
+                                        <div className="company-info">
+                                          <h3 className="company-name">
+                                            {company.workingCompanyName || "Not specified"}
+                                          </h3>
+                                          <span className="job-title">
+                                            {company.jobTitle || "Not specified"}
+                                          </span>
+                                        </div>
+                                        <div className="company-logo-placeholder">
+                                          {company.workingCompanyName?.charAt(0).toUpperCase() || "C"}
+                                        </div>
+                                      </div>
+
+                                      <div className="card-details">
+                                        <div className="detail-item">
+                                          <svg
+                                            className="detail-icon"
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                          >
+                                            <path
+                                              d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21L21 21M19 21H14M5 21L3 21M5 21H10M9 6.99998H10M9 11H10M14 6.99998H15M14 11H15"
+                                              stroke="#5f2eea"
+                                              strokeWidth="2"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                            />
+                                          </svg>
+                                          <span>{company.jobTitle || "Not specified"}</span>
+                                        </div>
+
+                                        <div className="detail-item">
+                                          <svg
+                                            className="detail-icon"
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                          >
+                                            <path
+                                              d="M3 9H21M7 3V5M17 3V5M6 12H8M11 12H13M16 12H18M6 15H8M11 15H13M16 15H18M6 18H8M11 18H13M16 18H18M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z"
+                                              stroke="#5f2eea"
+                                              strokeWidth="2"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                            />
+                                          </svg>
+                                          <span>
+                                            {company.workingStartDate || "Not specified"} -{" "}
+                                            {company.workingEndDate || "Present"}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </>
+                              </div>
+                            ) : (
+                              <div style={{ marginTop: 10 }} className="empty-state">
                                 <div className="empty-icon">
                                   <svg
                                     width="48"
@@ -4689,81 +4786,6 @@ export default function MainProfile() {
                                   first work experience to showcase your
                                   professional journey.
                                 </p>
-                              </div>
-                            ) : (
-                              <div className="experience-timeline">
-                                {companies.map((company, index) => (
-                                  <div
-                                    key={company.id || index}
-                                    className="experience-card"
-                                  >
-                                    <div className="card-header">
-                                      <div className="company-info">
-                                        <h3 className="company-name">
-                                          {company.workingCompanyName ||
-                                            "Not specified"}
-                                        </h3>
-                                        <span className="job-title">
-                                          {company.jobTitle || "Not specified"}
-                                        </span>
-                                      </div>
-                                      <div className="company-logo-placeholder">
-                                        {company.workingCompanyName
-                                          ?.charAt(0)
-                                          .toUpperCase() || "C"}
-                                      </div>
-                                    </div>
-
-                                    <div className="card-details">
-                                      <div className="detail-item">
-                                        <svg
-                                          className="detail-icon"
-                                          width="16"
-                                          height="16"
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                          <path
-                                            d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21L21 21M19 21H14M5 21L3 21M5 21H10M9 6.99998H10M9 11H10M14 6.99998H15M14 11H15"
-                                            stroke="#5f2eea"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                          />
-                                        </svg>
-                                        <span>
-                                          {company.jobTitle || "Not specified"}
-                                        </span>
-                                      </div>
-
-                                      <div className="detail-item">
-                                        <svg
-                                          className="detail-icon"
-                                          width="16"
-                                          height="16"
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                          <path
-                                            d="M3 9H21M7 3V5M17 3V5M6 12H8M11 12H13M16 12H18M6 15H8M11 15H13M16 15H18M6 18H8M11 18H13M16 18H18M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z"
-                                            stroke="#5f2eea"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                          />
-                                        </svg>
-                                        <span>
-                                          {company.workingStartDate ||
-                                            "Not specified"}{" "}
-                                          -{" "}
-                                          {company.workingEndDate || "Present"}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
                               </div>
                             )}
 
@@ -5409,16 +5431,15 @@ export default function MainProfile() {
                           "Sat",
                         ]}
                         titleForValue={(value) => {
-                          if (!value || !value.date) return "No data";
+                          if (!value || !value.date) return "No avtivities";
 
                           const date = format(
                             parseISO(value.date),
                             "MMMM d, yyyy"
                           );
                           const streakText = value.streak
-                            ? `${value.streak} Day${
-                                value.streak > 0 ? "s" : ""
-                              } Streak`
+                            ? `${value.streak} Day${value.streak > 0 ? "s" : ""
+                            } Streak`
                             : "No Streak";
 
                           return `${date} | ${streakText}`;
@@ -5534,9 +5555,8 @@ export default function MainProfile() {
             ) : (
               <>
                 <div
-                  className={`premium-profile-card ${
-                    isVisible ? "premium-visible" : ""
-                  }`}
+                  className={`premium-profile-card ${isVisible ? "premium-visible" : ""
+                    }`}
                 >
                   <h3 className="premium-titles">Profile Overview</h3>
 
@@ -5579,72 +5599,81 @@ export default function MainProfile() {
                     </p>
                   </div>
 
-                  {/* Job preferences */}
-                  {profileStats.jobPreferences.length > 0 && (
-                    <div className="premium-section">
-                      <div className="premium-section-header">
-                        <Briefcase size={18} className="premium-icon" />
-                        <strong className="premium-section-title">
-                          Users Details:
-                        </strong>
-                      </div>
+                  <div className="premium-section">
+                    <div className="premium-section-header">
+                      <Briefcase size={18} className="premium-icon" />
+                      <strong className="premium-section-title">
+                        Users Details:
+                      </strong>
+                    </div>
+                    {isWorkExp === "Fresher" ? (
+                      <ul className="premium-list">
+                        <li>
+                          <Check size={14} className="premium-check-icon" /> Fresher
+                        </li>
+                        <li>
+                          <Check size={14} className="premium-check-icon" /> {location}
+                        </li>
+                        <li>
+                          <Check size={14} className="premium-check-icon" /> {educationCollege}
+                        </li>
+                        <li>
+                          <Check size={14} className="premium-check-icon" /> {educationCourse}
+                        </li>
+                      </ul>
+                    ) : isWorkExp === "Experience" ? (
                       <ul className="premium-list">
                         <li>
                           <Check size={14} className="premium-check-icon" />{" "}
                           {totalYearsExperience} {totalMonthsExperience}
                         </li>
                         <li>
-                          <Check size={14} className="premium-check-icon" />{" "}
-                          {experienceData}
+                          <Check size={14} className="premium-check-icon" /> {location}
                         </li>
                         <li>
-                          <Check size={14} className="premium-check-icon" />{" "}
-                          {educationCollege}
+                          <Check size={14} className="premium-check-icon" /> {educationCollege}
                         </li>
                         <li>
-                          <Check size={14} className="premium-check-icon" />{" "}
-                          {educationCourse}
+                          <Check size={14} className="premium-check-icon" /> {educationCourse}
                         </li>
-                        {/* {profileStats.jobPreferences.map((pref, index) => (
-                      <li key={index}>
-                        <Check size={14} className="premium-check-icon" />{" "}
-                        {pref}
-                      </li>
-                    ))} */}
                       </ul>
-                    </div>
-                  )}
+                    ) : (
+                      ""
+                    )}
+
+
+                  </div>
 
                   {/* Application activity */}
                   {(profileStats.applicationStats.jobsThisMonth > 0 ||
                     profileStats.applicationStats.interviewsScheduled > 0) && (
-                    <div className="premium-section">
-                      <div className="premium-section-header">
-                        <FileText size={18} className="premium-icon" />
-                        <strong className="premium-section-title">
-                          Application Activity:
-                        </strong>
-                      </div>
-                      <div className="premium-activity-grid">
-                        <div className="premium-activity-item">
-                          <span className="premium-activity-number">
-                            {profileStats.applicationStats.jobsThisMonth}
-                          </span>
-                          <span className="premium-activity-label">
-                            jobs this month
-                          </span>
+                      <div className="premium-section">
+                        <div className="premium-section-header">
+                          <FileText size={18} className="premium-icon" />
+                          <strong className="premium-section-title">
+                            Application Activity:
+                          </strong>
                         </div>
-                        <div className="premium-activity-item">
-                          <span className="premium-activity-number">
-                            {profileStats.applicationStats.interviewsScheduled}
-                          </span>
-                          <span className="premium-activity-label">
-                            interviews scheduled
-                          </span>
+                        <div className="premium-activity-grid">
+                          <div className="premium-activity-item">
+                            <span className="premium-activity-number">
+                              {profileStats.applicationStats.jobsThisMonth}
+                            </span>
+                            <span className="premium-activity-label">
+                              jobs this month
+                            </span>
+                          </div>
+                          <div className="premium-activity-item">
+                            <span className="premium-activity-number">
+                              {profileStats.applicationStats.interviewsScheduled}
+                            </span>
+                            <span className="premium-activity-label">
+                              interviews scheduled
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               </>
             )}

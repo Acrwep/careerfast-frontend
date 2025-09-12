@@ -3724,7 +3724,7 @@
 
 .premium-icon {
   margin-right: 10px;
-  color: #5f2eea;
+  color: #078736;
 }
 
 .premium-section-title {
@@ -3753,7 +3753,7 @@
 .premium-progress-fill {
   width: 85%;
   height: 100%;
-  background: linear-gradient(90deg, #5f2eea 0%, #7f5af0 100%);
+  background: linear-gradient(90deg, #22c55e 0%, #078736 100%);
   border-radius: 12px;
   transition: width 1.5s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
@@ -3792,7 +3792,7 @@
 }
 
 .premium-percentage {
-  color: #5f2eea;
+  color: #078736;
   font-weight: 500;
 }
 

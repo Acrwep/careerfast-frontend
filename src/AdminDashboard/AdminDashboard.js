@@ -86,6 +86,7 @@ import JobDetails from "../JobPortal/JobDetails";
 import RegistrationChart from "./RegistrationChart";
 import ManageNotification from "./ManageNotification";
 import {
+  getAllCandidateByRecruiter,
   getAppliedCandidatesCount,
   getJobAppliedCandidates,
   getJobPosts,
@@ -121,6 +122,7 @@ export default function AdminDashboard() {
   const [othersCount, setOthersCount] = useState(null);
   const [totalAppliedCandidates, setTotalAppliedCandidates] = useState(null);
   const [domainCount, setDomainCount] = useState([]);
+  const [allAppliedUsers, setAllAppliedUsers] = useState([])
 
   useEffect(() => {
     console.log("Post ID from URL:", id);
@@ -195,6 +197,25 @@ export default function AdminDashboard() {
       console.log("applied candidate", error);
     }
   };
+
+  useEffect(() => {
+    getAllCandidateByRecruiterData()
+  }, [loginUserId])
+
+  const getAllCandidateByRecruiterData = async () => {
+    const payload = {
+      user_id: loginUserId
+    }
+
+    try {
+      const response = await getAllCandidateByRecruiter(payload);
+      setAllAppliedUsers(response?.data?.data || [])
+      console.log("getAllCandidateByRecruiter", response)
+    } catch (error) {
+      console.log("getAllCandidateByRecruiter", error)
+    }
+  }
+
 
   useEffect(() => {
     if (activeTab === "1" && id) {
@@ -1026,7 +1047,7 @@ export default function AdminDashboard() {
                                 padding: "6px 10px",
                                 display: "inline-flex",
                               }}
-                              message={<span>{jobTitle}</span>}
+                              message={<span>All Applied Candidates</span>}
                               type="success"
                               showIcon
                             />
@@ -1043,13 +1064,15 @@ export default function AdminDashboard() {
                           padding: "20px 24px 8px",
                         }}
                       >
-                        {appliedUser.length > 0 ? (
+
+
+                        {allAppliedUsers.length > 0 ? (
                           <div
                             style={{ maxHeight: "500px", overflowY: "auto" }}
                           >
                             <List
                               itemLayout="horizontal"
-                              dataSource={appliedUser.slice(0, 5)}
+                              dataSource={allAppliedUsers.slice(0, 5)}
                               renderItem={(item, index) => (
                                 <List.Item
                                   className="candidate-item"
@@ -1062,7 +1085,7 @@ export default function AdminDashboard() {
                                   actions={[
                                     <Button
                                       onClick={() =>
-                                        handleGetUserProfile(item.id)
+                                        handleGetUserProfile(item.user_id)
                                       }
                                       type="text"
                                       className="view-btn"
@@ -1075,12 +1098,12 @@ export default function AdminDashboard() {
                                         transition: "all 0.2s ease",
                                       }}
                                       onMouseEnter={(e) =>
-                                        (e.currentTarget.style.transform =
-                                          "translateX(2px)")
+                                      (e.currentTarget.style.transform =
+                                        "translateX(2px)")
                                       }
                                       onMouseLeave={(e) =>
-                                        (e.currentTarget.style.transform =
-                                          "translateX(0)")
+                                      (e.currentTarget.style.transform =
+                                        "translateX(0)")
                                       }
                                     >
                                       View{" "}
@@ -1178,7 +1201,7 @@ export default function AdminDashboard() {
                                                 ].map((key) => {
                                                   const value =
                                                     selectedUser.social_links[
-                                                      key
+                                                    key
                                                     ];
                                                   return (
                                                     <a
@@ -1368,7 +1391,7 @@ export default function AdminDashboard() {
                                                   </div>
                                                   <div className="info-value">
                                                     {selectedUser.total_years ||
-                                                    selectedUser.total_months ? (
+                                                      selectedUser.total_months ? (
                                                       <>
                                                         {selectedUser.total_years ||
                                                           0}{" "}
@@ -1392,7 +1415,7 @@ export default function AdminDashboard() {
                                             className="info-card"
                                           >
                                             {selectedUser.education &&
-                                            selectedUser.education.length >
+                                              selectedUser.education.length >
                                               0 ? (
                                               <div className="info-grid">
                                                 <div className="info-item">
@@ -1595,7 +1618,7 @@ export default function AdminDashboard() {
                                             className="profile_image"
                                             size={48}
                                             src={
-                                              item.image ||
+                                              item.profile_image ||
                                               "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                                             }
                                             style={{
@@ -1614,22 +1637,6 @@ export default function AdminDashboard() {
                                           <span>
                                             {item.email || item.phone}
                                           </span>
-                                          {item.skills && (
-                                            <div className="skill-tags">
-                                              {item.skills
-                                                .slice(0, 2)
-                                                .map((skill) => (
-                                                  <Tag className="skill-tag">
-                                                    {skill}
-                                                  </Tag>
-                                                ))}
-                                              {item.skills.length > 2 && (
-                                                <Tag className="skill-tag">
-                                                  +{item.skills.length - 2}
-                                                </Tag>
-                                              )}
-                                            </div>
-                                          )}
                                         </div>
                                       }
                                       style={{
@@ -1641,6 +1648,10 @@ export default function AdminDashboard() {
                                 </List.Item>
                               )}
                             />
+                            <div style={{ textAlign: "center", marginTop: 20, marginBottom: 10 }}>
+                              <a className="see-more-btn" onClick={() => navigate("/applied-candidates-all")} style={{ cursor: "pointer" }}>View All</a>
+                            </div>
+
                           </div>
                         ) : (
                           <Card style={{ textAlign: "center", padding: 40 }}>
@@ -1919,7 +1930,7 @@ export default function AdminDashboard() {
                         }
                       >
                         {domainCount.length > 0 &&
-                        domainCount.some((item) => item.value > 0) ? (
+                          domainCount.some((item) => item.value > 0) ? (
                           <ResponsiveContainer width="100%" height={280}>
                             <BarChart
                               data={domainCount}

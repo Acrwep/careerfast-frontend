@@ -19,6 +19,7 @@ import { FaEye } from "react-icons/fa";
 import moment from "moment/moment";
 import { useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
+import { MdFactCheck } from "react-icons/md";
 const { Title, Text } = Typography;
 
 export default function ListingDashboard() {
@@ -54,7 +55,12 @@ export default function ListingDashboard() {
 
   useEffect(() => {
     getJobPostsData();
-  });
+
+  }, []);
+
+  useEffect(() => {
+    getAppliedCandidatesCountData();
+  }, [loginUserId])
 
   const getJobPostsData = async () => {
     const payload = {};
@@ -71,7 +77,6 @@ export default function ListingDashboard() {
 
       const firstId = jobPosts[0]?.id || null;
       setPostId(firstId);
-      getAppliedCandidatesCountData(firstId);
     } catch (error) {
       console.log("applied candidate", error);
     } finally {
@@ -79,13 +84,13 @@ export default function ListingDashboard() {
     }
   };
 
-  const getAppliedCandidatesCountData = async (postId) => {
+  const getAppliedCandidatesCountData = async () => {
     const payload = {
       user_id: loginUserId,
-      id: postId,
     };
     try {
       const response = await getAppliedCandidatesCount(payload);
+      console.log("getAppliedCandidatesCount", response)
       setTotalAppliedCandidates(response?.data?.data?.candidatesCount || 0);
     } catch (error) {
       console.log("applied candidates count", error);
@@ -207,7 +212,7 @@ export default function ListingDashboard() {
                 title="Total Applied Candidates"
                 value={totalAppliedCandidates}
                 change="+24% from last month"
-                icon={<FiAward />}
+                icon={<MdFactCheck />}
                 bgColor="blue"
               />
             )}
@@ -218,7 +223,7 @@ export default function ListingDashboard() {
                 title="Total View"
                 value={totalRegistrations}
                 change="+8% from last month"
-                icon={<FiBook />}
+                icon={<FaEye />}
                 bgColor="orange"
               />
             )}

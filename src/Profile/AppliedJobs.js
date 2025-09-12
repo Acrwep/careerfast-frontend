@@ -4,7 +4,6 @@ import { SearchOutlined, CalendarOutlined } from "@ant-design/icons";
 import { debounce } from "lodash";
 import { useNavigate } from "react-router-dom";
 import {
-  applyForJob,
   getUserAppliedJobs,
   getUserJobPostStatus,
 } from "../ApiService/action";
@@ -15,14 +14,13 @@ const { Title, Text } = Typography;
 
 const OpportunityCard = ({ opportunity, status }) => {
   const navigate = useNavigate();
-
   const getStatusColor = (status) => {
     switch (status) {
-      case "Shortlist":
+      case "Shortlisted":
         return "green";
       case "Rejected":
         return "red";
-      case "Sent Mail":
+      case "Mail Sent":
         return "blue";
       default:
         return "orange";
@@ -96,13 +94,15 @@ const OpportunityCard = ({ opportunity, status }) => {
               flexWrap: "wrap",
             }}
           >
-            <Tag color="green">{opportunity.work_location}</Tag>
+            <Tag color="green">
+              {opportunity.work_location ? opportunity.work_location : "WFH"}
+            </Tag>
             <Tag color="blue">
               {opportunity.salary_type === "Fixed"
                 ? `$${opportunity.min_salary}`
                 : opportunity.salary_type === "Range"
-                ? `$${opportunity.min_salary} - $${opportunity.max_salary}`
-                : ""}
+                  ? `$${opportunity.min_salary} - $${opportunity.max_salary}`
+                  : ""}
             </Tag>
           </div>
 
@@ -110,7 +110,8 @@ const OpportunityCard = ({ opportunity, status }) => {
             type="secondary"
             style={{ display: "flex", alignItems: "center", gap: 4 }}
           >
-            <CalendarOutlined /> Created at: {opportunity.created_at}
+            <CalendarOutlined /> Applied on:{" "}
+            {new Date(opportunity.created_at).toLocaleDateString()}
           </Text>
         </div>
       </div>
@@ -118,12 +119,16 @@ const OpportunityCard = ({ opportunity, status }) => {
   );
 };
 
+// AppliedJobs.js
+
 export default function AppliedJobs() {
   const [opportunities, setOpportunities] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [loginUserId, setLoginUserId] = useState(null);
-  const [userAppliedJobStatus, setUserAppliedJobStatus] = useState([]);
+  const [appliedJobIds, setAppliedJobIds] = useState([]);
+  const [jobStatusMap, setJobStatusMap] = useState({});
+  const [appliedOn, setAppliedOn] = useState({});
 
   const navigate = useNavigate();
 
@@ -146,15 +151,14 @@ export default function AppliedJobs() {
   }, [loginUserId]);
 
   useEffect(() => {
-    if (userAppliedJobStatus?.length > 0) {
+    if (appliedJobIds.length > 0) {
       getUserJobPostStatusData();
     }
-  }, [userAppliedJobStatus]);
+  }, [appliedJobIds]);
 
   const fetchAppliedJobs = async () => {
     try {
       const response = await getUserAppliedJobs({ userId: loginUserId });
-      console.log("getUserAppliedJobs", response);
       const jobs = response?.data?.data || [];
 
       const sortedJobs = jobs.sort(
@@ -162,9 +166,7 @@ export default function AppliedJobs() {
       );
 
       setOpportunities(sortedJobs);
-
-      const jobIds = sortedJobs.map((job) => job.id);
-      setUserAppliedJobStatus(jobIds);
+      setAppliedJobIds(sortedJobs.map((job) => job.id));
     } catch (error) {
       console.error("Error fetching applied jobs:", error);
     } finally {
@@ -174,7 +176,7 @@ export default function AppliedJobs() {
 
   const getUserJobPostStatusData = async () => {
     try {
-      const promises = userAppliedJobStatus.map((id) =>
+      const promises = appliedJobIds.map((id) =>
         getUserJobPostStatus({ applied_job_id: id })
       );
 
@@ -184,36 +186,30 @@ export default function AppliedJobs() {
       responses.forEach((res) => {
         const jobStatuses = res?.data?.data || [];
         if (jobStatuses.length > 0) {
-          // Pick latest by changed_at
           const latestStatus = jobStatuses.reduce((latest, current) =>
             new Date(current.changed_at) > new Date(latest.changed_at)
               ? current
               : latest
           );
-
           statusMap[latestStatus.applied_job_id] = latestStatus.status;
         }
       });
 
-      setUserAppliedJobStatus(statusMap);
+      setJobStatusMap(statusMap); // ✅ keep map separate
     } catch (error) {
       console.log("getUserJobPostStatus error", error);
     }
   };
 
   const debouncedSearch = useMemo(
-    () =>
-      debounce((value) => {
-        setSearchQuery(value);
-      }, 300),
+    () => debounce((value) => setSearchQuery(value), 300),
     []
   );
 
   const filteredOpportunities = useMemo(() => {
     return opportunities.filter((opp) => {
-      const target = `${opp.job_title} ${
-        opp.company_name || opp.company
-      }`.toLowerCase();
+      const target = `${opp.job_title} ${opp.company_name || opp.company
+        }`.toLowerCase();
       return searchQuery ? target.includes(searchQuery.toLowerCase()) : true;
     });
   }, [opportunities, searchQuery]);
@@ -269,7 +265,7 @@ export default function AppliedJobs() {
             <OpportunityCard
               key={opp.applied_job_id}
               opportunity={opp}
-              status={userAppliedJobStatus[opp.id]}
+              status={jobStatusMap[opp.id]} // ✅ now properly mapped
             />
           ))
         ) : (

@@ -24,6 +24,10 @@ button {
   background-color: rgb(101 63 255 / 16%);
 }
 
+.navbar .ant-select-dropdown{
+  width: 100% !important;
+}
+
 .login_image {
   background-image: url(/src/images/login_bg.png);
   background-position: center;

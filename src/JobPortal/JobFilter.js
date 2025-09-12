@@ -66,6 +66,7 @@ import additional4 from "../images/additional4.png";
 import additional5 from "../images/additional5.png";
 import additional6 from "../images/additional6.png";
 import cities from "cities-list";
+import axios from "axios";
 
 const { Text } = Typography;
 
@@ -107,8 +108,9 @@ export default function JobFilter() {
   const [tempWorkingDays, setTempWorkingDays] = useState("");
   const [tempTypes, setTempTypes] = useState([]);
   const [tempCategories, setTempCategories] = useState([]);
-  const [appliedDate, setAppliedDate] = useState("");
-  const [datePosted, setDatePosted] = useState(0);
+  const [appliedDates, setAppliedDates] = useState({});
+  const [fName, setFname] = useState("");
+  const [lName, setLname] = useState("");
 
   const [activeFilters, setActiveFilters] = useState({
     jobNature: false,
@@ -185,6 +187,8 @@ export default function JobFilter() {
       if (stored) {
         const loginDetails = JSON.parse(stored);
         setLoginUserId(loginDetails.id);
+        setFname(loginDetails.first_name);
+        setLname(loginDetails.last_name);
       }
     } catch (error) {
       console.error("Invalid JSON in localStorage", error);
@@ -252,7 +256,6 @@ export default function JobFilter() {
   const checkIsJobSavedData = async (postId) => {
     if (!loginUserId || !postId) return;
 
-    // Use the existing isSaved state if available
     if (isSaved[postId] !== undefined) return;
 
     const payload = {
@@ -478,6 +481,22 @@ export default function JobFilter() {
       });
   };
 
+  useEffect(() => {
+    try {
+      const storedAppliedDates = localStorage.getItem("appliedDates");
+      if (storedAppliedDates) {
+        setAppliedDates(JSON.parse(storedAppliedDates));
+      }
+    } catch (error) {
+      console.error("Error loading applied dates from localStorage", error);
+    }
+  }, []);
+
+  // Save applied dates to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("appliedDates", JSON.stringify(appliedDates));
+  }, [appliedDates]);
+
   const applyForJobData = async () => {
     const token = localStorage.getItem("AccessToken");
     if (!token) {
@@ -511,30 +530,89 @@ export default function JobFilter() {
     try {
       const response = await applyForJob(payload, token);
       console.log("apply jobs", response);
-      message.success("Job applied successfully!");
 
       setIsApplied((prev) => ({
         ...prev,
         [jobId]: true,
       }));
 
-      setAppliedDate((prev) => ({
+      const appliedDate = response.data.appliedJob.created_at;
+      setAppliedDates((prev) => ({
         ...prev,
-        [jobId]: response.data.appliedJob.created_at,
+        [jobId]: appliedDate,
       }));
+
+      // 2️⃣ Notify recruiter
+      const notifyResponse = await axios.post(
+        "http://localhost:3001/api/applyJob",
+        {
+          postId: jobId,
+          userId: loginUserId,
+          answers: structuredAnswers,
+        }
+      );
+
+      if (notifyResponse.data.success) {
+        message.success(
+          "Job applied successfully! Recruiter has been notified."
+        );
+      } else {
+        message.warning(notifyResponse.data.message);
+      }
 
       setOpenApplyNow(false);
     } catch (error) {
       console.error("apply jobs error", error);
-      message.error("Error while applying");
+      message.error("Error while applying for the job");
     }
   };
 
-  const showDrawer = () => {
+  const showDrawer = async () => {
+    const jobId = postDetails[0]?.id;
+
     if (postDetails[0]?.questions?.length > 0) {
+      // If questions exist, show the drawer
       setOpenApplyNow(true);
     } else {
-      applyForJobData();
+      // No questions, directly apply
+      try {
+        const token = localStorage.getItem("AccessToken");
+        if (!token) {
+          message.error("Please login before applying.");
+          return;
+        }
+
+        // 1️⃣ Store applied job in DB
+        const payload = {
+          postId: jobId,
+          userId: loginUserId,
+          answers: [],
+        };
+        const response = await applyForJob(payload, token);
+        console.log("applyForJob", response);
+
+        // Update state
+        setIsApplied((prev) => ({ ...prev, [jobId]: true }));
+        const appliedDate = response.data.appliedJob.created_at;
+        setAppliedDates((prev) => ({
+          ...prev,
+          [jobId]: appliedDate,
+        }));
+        // 2️⃣ Notify recruiter
+        const notifyResponse = await axios.post(
+          "http://localhost:3001/api/applyJob",
+          { postId: jobId, userId: loginUserId, answers: "" }
+        );
+
+        if (notifyResponse.data.success) {
+          message.success("Applied successfully! Recruiter has been notified.");
+        } else {
+          message.warning(notifyResponse.data.message);
+        }
+      } catch (error) {
+        console.error("Apply error:", error);
+        message.error("Error while applying for job.");
+      }
     }
   };
 
@@ -1495,9 +1573,36 @@ export default function JobFilter() {
                                 }}
                               >
                                 {isApplied[job.id] === true ? (
-                                  <div className="side_job_applied_badge">
-                                    <FaCheckCircle /> Applied
-                                  </div>
+                                  <Tooltip
+                                    title={
+                                      appliedDates[job.id]
+                                        ? `Applied on ${new Date(
+                                            appliedDates[job.id]
+                                          ).toLocaleDateString("en-US", {
+                                            month: "short",
+                                            day: "numeric",
+                                            year: "numeric",
+                                          })}`
+                                        : "Applied recently"
+                                    }
+                                    placement="top"
+                                    arrow={true}
+                                    overlayInnerStyle={{
+                                      padding: "6px 10px",
+                                      borderRadius: "8px",
+                                      fontSize: "13px",
+                                      fontWeight: 500,
+                                      background: "#111827",
+                                      color: "#fff",
+                                    }}
+                                  >
+                                    <div className="side_job_applied_badge tooltip-badge">
+                                      <FaCheckCircle className="applied-icon" />
+                                      <span className="applied-text">
+                                        Applied
+                                      </span>
+                                    </div>
+                                  </Tooltip>
                                 ) : (
                                   <button
                                     onClick={showDrawer}
@@ -1512,16 +1617,6 @@ export default function JobFilter() {
                                   </button>
                                 )}
                               </div>
-                              <div>
-                                {isApplied[job.id] && (
-                                  <p className="applied-info">
-                                    Applied on:{" "}
-                                    {new Date(
-                                      appliedDate[job.id]
-                                    ).toLocaleDateString()}
-                                  </p>
-                                )}
-                              </div>
                               <Drawer
                                 size="default"
                                 title="Apply Now"
@@ -1530,9 +1625,31 @@ export default function JobFilter() {
                                 open={openApplyNow}
                               >
                                 <p>
-                                  Hi Santhosh! We request you to take a couple
-                                  of minutes to update your profile.
+                                  Hi {fName} {lName}! We request you to take a
+                                  couple of minutes to update your profile.
                                 </p>
+
+                                {/* ✅ Show applied date if available */}
+                                {postDetails[0]?.applied_at && (
+                                  <p
+                                    style={{
+                                      marginTop: 12,
+                                      fontWeight: "500",
+                                      color: "#555",
+                                    }}
+                                  >
+                                    Applied on:{" "}
+                                    {new Date(
+                                      postDetails[0].applied_at
+                                    ).toLocaleDateString("en-IN", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </p>
+                                )}
 
                                 {postDetails[0]?.questions?.length > 0 && (
                                   <div className="job-questions-section">

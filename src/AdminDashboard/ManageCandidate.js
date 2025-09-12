@@ -15,6 +15,7 @@ import {
   Skeleton,
   Tooltip,
   Drawer,
+  message,
 } from "antd";
 import {
   EnvironmentOutlined,
@@ -52,6 +53,8 @@ import {
   updateUserAppliedJobStatus,
 } from "../ApiService/action";
 import { useParams } from "react-router-dom";
+import { CommonToaster } from "../Common/CommonToaster";
+
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -70,6 +73,30 @@ export default function ManageCandidate() {
   const [jobTitle, setJobTitle] = useState("");
   const [appliedUserId, setAppliedUserId] = useState(null);
   const [postDetails, setPostDetails] = useState([]);
+
+  const statusColors = {
+    Shortlisted: {
+      background: "#f6ffed",
+      borderColor: "#b7eb8f",
+      color: "#52c41a",
+    },
+    Rejected: {
+      background: "#fff1f0",
+      borderColor: "#ffa39e",
+      color: "#f5222d",
+    },
+    "Mail Sent": {
+      background: "#e6f4ff",
+      borderColor: "#91caff",
+      color: "#0958d9",
+    },
+    Pending: {
+      background: "#fffbe6",
+      borderColor: "#ffe58f",
+      color: "#faad14",
+    },
+  };
+
 
   useEffect(() => {
     const stored = localStorage.getItem("loginDetails");
@@ -221,24 +248,45 @@ export default function ManageCandidate() {
   };
 
   const handleJobStatus = async (status, userId) => {
+    // ✅ Map frontend button values to backend values
+    const backendStatusMap = {
+      Shortlist: "Shortlisted",
+      Rejected: "Rejected",
+      "Sent Mail": "Mail Sent",
+    };
+
+    const finalStatus = backendStatusMap[status] || status;
+
     const payload = {
       post_id: id,
       user_id: userId,
-      status: status,
+      status: finalStatus, // ✅ send mapped value to backend
     };
 
     try {
       const response = await updateUserAppliedJobStatus(payload);
       console.log("updateUserAppliedJobStatus", response);
 
+      const lower = finalStatus.toLowerCase();
+
+      if (lower === "shortlisted") {
+        message.success("Candidate Shortlisted Successfully");
+      }
+      if (lower === "rejected") {
+        message.error("Candidate Rejected Successfully");
+      }
+      if (lower === "mail sent") {
+        message.info("Mail Sent Successfully");
+      }
+
       setAppliedUser((prev) =>
         prev.map((user) =>
           user.id === userId
             ? {
-                ...user,
-                status: status,
-                status_updated_at: new Date().toISOString(),
-              }
+              ...user,
+              status: finalStatus,
+              status_updated_at: new Date().toISOString(),
+            }
             : user
         )
       );
@@ -246,6 +294,7 @@ export default function ManageCandidate() {
       console.log("updateUserAppliedJobStatus", error);
     }
   };
+
 
   const filteredUsers = appliedUser.filter((user) => {
     const matchesSearch =
@@ -297,27 +346,33 @@ export default function ManageCandidate() {
       title: <Text type="secondary">CANDIDATE STATUS</Text>,
       dataIndex: "status",
       render: (status, record) => {
-        let color = "default";
-        const lower = status?.toLowerCase();
+        const currentStatus = status || "Pending";
+        const colors = statusColors[currentStatus] || statusColors["Pending"];
 
-        if (lower === "shortlist") color = "green";
-        else if (lower === "rejected") color = "red";
-        else if (lower === "sent mail") color = "blue";
-        else if (lower === "pending") color = "orange";
+        const updatedAt = record.status_updated_at
+          ? new Date(record.status_updated_at).toLocaleString()
+          : "Status not updated yet";
 
         return (
-          <Tooltip
-            title={`Last updated: ${new Date(
-              record.status_updated_at
-            ).toLocaleDateString()}`}
-          >
-            <Tag color={color} style={{ fontWeight: 500, borderRadius: 6 }}>
-              {status?.charAt(0).toUpperCase() + status?.slice(1)}
+          <Tooltip title={`Last updated: ${updatedAt}`}>
+            <Tag
+              style={{
+                fontWeight: 500,
+                borderRadius: 6,
+                background: colors.background,
+                borderColor: colors.borderColor,
+                color: colors.color,
+              }}
+            >
+              {currentStatus}
             </Tag>
           </Tooltip>
         );
       },
-    },
+    }
+
+    ,
+
     {
       title: <Text type="secondary">REG STATUS</Text>,
       key: "regStatus",
@@ -326,55 +381,74 @@ export default function ManageCandidate() {
 
         return (
           <Space>
+            {/* Shortlist */}
             <Tooltip title="Shortlist">
               <Button
-                onClick={() => handleJobStatus("Shortlist", record.id)}
+                onClick={() => handleJobStatus("Shortlisted", record.id)}
                 shape="circle"
                 icon={<CheckOutlined />}
-                disabled={
-                  lowerStatus === "rejected" || lowerStatus === "sent mail"
-                }
+                disabled={lowerStatus === "rejected" || lowerStatus === "mail sent"}
                 style={{
-                  background: "#f6ffed",
-                  borderColor: "#b7eb8f",
-                  color: "#52c41a",
-                  opacity:
-                    lowerStatus === "rejected" || lowerStatus === "sent mail"
-                      ? 0.5
-                      : 1,
+                  border: "none",
+                  background:
+                    record.status === "Shortlisted"
+                      ? statusColors["Shortlisted"].color
+                      : "#f0f0f0",
+                  color:
+                    record.status === "Shortlisted"
+                      ? "#fff"
+                      : statusColors["Shortlisted"].color,
                 }}
               />
             </Tooltip>
 
+            {/* Reject */}
             <Tooltip title="Reject">
               <Button
                 onClick={() => handleJobStatus("Rejected", record.id)}
                 shape="circle"
                 icon={<StopOutlined />}
+                disabled={lowerStatus === "shortlisted" || lowerStatus === "mail sent"}
                 style={{
-                  background: "#fff1f0",
-                  borderColor: "#ffa39e",
-                  color: "#f5222d",
+                  border: "none",
+                  background:
+                    record.status === "Rejected"
+                      ? statusColors["Rejected"].color
+                      : "#f0f0f0",
+                  color:
+                    record.status === "Rejected"
+                      ? "#fff"
+                      : statusColors["Rejected"].color,
                 }}
               />
             </Tooltip>
 
+            {/* Send Email */}
             <Tooltip title="Send Email">
               <Button
-                onClick={() => handleJobStatus("Sent Mail", record.id)}
+                onClick={() => handleJobStatus("Mail Sent", record.id)}
                 shape="circle"
                 icon={<MailOutlined />}
+                disabled={lowerStatus === "rejected" || lowerStatus === "shortlisted"}
                 style={{
-                  background: "#e6f4ff",
-                  borderColor: "#91caff",
-                  color: "#0958d9",
+                  border: "none",
+                  background:
+                    record.status === "Mail Sent"
+                      ? statusColors["Mail Sent"].color
+                      : "#f0f0f0",
+                  color:
+                    record.status === "Mail Sent"
+                      ? "#fff"
+                      : statusColors["Mail Sent"].color,
                 }}
               />
             </Tooltip>
           </Space>
         );
       },
-    },
+
+    }
+    ,
     {
       title: <Text type="secondary">COMPATIBILITY</Text>,
       dataIndex: "score",
@@ -760,7 +834,7 @@ export default function ManageCandidate() {
                         <div className="info-label">Experience Duration</div>
                         <div className="info-value">
                           {selectedUser.total_years ||
-                          selectedUser.total_months ? (
+                            selectedUser.total_months ? (
                             <>
                               {selectedUser.total_years || 0}{" "}
                               {selectedUser.total_months
@@ -778,7 +852,7 @@ export default function ManageCandidate() {
 
                 <Card title="Education" className="info-card">
                   {selectedUser.education &&
-                  selectedUser.education.length > 0 ? (
+                    selectedUser.education.length > 0 ? (
                     <div className="info-grid">
                       <div className="info-item">
                         <div className="info-icon">

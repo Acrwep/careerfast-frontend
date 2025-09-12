@@ -34,6 +34,7 @@ import {
 } from "../ApiService/action";
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import { requestForToken } from "../firebase/fireBase";
 const { Title, Text, Link } = Typography;
 
 const LoginPage = () => {
@@ -156,19 +157,28 @@ const LoginPage = () => {
       setOfficialEmailError(emailValidate);
       return;
     }
-    const payload = {
-      email: activeTab === "recruiter" ? officialEmail : email,
-      password: password,
-      role_id: roleId,
-    };
+
     try {
+      // ✅ Get FCM token
+      await requestForToken(() => {});
+      const fcm_token = localStorage.getItem("fcm_token");
+
+      const payload = {
+        email: activeTab === "recruiter" ? officialEmail : email,
+        password: password,
+        role_id: roleId,
+        fcm_token, // send to backend
+      };
+
       const response = await login(payload);
       console.log("login response", response);
+
       const token = response.data.token;
       localStorage.setItem("AccessToken", token);
+
       const loginDetails = response.data.data[0];
-      console.log(loginDetails);
       localStorage.setItem("loginDetails", JSON.stringify(loginDetails));
+
       setIsLoading(true);
       setTimeout(() => {
         setIsLoading(false);
