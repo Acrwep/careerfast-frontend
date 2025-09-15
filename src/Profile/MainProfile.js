@@ -100,6 +100,7 @@ import {
   getColleges,
   getCourses,
   getCourseType,
+  getDailyStreak,
   getGenderData,
   getQualification,
   getSpecialization,
@@ -402,11 +403,34 @@ export default function MainProfile() {
   // Update the getClassForValue function
   const getClassForValue = (value) => {
     if (!value || value.count === 0) return "color-empty";
+    const today = format(new Date(), "yyyy-MM-dd");
+    if (value.date === today) {
+      return "color-today";
+    }
     if (value.count === 1) return "color-scale-1";
     if (value.count === 2) return "color-scale-2";
     if (value.count === 3) return "color-scale-3";
     return "color-scale-4";
   };
+
+  useEffect(() => {
+    getDailyStreakData();
+  }, [loginUserId])
+
+  const getDailyStreakData = async () => {
+    const payload = {
+      user_id: loginUserId
+    }
+
+    try {
+      const response = await getDailyStreak(payload);
+      console.log("getDailyStreak", response)
+    } catch (error) {
+      console.log("getDailyStreak", error)
+    }
+  }
+
+
 
   useEffect(() => {
     if (loginUserId) {
@@ -5563,7 +5587,7 @@ export default function MainProfile() {
                   {/* Profile completion */}
                   <div className="premium-section">
                     <div className="premium-section-header">
-                      <Award size={18} className="premium-icon" />
+                      <Award style={{ color: "#078736" }} size={18} className="premium-icon" />
                       <strong className="premium-section-title">
                         Profile Completion:
                       </strong>

@@ -870,3 +870,17 @@ export const dailyStreak = async (payload) => {
     throw error;
   }
 };
+
+// getDailyStreak
+
+export const getDailyStreak = async (payload) => {
+  try {
+    const response = await api.get("api/getDailyStreak", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+

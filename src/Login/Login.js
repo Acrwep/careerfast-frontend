@@ -25,7 +25,7 @@ import {
 } from "../Common/Validation";
 import CommonInputField from "../Common/CommonInputField";
 import CommonPasswordField from "../Common/CommonPasswordField";
-import { isProfileUpdated, login } from "../ApiService/action";
+import { googleLogin, isProfileUpdated, login } from "../ApiService/action";
 import {
   verifyOtp,
   forgotPassword,
@@ -160,7 +160,7 @@ const LoginPage = () => {
 
     try {
       // ✅ Get FCM token
-      await requestForToken(() => {});
+      await requestForToken(() => { });
       const fcm_token = localStorage.getItem("fcm_token");
 
       const payload = {
@@ -183,8 +183,7 @@ const LoginPage = () => {
       setTimeout(() => {
         setIsLoading(false);
         message.success(
-          `${
-            activeTab === "candidate" ? "Candidate" : "Recruiter"
+          `${activeTab === "candidate" ? "Candidate" : "Recruiter"
           } Login successfully!`
         );
       }, 1500);
@@ -322,37 +321,46 @@ const LoginPage = () => {
     },
   ];
 
-  // const handleGoogleLoginSuccess = async (credentialResponse) => {
-  //   try {
-  //     const { credential } = credentialResponse;
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+    try {
+      const { credential } = credentialResponse || {};
+      if (!credential) {
+        message.error("Google login failed. No token received.");
+        return;
+      }
 
-  //     const response = await googleLogin({ token: credential });
+      // Decode client side (optional, just for debugging)
+      const decoded = jwtDecode(credential);
+      console.log("Google user decoded:", decoded);
 
-  //     const token = response.data.token;
-  //     const userData = response.data.user;
+      // Call backend
+      const response = await googleLogin({ token: credential });
+      const token = response.data.token;
+      const userData = response.data.user;
 
-  //     localStorage.setItem("AccessToken", token);
-  //     localStorage.setItem("loginDetails", JSON.stringify(userData));
+      localStorage.setItem("AccessToken", token);
+      localStorage.setItem("loginDetails", JSON.stringify(userData));
 
-  //     message.success("Google login successful!");
+      message.success("Google login successful!");
 
-  //     const profileResponse = await isProfileUpdated({ email: userData.email });
+      // check profile status
+      const profileResponse = await isProfileUpdated({ email: userData.email });
+      if (profileResponse?.data?.data === true) {
+        navigate("/job-portal");
+      } else {
+        navigate("/profiledetails");
+      }
+    } catch (error) {
+      console.error("Google login error:", error);
+      message.error("Google login failed. Please try again.");
+    }
+  };
 
-  //     if (profileResponse?.data?.data === true) {
-  //       navigate("/job-portal");
-  //     } else {
-  //       navigate("/profiledetails");
-  //     }
-  //   } catch (error) {
-  //     console.error("Google login error:", error);
-  //     message.error("Google login failed. Please try again.");
-  //   }
-  // };
 
-  // const handleGoogleLoginError = () => {
-  //   console.log("Google login failed");
-  //   message.error("Google login failed. Please try again.");
-  // };
+  const handleGoogleLoginError = () => {
+    console.log("Google login failed");
+    message.error("Google login failed. Please try again.");
+  };
   return (
     <div className="loginpage_container">
       <Row>
@@ -521,9 +529,8 @@ const LoginPage = () => {
                   >
                     {isLoading
                       ? "Authenticating..."
-                      : `Continue as ${
-                          activeTab === "candidate" ? "Candidate" : "Recruiter"
-                        }`}
+                      : `Continue as ${activeTab === "candidate" ? "Candidate" : "Recruiter"
+                      }`}
                   </Button>
                 </Form.Item>
 
@@ -539,12 +546,12 @@ const LoginPage = () => {
                     marginBottom: 14,
                   }}
                 >
-                  {/* <GoogleLogin
+                  <GoogleLogin
                     onSuccess={handleGoogleLoginSuccess}
                     onError={handleGoogleLoginError}
                     auto_select={true}
                     useOneTap={true}
-                  /> */}
+                  />
                   <Button
                     shape="circle"
                     size="large"
