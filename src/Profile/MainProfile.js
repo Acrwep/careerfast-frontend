@@ -183,6 +183,7 @@ export default function MainProfile() {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [customSkill, setCustomSkill] = useState("");
   const [activeButton, setActiveButton] = useState(null);
+  const [genderActiveButton, setGenderActiveButton] = useState(null);
   const [userTypeactiveButton, setUserTypeActiveButton] = useState(null);
   const defaultAvatar =
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
@@ -701,12 +702,21 @@ export default function MainProfile() {
       setProfileImage(image || defaultAvatar);
       setIsResume(response?.data?.data?.resume || "");
       setIsSkills(response?.data?.data?.skills || []);
-      setIsWorkExp(response?.data?.data?.experince_type || []);
+      setIsWorkExp(response?.data?.data?.experince_type || "");
       setIsAbout(response?.data?.data?.about || "");
       setIsEducation(response?.data?.data?.education || []);
       setIsProjects(response?.data?.data?.projects || []);
-      setTotalMonthsExperience(response?.data?.data?.total_months || "N/A");
-      setTotalYearsExperience(response?.data?.data?.total_years || "N/A");
+      setTotalYearsExperience(
+        response?.data?.data?.total_years
+          ? `${response.data.data.total_years}`
+          : ""
+      );
+      setTotalMonthsExperience(
+        response?.data?.data?.total_months
+          ? `${response.data.data.total_months}`
+          : ""
+      );
+
 
       setLocation(response?.data?.data?.location || "N/A");
       const fetchedLinks = response?.data?.data?.social_links || {};
@@ -727,6 +737,13 @@ export default function MainProfile() {
 
       if (response?.data?.data) {
         const profile = response.data.data;
+        setUserType(profile.user_type || "");
+        setGender(profile.gender || "");
+        setExperienceType(profile.experince_type || "");
+        setUserTypeActiveButton(profile.user_type || "");
+        setGenderActiveButton(profile.gender || "");
+
+
 
         // Handle education
         if (profile.education && profile.education.length > 0) {
@@ -764,6 +781,7 @@ export default function MainProfile() {
           setCompanyName(proj.company_name || "");
           setProject(proj.project_title || "");
           setProjectType(proj.project_type || "");
+          setActiveButton(proj.project_type || "");
           setProjectStartDate(proj.start_date || "");
           setProjectEndDate(proj.end_date || "");
           setProjectDescription(proj.description);
@@ -941,9 +959,7 @@ export default function MainProfile() {
         end_year: endDate,
       }),
       ...(userType === "Fresher" && {
-        course: fresherCourseOptions.find(
-          (item) => item.id === fresherCourse?.name || ""
-        ),
+        course: fresherCourseOptions.find((item) => item.id === fresherCourse)?.name || "",
         start_year: fresherStartDate,
         end_year: fresherEndtDate,
       }),
@@ -1310,6 +1326,7 @@ export default function MainProfile() {
       setProjectEndDate("");
       setProjectDescription("");
       setActiveButton(""); // clear active button style
+      setGenderActiveButton("")
       setShowForm(false);
     } catch (error) {
       console.error("project error", error);
@@ -1697,7 +1714,7 @@ export default function MainProfile() {
   };
 
   const handleButtonClick = (buttonId) => {
-    setActiveButton(buttonId);
+    setGenderActiveButton(buttonId);
     setGender(buttonId);
     setGenderError("");
   };
@@ -1930,7 +1947,7 @@ export default function MainProfile() {
                         key={item.id || item.name}
                         type="button"
                         className={
-                          activeButton === item.name
+                          genderActiveButton === item.name
                             ? "job_nature_button_active"
                             : "job_nature_button"
                         }
@@ -2070,7 +2087,7 @@ export default function MainProfile() {
 
                           if (endDate && parseInt(value) > parseInt(endDate)) {
                             setEndDateError(
-                              "End year must be after start year"
+                              " must be after start year"
                             );
                           } else {
                             setEndDateError("");
@@ -2098,7 +2115,7 @@ export default function MainProfile() {
                             parseInt(value) < parseInt(startDate)
                           ) {
                             setEndDateError(
-                              "End year must be after start year"
+                              " must be after start year"
                             );
                           } else {
                             setEndDateError("");
@@ -2159,7 +2176,7 @@ export default function MainProfile() {
 
                           if (endDate && parseInt(value) > parseInt(endDate)) {
                             setFresherEndDateError(
-                              "End year must be after start year"
+                              " must be after start year"
                             );
                           } else {
                             setFresherEndDateError("");
@@ -2186,7 +2203,7 @@ export default function MainProfile() {
                             parseInt(value) < parseInt(startDate)
                           ) {
                             setFresherEndDateError(
-                              "End year must be after start year"
+                              " must be after start year"
                             );
                           } else {
                             setFresherEndDateError("");
@@ -2369,6 +2386,7 @@ export default function MainProfile() {
                 name="fresherexperience"
                 mandatory={true}
                 placeholder="Select Experience"
+                value={selectExperienceType}
                 options={[
                   {
                     value: "Fresher",
@@ -2400,6 +2418,7 @@ export default function MainProfile() {
                       name="totalexperience"
                       mandatory={true}
                       placeholder="Select Experience"
+                      value={totalYearsExperience}
                       options={[
                         {
                           value: "0 Years",
@@ -2464,6 +2483,7 @@ export default function MainProfile() {
                       name="experiencemonth"
                       mandatory={true}
                       placeholder="Select Experience"
+                      value={totalMonthsExperience}
                       options={[
                         {
                           value: "0 Month",
@@ -5635,15 +5655,22 @@ export default function MainProfile() {
                         <li>
                           <Check size={14} className="premium-check-icon" /> Fresher
                         </li>
-                        <li>
-                          <Check size={14} className="premium-check-icon" /> {location}
-                        </li>
-                        <li>
-                          <Check size={14} className="premium-check-icon" /> {educationCollege}
-                        </li>
-                        <li>
-                          <Check size={14} className="premium-check-icon" /> {educationCourse}
-                        </li>
+                        {location ? (
+                          <li>
+                            <Check size={14} className="premium-check-icon" /> {location}
+                          </li>
+                        ) : ""}
+                        {educationCollege ? (
+                          <li>
+                            <Check size={14} className="premium-check-icon" /> {educationCollege}
+                          </li>
+                        ) : ""}
+                        {educationCourse ? (
+                          <li>
+                            <Check size={14} className="premium-check-icon" /> {educationCourse}
+                          </li>
+                        ) : ""}
+
                       </ul>
                     ) : isWorkExp === "Experience" ? (
                       <ul className="premium-list">
@@ -5651,15 +5678,21 @@ export default function MainProfile() {
                           <Check size={14} className="premium-check-icon" />{" "}
                           {totalYearsExperience} {totalMonthsExperience}
                         </li>
-                        <li>
-                          <Check size={14} className="premium-check-icon" /> {location}
-                        </li>
-                        <li>
-                          <Check size={14} className="premium-check-icon" /> {educationCollege}
-                        </li>
-                        <li>
-                          <Check size={14} className="premium-check-icon" /> {educationCourse}
-                        </li>
+                        {location ? (
+                          <li>
+                            <Check size={14} className="premium-check-icon" /> {location}
+                          </li>
+                        ) : ""}
+                        {educationCollege ? (
+                          <li>
+                            <Check size={14} className="premium-check-icon" /> {educationCollege}
+                          </li>
+                        ) : ""}
+                        {educationCourse ? (
+                          <li>
+                            <Check size={14} className="premium-check-icon" /> {educationCourse}
+                          </li>
+                        ) : ""}
                       </ul>
                     ) : (
                       ""

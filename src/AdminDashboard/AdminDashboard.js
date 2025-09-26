@@ -85,6 +85,7 @@ import EditOpportunity from "./EditOpportunity";
 import JobDetails from "../JobPortal/JobDetails";
 import RegistrationChart from "./RegistrationChart";
 import ManageNotification from "./ManageNotification";
+
 import {
   getAllCandidateByRecruiter,
   getAppliedCandidatesCount,
@@ -92,9 +93,11 @@ import {
   getJobPosts,
   getUserProfile,
 } from "../ApiService/action";
+import { requestForToken } from "../firebase/fireBase";
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
+
 
 export default function AdminDashboard() {
   const [collapsed, setCollapsed] = useState(false);
@@ -131,6 +134,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     document.title = "CareerFast | Admin Dashboard";
     getJobPostsData();
+  }, []);
+  useEffect(() => {
+    // 🔹 Save/update recruiter FCM token when dashboard loads
+    requestForToken();
   }, []);
 
   useEffect(() => {

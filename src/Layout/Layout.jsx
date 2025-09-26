@@ -29,33 +29,15 @@ import RegistrationChart from "../AdminDashboard/RegistrationChart";
 import ManageNotification from "../AdminDashboard/ManageNotification";
 import { useDispatch } from "react-redux";
 import { storeLoginStatus } from "../Redux/Slice";
-import Blogs from "../Blogs/blogs";
-import BlogContent from "../Blogs/BlogContent";
 import AllAppliedCandidates from "../AdminDashboard/AllAppliedCandidates";
-import useFetch from "../hooks/useFetch";
 import Location from "../JobPortal/Location";
-import PushNotification from "../PushNotification/PushNotification";
+import AllRegisteredCandidates from "../AllRegisteredCandidates/AllRegisteredCandidates";
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  let { loading, data, error } = useFetch(
-    "http://localhost:1337/api/blogs?populate=*"
-  );
-
-  let {
-    loading: jobLoading,
-    data: jobData,
-    error: jobError,
-  } = useFetch("http://localhost:1337/api/jobportals?populate=*");
-
-  let {
-    loading: internshipLoading,
-    data: internshipData,
-    error: internshipError,
-  } = useFetch("http://localhost:1337/api/internship-portals?populate=*");
 
   useEffect(() => {
     const handleTokenExpire = () => {
@@ -120,9 +102,6 @@ const Layout = () => {
           path="/job-portal"
           element={
             <JobPortalLandingPage
-              loading={jobLoading}
-              error={jobError}
-              jobPortals={jobData || ""}
             />
           }
         />
@@ -130,9 +109,6 @@ const Layout = () => {
           path="/internship"
           element={
             <InternshipLandingPage
-              loading={internshipLoading}
-              error={internshipError}
-              intershipPortals={internshipData || ""}
             />
           }
         />
@@ -157,29 +133,12 @@ const Layout = () => {
         <Route path="/admin-dashboard/:id" element={<ManageCandidate />} />
         <Route path="/admin-dashboard/:id" element={<RegistrationChart />} />
         <Route path="/location" element={<Location />} />
-        <Route
-          path="/blogs"
-          element={
-            <Blogs loading={loading} error={error} blogs={data ? data : ""} />
-          }
-        />
-        <Route
-          path="/blog/:slug"
-          element={
-            <BlogContent
-              loading={loading}
-              error={error}
-              blogs={data ? data : ""}
-            />
-          }
-        />
-
         <Route path="/manage-notification" element={<ManageNotification />} />
+        <Route path="/all-candidates" element={<AllRegisteredCandidates />} />
         <Route
           path="/applied-candidates-all"
           element={<AllAppliedCandidates />}
         />
-        <Route path="/push-notification" element={<PushNotification />} />
       </Routes>
     </div>
   );

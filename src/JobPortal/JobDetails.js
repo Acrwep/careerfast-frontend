@@ -169,24 +169,23 @@ export default function JobDetails() {
       job_category: job.job_category,
       postedDate,
       working_days: job.working_days,
-      daysLeft: daysLeft > 0 ? `${daysLeft} days left` : "Expired",
+      daysLeft: daysLeft >= 0 ? `${daysLeft} days left` : "Expired",
       level: job.experience_type,
       salary:
         job.salary_type === "Fixed"
           ? `$${job.min_salary || "N/A"}`
           : job.salary_type === "Range"
-          ? `$${job.min_salary || "N/A"} - $${job.max_salary || "N/A"}`
-          : "Negotiable",
-      location: `${job.workplace_type}${
-        job.work_location ? ` • ${job.work_location}` : ""
-      }`,
+            ? `$${job.min_salary || "N/A"} - $${job.max_salary || "N/A"}`
+            : "Negotiable",
+      location: `${job.workplace_type}${job.work_location ? ` • ${job.work_location}` : ""
+        }`,
       diversity_hiring: job.diversity_hiring,
       type: job.job_nature,
       premium: true,
       urgent: false,
       skills: job.skills,
       eligibility: job.experience_required?.join(", "),
-      status: daysLeft > 0 ? "Live" : "Expired",
+      status: daysLeft >= 0 ? "Live" : "Expired",
       questions: job.questions?.map((q) => q.question) || [],
       questions_with_ids:
         job.questions?.map((q) => ({
@@ -430,6 +429,7 @@ export default function JobDetails() {
           <Col lg={24} md={24} sm={24}>
             {postDetails.map((job) => (
               <div
+                key={job.id}
                 style={{ padding: "40px 80px" }}
                 className="premium-job-card"
               >
@@ -441,8 +441,8 @@ export default function JobDetails() {
                         job.status === "Live"
                           ? "status-badge"
                           : job.status === "Expired"
-                          ? "status-badge-red"
-                          : ""
+                            ? "status-badge-red"
+                            : ""
                       }
                     >
                       {job.status}
@@ -563,9 +563,9 @@ export default function JobDetails() {
                       {postDetails[0]?.questions?.length > 0 && (
                         <div className="job-questions-section">
                           <h4>Application Questions</h4>
-                          {postDetails[0].questions.map((question, index) => (
-                            <div key={index} className="question-item">
-                              <p>{question}</p>
+                          {postDetails[0]?.questions_with_ids?.map((q, index) => (
+                            <div key={q.id || index} className="question-item">
+                              <p>{q.question}</p>
                               <Input.TextArea
                                 rows={3}
                                 placeholder="Your answer..."
@@ -604,7 +604,7 @@ export default function JobDetails() {
                       <span className="side_job_eligibility_item">
                         <FaTransgender />{" "}
                         {job.diversity_hiring.map((diversity_hiring, index) => (
-                          <span key={index}>
+                          <span key={diversity_hiring}>
                             {diversity_hiring}
                             {index < job.diversity_hiring.length - 1 && ", "}
                           </span>
@@ -618,7 +618,7 @@ export default function JobDetails() {
           </Col>
         </Row>
         {postDetails.map((job) => (
-          <div className="job-details-container">
+          <div key={job.id} className="job-details-container">
             {/* Premium Tab Navigation */}
             <div className="tabs">
               {tabs.map((tab) => (
@@ -655,7 +655,7 @@ export default function JobDetails() {
                       <h4>Skills Required</h4>
                       <p>
                         {job.skills.map((skill, index) => (
-                          <span key={index} className="premium-skill">
+                          <span key={skill} className="premium-skill">
                             {skill}
                             {index < job.skills.length - 1 && (
                               <span className="skill-separator"> | </span>
@@ -676,7 +676,7 @@ export default function JobDetails() {
                       <h4>Job Benefits</h4>
                       <p>
                         {(job.benefits || []).map((benefit, index) => (
-                          <span key={index} className="premium-skill">
+                          <span key={benefit} className="premium-skill">
                             {benefit}
                           </span>
                         ))}

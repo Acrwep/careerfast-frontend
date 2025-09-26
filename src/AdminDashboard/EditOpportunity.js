@@ -419,11 +419,10 @@ const EditOpportunity = () => {
   const [activeSection, setActiveSection] = useState(null);
   const [salaryData, setSalaryData] = useState([]);
   const [salaryTypeActiveButton, setSalaryTypeActiveButton] = useState("");
-  const [salaryDetails, setSalaryDetails] = useState("");
   const [currency, setCurrency] = useState("INR");
-  const [fixedSalary, setFixedSalary] = useState("");
-  const [salaryMin, setSalaryMin] = useState("");
-  const [salaryMax, setSalaryMax] = useState("");
+  const [fixedSalary, setFixedSalary] = useState(null);
+  const [salaryMin, setSalaryMin] = useState(null);
+  const [salaryMax, setSalaryMax] = useState(null);
   const [companyName, setCompanyName] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [jobCategory, setJobCategory] = useState("");
@@ -470,7 +469,6 @@ const EditOpportunity = () => {
   const [selected, setSelected] = useState([]);
   const [selectedWorkingDays, setSelectedWorkingDays] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [jobNatureSelected, setJobNatureSelected] = useState("");
   const [selectedSort, setSelectedSort] = useState(null);
   const [diversityenabled, setDiversityEnabled] = useState(true);
   const [gender, setGender] = useState([]);
@@ -529,11 +527,10 @@ const EditOpportunity = () => {
         job.salary_type === "Fixed"
           ? `$${job.min_salary || "N/A"}`
           : job.salary_type === "Range"
-          ? `$${job.min_salary || "N/A"} - $${job.max_salary || "N/A"}`
-          : "Negotiable",
-      location: `${job.workplace_type}${
-        job.work_location ? ` • ${job.work_location}` : ""
-      }`,
+            ? `$${job.min_salary || "N/A"} - $${job.max_salary || "N/A"}`
+            : "Negotiable",
+      location: `${job.workplace_type}${job.work_location ? ` • ${job.work_location}` : ""
+        }`,
       diversity_hiring: job.diversity_hiring,
       type: job.job_nature,
       job_category: job.job_category,
@@ -577,13 +574,19 @@ const EditOpportunity = () => {
       work_location: selected || [],
       working_days: selectedWorkingDays || "",
       status: selectedStatus || "",
-      job_nature: jobNatureSelected || "",
+      job_nature: jobNatureId
+        ? jobNatureId === 1
+          ? "Job"
+          : jobNatureId === 2
+            ? "Internship"
+            : "Contract"
+        : "",
       salary_sort:
         selectedSort === "highToLow"
           ? "high_to_low"
           : selectedSort === "lowToHigh"
-          ? "low_to_high"
-          : "",
+            ? "low_to_high"
+            : "",
     };
 
     try {
@@ -619,9 +622,10 @@ const EditOpportunity = () => {
   useEffect(() => {
     if (postDetails.length > 0) {
       const job = postDetails[0];
-      setCompanyName(job.company || "");
+
+      if (!companyName) setCompanyName(job.company || "");
       setLogoUrl(job.logo || null);
-      setJobTitle(job.title || "");
+      if (!jobTitle) setJobTitle(job.title || "");
       setSkillsRequired(job.skills || []);
       setJobCategory(job.job_category[0]);
       setJobOpenings(job.openings || "");
@@ -629,8 +633,67 @@ const EditOpportunity = () => {
       setWorkingDaysName(job.working_days || "");
       setJobDescription(job.job_description || "");
       localStorage.setItem("jobDescription", job.job_description || "");
+
+      // Restore salary type & values
+      if (job.salary_type === "Fixed") {
+        setSalaryTypeActiveButton(1);
+        setFixedSalary(Number(job.min_salary) || null);
+      } else if (job.salary_type === "Range") {
+        setSalaryTypeActiveButton(2);
+        setSalaryMin(Number(job.min_salary) || null);
+        setSalaryMax(Number(job.max_salary) || null);
+      } else {
+        setSalaryTypeActiveButton(3);
+      }
+
+      // 👇 Restore active button states
+      if (!jobNatureId) {
+        if (job.type === "Job") setJobNatureId(1);
+        else if (job.type === "Internship") setJobNatureId(2);
+        else if (job.type === "Contract") setJobNatureId(3);
+      }
+
+      if (!workTypeActiveButton) {
+        if (job.location?.includes("In Office")) setWorkTypeActiveButton(1);
+        else if (job.location?.includes("Work From Home")) setWorkTypeActiveButton(2);
+        else if (job.location?.includes("On Field")) setWorkTypeActiveButton(3);
+      }
+
+      if (!workLocationActiveButton) {
+        if (job.location?.includes("Pan India")) setWorkLocationActiveButton(2);
+        else if (job.location?.includes("•")) {
+          setWorkLocationActiveButton(1);
+          setSpecificLocation(job.location.split("•")[1]?.trim());
+        }
+      }
+
+      if (job.salary.includes("-")) setSalaryTypeActiveButton(2);
+      else if (job.salary.includes("$") || job.salary.includes("₹")) setSalaryTypeActiveButton(1);
+      else setSalaryTypeActiveButton(3);
+
+      if (experienceRequiredActiveButton === null) {
+        if (job.level === "Fresher") {
+          setExperienceRequiredActiveButton(1);
+          setEligibility(1);
+          setSelectedFresherPass(job.eligibility?.split(",") || []);
+        } else if (job.level === "Experienced") {
+          setExperienceRequiredActiveButton(2);
+          setEligibility(2);
+          setExperienceRequired(job.eligibility || "");
+        }
+      }
+
+      setGenderSelected(
+        job.diversity_hiring?.map((gName) => {
+          const g = gName.toLowerCase();
+          const match = gender.find((gd) => gd.name.toLowerCase() === g);
+          return match?.id;
+        }).filter(Boolean) || []
+      );
     }
-  }, [postDetails]);
+  }, [postDetails, gender]);
+
+
 
   useEffect(() => {
     const savedJobDescription = localStorage.getItem("jobDescription");
@@ -704,45 +767,63 @@ const EditOpportunity = () => {
         jobNatureId === 1
           ? "Job"
           : jobNatureId === 2
-          ? "Internship"
-          : jobNatureId === 3
-          ? "Contract"
-          : "",
+            ? "Internship"
+            : jobNatureId === 3
+              ? "Contract"
+              : "",
       duration_period:
         jobNatureId === 1
           ? "Permanent"
           : jobNatureId === 2
-          ? getDurationName?.duration || ""
-          : jobNatureId === 3
-          ? "Contract"
-          : "",
+            ? getDurationName?.duration || ""
+            : jobNatureId === 3
+              ? "Contract"
+              : "",
       workplace_type:
         workplaceType === 1
           ? "In Office"
           : workplaceType === 2
-          ? "Work From Home"
-          : workplaceType === 3
-          ? "On Field"
-          : "",
+            ? "Work From Home"
+            : workplaceType === 3
+              ? "On Field"
+              : "",
       work_location:
         workLocation === 1
           ? specificLocation
           : workLocation === 2
-          ? "Pan India"
-          : "",
+            ? "Pan India"
+            : "",
     };
 
     try {
-      const response = await updateJobNature(payload);
-      console.log("jobnature update", response);
+      await updateJobNature(payload);
       message.success("Updated Successfully");
-      fetchJobs();
+
+      // ✅ Optimistically update local postDetails
+      setPostDetails((prev) =>
+        prev.map((p) =>
+          p.id === currentPostId
+            ? {
+              ...p,
+              type: payload.job_nature,
+              location: `${payload.workplace_type}${payload.work_location ? ` • ${payload.work_location}` : ""
+                }`,
+              duration_period: payload.duration_period,
+            }
+            : p
+        )
+      );
+
       setDrawerOpen(false);
+
+      // Optionally, still refetch after delay if you want to sync with backend
+      // fetchJobs();
     } catch (error) {
       console.log("jobnature update", error);
       message.error("Updated error");
     }
   };
+
 
   const handleTagClick = (id) => {
     setGenderSelected((prevSelected) => {
@@ -767,26 +848,37 @@ const EditOpportunity = () => {
         eligibility === 1
           ? selectedFresherPass
           : eligibility === 2
-          ? experienceRequired
-          : "",
+            ? experienceRequired
+            : "",
       salary_type:
-        salaryDetails === 1 ? "Fixed" : salaryDetails === 2 ? "Range" : "",
-      min_salary: salaryDetails === 1 ? fixedSalary : salaryMin,
-      max_salary: salaryDetails === 2 ? salaryMax : null,
+        salaryTypeActiveButton === 1
+          ? "Fixed"
+          : salaryTypeActiveButton === 2
+            ? "Range"
+            : "Negotiable",
+      currency, // 👈 include currency
+      min_salary:
+        salaryTypeActiveButton === 1
+          ? Number(fixedSalary) || 0
+          : Number(salaryMin) || 0,
+      max_salary:
+        salaryTypeActiveButton === 2 ? Number(salaryMax) || 0 : null,
       diversity_hiring: allDiversity,
     };
 
     try {
-      const response = updateEligibility(payload);
-      console.log("jobnature update", response);
+      const response = await updateEligibility(payload);
+      console.log("salary update", response);
       message.success("Updated Successfully");
       fetchJobs();
       setDrawerOpen(false);
     } catch (error) {
-      console.log("jobnature update", error);
+      console.log("salary update error", error);
       message.error("Updated error");
     }
   };
+
+
 
   const visibleBenefits = showMore ? otherBenifits : otherBenifits.slice(0, 4);
   const toggleBenefitSelection = (key) => {
@@ -1389,7 +1481,6 @@ const EditOpportunity = () => {
                         }
                         onClick={() => {
                           setSalaryTypeActiveButton(item.id);
-                          setSalaryDetails(item.id);
                         }}
                       >
                         {item.id === 1 ? (
@@ -1422,11 +1513,12 @@ const EditOpportunity = () => {
                       <Option value="EUR">€ (EUR)</Option>
                     </Select>
 
-                    <Input
+                    <InputNumber
                       style={{ width: "60%", marginLeft: 12 }}
                       value={fixedSalary}
-                      onChange={(e) => setFixedSalary(e.target.value)}
+                      onChange={(value) => setFixedSalary(value)}
                       placeholder="Enter amount"
+                      min={0}
                     />
                   </div>
                 </div>
@@ -1452,12 +1544,6 @@ const EditOpportunity = () => {
                       onChange={(value) => setSalaryMin(value)}
                       placeholder="Min"
                       min={0}
-                      style={{
-                        width: "30%",
-                        height: 45,
-                        placeContent: "center",
-                        textAlign: "center",
-                      }}
                     />
 
                     <InputNumber
@@ -1465,13 +1551,8 @@ const EditOpportunity = () => {
                       onChange={(value) => setSalaryMax(value)}
                       placeholder="Max"
                       min={0}
-                      style={{
-                        width: "30%",
-                        height: 45,
-                        placeContent: "center",
-                        textAlign: "center",
-                      }}
                     />
+
                   </div>
                 </div>
               )}
@@ -1524,9 +1605,9 @@ const EditOpportunity = () => {
                         const isSelected =
                           item.year === "All"
                             ? selectedFresherPass.length ===
-                              eligibilityYearData.filter(
-                                (i) => i.year !== "All"
-                              ).length
+                            eligibilityYearData.filter(
+                              (i) => i.year !== "All"
+                            ).length
                             : selectedFresherPass.includes(item.year);
 
                         return (
@@ -1886,8 +1967,8 @@ const EditOpportunity = () => {
                             job.status === "Live"
                               ? "status-badge"
                               : job.status === "Expired"
-                              ? "status-badge-red"
-                              : "status-badge"
+                                ? "status-badge-red"
+                                : "status-badge"
                           }
                         >
                           {job.status}

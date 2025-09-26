@@ -120,6 +120,20 @@ export const login = async (payload) => {
   }
 };
 
+// getUsers
+
+export const getUsers = async (payload) => {
+  try {
+    const response = await api.get("api/getUsers", {
+      params: payload,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+
 export const googleLogin = async (data) => {
   try {
     const response = await axios.post(
@@ -884,3 +898,61 @@ export const getDailyStreak = async (payload) => {
   }
 };
 
+// sendNotification (post notification)
+export const sendNotification = async () => {
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/api/broadcast-notification`,
+      {
+        title: "New Job Post Created 🚀",
+        body: "Check out the job post details and apply now!",
+        link: "https://careerfast.com/job-portal", // ✅ correct way
+        icon: "/favicon.png", // ✅ will be added as `data`
+      }
+    );
+    return res.data;
+  } catch (err) {
+    console.error("❌ Error sending broadcast notification:", err);
+    throw err;
+  }
+};
+
+
+// subscribeTopic (FCM)
+export const subscribeTopic = async (token) => {
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/api/subscribe-topic`,
+      { token }
+    );
+    return res.data;
+  } catch (err) {
+    console.error("❌ Error subscribing to topic:", err);
+    throw err;
+  }
+};
+
+// recruiter notification + application save
+export const userApplyJob = async (payload) => {
+  try {
+    const response = await axios.post(
+      `${process.env.REACT_APP_API_URL}/api/applyJob`,
+      payload
+    );
+    return response;
+  } catch (error) {
+    console.error("❌ Error in applyJob:", error);
+    throw error;
+  }
+};
+
+// saveToken (store FCM token in backend)
+export const saveToken = async (userId, token) => {
+  try {
+    const response = await api.post("/api/token/save-token", { userId, token });
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error saving token:", error);
+    throw error;
+  }
+};

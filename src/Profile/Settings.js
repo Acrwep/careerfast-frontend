@@ -176,180 +176,181 @@ export default function Settings() {
           tabPosition="left"
           style={{ minHeight: 500 }}
           tabBarStyle={{ fontWeight: "600" }}
-        >
-          <TabPane
-            tab={
-              <span>
-                <BellOutlined style={{ marginRight: 6 }} />
-                Notifications
-              </span>
-            }
-            key="notifications"
-          >
-            <SettingCard>
-              {[
-                {
-                  title: "Newsletter Preference",
-                  desc: "Access the latest updates on jobs, internships, and competitions.",
-                },
-                {
-                  title: "Email Notification Preferences",
-                  desc: "Get reminders for quizzes, hackathons, and incomplete registrations.",
-                },
-                {
-                  title: "Competition Updates",
-                  desc: "Turn on emails for specific competitions from My Registration page.",
-                },
-                {
-                  title: "Relevant Jobs Notifications",
-                  desc: "Receive job notifications that match your profile.",
-                },
-              ].map((item, i) => (
-                <SettingItem key={i}>
+          items={[
+            {
+              key: "notifications",
+              label: (
+                <span>
+                  <BellOutlined style={{ marginRight: 6 }} />
+                  Notifications
+                </span>
+              ),
+              children: (
+                <SettingCard>
+                  {[
+                    {
+                      title: "Newsletter Preference",
+                      desc: "Access the latest updates on jobs, internships, and competitions.",
+                    },
+                    {
+                      title: "Email Notification Preferences",
+                      desc: "Get reminders for quizzes, hackathons, and incomplete registrations.",
+                    },
+                    {
+                      title: "Competition Updates",
+                      desc: "Turn on emails for specific competitions from My Registration page.",
+                    },
+                    {
+                      title: "Relevant Jobs Notifications",
+                      desc: "Receive job notifications that match your profile.",
+                    },
+                  ].map((item, i) => (
+                    <SettingItem key={i}>
+                      <SettingContent>
+                        <SettingTitle>{item.title}</SettingTitle>
+                        <SettingDescription>{item.desc}</SettingDescription>
+                      </SettingContent>
+                      <Switch />
+                    </SettingItem>
+                  ))}
+                </SettingCard>
+              ),
+            },
+            {
+              key: "password",
+              label: (
+                <span>
+                  <LockOutlined style={{ marginRight: 6 }} />
+                  Password
+                </span>
+              ),
+              children: (
+                <SettingCard>
                   <SettingContent>
-                    <SettingTitle>{item.title}</SettingTitle>
-                    <SettingDescription>{item.desc}</SettingDescription>
+                    <SettingTitle>Change Password</SettingTitle>
+                    <SettingDescription>
+                      Use a strong, unique password for better security.
+                    </SettingDescription>
                   </SettingContent>
-                  <Switch />
-                </SettingItem>
-              ))}
-            </SettingCard>
-          </TabPane>
+                  <Divider />
+                  <Form layout="vertical" style={{ maxWidth: 500 }}>
+                    <Form.Item label="Current Password">
+                      <PasswordInput
+                        placeholder="Enter current password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        iconRender={(visible) =>
+                          visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                        }
+                      />
+                    </Form.Item>
+                    <Form.Item label="New Password">
+                      <PasswordInput
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        iconRender={(visible) =>
+                          visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                        }
+                      />
+                    </Form.Item>
+                    <Form.Item label="Confirm New Password">
+                      <PasswordInput
+                        placeholder="Confirm new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        iconRender={(visible) =>
+                          visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                        }
+                      />
+                    </Form.Item>
+                    <Space>
+                      <PremiumButton
+                        type="primary"
+                        onClick={handleChangePassword}
+                        disabled={!currentPassword || !newPassword || !confirmPassword}
+                      >
+                        Update Password
+                      </PremiumButton>
+                      <Button
+                        onClick={() => {
+                          setCurrentPassword("");
+                          setNewPassword("");
+                          setConfirmPassword("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </Space>
+                  </Form>
+                </SettingCard>
+              ),
+            },
+            {
+              key: "profile",
+              label: (
+                <span>
+                  <UserOutlined style={{ marginRight: 6 }} />
+                  Profile
+                </span>
+              ),
+              children: (
+                <SettingCard>
+                  <SettingItem>
+                    <SettingContent>
+                      <SettingTitle>Profile Visibility</SettingTitle>
+                      <SettingDescription>
+                        Choose whether your profile is visible to search engines.
+                      </SettingDescription>
+                    </SettingContent>
+                    <Select
+                      defaultValue="Public"
+                      style={{ width: 140 }}
+                      options={[
+                        { value: "Public", label: "Public" },
+                        { value: "Private", label: "Private" },
+                      ]}
+                    />
+                  </SettingItem>
+                </SettingCard>
+              ),
+            },
+            {
+              key: "security",
+              label: (
+                <span>
+                  <SafetyOutlined style={{ marginRight: 6 }} />
+                  Security
+                </span>
+              ),
+              children: (
+                <SettingCard>
+                  <SettingItem>
+                    <SettingContent>
+                      <SettingTitle>Two-Factor Authentication</SettingTitle>
+                      <SettingDescription>
+                        Add an extra layer of protection to your account.
+                      </SettingDescription>
+                    </SettingContent>
+                    <Switch checked={false} />
+                  </SettingItem>
+                  <SettingItem>
+                    <SettingContent>
+                      <SettingTitle>Login Activity</SettingTitle>
+                      <SettingDescription>
+                        View recent login history and sessions.
+                      </SettingDescription>
+                    </SettingContent>
+                    <Button style={{ color: "#5f2eea" }} type="link">
+                      View Activity
+                    </Button>
+                  </SettingItem>
+                </SettingCard>
+              ),
+            },
+          ]}
+        />
 
-          <TabPane
-            tab={
-              <span>
-                <LockOutlined style={{ marginRight: 6 }} />
-                Password
-              </span>
-            }
-            key="password"
-          >
-            <SettingCard>
-              <SettingContent>
-                <SettingTitle>Change Password</SettingTitle>
-                <SettingDescription>
-                  Use a strong, unique password for better security.
-                </SettingDescription>
-              </SettingContent>
-              <Divider />
-              <Form layout="vertical" style={{ maxWidth: 500 }}>
-                <Form.Item label="Current Password">
-                  <PasswordInput
-                    placeholder="Enter current password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    iconRender={(visible) =>
-                      visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-                    }
-                  />
-                </Form.Item>
-                <Form.Item label="New Password">
-                  <PasswordInput
-                    placeholder="Enter new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    iconRender={(visible) =>
-                      visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-                    }
-                  />
-                </Form.Item>
-                <Form.Item label="Confirm New Password">
-                  <PasswordInput
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    iconRender={(visible) =>
-                      visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-                    }
-                  />
-                </Form.Item>
-                <Space>
-                  <PremiumButton
-                    type="primary"
-                    onClick={handleChangePassword}
-                    disabled={
-                      !currentPassword || !newPassword || !confirmPassword
-                    }
-                  >
-                    Update Password
-                  </PremiumButton>
-                  <Button
-                    onClick={() => {
-                      setCurrentPassword("");
-                      setNewPassword("");
-                      setConfirmPassword("");
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </Space>
-              </Form>
-            </SettingCard>
-          </TabPane>
-
-          <TabPane
-            tab={
-              <span>
-                <UserOutlined style={{ marginRight: 6 }} />
-                Profile
-              </span>
-            }
-            key="profile"
-          >
-            <SettingCard>
-              <SettingItem>
-                <SettingContent>
-                  <SettingTitle>Profile Visibility</SettingTitle>
-                  <SettingDescription>
-                    Choose whether your profile is visible to search engines.
-                  </SettingDescription>
-                </SettingContent>
-                <Select
-                  defaultValue="Public"
-                  style={{ width: 140 }}
-                  options={[
-                    { value: "Public", label: "Public" },
-                    { value: "Private", label: "Private" },
-                  ]}
-                />
-              </SettingItem>
-            </SettingCard>
-          </TabPane>
-
-          <TabPane
-            tab={
-              <span>
-                <SafetyOutlined style={{ marginRight: 6 }} />
-                Security
-              </span>
-            }
-            key="security"
-          >
-            <SettingCard>
-              <SettingItem>
-                <SettingContent>
-                  <SettingTitle>Two-Factor Authentication</SettingTitle>
-                  <SettingDescription>
-                    Add an extra layer of protection to your account.
-                  </SettingDescription>
-                </SettingContent>
-                <Switch checked={false} />
-              </SettingItem>
-              <SettingItem>
-                <SettingContent>
-                  <SettingTitle>Login Activity</SettingTitle>
-                  <SettingDescription>
-                    View recent login history and sessions.
-                  </SettingDescription>
-                </SettingContent>
-                <Button style={{ color: "#5f2eea" }} type="link">
-                  View Activity
-                </Button>
-              </SettingItem>
-            </SettingCard>
-          </TabPane>
-        </Tabs>
       </SettingsContainer>
     </div>
   );

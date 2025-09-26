@@ -91,7 +91,9 @@ export default function ListingDashboard() {
     try {
       const response = await getAppliedCandidatesCount(payload);
       console.log("getAppliedCandidatesCount", response)
-      setTotalAppliedCandidates(response?.data?.data?.candidatesCount || 0);
+      setTotalAppliedCandidates(
+        Number(response?.data?.data?.candidatesCount) || 0
+      );
     } catch (error) {
       console.log("applied candidates count", error);
       setTotalAppliedCandidates(0);
@@ -163,10 +165,12 @@ export default function ListingDashboard() {
     return matchesTab && matchesFilter && matchesSearch;
   });
 
+  // Safe reducer
   const totalRegistrations = listings.reduce(
-    (sum, listing) => sum + listing.registrations,
+    (sum, listing) => sum + (Number(listing.registrations) || 0),
     0
   );
+
 
   const tabs = ["All", "Internship", "Job"];
 
@@ -273,7 +277,7 @@ export default function ListingDashboard() {
                     .slice(0, visibleCount)
                     .map((listing) => {
                       const isClosed =
-                        moment().diff(moment(listing.created_at), "days") > 15;
+                        moment().diff(moment(listing.created_at), "days") >= 15;
                       return (
                         <motion.div
                           key={listing.id}
@@ -408,7 +412,7 @@ const StatCard = ({ title, value, change, icon, bgColor }) => {
       <div className="stat-header">
         <div>
           <p className="stat-title">{title}</p>
-          <p className="stat-value">{value}</p>
+          <p className="stat-value">{isNaN(value) ? 0 : value}</p>
           <p className="stat-change">{change}</p>
         </div>
         <div className="stat-icon">{icon}</div>

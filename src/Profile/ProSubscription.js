@@ -180,7 +180,7 @@ const ProSubscription = () => {
         {/* Payment History Dropdown */}
         <Collapse
           bordered={false}
-          expandIconPosition="right"
+          expandIconPosition="end"
           activeKey={activePanel}
           onChange={(key) => setActivePanel(key.length > 0 ? key : null)}
           style={{
@@ -188,32 +188,35 @@ const ProSubscription = () => {
             borderRadius: 12,
             border: "1px solid #f0ebff",
           }}
-        >
-          <Panel
-            header={
-              <Text strong style={{ color: activePanel ? "#fff" : "inherit" }}>
-                View Payment History
-              </Text>
-            }
-            key="1"
-            style={{
-              border: "none",
-              borderRadius: 12,
-              padding: "0px 0px 0px 0",
-            }}
-          >
-            <div
-              style={{
-                padding: 16,
-                background: "#fff",
-                borderRadius: 8,
-                border: "1px dashed #f0f0f0",
-              }}
-            >
-              <Text type="secondary">No payment history available</Text>
-            </div>
-          </Panel>
-        </Collapse>
+          items={[
+            {
+              key: "1",
+              label: (
+                <Text strong style={{ color: activePanel ? "#fff" : "inherit" }}>
+                  View Payment History
+                </Text>
+              ),
+              children: (
+                <div
+                  style={{
+                    padding: 16,
+                    background: "#fff",
+                    borderRadius: 8,
+                    border: "1px dashed #f0f0f0",
+                  }}
+                >
+                  <Text type="secondary">No payment history available</Text>
+                </div>
+              ),
+              style: {
+                border: "none",
+                borderRadius: 12,
+                padding: "0px 0px 0px 0",
+              },
+            },
+          ]}
+        />
+
       </Card>
     </>
   );

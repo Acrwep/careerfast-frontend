@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { StrictMode, useEffect, useState } from "react";
 import {
   Row,
   Col,
@@ -65,11 +65,11 @@ import {
   getSkillsData,
   getJobCategoryData,
   createJobPost,
+  sendNotification
 } from "../ApiService/action";
 import Header from "../Header/Header";
 import currencyCodes from "currency-codes";
 import Footer from "../Footer/Footer";
-import axios from "axios";
 const { Option } = Select;
 export default function PostJobs() {
   const [jobNatureId, setJobNatureId] = useState(null);
@@ -329,7 +329,7 @@ export default function PostJobs() {
     } catch (error) {
       console.log("duration type", error);
     } finally {
-      setTimeout(() => {}, 300);
+      setTimeout(() => { }, 300);
     }
   };
 
@@ -448,7 +448,7 @@ export default function PostJobs() {
     setJobInternshipDurationError(jobInternshipDurationValidate);
     setEligibilityError(eligibilityValidate);
     setWorkLocationError(workLocationValidate);
-    setJobOpeningsError(jobCategoryValidate);
+    setJobOpeningsError(jobOpeningsValidate);
     setWorkingDaysError(workingDaysValidate);
 
     // Validation check
@@ -556,32 +556,32 @@ export default function PostJobs() {
         jobNatureId === 1
           ? "Job"
           : jobNatureId === 2
-          ? "Internship"
-          : jobNatureId === 3
-          ? "Contract"
-          : "",
+            ? "Internship"
+            : jobNatureId === 3
+              ? "Contract"
+              : "",
       duration_period:
         jobNatureId === 1
           ? "Permanent"
           : jobNatureId === 2
-          ? getDurationName.duration
-          : jobNatureId === 3
-          ? "Contract"
-          : "",
+            ? getDurationName.duration
+            : jobNatureId === 3
+              ? "Contract"
+              : "",
       workplace_type:
         workplaceType === 1
           ? "In Office"
           : workplaceType === 2
-          ? "Work From Home"
-          : workplaceType === 3
-          ? "On Field"
-          : "",
+            ? "Work From Home"
+            : workplaceType === 3
+              ? "On Field"
+              : "",
       work_location:
         workLocation === 1
           ? specificLocation
           : workLocation === 2
-          ? "Pan India"
-          : "",
+            ? "Pan India"
+            : "",
       job_category: jobCategory,
       skills: skillsRequired,
       experience_type:
@@ -590,8 +590,8 @@ export default function PostJobs() {
         eligibility === 1
           ? selectedFresherPass
           : eligibility === 2
-          ? experienceRequired
-          : "",
+            ? experienceRequired
+            : "",
       salary_type:
         salaryDetails === 1 ? "Fixed" : salaryDetails === 2 ? "Range" : "",
       min_salary: salaryDetails === 1 ? fixedSalary : salaryMin,
@@ -617,42 +617,27 @@ export default function PostJobs() {
     return updated.every((q) => !q.error);
   };
 
-  // Send a test notification
-  const sendNotification = async () => {
-    try {
-      const res = await axios.post(
-        "http://localhost:3001/api/broadcast-notification",
-        {
-          title: "New Job Post Created 🚀",
-          body: "Check out the job post details and apply now!",
-        }
-      );
-      console.log("✅ Broadcast notification sent:", res.data);
-    } catch (err) {
-      console.error("❌ Error sending broadcast notification:", err);
-    }
-  };
 
   // Publish job post
   const publish = async (payload) => {
     try {
+      setIsLoading(true); // start loader immediately
       const response = await createJobPost(payload);
-      console.log("posted job", response);
 
-      setIsLoading(true);
-      setTimeout(async () => {
-        message.success("Job Posted Successfully.");
+      message.success("Job Posted Successfully.");
 
-        // ✅ Trigger FCM notification after posting
-        await sendNotification();
+      // ✅ Trigger FCM notification after posting
+      await sendNotification();
 
-        navigate("/job-portal");
-        setIsLoading(false);
-      }, 1000);
+      navigate("/job-portal");
     } catch (error) {
       console.error("Error posting job", error);
+      message.error("Failed to post job. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
+
 
   // Publish with questions
   const handlePublishPostWithQuestions = async () => {
@@ -913,40 +898,24 @@ export default function PostJobs() {
                   ]}
                 >
                   <div className="job_nature">
-                    {jobNatureOptions.map((item) => {
-                      return (
-                        <button
-                          type="button"
-                          className={
-                            jobNatureId === item.id
-                              ? "job_nature_button_active"
-                              : "job_nature_button"
-                          }
-                          onClick={() => {
-                            if (item.id === jobNatureId) {
-                              return;
-                            } else {
-                              setJobNatureId(item.id);
-                              setJobNatureError("");
-                              if (item.id === 2) {
-                                getDurationTypesData();
-                              } else {
-                                setInternshipDurationTypeData([]);
-                              }
-                            }
-                          }}
-                        >
-                          {item.id === 1 ? (
-                            <HiMiniComputerDesktop />
-                          ) : item.id === 2 ? (
-                            <MdOutlineEventNote />
-                          ) : (
-                            <TbContract />
-                          )}{" "}
-                          {item.name}
-                        </button>
-                      );
-                    })}
+                    {jobNatureOptions.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={jobNatureId === item.id ? "job_nature_button_active" : "job_nature_button"}
+                        onClick={() => {
+                          if (item.id === jobNatureId) return;
+                          setJobNatureId(item.id);
+                          setJobNatureError("");
+                          if (item.id === 2) getDurationTypesData();
+                          else setInternshipDurationTypeData([]);
+                        }}
+                      >
+                        {item.id === 1 ? <HiMiniComputerDesktop /> : item.id === 2 ? <MdOutlineEventNote /> : <TbContract />}{" "}
+                        {item.name}
+                      </button>
+                    ))}
+
                   </div>
                   {jobNatureError && (
                     <div style={{ color: "red", marginTop: 6, fontSize: 13 }}>
@@ -978,6 +947,7 @@ export default function PostJobs() {
                       {internshipDurationTypeData.map((item) => {
                         return (
                           <button
+                            key={item.id}
                             type="button"
                             className={
                               jobInternshipDuration === item.id
@@ -1058,6 +1028,7 @@ export default function PostJobs() {
                       {workplaceTypeData.map((item) => {
                         return (
                           <button
+                            key={item.id}
                             type="button"
                             className={
                               workTypeActiveButton === item.id
@@ -1111,6 +1082,7 @@ export default function PostJobs() {
                       {workplaceLocation.map((item) => {
                         return (
                           <button
+                            key={item.id}
                             type="button"
                             className={
                               workLocationActiveButton === item.id
@@ -1242,6 +1214,7 @@ export default function PostJobs() {
                     {eligibilityData.map((item) => {
                       return (
                         <button
+                          key={item.id}
                           type="button"
                           className={
                             experienceRequiredActiveButton === item.id
@@ -1278,9 +1251,9 @@ export default function PostJobs() {
                           const isSelected =
                             item.year === "All"
                               ? selectedFresherPass.length ===
-                                eligibilityYearData.filter(
-                                  (i) => i.year !== "All"
-                                ).length
+                              eligibilityYearData.filter(
+                                (i) => i.year !== "All"
+                              ).length
                               : selectedFresherPass.includes(item.year);
 
                           return (
@@ -1352,6 +1325,7 @@ export default function PostJobs() {
                     {salaryData.map((item) => {
                       return (
                         <button
+                          key={item.id}
                           className={
                             salaryTypeActiveButton === item.id
                               ? "experience_required_button_active"
@@ -1515,7 +1489,7 @@ export default function PostJobs() {
                   <Text strong>Other Benefits</Text>
                   <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
                     {visibleBenefits.map((item) => (
-                      <Col key={item.key}>
+                      <Col key={item.id}>
                         <Card
                           hoverable
                           onClick={() => {
@@ -1592,31 +1566,33 @@ export default function PostJobs() {
                     🧠 Generate with AI
                   </button>
                 </div>
+                <StrictMode>
 
-                <ReactQuill
-                  value={value}
-                  onChange={handleChange}
-                  modules={{
-                    toolbar: [
-                      ["bold", "italic", "underline", "strike"],
-                      [{ list: "ordered" }, { list: "bullet" }],
-                      ["link", "image"],
-                      ["clean"],
-                    ],
-                  }}
-                  formats={[
-                    "bold",
-                    "italic",
-                    "underline",
-                    "strike",
-                    "list",
-                    "bullet",
-                    "link",
-                    "image",
-                  ]}
-                  style={{ height: "300px", marginBottom: "8px" }}
-                />
 
+                  <ReactQuill
+                    value={value}
+                    onChange={handleChange}
+                    modules={{
+                      toolbar: [
+                        ["bold", "italic", "underline", "strike"],
+                        [{ list: "ordered" }, { list: "bullet" }],
+                        ["link", "image"],
+                        ["clean"],
+                      ],
+                    }}
+                    formats={[
+                      "bold",
+                      "italic",
+                      "underline",
+                      "strike",
+                      "list",
+                      "bullet",
+                      "link",
+                      "image",
+                    ]}
+                    style={{ height: "300px", marginBottom: "8px" }}
+                  />
+                </StrictMode>
                 <div
                   style={{
                     textAlign: "right",
@@ -1684,8 +1660,9 @@ export default function PostJobs() {
                           onClick={handlePublishPostWithoutQuestions}
                           className="premium-cancel-btn"
                           size="large"
+                          loading={isLoading} // ✅ Add loading here
                         >
-                          Publish Without Questions
+                          {isLoading ? "Publishing..." : "Publish Without Questions"}
                         </Button>
                         <Button
                           key="add"
@@ -1706,6 +1683,7 @@ export default function PostJobs() {
                         </Button>
                       </div>
                     }
+
                   >
                     <div className="premium-modal-content">
                       <p className="premium-modal-description">

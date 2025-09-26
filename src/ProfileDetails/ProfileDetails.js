@@ -120,6 +120,7 @@ const ProfileDetails = () => {
   const [fresherStartDateError, setFresherStartDateError] = useState("");
   const [fresherEndtDate, setFresherEndDate] = useState("");
   const [fresherEndDateError, setFresherEndDateError] = useState("");
+  const [fresherCustomSkill, setFresherCustomSkill] = useState("");
 
   // 2
   const [selectExperienceType, setSelectExperienceType] = useState("");
@@ -231,27 +232,28 @@ const ProfileDetails = () => {
     setCompanies(data);
   };
 
-  const handleRemoveSkill = (skillToRemove) => {
-    setSelectedSkills(
-      selectedSkills.filter((skill) => skill !== skillToRemove)
+  const handleRemoveSkill = (companyIndex, skillToRemove) => {
+    const updatedCompanies = [...companies];
+    updatedCompanies[companyIndex].skills = updatedCompanies[companyIndex].skills.filter(
+      (skill) => skill !== skillToRemove
     );
+    setCompanies(updatedCompanies);
   };
+
 
   const handleCustomSkillAdd = (index) => {
     const trimmed = companies[index].customSkill?.trim();
     if (
       trimmed &&
-      !selectedSkills.some(
+      !companies[index].skills.some(
         (skill) => skill.toLowerCase() === trimmed.toLowerCase()
       )
     ) {
-      setSelectedSkills([...selectedSkills, trimmed]);
+      const updatedCompanies = [...companies];
+      updatedCompanies[index].skills.push(trimmed);
+      updatedCompanies[index].customSkill = "";
+      setCompanies(updatedCompanies);
     }
-
-    // Clear the input field
-    const updatedCompanies = [...companies];
-    updatedCompanies[index].customSkill = "";
-    setCompanies(updatedCompanies);
   };
 
   //
@@ -517,47 +519,43 @@ const ProfileDetails = () => {
 
   const ProfessionalInfoValidate = () => {
     let skillsValidate = "";
-
     const selectExperienceTypeValidate = selectValidator(selectExperienceType);
     setSelectExperienceTypeError(selectExperienceTypeValidate);
 
     let experienceErrors = false;
 
     if (selectExperienceType === "Experience") {
-      if (selectedSkills.length <= 0) {
-        skillsValidate = " is required";
+      const companiesWithoutSkills = companies.filter(
+        (c) => !c.skills || c.skills.length === 0
+      );
+
+      if (companiesWithoutSkills.length > 0) {
+        skillsValidate = "Skills are required for each company";
       }
+
       setSkillsError(skillsValidate);
 
-      const totalYearsExperienceValidate =
-        selectValidator(totalYearsExperience);
-      const totalMonthsExperienceValidate = selectValidator(
-        totalMonthsExperience
-      );
+      const totalYearsExperienceValidate = selectValidator(totalYearsExperience);
+      const totalMonthsExperienceValidate = selectValidator(totalMonthsExperience);
       const jobTitleValidate = nameValidator(jobTitle);
 
       setTotalYearsExperienceError(totalYearsExperienceValidate);
       setTotalMonthsExperienceError(totalMonthsExperienceValidate);
       setJobTitleError(jobTitleValidate);
 
-      const validateCompanyFields = companies.map((item, index) => {
-        return {
-          ...item,
-          jobTitleError: nameValidator(item.jobTitle),
-          companyNameError: nameValidator(item.companyName),
-          designationError: nameValidator(item.designation),
-          workingStartDateError: selectValidator(item.workingStartDate),
-          workingEndDateError:
-            item.currentlyWorking === true
-              ? ""
-              : selectValidator(item.workingEndDate),
-        };
-      });
+      const validateCompanyFields = companies.map((item) => ({
+        ...item,
+        jobTitleError: nameValidator(item.jobTitle),
+        companyNameError: nameValidator(item.companyName),
+        designationError: nameValidator(item.designation),
+        workingStartDateError: selectValidator(item.workingStartDate),
+        workingEndDateError:
+          item.currentlyWorking === true ? "" : selectValidator(item.workingEndDate),
+      }));
 
-      console.log("valllllll", validateCompanyFields);
       setCompanies(validateCompanyFields);
 
-      validateCompanyFields.map((err) => {
+      validateCompanyFields.forEach((err) => {
         if (
           err.jobTitleError ||
           err.companyNameError ||
@@ -576,32 +574,56 @@ const ProfileDetails = () => {
         skillsValidate ||
         experienceErrors
       ) {
-        message.error("Please fill all fields correctly before proceedinggg.");
+        message.error("Please fill all fields correctly before proceeding.");
         return;
       }
     } else {
-      // ✅ Skip skill validation here
-      setSkillsError(""); // Clear any previous error
-      if (selectExperienceTypeValidate || skillsValidate || experienceErrors) {
-        message.error("Please fill all fieldsss correctly before proceeding.");
+      // ✅ Fresher case
+      setSkillsError(""); // clear old error
+      if (selectExperienceTypeValidate) {
+        message.error("Please fill all fields correctly before proceeding.");
         return;
       }
     }
+
+    if (selectExperienceType === "Fresher") {
+      if (!selectedSkills || selectedSkills.length === 0) {
+        setSkillsError(" Please add at least one skill");
+        message.error(" Please add at least one skill before proceeding.");
+        return;
+      }
+    }
+
 
     setCurrentStep(2);
     setProgress(50);
   };
 
+
   const doneProfile = async () => {
-    const professional = companies.map((company) => ({
-      job_title: company.jobTitle,
-      company_name: company.companyName,
-      designation: company.designation,
-      start_date: company.workingStartDate,
-      end_date: company.workingEndDate,
-      currently_working: company.currentlyWorking,
-      skills: selectedSkills,
-    }));
+    const professional =
+      selectExperienceType === "Experience"
+        ? companies.map((company) => ({
+          job_title: company.jobTitle,
+          company_name: company.companyName,
+          designation: company.designation,
+          start_date: company.workingStartDate,
+          end_date: company.workingEndDate,
+          currently_working: company.currentlyWorking,
+          skills: company.skills,
+        }))
+        : [
+          {
+            job_title: "Fresher",
+            company_name: "",
+            designation: "",
+            start_date: "",
+            end_date: "",
+            currently_working: false,
+            skills: selectedSkills, // ⬅️ fresher skills
+          },
+        ];
+
 
     const payload = {
       profile_image: profileImage,
@@ -620,12 +642,12 @@ const ProfileDetails = () => {
         userType === 1
           ? "College Student"
           : userType === 2
-          ? "Professional"
-          : userType === 3
-          ? "School Student"
-          : userType === 4
-          ? "Fresher"
-          : "",
+            ? "Professional"
+            : userType === 3
+              ? "School Student"
+              : userType === 4
+                ? "Fresher"
+                : "",
       is_email_verified: "verified",
       ...(userType === 1 && {
         course: courseOptions.find((item) => item.id === course)?.name || "",
@@ -1641,11 +1663,11 @@ const ProfileDetails = () => {
 
                       <div className="form-group">
                         <div style={{ marginTop: 8, marginBottom: 0 }}>
-                          {selectedSkills.map((skill) => (
+                          {company.skills.map((skill) => (
                             <Tag
                               key={skill}
                               closable
-                              onClose={() => handleRemoveSkill(skill)}
+                              onClose={() => handleRemoveSkill(index, skill)}
                               style={{
                                 marginBottom: 15,
                                 fontSize: 14,
@@ -1660,6 +1682,7 @@ const ProfileDetails = () => {
                             </Tag>
                           ))}
                         </div>
+
 
                         <CommonInputField
                           label={"Skills"}
@@ -1689,6 +1712,59 @@ const ProfileDetails = () => {
                   </div>
                 </div>
               )}
+              {experienceType === "Fresher" && (
+                <div className="fresher-skills-section">
+                  <div className="form-group">
+                    <div style={{ marginTop: 8, marginBottom: 0 }}>
+                      {selectedSkills.map((skill) => (
+                        <Tag
+                          key={skill}
+                          closable
+                          onClose={() =>
+                            setSelectedSkills((prev) =>
+                              prev.filter((s) => s !== skill)
+                            )
+                          }
+                          style={{
+                            marginBottom: 15,
+                            fontSize: 14,
+                            padding: "5px 10px",
+                            border: "none",
+                            backgroundColor: "#e9e0fe",
+                            color: "#5f2eea",
+                            borderRadius: 50,
+                          }}
+                        >
+                          {skill}
+                        </Tag>
+                      ))}
+                    </div>
+
+                    <CommonInputField
+                      label={"Skills"}
+                      value={fresherCustomSkill}
+                      placeholder={"List your skills here, showcasing what you excel at."}
+                      mandotary={true}
+                      onChange={(e) => setFresherCustomSkill(e.target.value)}
+                      onPressEnter={(e) => {
+                        const trimmed = fresherCustomSkill.trim();
+                        if (
+                          trimmed &&
+                          !selectedSkills.some(
+                            (skill) => skill.toLowerCase() === trimmed.toLowerCase()
+                          )
+                        ) {
+                          setSelectedSkills([...selectedSkills, trimmed]);
+                        }
+                        setFresherCustomSkill(""); // clear input after adding
+                      }}
+                      error={skillsError}
+                    />
+
+                  </div>
+                </div>
+              )}
+
             </div>
           </Card>
         </div>
@@ -1724,8 +1800,8 @@ const ProfileDetails = () => {
                     emailVerified === "Verified"
                       ? "success"
                       : emailVerified
-                      ? "danger"
-                      : "secondary"
+                        ? "danger"
+                        : "secondary"
                   }
                   style={{ marginLeft: "auto" }}
                 >
@@ -1829,7 +1905,7 @@ const ProfileDetails = () => {
   return (
     <div className="profile-details-container">
       <div className="profile-header">
-        <Title level={2}>Complete Your Profile</Title>
+        <Title onClick={doneProfile} level={2}>Complete Your Profile</Title>
         <Text type="secondary">
           Follow these steps to set up your professional profile
         </Text>

@@ -214,7 +214,6 @@ export default function Header() {
       path: "/internship",
     },
     { key: "practice", label: "Practice", icon: <CodeOutlined />, path: "#" },
-    // { key: "more", label: "More", icon: <CodeOutlined />, path: "#" },
   ];
 
   const moreMenuItems = [

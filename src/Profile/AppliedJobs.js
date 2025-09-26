@@ -263,7 +263,7 @@ export default function AppliedJobs() {
         ) : filteredOpportunities.length > 0 ? (
           filteredOpportunities.map((opp) => (
             <OpportunityCard
-              key={opp.applied_job_id}
+              key={opp.applied_job_id || opp.id}
               opportunity={opp}
               status={jobStatusMap[opp.id]} // ✅ now properly mapped
             />

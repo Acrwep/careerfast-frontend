@@ -45,6 +45,7 @@ import {
   getSavedJobs,
   removeSavedJobs,
   saveJobPost,
+  userApplyJob,
 } from "../ApiService/action";
 import { FaLink } from "react-icons/fa6";
 import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
@@ -207,8 +208,8 @@ export default function JobFilter() {
         selectedSort === "highToLow"
           ? "high_to_low"
           : selectedSort === "lowToHigh"
-          ? "low_to_high"
-          : "",
+            ? "low_to_high"
+            : "",
     };
 
     try {
@@ -277,6 +278,7 @@ export default function JobFilter() {
       }));
     }
   };
+
 
   useEffect(() => {
     if (postDetails.length > 0) {
@@ -419,18 +421,17 @@ export default function JobFilter() {
       openings: job.openings,
       postedDate,
       working_days: job.working_days,
-      daysLeft: daysLeft > 0 ? `${daysLeft} days left` : "Expired",
+      daysLeft: daysLeft >= 0 ? `${daysLeft} days left` : "Expired",
       level: job.experience_type,
       date_posted: job.date_posted,
       salary:
         job.salary_type === "Fixed"
           ? `$${job.min_salary || "N/A"}`
           : job.salary_type === "Range"
-          ? `$${job.min_salary || "N/A"} - $${job.max_salary || "N/A"}`
-          : "Negotiable",
-      location: `${job.workplace_type}${
-        job.work_location ? ` • ${job.work_location}` : ""
-      }`,
+            ? `$${job.min_salary || "N/A"} - $${job.max_salary || "N/A"}`
+            : "Negotiable",
+      location: `${job.workplace_type}${job.work_location ? ` • ${job.work_location}` : ""
+        }`,
       diversity_hiring: job.diversity_hiring,
       job_category: job.job_category,
       type: job.job_nature,
@@ -438,7 +439,7 @@ export default function JobFilter() {
       urgent: false,
       skills: job.skills,
       eligibility: job.experience_required?.join(", "),
-      status: daysLeft > 0 ? "Live" : "Expired",
+      status: daysLeft >= 0 ? "Live" : "Expired",
       questions: job.questions?.map((q) => q.question) || [],
       questions_with_ids:
         job.questions?.map((q) => ({
@@ -528,6 +529,7 @@ export default function JobFilter() {
     };
 
     try {
+      // 1️⃣ Save application in DB
       const response = await applyForJob(payload, token);
       console.log("apply jobs", response);
 
@@ -542,20 +544,12 @@ export default function JobFilter() {
         [jobId]: appliedDate,
       }));
 
-      // 2️⃣ Notify recruiter
-      const notifyResponse = await axios.post(
-        "http://localhost:3001/api/applyJob",
-        {
-          postId: jobId,
-          userId: loginUserId,
-          answers: structuredAnswers,
-        }
-      );
+      // 2️⃣ Notify recruiter (backend will ONLY push to recruiter now)
+      const notifyResponse = await userApplyJob(payload);
 
       if (notifyResponse.data.success) {
-        message.success(
-          "Job applied successfully! Recruiter has been notified."
-        );
+        // ✅ Candidate gets confirmation via toast (not push)
+        message.success("Application submitted! Recruiter has been notified 🚀");
       } else {
         message.warning(notifyResponse.data.message);
       }
@@ -566,6 +560,7 @@ export default function JobFilter() {
       message.error("Error while applying for the job");
     }
   };
+
 
   const showDrawer = async () => {
     const jobId = postDetails[0]?.id;
@@ -586,7 +581,7 @@ export default function JobFilter() {
         const payload = {
           postId: jobId,
           userId: loginUserId,
-          answers: [],
+          answers: [], // ✅ no questions → empty answers
         };
         const response = await applyForJob(payload, token);
         console.log("applyForJob", response);
@@ -598,11 +593,13 @@ export default function JobFilter() {
           ...prev,
           [jobId]: appliedDate,
         }));
+
         // 2️⃣ Notify recruiter
-        const notifyResponse = await axios.post(
-          "http://localhost:3001/api/applyJob",
-          { postId: jobId, userId: loginUserId, answers: "" }
-        );
+        const notifyResponse = await userApplyJob({
+          postId: jobId,
+          userId: loginUserId,
+          answers: [], // ✅ empty array instead of structuredAnswers
+        });
 
         if (notifyResponse.data.success) {
           message.success("Applied successfully! Recruiter has been notified.");
@@ -615,6 +612,7 @@ export default function JobFilter() {
       }
     }
   };
+
 
   const onClose = () => {
     setOpenApplyNow(false);
@@ -630,6 +628,7 @@ export default function JobFilter() {
     fetchJobs();
     setJobNatureVisible(false);
   };
+
 
   const dropdownItems = () => (
     <div style={{ padding: 16, width: 220, background: "#fff" }}>
@@ -683,8 +682,8 @@ export default function JobFilter() {
                       job.status === "Live"
                         ? "status-badge"
                         : job.status === "Expired"
-                        ? "status-badge-red"
-                        : ""
+                          ? "status-badge-red"
+                          : ""
                     }
                   >
                     {job.status}
@@ -709,7 +708,7 @@ export default function JobFilter() {
 
             <div className="premium-skills">
               {job.skills.map((skill, index) => (
-                <span key={index} className="premium-skill">
+                <span key={skill} className="premium-skill">
                   {skill}
                 </span>
               ))}
@@ -725,8 +724,8 @@ export default function JobFilter() {
                   job.type === "Job"
                     ? "premium-badges"
                     : job.type === "Internship"
-                    ? "regular-badge"
-                    : "urgent-badge"
+                      ? "regular-badge"
+                      : "urgent-badge"
                 }
               >
                 {job.type}
@@ -878,7 +877,6 @@ export default function JobFilter() {
 
     const handleWorkingDaysApply = () => {
       setSelectedWorkingDays(tempWorkingDays);
-      fetchJobs();
       setWorkingDaysVisible(false);
     };
 
@@ -1043,9 +1041,9 @@ export default function JobFilter() {
 
   const handleUserCategoryApply = () => {
     setSelectedCategories(tempCategories);
-    fetchJobs();
     setUserCatergoryVisible(false);
   };
+
 
   const userCatergory = () => (
     <div style={{ padding: 16, width: 260, background: "#fff" }}>
@@ -1445,9 +1443,18 @@ export default function JobFilter() {
         <div>
           <Row gutter={32}>
             <Col className="job_filter_left" lg={7} xs={24} md={8}>
-              {backendJobs.length === 0 ? (
+              {jobLoading ? (
+                // 🔹 Show skeleton placeholders while loading
+                <Space direction="vertical" size={24} style={{ width: "100%" }}>
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} active />
+                  ))}
+                </Space>
+              ) : backendJobs.length === 0 ? (
+                // 🔹 Show "No data" only AFTER loading finishes
                 <Empty description="No jobs found" />
               ) : (
+                // 🔹 Show job cards after data is loaded
                 <Space direction="vertical" size={24} style={{ width: "100%" }}>
                   {backendJobs.map((job) => (
                     <JobCard key={job.id} job={transformJob(job)} />
@@ -1456,10 +1463,11 @@ export default function JobFilter() {
               )}
             </Col>
 
+
             <Col className="job_filter_left" lg={17} xs={24} md={16}>
               <section className="premium-job-details">
                 {postDetails.map((job) => (
-                  <>
+                  <React.Fragment key={job.id}>
                     {jobDetailsLoading ? (
                       <Skeleton active />
                     ) : (
@@ -1473,8 +1481,8 @@ export default function JobFilter() {
                                   job.status === "Live"
                                     ? "status-badge"
                                     : job.status === "Expired"
-                                    ? "status-badge-red"
-                                    : ""
+                                      ? "status-badge-red"
+                                      : ""
                                 }
                               >
                                 {job.status}
@@ -1577,12 +1585,12 @@ export default function JobFilter() {
                                     title={
                                       appliedDates[job.id]
                                         ? `Applied on ${new Date(
-                                            appliedDates[job.id]
-                                          ).toLocaleDateString("en-US", {
-                                            month: "short",
-                                            day: "numeric",
-                                            year: "numeric",
-                                          })}`
+                                          appliedDates[job.id]
+                                        ).toLocaleDateString("en-US", {
+                                          month: "short",
+                                          day: "numeric",
+                                          year: "numeric",
+                                        })}`
                                         : "Applied recently"
                                     }
                                     placement="top"
@@ -1657,7 +1665,7 @@ export default function JobFilter() {
                                     {postDetails[0].questions.map(
                                       (question, index) => (
                                         <div
-                                          key={index}
+                                          key={question.id || index}
                                           className="question-item"
                                         >
                                           <p>{question}</p>
@@ -1704,7 +1712,7 @@ export default function JobFilter() {
                                   <FaTransgender />{" "}
                                   {job.diversity_hiring.map(
                                     (diversity_hiring, index) => (
-                                      <span key={index}>
+                                      <span key={diversity_hiring}>
                                         {diversity_hiring}
                                         {index <
                                           job.diversity_hiring.length - 1 &&
@@ -1779,7 +1787,7 @@ export default function JobFilter() {
                               <p>
                                 {(job.benefits || []).map(
                                   (benefit, index, arr) => (
-                                    <span key={index} className="premium-skill">
+                                    <span key={benefit} className="premium-skill">
                                       {benefit}
                                       {index < arr.length - 1 && (
                                         <span className="separator"> | </span>
@@ -1842,7 +1850,7 @@ export default function JobFilter() {
                         </div>
                       </>
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </section>
             </Col>
