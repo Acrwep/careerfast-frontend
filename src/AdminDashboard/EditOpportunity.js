@@ -579,7 +579,7 @@ const EditOpportunity = () => {
           ? "Job"
           : jobNatureId === 2
             ? "Internship"
-            : "Contract"
+            : "Scholarship"
         : "",
       salary_sort:
         selectedSort === "highToLow"
@@ -650,7 +650,7 @@ const EditOpportunity = () => {
       if (!jobNatureId) {
         if (job.type === "Job") setJobNatureId(1);
         else if (job.type === "Internship") setJobNatureId(2);
-        else if (job.type === "Contract") setJobNatureId(3);
+        else if (job.type === "Scholarship") setJobNatureId(3);
       }
 
       if (!workTypeActiveButton) {
@@ -769,7 +769,7 @@ const EditOpportunity = () => {
           : jobNatureId === 2
             ? "Internship"
             : jobNatureId === 3
-              ? "Contract"
+              ? "Scholarship"
               : "",
       duration_period:
         jobNatureId === 1
@@ -777,7 +777,7 @@ const EditOpportunity = () => {
           : jobNatureId === 2
             ? getDurationName?.duration || ""
             : jobNatureId === 3
-              ? "Contract"
+              ? "Scholarship"
               : "",
       workplace_type:
         workplaceType === 1

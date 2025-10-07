@@ -1,5 +1,5 @@
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Login from "../Login/Login";
 import About from "../About/About";
 import ProfileDetails from "../ProfileDetails/ProfileDetails";
@@ -29,14 +29,30 @@ import RegistrationChart from "../AdminDashboard/RegistrationChart";
 import ManageNotification from "../AdminDashboard/ManageNotification";
 import { useDispatch } from "react-redux";
 import { storeLoginStatus } from "../Redux/Slice";
-import AllAppliedCandidates from "../AdminDashboard/AllAppliedCandidates";
 import Location from "../JobPortal/Location";
 import AllRegisteredCandidates from "../AllRegisteredCandidates/AllRegisteredCandidates";
+import ProtectedRoute from "../ProtectedRoute/ProtectedRoute";
+import AllAppliedCandidates from "../AdminDashboard/AllAppliedCandidates";
+import PostEvents from "../PostEvents/PostEvents";
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [roleId, setRoleId] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setRoleId(loginDetails.role_id);
+      }
+      console.log("stored", stored);
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, []);
 
 
   useEffect(() => {
@@ -98,22 +114,10 @@ const Layout = () => {
         <Route path="/about" element={<About />} />
         <Route path="/profiledetails" element={<ProfileDetails />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route
-          path="/job-portal"
-          element={
-            <JobPortalLandingPage
-            />
-          }
-        />
-        <Route
-          path="/internship"
-          element={
-            <InternshipLandingPage
-            />
-          }
-        />
+        <Route path="/job-portal" element={<JobPortalLandingPage />} />
+        <Route path="/internship" element={<InternshipLandingPage />} />
         <Route path="/header" element={<Header />} />
-        <Route path="/footer" element={<Footer />}></Route>
+        <Route path="/footer" element={<Footer />} />
         <Route path="/post-jobs" element={<PostJobs />} />
         <Route path="/job-filter" element={<JobFilter />} />
         <Route path="/job-details/:id" element={<JobDetails />} />
@@ -134,12 +138,21 @@ const Layout = () => {
         <Route path="/admin-dashboard/:id" element={<RegistrationChart />} />
         <Route path="/location" element={<Location />} />
         <Route path="/manage-notification" element={<ManageNotification />} />
-        <Route path="/all-candidates" element={<AllRegisteredCandidates />} />
+        <Route path="/post-events" element={<PostEvents />} />
+        <Route path="/applied-candidates-all" element={<AllAppliedCandidates />} />
+
+        {/* ✅ Restrict access only to role_id = 3 */}
         <Route
-          path="/applied-candidates-all"
-          element={<AllAppliedCandidates />}
+          path="/all-candidates"
+          element={
+            <ProtectedRoute allowedRoles={[3]}>
+              <AllRegisteredCandidates />
+            </ProtectedRoute>
+          }
         />
+
       </Routes>
+
     </div>
   );
 };

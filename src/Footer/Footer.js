@@ -85,7 +85,7 @@ export default function Footer() {
                     onClick={() => navigate("/job-filter")}
                     className="footer-menu-link"
                   >
-                    Contract
+                    Scholarship
                   </a>
                 </li>
               </ul>

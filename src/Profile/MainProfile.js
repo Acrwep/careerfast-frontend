@@ -23,6 +23,7 @@ import {
   Skeleton,
   Dropdown,
   Modal,
+  Alert,
 } from "antd";
 import { Check, Clock, Briefcase, FileText, Award } from "lucide-react";
 import {
@@ -2799,11 +2800,22 @@ export default function MainProfile() {
                 }
                 error={customSkillError}
               />
-
+              <Alert
+                style={{
+                  marginTop: 0,
+                  marginBottom: 10,
+                  fontSize: 12,
+                  border: "none",
+                  display: "inline-flex",
+                }}
+                message="Click “Add Skill” to update and display your competencies."
+                type="warning"
+                showIcon
+              /><br></br>
               <Button
                 type="primary"
                 style={{
-                  marginTop: 20,
+                  marginTop: 4,
                   background:
                     "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
                 }}
@@ -5504,12 +5516,12 @@ export default function MainProfile() {
                     <StreakBox
                       label="Current Streak"
                       value={currentStreak}
-                      color="#f72585"
+                      color="#4cc9f0"
                     />
                     <StreakBox
                       label="Max Streak"
                       value={maxStreak}
-                      color="#4cc9f0"
+                      color="#f72585"
                     />
                   </div>
                 </motion.div>

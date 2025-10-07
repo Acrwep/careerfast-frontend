@@ -174,6 +174,25 @@ export default function PostJobs() {
   }, []);
 
   useEffect(() => {
+    if (jobNatureId === 3) {
+      // Reset hidden fields when Scholarship is selected
+      setWorkplaceType("");
+      setWorkTypeActiveButton(null);
+      setJobCategory("");
+      setSkillsRequired([]);
+      setJobOpenings("");
+      setWorkingDays("");
+      setSalaryDetails("");
+      setSalaryTypeActiveButton(null);
+      setSelectedBenefits([]);
+      setSalaryMin("");
+      setSalaryMax("");
+      setFixedSalary("");
+    }
+  }, [jobNatureId]);
+
+
+  useEffect(() => {
     getJobNatureData();
   }, []);
 
@@ -424,18 +443,24 @@ export default function PostJobs() {
     const companyNameValidate = nameValidator(companyName);
     const jobTitleValidate = nameValidator(jobTitle);
     const jobNatureValidate = selectValidator(jobNatureId);
-    const workplaceTypeValidate = selectValidator(workplaceType);
-    const jobCategoryValidate = selectValidator(jobCategory);
-    const skillsRequiredValidate = selectValidator(skillsRequired);
-    const salaryDetailsValidate = selectValidator(salaryDetails);
+    const workplaceTypeValidate =
+      jobNatureId === 3 ? "" : selectValidator(workplaceType);
+    const jobCategoryValidate =
+      jobNatureId === 3 ? "" : selectValidator(jobCategory);
+    const skillsRequiredValidate =
+      jobNatureId === 3 ? "" : selectValidator(skillsRequired);
+    const salaryDetailsValidate =
+      jobNatureId === 3 ? "" : selectValidator(salaryDetails);
     const jobInternshipDurationValidate =
       jobNatureId === "Internship"
         ? selectValidator(jobInternshipDuration)
         : "";
     const eligibilityValidate = selectValidator(eligibility);
     const workLocationValidate = selectValidator(workLocation);
-    const jobOpeningsValidate = selectValidator(jobOpenings);
-    const workingDaysValidate = selectValidator(workingDays);
+    const jobOpeningsValidate =
+      jobNatureId === 3 ? "" : selectValidator(jobOpenings);
+    const workingDaysValidate =
+      jobNatureId === 3 ? "" : selectValidator(workingDays);
 
     // Set all error states
     setCompanyNameError(companyNameValidate);
@@ -558,7 +583,7 @@ export default function PostJobs() {
           : jobNatureId === 2
             ? "Internship"
             : jobNatureId === 3
-              ? "Contract"
+              ? "Scholarship"
               : "",
       duration_period:
         jobNatureId === 1
@@ -566,7 +591,7 @@ export default function PostJobs() {
           : jobNatureId === 2
             ? getDurationName.duration
             : jobNatureId === 3
-              ? "Contract"
+              ? "Scholarship"
               : "",
       workplace_type:
         workplaceType === 1
@@ -624,7 +649,7 @@ export default function PostJobs() {
       setIsLoading(true); // start loader immediately
       const response = await createJobPost(payload);
 
-      message.success("Job Posted Successfully.");
+      message.success("Posted Successfully.");
 
       // ✅ Trigger FCM notification after posting
       await sendNotification();
@@ -632,7 +657,6 @@ export default function PostJobs() {
       navigate("/job-portal");
     } catch (error) {
       console.error("Error posting job", error);
-      message.error("Failed to post job. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -653,6 +677,7 @@ export default function PostJobs() {
     };
 
     await publish(payload);
+    navigate("/job-portal");
   };
 
   // Publish without questions
@@ -664,6 +689,7 @@ export default function PostJobs() {
     console.log("job posted", payload);
 
     await publish(payload);
+    navigate("/job-portal");
   };
 
   const handleFresherPassClick = (item) => {
@@ -888,7 +914,7 @@ export default function PostJobs() {
               <div style={{ marginTop: 15 }} className="form-group">
                 <Form.Item
                   layout="vertical"
-                  label={<span style={{ fontWeight: 500 }}>Job Nature </span>}
+                  label={<span style={{ fontWeight: 500 }}>Post Nature </span>}
                   name="jobnature"
                   rules={[
                     {
@@ -1008,25 +1034,18 @@ export default function PostJobs() {
                 )}
               </div>
 
-              <div style={{ marginTop: 15 }} className="form-group">
-                <div className="job_nature">
-                  <Form.Item
-                    layout="vertical"
-                    name={"workplaceType"}
-                    label={
-                      <span style={{ fontWeight: 500 }}>Workplace Type</span>
-                    }
-                    style={{ marginBottom: "0px" }}
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please enter your Workplace Type",
-                      },
-                    ]}
-                  >
-                    <div className="work_type">
-                      {workplaceTypeData.map((item) => {
-                        return (
+              {jobNatureId !== 3 && (
+                <div style={{ marginTop: 15 }} className="form-group">
+                  <div className="job_nature">
+                    <Form.Item
+                      layout="vertical"
+                      name={"workplaceType"}
+                      label={<span style={{ fontWeight: 500 }}>Workplace Type</span>}
+                      style={{ marginBottom: "0px" }}
+                      rules={[{ required: true, message: "Please enter your Workplace Type" }]}
+                    >
+                      <div className="work_type">
+                        {workplaceTypeData.map((item) => (
                           <button
                             key={item.id}
                             type="button"
@@ -1036,11 +1055,8 @@ export default function PostJobs() {
                                 : "work_type_button"
                             }
                             onClick={() => {
-                              if (item.id === 3 || item.id === 1) {
-                                getWorkPlaceLocationData();
-                              } else {
-                                setWorkplaceLocation([]);
-                              }
+                              if (item.id === 3 || item.id === 1) getWorkPlaceLocationData();
+                              else setWorkplaceLocation([]);
                               setWorkTypeActiveButton(item.id);
                               setWorkplaceType(item.id);
                               setWorkplaceTypeError("");
@@ -1048,20 +1064,21 @@ export default function PostJobs() {
                           >
                             <PiOfficeChairLight /> {item.name}
                           </button>
-                        );
-                      })}
-                    </div>
-                    {workplaceTypeError && (
-                      <div
-                        className="error-message"
-                        style={{ color: "red", marginTop: "8px", fontSize: 13 }}
-                      >
-                        {"Workplace Type" + workplaceTypeError}
+                        ))}
                       </div>
-                    )}
-                  </Form.Item>
+                      {workplaceTypeError && (
+                        <div
+                          className="error-message"
+                          style={{ color: "red", marginTop: "8px", fontSize: 13 }}
+                        >
+                          {"Workplace Type" + workplaceTypeError}
+                        </div>
+                      )}
+                    </Form.Item>
+                  </div>
                 </div>
-              </div>
+              )}
+
 
               <div style={{ marginTop: 15 }} className="form-group">
                 {workTypeActiveButton === 3 || workTypeActiveButton === 1 ? (
@@ -1129,75 +1146,82 @@ export default function PostJobs() {
               {/*  */}
 
               {/* Job category */}
-              <div style={{ marginTop: 15 }} className="form-group">
-                <CommonSelectField
-                  label={"Job Category"}
-                  showSearch={true}
-                  value={jobCategory}
-                  mandatory={true}
-                  name={"Job category"}
-                  placeholder={"Select Job Category"}
-                  options={jobCategoryOptions}
-                  onChange={(value) => {
-                    setJobCategory(value);
-                    setJobCategoryError(selectValidator(value));
-                  }}
-                  error={jobCategoryError}
-                />
+              {jobNatureId !== 3 && (
+                <div style={{ marginTop: 15 }} className="form-group">
+                  <CommonSelectField
+                    label={"Job Category"}
+                    showSearch={true}
+                    value={jobCategory}
+                    mandatory={true}
+                    name={"Job category"}
+                    placeholder={"Select Job Category"}
+                    options={jobCategoryOptions}
+                    onChange={(value) => {
+                      setJobCategory(value);
+                      setJobCategoryError(selectValidator(value));
+                    }}
+                    error={jobCategoryError}
+                  />
 
-                <CommonSelectField
-                  label={"Skills Required"}
-                  mandatory={true}
-                  name={"skill_required"}
-                  showSearch={true}
-                  mode="multiple"
-                  placeholder={"Select skills"}
-                  style={{ height: 56 }}
-                  value={skillsRequired}
-                  options={skillsRequiredOptions}
-                  onChange={(value) => {
-                    setSkillsRequired(value);
-                    setSkillsRequiredError(selectValidator(value));
-                  }}
-                  error={skillsRequiredError}
-                />
-              </div>
+                  <CommonSelectField
+                    label={"Skills Required"}
+                    mandatory={true}
+                    name={"skill_required"}
+                    showSearch={true}
+                    mode="multiple"
+                    placeholder={"Select skills"}
+                    style={{ height: 56 }}
+                    value={skillsRequired}
+                    options={skillsRequiredOptions}
+                    onChange={(value) => {
+                      setSkillsRequired(value);
+                      setSkillsRequiredError(selectValidator(value));
+                    }}
+                    error={skillsRequiredError}
+                  />
+                </div>
+              )}
+
 
               {/* Openings */}
-              <div style={{ marginTop: 0 }} className="form-group">
-                <CommonInputField
-                  name={"Job Openings"}
-                  label="Job Openings"
-                  mandotary={true}
-                  placeholder={"No.of openings"}
-                  type={"text"}
-                  value={jobOpenings}
-                  onChange={(e) => {
-                    setJobOpenings(e.target.value);
-                    setJobOpeningsError(selectValidator(e.target.value));
-                  }}
-                  error={jobOpeningsError}
-                />
-              </div>
+              {jobNatureId !== 3 && (
+                <div style={{ marginTop: 0 }} className="form-group">
+                  <CommonInputField
+                    name={"Job Openings"}
+                    label="Job Openings"
+                    mandotary={true}
+                    placeholder={"No.of openings"}
+                    type={"text"}
+                    value={jobOpenings}
+                    onChange={(e) => {
+                      setJobOpenings(e.target.value);
+                      setJobOpeningsError(selectValidator(e.target.value));
+                    }}
+                    error={jobOpeningsError}
+                  />
+                </div>
+              )}
 
               {/* working days */}
-              <div style={{ marginTop: 0 }} className="form-group">
-                <CommonSelectField
-                  label={"Working Days"}
-                  showSearch={true}
-                  value={workingDays}
-                  mandatory={true}
-                  name={"working_days"}
-                  placeholder={"Choose working days"}
-                  options={workingDaysOptions}
-                  onChange={(value) => {
-                    setWorkingDays(value);
-                    setWorkingDaysName(value);
-                    setWorkingDaysError(selectValidator(value));
-                  }}
-                  error={workingDaysError}
-                />
-              </div>
+              {jobNatureId !== 3 && (
+                <div style={{ marginTop: 0 }} className="form-group">
+                  <CommonSelectField
+                    label={"Working Days"}
+                    showSearch={true}
+                    value={workingDays}
+                    mandatory={true}
+                    name={"working_days"}
+                    placeholder={"Choose working days"}
+                    options={workingDaysOptions}
+                    onChange={(value) => {
+                      setWorkingDays(value);
+                      setWorkingDaysName(value);
+                      setWorkingDaysError(selectValidator(value));
+                    }}
+                    error={workingDaysError}
+                  />
+                </div>
+              )}
 
               <div className="eligibility">
                 <h4>Eligibility</h4>
@@ -1301,145 +1325,147 @@ export default function PostJobs() {
                 </div>
               </div>
 
-              <div className="salary_details">
-                <h4>Salary Details</h4>
-                <p>
-                  Add compensation details to filter better candidates and speed
-                  up the sourcing process.
-                </p>
-                <Form.Item
-                  layout="vertical"
-                  label={
-                    <h5>
-                      <span style={{ color: "red" }}>*</span> Salary Type{" "}
-                    </h5>
-                  }
-                  name="internship_duration"
-                >
-                  <Alert
-                    className="alert_message"
-                    banner
-                    message={"Enter Annual Salary"}
-                  />
-                  <div className="job_nature">
-                    {salaryData.map((item) => {
-                      return (
-                        <button
-                          key={item.id}
-                          className={
-                            salaryTypeActiveButton === item.id
-                              ? "experience_required_button_active"
-                              : "experience_required_button"
-                          }
-                          onClick={() => {
-                            setSalaryTypeActiveButton(item.id);
-                            setSalaryDetails(item.id);
-                            setSalaryDetailsError(selectValidator(item.name));
-                          }}
+              {jobNatureId !== 3 && (
+                <div className="salary_details">
+                  <h4>Salary Details</h4>
+                  <p>
+                    Add compensation details to filter better candidates and speed
+                    up the sourcing process.
+                  </p>
+                  <Form.Item
+                    layout="vertical"
+                    label={
+                      <h5>
+                        <span style={{ color: "red" }}>*</span> Salary Type{" "}
+                      </h5>
+                    }
+                    name="internship_duration"
+                  >
+                    <Alert
+                      className="alert_message"
+                      banner
+                      message={"Enter Annual Salary"}
+                    />
+                    <div className="job_nature">
+                      {salaryData.map((item) => {
+                        return (
+                          <button
+                            key={item.id}
+                            className={
+                              salaryTypeActiveButton === item.id
+                                ? "experience_required_button_active"
+                                : "experience_required_button"
+                            }
+                            onClick={() => {
+                              setSalaryTypeActiveButton(item.id);
+                              setSalaryDetails(item.id);
+                              setSalaryDetailsError(selectValidator(item.name));
+                            }}
+                          >
+                            {item.id === 1 ? (
+                              <LuLocateFixed />
+                            ) : item.id === 2 ? (
+                              <RiEqualizerLine />
+                            ) : (
+                              <TbContract />
+                            )}{" "}
+                            {item.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {salaryDetailsError && (
+                      <div
+                        className="error-message"
+                        style={{ color: "red", marginTop: "8px", fontSize: 13 }}
+                      >
+                        {"Salary Type" + salaryDetailsError}
+                      </div>
+                    )}
+                  </Form.Item>
+
+                  {salaryTypeActiveButton === 1 && (
+                    <div className="salary_details_inner">
+                      <h5>Salary Figure</h5>
+                      <p>
+                        The salary on the job page will be shown in years only.
+                      </p>
+                      <div className="job_nature">
+                        <Select
+                          showSearch
+                          value={currency}
+                          onChange={(value) => setCurrency(value)}
+                          style={{ width: 100 }}
+                          optionFilterProp="children"
                         >
-                          {item.id === 1 ? (
-                            <LuLocateFixed />
-                          ) : item.id === 2 ? (
-                            <RiEqualizerLine />
-                          ) : (
-                            <TbContract />
-                          )}{" "}
-                          {item.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {salaryDetailsError && (
-                    <div
-                      className="error-message"
-                      style={{ color: "red", marginTop: "8px", fontSize: 13 }}
-                    >
-                      {"Salary Type" + salaryDetailsError}
+                          {currencyCodes.data.map((c) => (
+                            <Option key={c.code} value={c.code}>
+                              {c.symbol_native || c.symbol || c.code} ({c.code})
+                            </Option>
+                          ))}
+                        </Select>
+
+                        <Input
+                          style={{ width: "60%" }}
+                          value={fixedSalary}
+                          onChange={(e) => setFixedSalary(e.target.value)}
+                          placeholder="Enter amount"
+                        />
+                      </div>
                     </div>
                   )}
-                </Form.Item>
 
-                {salaryTypeActiveButton === 1 && (
-                  <div className="salary_details_inner">
-                    <h5>Salary Figure</h5>
-                    <p>
-                      The salary on the job page will be shown in years only.
-                    </p>
-                    <div className="job_nature">
-                      <Select
-                        showSearch
-                        value={currency}
-                        onChange={(value) => setCurrency(value)}
-                        style={{ width: 100 }}
-                        optionFilterProp="children"
-                      >
-                        {currencyCodes.data.map((c) => (
-                          <Option key={c.code} value={c.code}>
-                            {c.symbol_native || c.symbol || c.code} ({c.code})
-                          </Option>
-                        ))}
-                      </Select>
+                  {salaryTypeActiveButton === 2 && (
+                    <div className="salary_details_inner">
+                      <h5>Salary Figure</h5>
+                      <p>
+                        The salary on the job page will be shown in years only.
+                      </p>
+                      <div className="job_nature">
+                        <Select
+                          showSearch
+                          value={currency}
+                          onChange={(value) => setCurrency(value)}
+                          style={{ width: 100 }}
+                          optionFilterProp="children"
+                        >
+                          {currencyCodes.data.map((c) => (
+                            <Option key={c.code} value={c.code}>
+                              {c.symbol_native || c.symbol || c.code} ({c.code})
+                            </Option>
+                          ))}
+                        </Select>
 
-                      <Input
-                        style={{ width: "60%" }}
-                        value={fixedSalary}
-                        onChange={(e) => setFixedSalary(e.target.value)}
-                        placeholder="Enter amount"
-                      />
+                        <InputNumber
+                          value={salaryMin}
+                          onChange={(value) => setSalaryMin(value)}
+                          placeholder="Min"
+                          min={0}
+                          style={{
+                            width: "30%",
+                            height: 45,
+                            placeContent: "center",
+                            textAlign: "center",
+                          }}
+                        />
+
+                        <InputNumber
+                          value={salaryMax}
+                          onChange={(value) => setSalaryMax(value)}
+                          placeholder="Max"
+                          min={0}
+                          style={{
+                            width: "30%",
+                            height: 45,
+                            placeContent: "center",
+                            textAlign: "center",
+                          }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                {salaryTypeActiveButton === 2 && (
-                  <div className="salary_details_inner">
-                    <h5>Salary Figure</h5>
-                    <p>
-                      The salary on the job page will be shown in years only.
-                    </p>
-                    <div className="job_nature">
-                      <Select
-                        showSearch
-                        value={currency}
-                        onChange={(value) => setCurrency(value)}
-                        style={{ width: 100 }}
-                        optionFilterProp="children"
-                      >
-                        {currencyCodes.data.map((c) => (
-                          <Option key={c.code} value={c.code}>
-                            {c.symbol_native || c.symbol || c.code} ({c.code})
-                          </Option>
-                        ))}
-                      </Select>
-
-                      <InputNumber
-                        value={salaryMin}
-                        onChange={(value) => setSalaryMin(value)}
-                        placeholder="Min"
-                        min={0}
-                        style={{
-                          width: "30%",
-                          height: 45,
-                          placeContent: "center",
-                          textAlign: "center",
-                        }}
-                      />
-
-                      <InputNumber
-                        value={salaryMax}
-                        onChange={(value) => setSalaryMax(value)}
-                        placeholder="Max"
-                        min={0}
-                        style={{
-                          width: "30%",
-                          height: 45,
-                          placeContent: "center",
-                          textAlign: "center",
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               <div
                 className="diversity_options"
@@ -1484,62 +1510,64 @@ export default function PostJobs() {
                 )}
               </div>
 
-              <div className="other_benifits">
-                <div className="job_nature">
-                  <Text strong>Other Benefits</Text>
-                  <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
-                    {visibleBenefits.map((item) => (
-                      <Col key={item.id}>
-                        <Card
-                          hoverable
-                          onClick={() => {
-                            toggleBenefitSelection(item.id);
-                          }}
-                          style={{
-                            width: 140,
-                            textAlign: "center",
-                            border: selectedBenefits.includes(item.id)
-                              ? "2px dashed #6a00ff"
-                              : "1px dashed #ccc",
-                            background: selectedBenefits.includes(item.id)
-                              ? "#6a00ff14"
-                              : "#fff",
-                            borderRadius: 8,
-                          }}
-                        >
-                          <div style={{ fontSize: 24, marginBottom: 4 }}>
-                            {item.id === 1 ? (
-                              <LineChartOutlined />
-                            ) : item.id === 2 ? (
-                              <MedicineBoxOutlined />
-                            ) : item.id === 3 ? (
-                              <CarOutlined />
-                            ) : item.id === 4 ? (
-                              <CoffeeOutlined />
-                            ) : null}
-                          </div>
-                          <Text>{item.name}</Text>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                  <Button
-                    type="link"
-                    onClick={() => setShowMore(!showMore)}
-                    style={{ marginTop: 12, color: "#6a00ff" }}
-                  >
-                    {showMore ? (
-                      <>
-                        View Less <FaAngleUp />
-                      </>
-                    ) : (
-                      <>
-                        View More <FaAngleDown />
-                      </>
-                    )}
-                  </Button>
+              {jobNatureId !== 3 && (
+                <div className="other_benifits">
+                  <div className="job_nature">
+                    <Text strong>Other Benefits</Text>
+                    <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
+                      {visibleBenefits.map((item) => (
+                        <Col key={item.id}>
+                          <Card
+                            hoverable
+                            onClick={() => {
+                              toggleBenefitSelection(item.id);
+                            }}
+                            style={{
+                              width: 140,
+                              textAlign: "center",
+                              border: selectedBenefits.includes(item.id)
+                                ? "2px dashed #6a00ff"
+                                : "1px dashed #ccc",
+                              background: selectedBenefits.includes(item.id)
+                                ? "#6a00ff14"
+                                : "#fff",
+                              borderRadius: 8,
+                            }}
+                          >
+                            <div style={{ fontSize: 24, marginBottom: 4 }}>
+                              {item.id === 1 ? (
+                                <LineChartOutlined />
+                              ) : item.id === 2 ? (
+                                <MedicineBoxOutlined />
+                              ) : item.id === 3 ? (
+                                <CarOutlined />
+                              ) : item.id === 4 ? (
+                                <CoffeeOutlined />
+                              ) : null}
+                            </div>
+                            <Text>{item.name}</Text>
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                    <Button
+                      type="link"
+                      onClick={() => setShowMore(!showMore)}
+                      style={{ marginTop: 12, color: "#6a00ff" }}
+                    >
+                      {showMore ? (
+                        <>
+                          View Less <FaAngleUp />
+                        </>
+                      ) : (
+                        <>
+                          View More <FaAngleDown />
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <div

@@ -49,11 +49,16 @@ import additional4 from "../images/additional4.png";
 import additional5 from "../images/additional5.png";
 import additional6 from "../images/additional6.png";
 
-const tabs = [
-  "Job Description",
-  "Additional Informations",
-  "FAQs & Discussions",
-];
+// ✅ Dynamically generate tab list based on job type
+const getTabs = (jobType) => {
+  const tabs = ["Job Description"];
+  if (jobType !== "Scholarship") {
+    tabs.push("Additional Informations");
+  }
+  tabs.push("FAQs & Discussions");
+  return tabs;
+};
+
 
 export default function JobDetails() {
   const [wishlisted, setWishlisted] = useState(false);
@@ -465,12 +470,12 @@ export default function JobDetails() {
                       <span className="meta-text">{job.company}</span>
                       <span className="verified-badge">Verified</span>
                     </div>
-
-                    <div className="job-meta-item">
-                      <FaMapMarkerAlt className="meta-icon premium-icon" />
-                      <span className="meta-text">{job.location}</span>
-                    </div>
-
+                    {job.type !== "Scholarship" && (
+                      <div className="job-meta-item">
+                        <FaMapMarkerAlt className="meta-icon premium-icon" />
+                        <span className="meta-text">{job.location}</span>
+                      </div>
+                    )}
                     <div className="job-meta-item">
                       <FaRegCalendarAlt className="meta-icon premium-icon" />
                       <span className="meta-text">
@@ -480,7 +485,9 @@ export default function JobDetails() {
 
                     <div className="job-tags">
                       <span className="tag">{job.type}</span>
-                      <span className="tag">{job.working_days}</span>
+                      {job.type !== "Scholarship" && (
+                        <span className="tag">{job.working_days}</span>
+                      )}
                       <span className="tag">{job.salary}</span>
                     </div>
                   </div>
@@ -621,7 +628,7 @@ export default function JobDetails() {
           <div key={job.id} className="job-details-container">
             {/* Premium Tab Navigation */}
             <div className="tabs">
-              {tabs.map((tab) => (
+              {getTabs(job.type).map((tab) => (
                 <button
                   key={tab}
                   className={`tab-button ${activeTab === tab ? "active" : ""}`}
@@ -632,6 +639,7 @@ export default function JobDetails() {
                 </button>
               ))}
             </div>
+
             {activeTab === "Job Description" && (
               <div className="section-card job-description">
                 <h2 className="section-title">Job Description</h2>
@@ -644,107 +652,110 @@ export default function JobDetails() {
                 />
               </div>
             )}
+            {job.type !== "Scholarship" && (
+              <>
+                {activeTab === "Additional Informations" && (
+                  <div className="job_filter">
+                    <div className="section-card">
+                      <h2 className="section-title">Additional Information</h2>
 
-            {activeTab === "Additional Informations" && (
-              <div className="job_filter">
-                <div className="section-card">
-                  <h2 className="section-title">Additional Information</h2>
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Skills Required</h4>
+                          <p>
+                            {job.skills.map((skill, index) => (
+                              <span key={skill} className="premium-skill">
+                                {skill}
+                                {index < job.skills.length - 1 && (
+                                  <span className="skill-separator"> | </span>
+                                )}
+                              </span>
+                            ))}
+                          </p>
+                        </div>
 
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Skills Required</h4>
-                      <p>
-                        {job.skills.map((skill, index) => (
-                          <span key={skill} className="premium-skill">
-                            {skill}
-                            {index < job.skills.length - 1 && (
-                              <span className="skill-separator"> | </span>
-                            )}
-                          </span>
-                        ))}
-                      </p>
+                        <img
+                          className="info-card-image"
+                          src={additional1}
+                          alt="Location"
+                        />
+                      </div>
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Job Benefits</h4>
+                          <p>
+                            {(job.benefits || []).map((benefit, index) => (
+                              <span key={benefit} className="premium-skill">
+                                {benefit}
+                              </span>
+                            ))}
+                          </p>
+                        </div>
+                        <img
+                          className="info-card-image"
+                          src={additional3}
+                          alt="Salary"
+                        />
+                      </div>
+
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Job Catergory</h4>
+                          <p>{job.job_category}</p>
+                        </div>
+                        <img
+                          className="info-card-image"
+                          src={additional4}
+                          alt="Work Details"
+                        />
+                      </div>
+
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Job Openings</h4>
+                          <p>{job.openings}</p>
+                        </div>
+                        <img
+                          className="info-card-image"
+                          src={additional2}
+                          alt="Experience"
+                        />
+                      </div>
+
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Work Schedule</h4>
+                          <p>
+                            <b>Working Days</b>: {job.working_days}
+                          </p>
+                        </div>
+                        <img
+                          className="info-card-image"
+                          src={additional5}
+                          alt="Work Details"
+                        />
+                      </div>
+
+                      <div className="info-card">
+                        <div className="info-card-content">
+                          <h4>Job Type / Natute</h4>
+                          <p>
+                            <b>Job Type</b>: {job.location}
+                          </p>
+                          <p>
+                            <b>Job Nature</b>: {job.type}
+                          </p>
+                        </div>
+                        <img
+                          className="info-card-image"
+                          src={additional6}
+                          alt="Work Details"
+                        />
+                      </div>
                     </div>
-
-                    <img
-                      className="info-card-image"
-                      src={additional1}
-                      alt="Location"
-                    />
                   </div>
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Job Benefits</h4>
-                      <p>
-                        {(job.benefits || []).map((benefit, index) => (
-                          <span key={benefit} className="premium-skill">
-                            {benefit}
-                          </span>
-                        ))}
-                      </p>
-                    </div>
-                    <img
-                      className="info-card-image"
-                      src={additional3}
-                      alt="Salary"
-                    />
-                  </div>
-
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Job Catergory</h4>
-                      <p>{job.job_category}</p>
-                    </div>
-                    <img
-                      className="info-card-image"
-                      src={additional4}
-                      alt="Work Details"
-                    />
-                  </div>
-
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Job Openings</h4>
-                      <p>{job.openings}</p>
-                    </div>
-                    <img
-                      className="info-card-image"
-                      src={additional2}
-                      alt="Experience"
-                    />
-                  </div>
-
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Work Schedule</h4>
-                      <p>
-                        <b>Working Days</b>: {job.working_days}
-                      </p>
-                    </div>
-                    <img
-                      className="info-card-image"
-                      src={additional5}
-                      alt="Work Details"
-                    />
-                  </div>
-
-                  <div className="info-card">
-                    <div className="info-card-content">
-                      <h4>Job Type / Natute</h4>
-                      <p>
-                        <b>Job Type</b>: {job.location}
-                      </p>
-                      <p>
-                        <b>Job Nature</b>: {job.type}
-                      </p>
-                    </div>
-                    <img
-                      className="info-card-image"
-                      src={additional6}
-                      alt="Work Details"
-                    />
-                  </div>
-                </div>
-              </div>
+                )}
+              </>
             )}
 
             {activeTab === "FAQs & Discussions" && (

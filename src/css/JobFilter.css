@@ -18,12 +18,31 @@ a {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
+}
+
+.premium-job-card {
+  position: relative;
+  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 11%);
+}
+
+.premium-job-card::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 0%;
+  height: 90%;
+  width: 5px;
+  background: linear-gradient(180deg, #6214fa9e 0%, #5d1cff52 100%);
+  border-radius: 0px 50px 50px 0px;
+  overflow: auto;
 }
 
 .premium-job-card .premium-tag {
@@ -66,7 +85,7 @@ a {
   object-fit: contain;
   background: white;
   padding: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 22%);
   border: 1px solid rgba(120, 51, 255, 0.1);
 }
 
@@ -191,15 +210,13 @@ a {
   justify-content: space-between;
   align-items: center;
   padding-top: 16px;
-  border-top: 1px solid rgba(120, 51, 255, 0.1);
+  border-top: 2px solid rgb(120 51 255 / 13%);
 }
 
 .premium-job-card .premium-level {
-  background: linear-gradient(
-    135deg,
-    rgba(120, 51, 255, 0.1),
-    rgba(209, 84, 255, 0.1)
-  );
+  background: linear-gradient(135deg,
+      rgba(120, 51, 255, 0.1),
+      rgba(209, 84, 255, 0.1));
   color: #5f2eea;
   border-radius: 20px;
   padding: 6px 16px;
@@ -362,7 +379,7 @@ a {
   border-radius: 0px 0px 16px 16px;
   padding: 32px;
   margin-bottom: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
 }
 
 .job_filter .section-title {
@@ -416,7 +433,7 @@ a {
   padding: 15px 18px;
   margin-bottom: 20px;
   transition: all 0.3s ease;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid rgb(0 0 0 / 19%);
 }
 
 .job-eligibility p {
@@ -490,9 +507,7 @@ a {
 }
 
 .ant-btn-variant-outlined:not(:disabled):not(.ant-btn-disabled):hover,
-:where(.css-dev-only-do-not-override-1m2bkf9).ant-btn-variant-dashed:not(
-    :disabled
-  ):not(.ant-btn-disabled):hover {
+:where(.css-dev-only-do-not-override-1m2bkf9).ant-btn-variant-dashed:not( :disabled):not(.ant-btn-disabled):hover {
   color: #4f46e5;
   border-color: #4f46e5;
 }
@@ -690,7 +705,7 @@ a {
 }
 
 .premium-job-details .tag {
-  background: #f3f2ff;
+  background: #e8e6ff;
   color: #6a5cff;
   padding: 4px 12px;
   border-radius: 20px;
@@ -774,7 +789,7 @@ a {
   backdrop-filter: blur(12px);
   transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 1;
-  border: 1px solid #eee;
+  border: 1px solid #c1c1c1bf;
   width: 52%;
 }
 
@@ -886,11 +901,9 @@ a {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0) 100%);
   opacity: 0;
   transition: opacity 0.6s ease;
 }
@@ -922,7 +935,7 @@ a {
 }
 
 .side_job_apply_button.disabled {
-  background: #f1f5f9;
+  background: #e1e1e1;
   color: #94a3b8;
   box-shadow: none;
   cursor: not-allowed;
@@ -933,11 +946,9 @@ a {
   width: 80%;
   padding: 13px;
   border-radius: 16px;
-  background: linear-gradient(
-    135deg,
-    rgba(220, 252, 231, 0.7) 0%,
-    rgba(187, 247, 208, 0.5) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(220, 252, 231, 0.7) 0%,
+      rgba(187, 247, 208, 0.5) 100%);
   color: #15803d;
   font-weight: 650;
   font-size: 16px;
@@ -952,11 +963,9 @@ a {
 }
 
 .side_job_applied_badge:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(220, 252, 231, 0.85) 0%,
-    rgba(187, 247, 208, 0.65) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(220, 252, 231, 0.85) 0%,
+      rgba(187, 247, 208, 0.65) 100%);
   transform: translateY(-2px);
 }
 
@@ -1022,10 +1031,12 @@ a {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.15);
     opacity: 0.8;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -1036,9 +1047,11 @@ a {
   0% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-6px);
   }
+
   100% {
     transform: translateY(0px);
   }
@@ -1746,12 +1759,10 @@ a {
 
 .additional_details_btn {
   border: none;
-  background: linear-gradient(
-    135deg,
-    #7f5af0 0%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      #7f5af0 0%,
+      #5f2eea 50%,
+      #4b1ea0 100%) !important;
   color: #fff;
   padding: 20px 20px;
   border-radius: 10px;

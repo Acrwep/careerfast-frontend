@@ -178,7 +178,7 @@ export default function ListingDashboard() {
     switch (job_nature) {
       case "Job":
         return <FiBriefcase className="icon-blue" />;
-      case "Contract":
+      case "Scholarship":
         return <FiBriefcase className="icon-green" />;
       case "Internship":
         return <FiBriefcase className="icon-purple" />;

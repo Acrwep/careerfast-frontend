@@ -373,7 +373,7 @@ export default function JobPortalLandingPage() {
               >
                 {/* Find Jobs */}
                 <motion.button
-                  onClick={() => navigate("/job-filter")}
+                  onClick={() => navigate("/job-filter?filter=Job")}
                   className="primary-btn"
                   whileHover={{ scale: 1.08 }}
                   whileTap={{ scale: 0.95 }}
@@ -1007,7 +1007,7 @@ export default function JobPortalLandingPage() {
         </Row>
 
         <div className="section-footer">
-          <p>Explore more career resources in our <a href="/blog">Career Hub</a></p>
+          <p>Explore more career resources in our <a href="/blog">Careerfast</a></p>
         </div>
       </div>
 

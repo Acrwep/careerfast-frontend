@@ -20,6 +20,8 @@ import {
   Typography,
   Progress,
   Tooltip,
+  Popover,
+  Divider,
   message,
 } from "antd";
 import { AutoComplete } from "antd";
@@ -40,9 +42,14 @@ import {
   LogoutOutlined,
   RightOutlined,
   HeartOutlined,
+  TrophyOutlined,
+  ShoppingOutlined,
+  ProfileOutlined,
+  LockOutlined,
+  DashboardOutlined,
 } from "@ant-design/icons";
 
-import { Skeleton, Tag } from "antd";
+import { Tag } from "antd";
 import {
   CrownFilled,
   StarFilled,
@@ -217,8 +224,16 @@ export default function Header() {
   ];
 
   const moreMenuItems = [
-    { key: "scholarships", label: "Scholarships", path: "#" },
-    { key: "events", label: "Events", path: "#" },
+    {
+      key: "scholarships",
+      label: "Scholarships",
+      onClick: () => navigate("/job-filter?filter=Scholarship"),
+    },
+    {
+      key: "events",
+      label: "Events",
+      onClick: () => navigate("/job-filter?filter=Events"),
+    },
     { key: "resources", label: "Resources", path: "#" },
     { key: "blog", label: "Blog", path: "/blogs" },
   ];
@@ -322,12 +337,15 @@ export default function Header() {
                 ))}
                 <Dropdown
                   menu={{
-                    items: moreMenuItems,
+                    items: moreMenuItems.map(item => ({
+                      key: item.key,
+                      label: item.label,
+                    })),
                     onClick: ({ key }) => {
-                      const selectedItem = moreMenuItems.find(
-                        (item) => item.key === key
-                      );
-                      if (selectedItem?.path) {
+                      const selectedItem = moreMenuItems.find(item => item.key === key);
+                      if (selectedItem?.onClick) {
+                        selectedItem.onClick();
+                      } else if (selectedItem?.path) {
                         navigate(selectedItem.path);
                         onClose();
                       }
@@ -345,6 +363,7 @@ export default function Header() {
                     More <IoChevronDownOutline />
                   </Nav.Link>
                 </Dropdown>
+
               </Nav>
 
               {/* Right: User Actions */}
@@ -379,11 +398,7 @@ export default function Header() {
                   <>
                     <Tooltip title="You don't have permission to post jobs">
                       <span>
-                        <Button
-                          onClick={() => navigate("/post-jobs")}
-                          className="host-button"
-                          disabled
-                        >
+                        <Button className="host-button">
                           <PlusOutlined /> Host
                         </Button>
                       </span>
@@ -401,18 +416,76 @@ export default function Header() {
                   </>
                 ) : (
                   <>
-                    <Button
-                      onClick={() => {
-                        if (isLoggedIn === false) {
-                          message.error("Please Login");
-                        } else {
-                          navigate("/post-jobs");
+                    {isLoggedIn ? (
+                      <Popover
+                        placement="bottomRight"
+                        trigger="click"
+                        content={
+                          <div style={{ width: 260 }}>
+                            <div
+                              onClick={() => navigate("/post-jobs")}
+                              className="host-popup-item"
+                            >
+                              <ShoppingOutlined style={{ color: "#ef4444", fontSize: 18 }} />
+                              <div className="host-popup-text">
+                                <div className="host-popup-title">Jobs, Internships</div>
+                                <div className="host-popup-sub">Hire the Right Talent</div>
+                              </div>
+                            </div>
+
+                            <div
+                              onClick={() => navigate("/post-events")}
+                              className="host-popup-item"
+                            >
+                              <TrophyOutlined style={{ color: "#f59e0b", fontSize: 18 }} />
+                              <div className="host-popup-text">
+                                <div className="host-popup-title">Cultural Events</div>
+                                <div className="host-popup-sub">Engage your target audience</div>
+                              </div>
+                            </div>
+
+                            <div className="host-popup-item" style={{ opacity: 0.6 }}>
+                              <ProfileOutlined style={{ color: "#6366f1", fontSize: 18 }} />
+                              <div className="host-popup-text">
+                                <div className="host-popup-title">Assessments</div>
+                                <div className="host-popup-sub">Evaluate candidates</div>
+                              </div>
+                              <div className="host-popup-upgrade">
+                                <LockOutlined /> Upgrade
+                              </div>
+                            </div>
+
+                            <Divider style={{ margin: "8px 0" }} />
+
+                            <div
+                              onClick={() => navigate("/admin-profile")}
+                              className="host-popup-item"
+                            >
+                              <DashboardOutlined style={{ color: "#3b82f6", fontSize: 18 }} />
+                              <div className="host-popup-text">
+                                <div className="host-popup-title">Go to organizer dashboard</div>
+                                <div className="host-popup-sub">
+                                  Manage listing, Festivals, Assessments
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         }
-                      }}
-                      className="host-button"
-                    >
-                      <PlusOutlined /> Host
-                    </Button>
+                      >
+                        <Button className="host-button">
+                          <PlusOutlined /> Host
+                        </Button>
+                      </Popover>
+                    ) : (
+                      <Button
+                        style={{ opacity: 0.6 }}
+                        onClick={() => message.error("Please Login")}
+                        className="host-button"
+                      >
+                        <PlusOutlined /> Host
+                      </Button>
+                    )}
+
                     {isLoggedIn === false ? (
                       <Button
                         onClick={() => navigate("/login")}
@@ -425,6 +498,15 @@ export default function Header() {
                     )}{" "}
                   </>
                 )}
+
+                {roleId === 3 ? (
+                  <Button
+                    onClick={() => navigate("/all-candidates")}
+                    className="host-button"
+                  >
+                    <SearchOutlined /> Find Candidates
+                  </Button>
+                ) : null}
               </div>
             </Offcanvas.Body>
           </Navbar.Offcanvas>
@@ -1037,7 +1119,7 @@ export default function Header() {
           /* Elite search input */
           .elite-search-input {
             border-radius: 12px;
-            border: 1px solid #e6e8f0;
+            border: 1px solid #b6b1ff;
             padding: 12px 18px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;

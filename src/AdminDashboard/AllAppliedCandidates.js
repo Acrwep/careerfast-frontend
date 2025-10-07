@@ -159,7 +159,7 @@ export default function AllAppliedCandidates() {
     },
     {
       title: "Status",
-      render: () => <Tag color="purple">Applied</Tag>,
+      render: () => <Tag color="green">Applied</Tag>,
     },
   ];
 

@@ -17,6 +17,7 @@ import {
     message,
     Badge,
     Statistic,
+    Slider,
 } from "antd";
 import {
     UserOutlined,
@@ -28,7 +29,6 @@ import {
     FieldTimeOutlined,
     TrophyOutlined,
     DownloadOutlined,
-    SettingOutlined,
     PhoneOutlined,
     CheckCircleOutlined,
     ExclamationCircleOutlined,
@@ -39,11 +39,16 @@ import {
     ApartmentOutlined,
     ExperimentOutlined,
     SwapOutlined,
+    SearchOutlined,
+    TeamOutlined,
+    DownOutlined,
+    ReloadOutlined
 } from "@ant-design/icons";
 
 // ✅ Import your actual API service
 import { getUsers, getUserProfile } from "../ApiService/action";
-import { FaBehance, FaBook, FaDribbble, FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa6";
+import { FaBehance, FaDribbble, FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa6";
+import Footer from "../Footer/Footer";
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -57,27 +62,10 @@ export default function AllRegisteredCandidates() {
     const [open, setOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [viewProfileLoading, setViewProfileLoading] = useState(false);
+    const [userTypeFilter, setUserTypeFilter] = useState("all");
+    const [experienceRange, setExperienceRange] = useState([0, 10]);
 
-    const statusColors = {
-        Active: {
-            background: "linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)",
-            borderColor: "#52c41a",
-            color: "#135200",
-            icon: <CheckCircleOutlined />,
-        },
-        Inactive: {
-            background: "linear-gradient(135deg, #fff2f0 0%, #fff7e6 100%)",
-            borderColor: "#ff4d4f",
-            color: "#820014",
-            icon: <ExclamationCircleOutlined />,
-        },
-        Pending: {
-            background: "linear-gradient(135deg, #fffbe6 0%, #f6ffed 100%)",
-            borderColor: "#faad14",
-            color: "#876800",
-            icon: <FieldTimeOutlined />,
-        },
-    };
+
 
     useEffect(() => {
         getUserData();
@@ -88,6 +76,7 @@ export default function AllRegisteredCandidates() {
         setLoading(true);
         try {
             const response = await getUsers();
+            console.log("getusers", response);
             const data = response?.data?.data || response?.data || [];
 
             const formattedUsers = data.map((user, index) => ({
@@ -128,22 +117,39 @@ export default function AllRegisteredCandidates() {
 
     const filteredUsers = users.filter((user) => {
         const matchesSearch =
-            user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.college.toLowerCase().includes(searchTerm.toLowerCase());
+            (user.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (user.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (user.phone?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (user.skills?.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())));
 
         const matchesStatus =
             statusFilter === "all" ||
-            user.status.toLowerCase() === statusFilter.toLowerCase();
+            user.status?.toLowerCase() === statusFilter.toLowerCase();
 
-        return matchesSearch && matchesStatus;
+        const matchesExperience = (() => {
+            // Extract numbers from "7 Years" and "4 Months" safely
+            const yearMatch = String(user.total_years || "0").match(/\d+/);
+            const monthMatch = String(user.total_months || "0").match(/\d+/);
+
+            const years = yearMatch ? parseInt(yearMatch[0], 10) : 0;
+            const months = monthMatch ? parseInt(monthMatch[0], 10) : 0;
+
+            // Convert total months into fractional years
+            const totalExperience = years + months / 12;
+
+            // Apply slider filter
+            return totalExperience >= experienceRange[0] && totalExperience <= experienceRange[1];
+        })();
+
+
+
+
+        const matchesUserType =
+            userTypeFilter === "all" ||
+            (user.user_type && user.user_type.toLowerCase() === userTypeFilter.toLowerCase());
+
+        return matchesSearch && matchesStatus && matchesExperience && matchesUserType;
     });
-
-    const getScoreColor = (score) => {
-        if (score >= 80) return "#52c41a";
-        if (score >= 60) return "#faad14";
-        return "#ff4d4f";
-    };
 
 
     const columns = [
@@ -193,6 +199,34 @@ export default function AllRegisteredCandidates() {
                 </Space>
             ),
         },
+        {
+            title: (
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>
+                    SKILLS
+                </Text>
+            ),
+            dataIndex: "skills",
+            render: (skills) =>
+                skills && skills.length > 0 ? (
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(2, 1fr)",
+                            gap: "4px 0px",
+                        }}
+                    >
+                        {skills.map((skill, idx) => (
+                            <Text key={idx} style={{ fontSize: 12, fontWeight: 500 }}>
+                                {skill}
+                                {idx !== skills.length - 1 && ","} {/* ✅ Add comma except last */}
+                            </Text>
+                        ))}
+                    </div>
+                ) : (
+                    <Text type="secondary">N/A</Text>
+                ),
+        }
+        ,
         {
             title: (
                 <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>
@@ -277,38 +311,38 @@ export default function AllRegisteredCandidates() {
         //         );
         //     },
         // },
-        {
-            title: <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>COMPATIBILITY</Text>,
-            dataIndex: "score",
-            render: (score) => (
-                <div style={{ minWidth: 100 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                        <Text strong style={{ color: getScoreColor(score), fontSize: 14 }}>
-                            {score}%
-                        </Text>
-                        <TrophyOutlined style={{ color: getScoreColor(score), fontSize: 12 }} />
-                    </div>
-                    <div
-                        style={{
-                            height: 6,
-                            background: "#f0f0f0",
-                            borderRadius: 3,
-                            overflow: "hidden",
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: `${score}%`,
-                                height: "100%",
-                                background: `linear-gradient(90deg, ${getScoreColor(score)}33, ${getScoreColor(score)})`,
-                                borderRadius: 3,
-                                transition: "all 0.3s ease",
-                            }}
-                        />
-                    </div>
-                </div>
-            ),
-        },
+        // {
+        //     title: <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>COMPATIBILITY</Text>,
+        //     dataIndex: "score",
+        //     render: (score) => (
+        //         <div style={{ minWidth: 100 }}>
+        //             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+        //                 <Text strong style={{ color: getScoreColor(score), fontSize: 14 }}>
+        //                     {score}%
+        //                 </Text>
+        //                 <TrophyOutlined style={{ color: getScoreColor(score), fontSize: 12 }} />
+        //             </div>
+        //             <div
+        //                 style={{
+        //                     height: 6,
+        //                     background: "#f0f0f0",
+        //                     borderRadius: 3,
+        //                     overflow: "hidden",
+        //                 }}
+        //             >
+        //                 <div
+        //                     style={{
+        //                         width: `${score}%`,
+        //                         height: "100%",
+        //                         background: `linear-gradient(90deg, ${getScoreColor(score)}33, ${getScoreColor(score)})`,
+        //                         borderRadius: 3,
+        //                         transition: "all 0.3s ease",
+        //                     }}
+        //                 />
+        //             </div>
+        //         </div>
+        //     ),
+        // },
         {
             title: "",
             key: "action",
@@ -361,333 +395,415 @@ export default function AllRegisteredCandidates() {
     };
 
     return (
-        <Layout style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)" }}>
-            <Layout style={{ padding: 24 }}>
-                <Header
-                    style={{
-                        borderRadius: 16,
-                        background: "linear-gradient(135deg, #fff 0%, #fafafa 100%)",
-                        padding: "40px 32px",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                        border: "1px solid rgba(0,0,0,0.03)",
-                        marginBottom: 24,
-                    }}
-                >
-                    <div style={{ display: "grid" }}>
-                        <Title level={3} style={{ margin: 0, color: "#1a1a1a", fontWeight: 700 }}>
-                            Candidate Management
-                        </Title>
-                        <Text type="secondary" style={{ fontSize: 14 }}>
-                            Manage and review all registered candidates
-                        </Text>
-                    </div>
-                    <Space>
-                        <Button
-                            type="primary"
-                            icon={<DownloadOutlined />}
-                            style={{
-                                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                border: "none",
-                                fontWeight: 600,
-                            }}
-                        >
-                            Export Data
-                        </Button>
-                    </Space>
-                </Header>
-
-                {/* Statistics */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
-                    <Card>
-                        <Statistic title="Total Candidates" value={statsData.total} valueStyle={{ color: "#1890ff" }} prefix={<UserOutlined />} />
-                    </Card>
-                    <Card>
-                        <Statistic title="Active" value={statsData.active} valueStyle={{ color: "#52c41a" }} prefix={<CheckCircleOutlined />} />
-                    </Card>
-                    <Card>
-                        <Statistic title="Pending" value={statsData.pending} valueStyle={{ color: "#faad14" }} prefix={<FieldTimeOutlined />} />
-                    </Card>
-                    <Card>
-                        <Statistic title="Avg. Score" value={statsData.averageScore} suffix="%" valueStyle={{ color: "#722ed1" }} prefix={<TrophyOutlined />} />
-                    </Card>
-                </div>
-
-                <Content>
-                    <Card
+        <>
+            <Layout style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)" }}>
+                <Layout style={{ padding: 24 }}>
+                    <Header
                         style={{
                             borderRadius: 16,
+                            background: "linear-gradient(135deg, #fff 0%, #fafafa 100%)",
+                            padding: "40px 32px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                             boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
                             border: "1px solid rgba(0,0,0,0.03)",
+                            marginBottom: 24,
                         }}
-                        bodyStyle={{ padding: 24 }}
                     >
-                        {loading ? (
-                            <Skeleton active avatar paragraph={{ rows: 6 }} />
-                        ) : (
-                            <Table
-                                columns={columns}
-                                dataSource={filteredUsers}
-                                pagination={{
-                                    position: ["bottomRight"],
-                                    showSizeChanger: true,
-                                    pageSizeOptions: ["10", "20", "50"],
-                                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} candidates`,
-                                    style: { marginTop: 24 },
+                        <div style={{ display: "grid" }}>
+                            <Title level={3} style={{ margin: 0, color: "#1a1a1a", fontWeight: 700 }}>
+                                Candidate Management
+                            </Title>
+                            <Text type="secondary" style={{ fontSize: 14 }}>
+                                Manage and review all registered candidates
+                            </Text>
+                        </div>
+                        <Space>
+                            <Button
+                                type="primary"
+                                icon={<DownloadOutlined />}
+                                style={{
+                                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                    border: "none",
+                                    fontWeight: 600,
                                 }}
-                                rowSelection={{ type: "checkbox", columnWidth: 48 }}
-                            />
-                        )}
-                    </Card>
-                </Content>
+                            >
+                                Export Data
+                            </Button>
+                        </Space>
+                    </Header>
 
-                {/* Drawer for Profile */}
-                {selectedUser && (
-                    <Drawer
-                        className="userDetails_drawer"
-                        closable
-                        width={900}
-                        title={
-                            <div className="drawer-title">
-                                <Avatar
-                                    size={36}
-                                    src={selectedUser.profile_image}
-                                    style={{
-                                        border: "2px solid #6a5cff",
-                                    }}
-                                />
-                                <span>User Profile</span>
-                            </div>
-                        }
-                        placement="right"
-                        open={open}
-                        loading={viewProfileLoading}
-                        onClose={() => setOpen(false)}
-                    >
-                        <div className="drawer-body">
-                            {/* LEFT PROFILE */}
-                            <div className="profile-left">
-                                <div className="avatar-container">
-                                    <Avatar size={100} src={selectedUser.profile_image} />
-                                    <div className="status-indicator"></div>
-                                </div>
-                                <div className="name">
-                                    {selectedUser.first_name} {selectedUser.last_name}
-                                </div>
-                                <div className="role">{selectedUser.role_name}</div>
-                                <div style={{ display: "flex", gap: 10 }}>
-                                    <div className="location">
-                                        <EnvironmentOutlined />
-                                        <span>{selectedUser.location}</span>
+                    {/* Statistics */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+                        <Card>
+                            <Statistic title="Total Candidates" value={statsData.total} valueStyle={{ color: "#1890ff" }} prefix={<UserOutlined />} />
+                        </Card>
+                        <Card>
+                            <Statistic title="Active" value={statsData.active} valueStyle={{ color: "#52c41a" }} prefix={<CheckCircleOutlined />} />
+                        </Card>
+                        <Card>
+                            <Statistic title="Pending" value={statsData.pending} valueStyle={{ color: "#faad14" }} prefix={<FieldTimeOutlined />} />
+                        </Card>
+                        <Card>
+                            <Statistic title="Avg. Score" value={statsData.averageScore} suffix="%" valueStyle={{ color: "#722ed1" }} prefix={<TrophyOutlined />} />
+                        </Card>
+                    </div>
+
+                    <Content>
+                        <Card
+                            style={{
+                                marginBottom: 24,
+                                borderRadius: 16,
+                                background: "linear-gradient(135deg, #ffffff 0%, #f9f9fb 100%)",
+                                boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
+                                border: "1px solid #f0f0f0",
+                            }}
+                            bodyStyle={{ padding: "16px 24px" }}
+                        >
+                            <Space
+                                wrap
+                                align="center"
+                                style={{
+                                    width: "100%",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    flexWrap: "wrap",
+                                    rowGap: 20,
+                                    padding: "24px",
+                                    background: "linear-gradient(135deg, rgb(236 230 255) 0%, rgb(225 221 255) 100%)",
+                                    borderRadius: 20,
+                                    border: "1px solid #e8edff",
+                                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.06)",
+                                    marginBottom: 24,
+                                }}
+                            >
+                                {/* 🔍 Premium Search */}
+                                <div style={{ position: "relative" }}>
+                                    <Input
+                                        prefix={
+                                            <SearchOutlined
+                                                style={{
+                                                    color: "#667eea",
+                                                    fontSize: 16,
+                                                }}
+                                            />
+                                        }
+                                        placeholder="Search by name, email, phone, or skills..."
+                                        allowClear
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        style={{
+                                            width: 380,
+                                            height: 48,
+                                            borderRadius: 16,
+                                            paddingLeft: 16,
+                                            background: "#ffffff",
+                                            fontSize: 14,
+                                            fontWeight: 400,
+                                            boxShadow: "0 2px 12px rgba(102, 126, 234, 0.08)",
+                                            transition: "all 0.3s ease",
+                                        }}
+                                    />
+                                    <div style={{
+                                        position: "absolute",
+                                        top: -8,
+                                        left: 12,
+                                        background: "#667eea",
+                                        color: "white",
+                                        fontSize: 10,
+                                        fontWeight: 600,
+                                        padding: "2px 8px",
+                                        borderRadius: 10,
+                                        letterSpacing: 0.5,
+                                    }}>
+                                        QUICK SEARCH
                                     </div>
+                                </div>
 
-                                    <div className="verification-badge">
-                                        {selectedUser.is_email_verified ? (
-                                            <Tag
-                                                icon={
-                                                    <CheckCircleOutlined style={{ color: "#52c41a" }} />
-                                                }
-                                                color="success"
+                                <Space wrap size={30}>
+                                    {/* Experience Range Filter */}
+                                    <div
+                                        style={{
+                                            background: "white",
+                                            padding: "12px 20px",
+                                            borderRadius: 16,
+                                            boxShadow: "0 2px 10px rgba(102,126,234,0.1)",
+                                            minWidth: 280,
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "space-between",
+                                                marginBottom: 6,
+                                            }}
+                                        >
+                                            <span
+                                                style={{
+                                                    color: "#667eea",
+                                                    fontWeight: 600,
+                                                    fontSize: 13,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 6,
+                                                }}
                                             >
-                                                Verified
-                                            </Tag>
-                                        ) : (
-                                            <Tag icon={<ExclamationCircleOutlined />} color="error">
-                                                Unverified
-                                            </Tag>
-                                        )}
+                                                <ExperimentOutlined /> Experience Range
+                                            </span>
+                                            <span style={{ fontSize: 13, fontWeight: 500, color: "#333" }}>
+                                                {experienceRange[0]} – {experienceRange[1]} yrs
+                                            </span>
+                                        </div>
+
+                                        <div style={{ padding: "0 8px" }}>
+                                            <Slider
+                                                range
+                                                step={0.5}
+                                                min={0}
+                                                max={10}
+                                                tooltip={{ open: false }}
+                                                value={experienceRange}
+                                                onChange={(value) => setExperienceRange(value)}
+                                                trackStyle={[{ backgroundColor: "#667eea" }]}
+                                                handleStyle={[
+                                                    { borderColor: "#667eea", backgroundColor: "#fff" },
+                                                    { borderColor: "#667eea", backgroundColor: "#fff" },
+                                                ]}
+                                            />
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    fontSize: 12,
+                                                    color: "#8c8c8c",
+                                                }}
+                                            >
+                                                <span>0 yrs</span>
+                                                <span>5 yrs</span>
+                                                <span>10+ yrs</span>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {/* User Type Filter */}
+                                    <div style={{ position: "relative" }}>
+                                        <Select
+                                            value={userTypeFilter}
+                                            onChange={setUserTypeFilter}
+                                            style={{
+                                                width: 200,
+                                                height: 42,
+                                                background: "#fff",
+                                                padding: "10px",
+                                                borderRadius: 10
+                                            }}
+                                            placeholder={
+                                                <span style={{ color: "#8c8c8c", fontWeight: 500 }}>
+                                                    <TeamOutlined style={{ marginRight: 8, color: "#667eea" }} />
+                                                    User Type
+                                                </span>
+                                            }
+                                            options={[
+                                                { value: "all", label: <span style={{ fontWeight: 500 }}>All User Types</span> },
+                                                { value: "College Student", label: <span style={{ fontWeight: 500 }}>🎓 College Student</span> },
+                                                { value: "Fresher", label: <span style={{ fontWeight: 500 }}>📚 Graduated Fresher</span> },
+                                                { value: "Professional", label: <span style={{ fontWeight: 500 }}>💼 Professional</span> },
+                                                { value: "School Student", label: <span style={{ fontWeight: 500 }}>📖 School Student</span> },
+                                            ]}
+                                            suffixIcon={<DownOutlined style={{ color: "#667eea" }} />}
+                                        />
+                                    </div>
+
+                                    {/* Reset Button - Premium Style */}
+                                    <Button
+                                        onClick={() => {
+                                            setSearchTerm("");
+                                            setStatusFilter("all");
+                                            setExperienceRange([0, 10]);
+                                            setUserTypeFilter("all");
+                                        }}
+                                        icon={<ReloadOutlined />}
+                                        style={{
+                                            borderRadius: 16,
+                                            padding: "0 20px",
+                                            height: 42,
+                                            background: "linear-gradient(135deg, rgb(102, 126, 234) 0%, rgb(118, 75, 162) 100%)",
+                                            border: "none",
+                                            fontWeight: 600,
+                                            color: "white",
+                                            transition: "all 0.3s ease",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 8,
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.transform = "translateY(-2px)";
+                                            e.target.style.boxShadow = "0 6px 10px rgb(102, 126, 234)";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.transform = "translateY(0)";
+                                            e.target.style.boxShadow = "0 0px 0px rgb(102, 126, 234)";
+                                        }}
+                                    >
+                                        Reset Filters
+                                    </Button>
+                                </Space>
+                            </Space>
+
+                            {loading ? (
+                                <Skeleton active avatar paragraph={{ rows: 6 }} />
+                            ) : (
+                                <Table
+                                    columns={columns}
+                                    dataSource={filteredUsers}
+                                    pagination={{
+                                        position: ["bottomRight"],
+                                        showSizeChanger: true,
+                                        pageSizeOptions: ["10", "20", "50"],
+                                        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} candidates`,
+                                        style: { marginTop: 24 },
+                                    }}
+                                    rowSelection={{ type: "checkbox", columnWidth: 48 }}
+                                />
+                            )}
+                        </Card>
+                    </Content>
+
+                    {/* Drawer for Profile */}
+                    {selectedUser && (
+                        <Drawer
+                            className="userDetails_drawer"
+                            closable
+                            width={900}
+                            title={
+                                <div className="drawer-title">
+                                    <Avatar
+                                        size={36}
+                                        src={selectedUser.profile_image}
+                                        style={{
+                                            border: "2px solid #6a5cff",
+                                        }}
+                                    />
+                                    <span>User Profile</span>
                                 </div>
-                                {selectedUser.social_links && (
-                                    <div className="social-links">
-                                        <div className="social-icons">
-                                            {[
-                                                "linkedin",
-                                                "facebook",
-                                                "instagram",
-                                                "behance",
-                                                "twitter",
-                                                "dribble",
-                                            ].map((key) => {
-                                                const value = selectedUser.social_links[key];
-                                                return (
-                                                    <a
-                                                        key={key}
-                                                        href={value || "#"}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className={`social-icon ${key}`}
-                                                        style={{
-                                                            opacity: value ? 1 : 0.3,
-                                                            pointerEvents: value ? "auto" : "none",
-                                                        }}
-                                                    >
-                                                        {key === "linkedin" && <LinkedinOutlined />}
-                                                        {key === "facebook" && <FaFacebook />}
-                                                        {key === "instagram" && <FaInstagram />}
-                                                        {key === "behance" && <FaBehance />}
-                                                        {key === "twitter" && <FaTwitter />}
-                                                        {key === "dribble" && <FaDribbble />}
-                                                    </a>
-                                                );
-                                            })}
+                            }
+                            placement="right"
+                            open={open}
+                            loading={viewProfileLoading}
+                            onClose={() => setOpen(false)}
+                        >
+                            <div className="drawer-body">
+                                {/* LEFT PROFILE */}
+                                <div className="profile-left">
+                                    <div className="avatar-container">
+                                        <Avatar size={100} src={selectedUser.profile_image} />
+                                        <div className="status-indicator"></div>
+                                    </div>
+                                    <div className="name">
+                                        {selectedUser.first_name} {selectedUser.last_name}
+                                    </div>
+                                    <div className="role">{selectedUser.role_name}</div>
+                                    <div style={{ display: "flex", gap: 10 }}>
+                                        <div className="location">
+                                            <EnvironmentOutlined />
+                                            <span>{selectedUser.location}</span>
+                                        </div>
+
+                                        <div className="verification-badge">
+                                            {selectedUser.is_email_verified ? (
+                                                <Tag
+                                                    icon={
+                                                        <CheckCircleOutlined style={{ color: "#52c41a" }} />
+                                                    }
+                                                    color="success"
+                                                >
+                                                    Verified
+                                                </Tag>
+                                            ) : (
+                                                <Tag icon={<ExclamationCircleOutlined />} color="error">
+                                                    Unverified
+                                                </Tag>
+                                            )}
                                         </div>
                                     </div>
-                                )}
-                            </div>
-
-                            {/* RIGHT DETAILS */}
-                            <div className="user-details-cards">
-                                <Card title="Basic Information" className="info-card">
-                                    <div className="info-grid">
-                                        <div className="info-item">
-                                            <div className="info-icon">
-                                                <MailOutlined />
-                                            </div>
-                                            <div className="info-content">
-                                                <div className="info-label">Email</div>
-                                                <div className="info-value">{selectedUser.email}</div>
-                                            </div>
-                                        </div>
-
-                                        <div className="info-item">
-                                            <div className="info-icon">
-                                                <PhoneOutlined />
-                                            </div>
-                                            <div className="info-content">
-                                                <div className="info-label">Phone</div>
-                                                <div className="info-value">
-                                                    {selectedUser.phone || (
-                                                        <span className="na-text">N/A</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="info-item">
-                                            <div className="info-icon">
-                                                <UserOutlined />
-                                            </div>
-                                            <div className="info-content">
-                                                <div className="info-label">Gender</div>
-                                                <div className="info-value">
-                                                    {selectedUser.gender || (
-                                                        <span className="na-text">N/A</span>
-                                                    )}
-                                                </div>
+                                    {selectedUser.social_links && (
+                                        <div className="social-links">
+                                            <div className="social-icons">
+                                                {[
+                                                    "linkedin",
+                                                    "facebook",
+                                                    "instagram",
+                                                    "behance",
+                                                    "twitter",
+                                                    "dribble",
+                                                ].map((key) => {
+                                                    const value = selectedUser.social_links[key];
+                                                    return (
+                                                        <a
+                                                            key={key}
+                                                            href={value || "#"}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className={`social-icon ${key}`}
+                                                            style={{
+                                                                opacity: value ? 1 : 0.3,
+                                                                pointerEvents: value ? "auto" : "none",
+                                                            }}
+                                                        >
+                                                            {key === "linkedin" && <LinkedinOutlined />}
+                                                            {key === "facebook" && <FaFacebook />}
+                                                            {key === "instagram" && <FaInstagram />}
+                                                            {key === "behance" && <FaBehance />}
+                                                            {key === "twitter" && <FaTwitter />}
+                                                            {key === "dribble" && <FaDribbble />}
+                                                        </a>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
+                                    )}
+                                </div>
 
-                                        <div className="info-item">
-                                            <div className="info-icon">
-                                                <CalendarOutlined />
-                                            </div>
-                                            <div className="info-content">
-                                                <div className="info-label">Start Year</div>
-                                                <div className="info-value">
-                                                    {selectedUser.start_year || (
-                                                        <span className="na-text">N/A</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Card>
-
-                                <Card title="Professional Information" className="info-card">
-                                    <div className="info-grid">
-                                        <div className="info-item">
-                                            <div className="info-icon">
-                                                <BankOutlined />
-                                            </div>
-                                            <div className="info-content">
-                                                <div className="info-label">Organization</div>
-                                                <div className="info-value">
-                                                    {selectedUser.organization || (
-                                                        <span className="na-text">N/A</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="info-item">
-                                            <div className="info-icon">
-                                                <ApartmentOutlined />
-                                            </div>
-                                            <div className="info-content">
-                                                <div className="info-label">Org Type</div>
-                                                <div className="info-value">
-                                                    {selectedUser.organization_type || (
-                                                        <span className="na-text">N/A</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="info-item">
-                                            <div className="info-icon">
-                                                <ExperimentOutlined />
-                                            </div>
-                                            <div className="info-content">
-                                                <div className="info-label">Experience</div>
-                                                <div className="info-value">
-                                                    {selectedUser.experince_type || (
-                                                        <span className="na-text">N/A</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="info-item">
-                                            <div className="info-icon">
-                                                <FieldTimeOutlined />
-                                            </div>
-                                            <div className="info-content">
-                                                <div className="info-label">Experience Duration</div>
-                                                <div className="info-value">
-                                                    {selectedUser.total_years ||
-                                                        selectedUser.total_months ? (
-                                                        <>
-                                                            {selectedUser.total_years || 0}{" "}
-                                                            {selectedUser.total_months
-                                                                ? ` ${selectedUser.total_months}`
-                                                                : ""}
-                                                        </>
-                                                    ) : (
-                                                        <span className="na-text">N/A</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Card>
-
-                                <Card title="Education" className="info-card">
-                                    {selectedUser.education &&
-                                        selectedUser.education.length > 0 ? (
+                                {/* RIGHT DETAILS */}
+                                <div className="user-details-cards">
+                                    <Card title="Basic Information" className="info-card">
                                         <div className="info-grid">
                                             <div className="info-item">
                                                 <div className="info-icon">
-                                                    <FileTextOutlined />
+                                                    <MailOutlined />
                                                 </div>
                                                 <div className="info-content">
-                                                    <div className="info-label">Course & College</div>
+                                                    <div className="info-label">Email</div>
+                                                    <div className="info-value">{selectedUser.email}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="info-item">
+                                                <div className="info-icon">
+                                                    <PhoneOutlined />
+                                                </div>
+                                                <div className="info-content">
+                                                    <div className="info-label">Phone</div>
                                                     <div className="info-value">
-                                                        {`${selectedUser.education[0].course} at ${selectedUser.education[0].college}`}
+                                                        {selectedUser.phone || (
+                                                            <span className="na-text">N/A</span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div className="info-item">
                                                 <div className="info-icon">
-                                                    <TagsOutlined />
+                                                    <UserOutlined />
                                                 </div>
                                                 <div className="info-content">
-                                                    <div className="info-label">Specialization</div>
+                                                    <div className="info-label">Gender</div>
                                                     <div className="info-value">
-                                                        {selectedUser.education[0].specialization || "N/A"}
+                                                        {selectedUser.gender || (
+                                                            <span className="na-text">N/A</span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -697,114 +813,209 @@ export default function AllRegisteredCandidates() {
                                                     <CalendarOutlined />
                                                 </div>
                                                 <div className="info-content">
-                                                    <div className="info-label">Duration</div>
+                                                    <div className="info-label">Start Year</div>
                                                     <div className="info-value">
-                                                        {`${selectedUser.education[0].start_date} - ${selectedUser.education[0].end_date}`}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="info-item">
-                                                <div className="info-icon">
-                                                    <CalendarOutlined />
-                                                </div>
-                                                <div className="info-content">
-                                                    <div className="info-label">CGPA / Percentage</div>
-                                                    <div className="info-value">
-                                                        {`CGPA: ${selectedUser.education[0].cgpa}, Percentage: ${selectedUser.education[0].percentage}`}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="info-item">
-                                                <div className="info-icon">
-                                                    <TrophyOutlined />
-                                                </div>
-                                                <div className="info-content">
-                                                    <div className="info-label">Qualification</div>
-                                                    <div className="info-value">
-                                                        {selectedUser.education[0].qualification}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="info-item">
-                                                <div className="info-icon">
-                                                    <SwapOutlined />
-                                                </div>
-                                                <div className="info-content">
-                                                    <div className="info-label">Lateral Entry</div>
-                                                    <div className="info-value">
-                                                        {selectedUser.education[0].lateral_entry}
+                                                        {selectedUser.start_year || (
+                                                            <span className="na-text">N/A</span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    ) : (
-                                        // <div className="info-item full-width">
-                                        //   <div className="info-content">
+                                    </Card>
 
-                                        //     <div className="info-label">
-                                        //       <TrophyOutlined
-                                        //         style={{
-                                        //           marginRight: 6,
-                                        //           color: "#6a5cff",
-                                        //         }}
-                                        //       />
-                                        //       Qualification
-                                        //     </div>
-                                        //     <div className="info-value">
-                                        //       {
-                                        //         selectedUser.education[0]
-                                        //           .qualification
-                                        //       }
-                                        //     </div>
-                                        //   </div>
-                                        // </div>
-                                        <span className="na-text">N/A</span>
+                                    <Card title="Professional Information" className="info-card">
+                                        <div className="info-grid">
+                                            <div className="info-item">
+                                                <div className="info-icon">
+                                                    <BankOutlined />
+                                                </div>
+                                                <div className="info-content">
+                                                    <div className="info-label">Organization</div>
+                                                    <div className="info-value">
+                                                        {selectedUser.organization || (
+                                                            <span className="na-text">N/A</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="info-item">
+                                                <div className="info-icon">
+                                                    <ApartmentOutlined />
+                                                </div>
+                                                <div className="info-content">
+                                                    <div className="info-label">Org Type</div>
+                                                    <div className="info-value">
+                                                        {selectedUser.organization_type || (
+                                                            <span className="na-text">N/A</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="info-item">
+                                                <div className="info-icon">
+                                                    <ExperimentOutlined />
+                                                </div>
+                                                <div className="info-content">
+                                                    <div className="info-label">Experience</div>
+                                                    <div className="info-value">
+                                                        {selectedUser.experince_type || (
+                                                            <span className="na-text">N/A</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="info-item">
+                                                <div className="info-icon">
+                                                    <FieldTimeOutlined />
+                                                </div>
+                                                <div className="info-content">
+                                                    <div className="info-label">Experience Duration</div>
+                                                    <div className="info-value">
+                                                        {selectedUser.total_years ||
+                                                            selectedUser.total_months ? (
+                                                            <>
+                                                                {selectedUser.total_years || 0}{" "}
+                                                                {selectedUser.total_months
+                                                                    ? ` ${selectedUser.total_months}`
+                                                                    : ""}
+                                                            </>
+                                                        ) : (
+                                                            <span className="na-text">N/A</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+
+                                    <Card title="Education" className="info-card">
+                                        {selectedUser.education &&
+                                            selectedUser.education.length > 0 ? (
+                                            <div className="info-grid">
+                                                <div className="info-item">
+                                                    <div className="info-icon">
+                                                        <FileTextOutlined />
+                                                    </div>
+                                                    <div className="info-content">
+                                                        <div className="info-label">Course & College</div>
+                                                        <div className="info-value">
+                                                            {`${selectedUser.education[0].course} at ${selectedUser.education[0].college}`}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="info-item">
+                                                    <div className="info-icon">
+                                                        <TagsOutlined />
+                                                    </div>
+                                                    <div className="info-content">
+                                                        <div className="info-label">Specialization</div>
+                                                        <div className="info-value">
+                                                            {selectedUser.education[0].specialization || "N/A"}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="info-item">
+                                                    <div className="info-icon">
+                                                        <CalendarOutlined />
+                                                    </div>
+                                                    <div className="info-content">
+                                                        <div className="info-label">Duration</div>
+                                                        <div className="info-value">
+                                                            {`${selectedUser.education[0].start_date} - ${selectedUser.education[0].end_date}`}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="info-item">
+                                                    <div className="info-icon">
+                                                        <CalendarOutlined />
+                                                    </div>
+                                                    <div className="info-content">
+                                                        <div className="info-label">CGPA / Percentage</div>
+                                                        <div className="info-value">
+                                                            {`CGPA: ${selectedUser.education[0].cgpa}, Percentage: ${selectedUser.education[0].percentage}`}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="info-item">
+                                                    <div className="info-icon">
+                                                        <TrophyOutlined />
+                                                    </div>
+                                                    <div className="info-content">
+                                                        <div className="info-label">Qualification</div>
+                                                        <div className="info-value">
+                                                            {selectedUser.education[0].qualification}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="info-item">
+                                                    <div className="info-icon">
+                                                        <SwapOutlined />
+                                                    </div>
+                                                    <div className="info-content">
+                                                        <div className="info-label">Lateral Entry</div>
+                                                        <div className="info-value">
+                                                            {selectedUser.education[0].lateral_entry}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span className="na-text">N/A</span>
+                                        )}
+                                    </Card>
+
+                                    {selectedUser.skills?.length > 0 && (
+                                        <Card title="Skills" className="info-card">
+                                            <div className="skills-container">
+                                                {selectedUser.skills.map((skill, idx) => (
+                                                    <div key={idx} className="skill-pill">
+                                                        {skill}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </Card>
                                     )}
-                                </Card>
 
-                                {selectedUser.skills?.length > 0 && (
-                                    <Card title="Skills" className="info-card">
-                                        <div className="skills-container">
-                                            {selectedUser.skills.map((skill, idx) => (
-                                                <div key={idx} className="skill-pill">
-                                                    {skill}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </Card>
-                                )}
+                                    {selectedUser.about && (
+                                        <Card title="About" className="info-card">
+                                            <div className="about-container">
+                                                <div className="about-text">{selectedUser.about}</div>
+                                            </div>
+                                        </Card>
+                                    )}
 
-                                {selectedUser.about && (
-                                    <Card title="About" className="info-card">
-                                        <div className="about-container">
-                                            <div className="about-text">{selectedUser.about}</div>
-                                        </div>
-                                    </Card>
-                                )}
-
-                                {selectedUser.resume ? (
-                                    <Card title="Resume" className="info-card">
-                                        <iframe
-                                            src={selectedUser.resume}
-                                            title="Resume"
-                                            width="100%"
-                                            height="500px"
-                                            style={{
-                                                border: "1px solid #ddd",
-                                                borderRadius: "8px",
-                                                marginBottom: 0,
-                                            }}
-                                        />
-                                    </Card>
-                                ) : null}
+                                    {selectedUser.resume ? (
+                                        <Card title="Resume" className="info-card">
+                                            <iframe
+                                                src={selectedUser.resume}
+                                                title="Resume"
+                                                width="100%"
+                                                height="500px"
+                                                style={{
+                                                    border: "1px solid #ddd",
+                                                    borderRadius: "8px",
+                                                    marginBottom: 0,
+                                                }}
+                                            />
+                                        </Card>
+                                    ) : null}
+                                </div>
                             </div>
-                        </div>
-                    </Drawer>
-                )}
+                        </Drawer>
+                    )}
+                </Layout>
             </Layout>
-        </Layout>
+            <Footer />
+        </>
+
     );
 }

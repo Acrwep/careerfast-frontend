@@ -956,3 +956,47 @@ export const saveToken = async (userId, token) => {
     throw error;
   }
 };
+
+
+// ===================== EVENTS =====================
+
+// Create Event
+export const createEvent = async (formData) => {
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/api/events`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return res;
+  } catch (error) {
+    console.error("Error creating event:", error);
+    throw error;
+  }
+};
+
+// Get All Events
+export const getAllEvents = async () => {
+  try {
+    const response = await api.get("/api/events");
+    return response;
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    throw error;
+  }
+};
+
+// Delete Event by ID
+export const deleteEvent = async (id) => {
+  try {
+    const response = await api.delete(`/api/events/${id}`);
+    return response;
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    throw error;
+  }
+};
