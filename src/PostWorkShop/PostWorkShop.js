@@ -17,7 +17,8 @@ import {
     Typography,
     Avatar,
     Tooltip,
-    Alert
+    Alert,
+    DatePicker
 } from "antd";
 import {
     UploadOutlined,
@@ -31,14 +32,16 @@ import {
 } from "@ant-design/icons";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { createEvent } from "../ApiService/action";
+import { createEvent, createWorkshop } from "../ApiService/action";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
+import { GrWorkshop } from "react-icons/gr";
+import { Mic } from "lucide-react";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-export default function PostEvents() {
+export default function PostWorkShop() {
     const [form] = Form.useForm();
     const [about, setAbout] = useState("");
     const [participationType, setParticipationType] = useState("Individual");
@@ -53,7 +56,7 @@ export default function PostEvents() {
         { title: "Basic Info", icon: <InfoCircleOutlined style={{ color: "#5f2eea" }} /> },
         { title: "Details", icon: <RocketOutlined style={{ color: "#5f2eea" }} /> },
         { title: "Participation", icon: <TeamOutlined style={{ color: "#5f2eea" }} /> },
-        { title: "Prizes", icon: <TrophyOutlined style={{ color: "#5f2eea" }} /> }
+        // { title: "Prizes", icon: <TrophyOutlined style={{ color: "#5f2eea" }} /> }
     ];
 
     const handleAddEligibility = () => {
@@ -81,30 +84,35 @@ export default function PostEvents() {
         }
     };
 
+    // ✅ Keep your existing imports, but replace onFinish payload with:
     const onFinish = async (values) => {
         try {
             setLoading(true);
 
             const payload = {
                 title: values.title || "",
-                type: values.type || "",
                 category: values.category || "",
-                about: about || "",
+                about,
                 mode: values.mode || "",
                 participationType: values.participationType || "",
-                memberLimit: values.participationType === "Team" ? values.memberLimit || "" : null,
+                memberLimit:
+                    values.participationType === "Team" ? values.memberLimit || "" : null,
                 eligibility: eligibilityList || [],
-                winnerPrize: values.winnerPrize || "",
-                runnerPrize: values.runnerPrize || "",
-                logo: base64Logo, // ✅ send base64 string here
+                startDate: values.startDate ? values.startDate.format("YYYY-MM-DD") : null,
+                endDate: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+                venue: values.venue || "",
+                organizer: values.organizer || "",
+                contactEmail: values.contactEmail || "",
+                contactNumber: values.contactNumber || "",
+                registrationLink: values.registrationLink || "",
+                logo: base64Logo,
             };
 
-            console.log("📦 Payload sending to backend:", payload);
-
-            const res = await createEvent(payload);
+            console.log("📦 Workshop Payload:", payload);
+            const res = await createWorkshop(payload);
 
             if (res.data.success) {
-                message.success("🎉 Event created successfully!");
+                message.success("Workshop created successfully!");
                 form.resetFields();
                 setAbout("");
                 setEligibilityList([]);
@@ -114,13 +122,11 @@ export default function PostEvents() {
             }
         } catch (error) {
             console.error("❌ Error:", error);
-            message.error("❌ Error creating opportunity!");
+            message.error("Error creating workshop!");
         } finally {
             setLoading(false);
         }
     };
-
-
 
     const nextStep = async () => {
         try {
@@ -175,6 +181,13 @@ export default function PostEvents() {
                 "memberLimit",
                 "winnerPrize",
                 "runnerPrize",
+                "contactEmail",
+                "contactNumber",
+                "endDate",
+                "organizer",
+                "registrationLink",
+                "startDate",
+                "venue"
             ]);
 
             const fullValues = {
@@ -232,7 +245,7 @@ export default function PostEvents() {
                         WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent"
                     }}>
-                        Create New Event
+                        Create New Workshop
                     </Title>
                     <Text type="secondary" style={{ fontSize: 16 }}>
                         Share amazing opportunities with the community and reach talented individuals
@@ -288,7 +301,7 @@ export default function PostEvents() {
                                             name="title"
                                             label={
                                                 <span style={{ fontWeight: 600, fontSize: 14 }}>
-                                                    Event Title
+                                                    Workshop Title
                                                 </span>
                                             }
                                             rules={[{ required: true, message: "Please enter a title" }]}
@@ -302,7 +315,7 @@ export default function PostEvents() {
                                         <div style={{ marginBottom: 20 }}>
                                             <Form.Item
                                                 name="type"
-                                                label={<span style={{ fontWeight: 600, fontSize: 14 }}>Event Type</span>}
+                                                label={<span style={{ fontWeight: 600, fontSize: 14 }}>Workshop Type</span>}
                                                 rules={[{ required: true, message: "Please select type" }]}
                                             >
                                                 <Select
@@ -345,7 +358,7 @@ export default function PostEvents() {
                                         <div style={{ marginTop: 20 }}>
                                             <Form.Item
                                                 name="category"
-                                                label={<span style={{ fontWeight: 600, fontSize: 14 }}>Event Category</span>}
+                                                label={<span style={{ fontWeight: 600, fontSize: 14 }}>Workshop Category</span>}
                                                 rules={[{ required: true, message: "Please select category" }]}
                                             >
                                                 <Select
@@ -389,7 +402,7 @@ export default function PostEvents() {
                                         <Form.Item
                                             label={
                                                 <span style={{ fontWeight: 600, fontSize: 14 }}>
-                                                    Event Logo
+                                                    Workshop Logo
                                                     <Tooltip title="Recommended: 500x500px, PNG/JPG format">
                                                         <InfoCircleOutlined style={{ marginLeft: 8, color: "#999" }} />
                                                     </Tooltip>
@@ -448,8 +461,8 @@ export default function PostEvents() {
                         {currentStep === 1 && (
                             <div>
                                 <Title level={3} style={{ marginBottom: 32, color: "#1a1a1a" }}>
-                                    <RocketOutlined style={{ marginRight: 12, color: "#1890ff" }} />
-                                    Event Details
+                                    <GrWorkshop style={{ marginRight: 12, color: "#5f2eea" }} />
+                                    Workshop Details
                                 </Title>
 
                                 <Row gutter={[32, 0]}>
@@ -458,7 +471,7 @@ export default function PostEvents() {
                                             style={{ marginBottom: 20 }}
                                             label={
                                                 <span style={{ fontWeight: 600, fontSize: 14 }}>
-                                                    About the Event
+                                                    About the Workshop
                                                 </span>
                                             }
                                             required
@@ -492,7 +505,7 @@ export default function PostEvents() {
                                             label={
                                                 <span style={{ fontWeight: 600, fontSize: 14 }}>
                                                     <GlobalOutlined style={{ marginRight: 8 }} />
-                                                    Event Mode
+                                                    Workshop Mode
                                                 </span>
                                             }
                                             rules={[{ required: true, message: "Please select mode" }]}
@@ -508,6 +521,62 @@ export default function PostEvents() {
                                             </Select>
                                         </Form.Item>
                                     </Col>
+                                    <Row gutter={16} className="g-3 mt-4 px-3">
+                                        <Col className="gutter-row" span={12}>
+                                            <Form.Item name="startDate" label={
+                                                <span style={{ fontWeight: 600, fontSize: 14 }}>Start Date</span>
+                                            } rules={[{ required: true }]}>
+                                                <DatePicker size="large" style={{ width: "100%" }} />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col className="gutter-row" span={12}>
+                                            <Form.Item name="endDate" label={
+                                                <span style={{ fontWeight: 600, fontSize: 14 }}>End Date</span>
+                                            } rules={[{ required: true }]}>
+                                                <DatePicker size="large" style={{ width: "100%" }} />
+                                            </Form.Item>
+                                        </Col>
+
+                                        <Col className="gutter-row mt-3" span={12}>
+                                            <Form.Item name="venue" label={
+                                                <span style={{ fontWeight: 600, fontSize: 14 }}>Venue</span>
+                                            } rules={[{ required: true }]}>
+                                                <Input size="large" placeholder="Enter venue name or address" />
+                                            </Form.Item>
+                                        </Col>
+
+                                        <Col className="gutter-row mt-3" span={12}>
+                                            <Form.Item name="organizer" label={
+                                                <span style={{ fontWeight: 600, fontSize: 14 }}>Organizer Name</span>
+                                            } rules={[{ required: true }]}>
+                                                <Input size="large" placeholder="Enter organizer name" />
+                                            </Form.Item>
+                                        </Col>
+
+                                        <Col className="gutter-row mt-3" span={12}>
+                                            <Form.Item name="contactEmail" label={
+                                                <span style={{ fontWeight: 600, fontSize: 14 }}>Contact Email</span>
+                                            } rules={[{ type: "email", required: true }]}>
+                                                <Input size="large" placeholder="Enter contact email" />
+                                            </Form.Item>
+                                        </Col>
+
+                                        <Col className="gutter-row mt-3" span={12}>
+                                            <Form.Item rules={[{ required: true }]} name="contactNumber" label={
+                                                <span style={{ fontWeight: 600, fontSize: 14 }}>Contact Number</span>
+                                            }>
+                                                <Input size="large" placeholder="Enter phone number" />
+                                            </Form.Item>
+                                        </Col>
+
+                                        <Col className="mt-3" xs={24}>
+                                            <Form.Item rules={[{ required: true }]} name="registrationLink" label={
+                                                <span style={{ fontWeight: 600, fontSize: 14 }}>Registration Link</span>
+                                            }>
+                                                <Input size="large" placeholder="Paste registration form or website link" />
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
                                 </Row>
                             </div>
                         )}
@@ -516,7 +585,7 @@ export default function PostEvents() {
                         {currentStep === 2 && (
                             <div>
                                 <Title level={3} style={{ marginBottom: 32, color: "#1a1a1a" }}>
-                                    <TeamOutlined style={{ marginRight: 12, color: "#1890ff" }} />
+                                    <TeamOutlined style={{ marginRight: 12, color: "#5f2eea" }} />
                                     Participation Details
                                 </Title>
 
@@ -615,60 +684,6 @@ export default function PostEvents() {
                             </div>
                         )}
 
-                        {/* Step 4: Prizes */}
-                        {currentStep === 3 && (
-                            <div>
-                                <Title level={3} style={{ marginBottom: 32, color: "#1a1a1a" }}>
-                                    <TrophyOutlined style={{ marginRight: 12, color: "#1890ff" }} />
-                                    Prize Information
-                                </Title>
-
-                                <Alert
-                                    message="Prize information helps attract more participants"
-                                    description="Be clear about what winners can expect to receive"
-                                    type="info"
-                                    showIcon
-                                    style={{ marginBottom: 24, borderRadius: 8 }}
-                                />
-
-                                <Row gutter={[32, 0]}>
-                                    <Col xs={24} md={12}>
-                                        <Form.Item
-                                            name="winnerPrize"
-                                            label={
-                                                <span style={{ fontWeight: 600, fontSize: 14 }}>
-                                                    🥇 Winner Prize
-                                                </span>
-                                            }
-                                        >
-                                            <Input
-                                                size="large"
-                                                placeholder="e.g., $1000 cash prize, Certificates, Internship opportunity"
-                                                style={{ borderRadius: 8 }}
-                                            />
-                                        </Form.Item>
-                                    </Col>
-
-                                    <Col xs={24} md={12}>
-                                        <Form.Item
-                                            name="runnerPrize"
-                                            label={
-                                                <span style={{ fontWeight: 600, fontSize: 14 }}>
-                                                    🥈 Runner-up Prize
-                                                </span>
-                                            }
-                                        >
-                                            <Input
-                                                size="large"
-                                                placeholder="e.g., $500 cash prize, Swag kits, Mentorship"
-                                                style={{ borderRadius: 8 }}
-                                            />
-                                        </Form.Item>
-                                    </Col>
-                                </Row>
-                            </div>
-                        )}
-
                         {/* Navigation Buttons */}
                         <Divider />
                         <Row justify="space-between" style={{ marginTop: 32 }}>
@@ -688,7 +703,7 @@ export default function PostEvents() {
                                 )}
                             </Col>
                             <Col>
-                                {currentStep < steps.length - 1 ? (
+                                {currentStep < 2 ? (
                                     <Button
                                         type="primary"
                                         size="large"
@@ -709,7 +724,7 @@ export default function PostEvents() {
                                         type="primary"
                                         size="large"
                                         loading={loading}
-                                        onClick={handlePublish} // ✅ manual submit handler
+                                        onClick={handlePublish}
                                         style={{
                                             padding: "0 40px",
                                             borderRadius: 8,
@@ -719,9 +734,10 @@ export default function PostEvents() {
                                             fontWeight: 600
                                         }}
                                     >
-                                        🚀 Publish Event
+                                        🚀 Publish Workshop
                                     </Button>
                                 )}
+
 
                             </Col>
                         </Row>

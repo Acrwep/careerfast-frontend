@@ -29,21 +29,29 @@ a {
 }
 
 .premium-job-card {
-  position: relative;
-  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 11%);
+    margin-bottom: 18px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: linear-gradient(90deg, rgba(95, 46, 234, 0.1), rgba(255, 255, 255, 0.5));
+    transition: 0.3s;
+    box-shadow:rgb(95 46 234 / 8%) 0px 4px 10px;
+    cursor: pointer;
+    position: relative;
+    transform: translateY(0px);
 }
 
 .premium-job-card::before {
   content: "";
   position: absolute;
   top: 16px;
-  left: 0%;
+  left: 0;
   height: 90%;
-  width: 5px;
-  background: linear-gradient(180deg, #6214fa9e 0%, #5d1cff52 100%);
-  border-radius: 0px 50px 50px 0px;
-  overflow: auto;
+  width: 4px;
+  background: linear-gradient(rgb(95, 46, 234), rgb(157, 78, 221));
+  border-radius: 0 50px 50px 0;
+  transition: opacity 0.3s ease;
 }
+
 
 .premium-job-card .premium-tag {
   position: absolute;
@@ -85,7 +93,7 @@ a {
   object-fit: contain;
   background: white;
   padding: 8px;
-  box-shadow: 0 4px 16px rgb(0 0 0 / 22%);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
   border: 1px solid rgba(120, 51, 255, 0.1);
 }
 
@@ -210,7 +218,7 @@ a {
   justify-content: space-between;
   align-items: center;
   padding-top: 16px;
-  border-top: 2px solid rgb(120 51 255 / 13%);
+  border-top: 1.3px solid rgb(120 51 255 / 13%);
 }
 
 .premium-job-card .premium-level {
@@ -433,7 +441,7 @@ a {
   padding: 15px 18px;
   margin-bottom: 20px;
   transition: all 0.3s ease;
-  border: 1px solid rgb(0 0 0 / 19%);
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.06) 0px 2px 4px -1px;
 }
 
 .job-eligibility p {
@@ -443,7 +451,7 @@ a {
 
 .job_filter .info-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 10%);
 }
 
 .job_filter .info-card-content {
@@ -777,10 +785,7 @@ a {
 
 .side_job_details {
   border-radius: 24px;
-  box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.08),
-    0 12px 32px -12px rgba(0, 0, 0, 0.04), 0 4px 16px -4px rgba(0, 0, 0, 0.02),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.8),
-    inset 0 0 24px rgba(255, 255, 255, 0.3);
+  box-shadow: rgb(0 0 0 / 25%) 0px 1px 3px, rgb(75 0 255 / 24%) 0px 1px 2px;
   padding: 25px 30px;
   border: none;
   font-family: "Inter var", "Helvetica Now", system-ui, sans-serif;
@@ -789,7 +794,6 @@ a {
   backdrop-filter: blur(12px);
   transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 1;
-  border: 1px solid #c1c1c1bf;
   width: 52%;
 }
 
@@ -1785,4 +1789,12 @@ a {
   font-size: 30px;
   top: 0px;
   left: 12px;
+}
+
+.post_events_steps .ant-steps-item-content>.ant-steps-item-title::after {
+  background-color: rgb(5 5 5 / 14%) !important;
+}
+
+.post_events_steps .ant-steps-item-content>.ant-steps-item-title::before {
+  background-color: rgb(5 5 5 / 14%) !important;
 }

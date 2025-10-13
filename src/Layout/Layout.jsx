@@ -34,6 +34,9 @@ import AllRegisteredCandidates from "../AllRegisteredCandidates/AllRegisteredCan
 import ProtectedRoute from "../ProtectedRoute/ProtectedRoute";
 import AllAppliedCandidates from "../AdminDashboard/AllAppliedCandidates";
 import PostEvents from "../PostEvents/PostEvents";
+import EventFilter from "../JobPortal/EventFilter";
+import PostWorkShop from "../PostWorkShop/PostWorkShop";
+import WorkshopFilter from "../JobPortal/WorkshopFilter";
 
 const Layout = () => {
   const location = useLocation();
@@ -120,6 +123,8 @@ const Layout = () => {
         <Route path="/footer" element={<Footer />} />
         <Route path="/post-jobs" element={<PostJobs />} />
         <Route path="/job-filter" element={<JobFilter />} />
+        <Route path="/event-filter" element={<EventFilter />} />
+        <Route path="/workshop-filter" element={<WorkshopFilter />} />
         <Route path="/job-details/:id" element={<JobDetails />} />
         <Route path="/admin-profile" element={<AdminProfile />} />
         <Route path="/main-profile" element={<MainProfile />} />
@@ -139,6 +144,7 @@ const Layout = () => {
         <Route path="/location" element={<Location />} />
         <Route path="/manage-notification" element={<ManageNotification />} />
         <Route path="/post-events" element={<PostEvents />} />
+        <Route path="/post-workshop" element={<PostWorkShop />} />
         <Route path="/applied-candidates-all" element={<AllAppliedCandidates />} />
 
         {/* ✅ Restrict access only to role_id = 3 */}

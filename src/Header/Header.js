@@ -232,10 +232,15 @@ export default function Header() {
     {
       key: "events",
       label: "Events",
-      onClick: () => navigate("/job-filter?filter=Events"),
+      onClick: () => navigate("/event-filter"),
     },
-    { key: "resources", label: "Resources", path: "#" },
-    { key: "blog", label: "Blog", path: "/blogs" },
+    {
+      key: "workshop",
+      label: "Workshop",
+      onClick: () => navigate("/workshop-filter"),
+    },
+    // { key: "resources", label: "Resources", path: "#" },
+    // { key: "blog", label: "Blog", path: "/blogs" },
   ];
 
   const location = useLocation();

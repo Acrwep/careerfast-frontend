@@ -4,8 +4,6 @@ import {
   FiSearch,
   FiCalendar,
   FiBriefcase,
-  FiAward,
-  FiBook,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, Typography, Skeleton, Tooltip } from "antd";
@@ -14,12 +12,14 @@ import {
   getJobPostByUserId,
   getJobPosts,
   StatsOfPost,
+  getAllEvents, // 🆕 Import
 } from "../ApiService/action";
 import { FaEye } from "react-icons/fa";
 import moment from "moment/moment";
 import { useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
 import { MdFactCheck } from "react-icons/md";
+
 const { Title, Text } = Typography;
 
 export default function ListingDashboard() {
@@ -27,6 +27,7 @@ export default function ListingDashboard() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [listings, setListings] = useState([]);
+  const [events, setEvents] = useState([]); // 🆕
   const [loading, setLoading] = useState(true);
   const [loginUserId, setLoginUserId] = useState(null);
   const navigate = useNavigate();
@@ -38,102 +39,92 @@ export default function ListingDashboard() {
   const [postedOn, setPostedOn] = useState(0);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("loginDetails");
-      if (stored) {
+    const stored = localStorage.getItem("loginDetails");
+    if (stored) {
+      try {
         const loginDetails = JSON.parse(stored);
         setLoginUserId(loginDetails.id);
+      } catch (error) {
+        console.error("Invalid JSON in localStorage", error);
       }
-    } catch (error) {
-      console.error("Invalid JSON in localStorage", error);
     }
   }, []);
 
   useEffect(() => {
     getJobPostByUserIdData();
-  }, []);
-
-  useEffect(() => {
     getJobPostsData();
-
+    getAllEventsData(); // 🆕 Fetch events too
   }, []);
 
   useEffect(() => {
     getAppliedCandidatesCountData();
-  }, [loginUserId])
+  }, [loginUserId]);
+
+  const getAllEventsData = async () => {
+    try {
+      const response = await getAllEvents();
+      const allEvents = response?.data?.data || [];
+
+      const mapped = allEvents.map((event) => {
+        const created = new Date(event.created_at);
+        const now = new Date();
+        const daysDiff = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+        const isExpired = daysDiff >= 15;
+        const daysLeft = 15 - daysDiff;
+
+        return {
+          ...event,
+          isExpired,
+          daysLeft: isExpired ? "Expired" : `${daysLeft} days left`,
+        };
+      });
+
+      setEvents(mapped);
+    } catch (err) {
+      console.error("Error fetching events:", err);
+    }
+  };
 
   const getJobPostsData = async () => {
     const payload = {};
     try {
       const response = await getJobPosts(payload);
       const jobPosts = response?.data?.data?.data || [];
-
       const postedMap = {};
       jobPosts.forEach((job) => {
         postedMap[job.id] = job.date_posted;
       });
-
       setPostedOn(postedMap);
-
       const firstId = jobPosts[0]?.id || null;
       setPostId(firstId);
     } catch (error) {
-      console.log("applied candidate", error);
+      console.log("getJobPosts error", error);
     } finally {
       setTimeout(() => setListLoading(false), 600);
     }
   };
 
   const getAppliedCandidatesCountData = async () => {
-    const payload = {
-      user_id: loginUserId,
-    };
+    const payload = { user_id: loginUserId };
     try {
       const response = await getAppliedCandidatesCount(payload);
-      console.log("getAppliedCandidatesCount", response)
-      setTotalAppliedCandidates(
-        Number(response?.data?.data?.candidatesCount) || 0
-      );
+      setTotalAppliedCandidates(Number(response?.data?.data?.candidatesCount) || 0);
     } catch (error) {
       console.log("applied candidates count", error);
       setTotalAppliedCandidates(0);
     }
   };
 
-  useEffect(() => {
-    StatsOfPostData();
-  }, [loginUserId]);
-
-  const StatsOfPostData = async () => {
-    const payload = {
-      user_id: loginUserId,
-      job_post_id: postId,
-    };
-
-    try {
-      const response = await StatsOfPost(payload);
-      console.log("StatsOfPost", response);
-    } catch (error) {
-      console.log("StatsOfPost", error);
-    }
-  };
-
   const getJobPostByUserIdData = async () => {
     const getUserDetails = JSON.parse(localStorage.getItem("loginDetails"));
-
-    if (!getUserDetails || !getUserDetails.id) {
-      console.error("User not logged in or ID missing.");
-      return;
-    }
+    if (!getUserDetails?.id) return;
 
     const payload = { user_id: getUserDetails.id };
-
     try {
       const response = await getJobPostByUserId(payload);
       const jobs = response?.data?.data || [];
       setListings(jobs);
 
-      // fetch applied count for each job
       const counts = {};
       for (let job of jobs) {
         try {
@@ -143,7 +134,7 @@ export default function ListingDashboard() {
           };
           const res = await StatsOfPost(statPayload);
           counts[job.id] = res?.data?.data?.candidatesCount || 0;
-        } catch (err) {
+        } catch {
           counts[job.id] = 0;
         }
       }
@@ -165,28 +156,13 @@ export default function ListingDashboard() {
     return matchesTab && matchesFilter && matchesSearch;
   });
 
-  // Safe reducer
-  const totalRegistrations = listings.reduce(
-    (sum, listing) => sum + (Number(listing.registrations) || 0),
-    0
+  const filteredEvents = events.filter((e) =>
+    e.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const listingOrder = localStorage.getItem("listingOrder");
 
-  const tabs = ["All", "Internship", "Job"];
-
-  const getTypeIcon = (job_nature) => {
-    switch (job_nature) {
-      case "Job":
-        return <FiBriefcase className="icon-blue" />;
-      case "Scholarship":
-        return <FiBriefcase className="icon-green" />;
-      case "Internship":
-        return <FiBriefcase className="icon-purple" />;
-      default:
-        return <FiCalendar className="icon-gray" />;
-    }
-  };
-  const listingOrder = localStorage.getItem("listingOrder"); // get the order
+  const tabs = ["All", "Internship", "Job", "Scholarship", "Events"];
 
   return (
     <>
@@ -204,33 +180,22 @@ export default function ListingDashboard() {
               <StatCard
                 title="Total Opportunities"
                 value={listings.length}
-                change="+12% from last month"
                 icon={<FiBriefcase />}
                 bgColor="purple"
               />
             )}
-            {listLoading ? (
-              <Skeleton active />
-            ) : (
-              <StatCard
-                title="Total Applied Candidates"
-                value={totalAppliedCandidates}
-                change="+24% from last month"
-                icon={<MdFactCheck />}
-                bgColor="blue"
-              />
-            )}
-            {listLoading ? (
-              <Skeleton active />
-            ) : (
-              <StatCard
-                title="Total View"
-                value={totalRegistrations}
-                change="+8% from last month"
-                icon={<FaEye />}
-                bgColor="orange"
-              />
-            )}
+            <StatCard
+              title="Total Applied Candidates"
+              value={totalAppliedCandidates}
+              icon={<MdFactCheck />}
+              bgColor="blue"
+            />
+            <StatCard
+              title="Total Events"
+              value={events.length}
+              icon={<FiCalendar />}
+              bgColor="orange"
+            />
           </div>
 
           <div className="filter-container">
@@ -238,7 +203,7 @@ export default function ListingDashboard() {
               <FiSearch className="search-icon" />
               <input
                 type="text"
-                placeholder="Search opportunities..."
+                placeholder={`Search ${activeTab.toLowerCase()}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -257,147 +222,130 @@ export default function ListingDashboard() {
             </div>
           </div>
 
+          {/* 🧩 JOBS / EVENTS SECTION */}
           {loading ? (
             <div className="loading-spinner"></div>
           ) : (
             <div className="listing-list">
-              {filteredListings.length > 0 ? (
-                <AnimatePresence>
-                  {[...filteredListings]
-                    .sort((a, b) => {
-                      if (listingOrder === "bottomTop") {
-                        return new Date(a.created_at) - new Date(b.created_at); // oldest first
-                      }
-                      if (listingOrder === "topBottom") {
-                        return new Date(b.created_at) - new Date(a.created_at); // newest first
-                      } else {
-                        return new Date(b.created_at) - new Date(a.created_at); // newest first
-                      }
-                    })
-                    .slice(0, visibleCount)
-                    .map((listing) => {
-                      const isClosed =
-                        moment().diff(moment(listing.created_at), "days") >= 15;
-                      return (
-                        <motion.div
-                          key={listing.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3 }}
-                          className="listing-card"
-                        >
-                          <div className="card-inner">
-                            <img
-                              src={listing.company_logo}
-                              alt={listing.company_name}
-                              className="company-logo"
-                            />
-                            <div className="listing-info">
-                              <div className="listing-header">
-                                <div style={{ textAlign: "left" }}>
-                                  <h3>{listing.job_title}</h3>
-                                  <p>{listing.company_name}</p>
-                                </div>
-                                <div className="listing-type">
-                                  {getTypeIcon(listing.job_nature)}
-                                  <span>{listing.job_nature}</span>
-                                </div>
-                              </div>
+              <AnimatePresence>
+                {(activeTab === "Events" ? filteredEvents : filteredListings)
+                  .sort((a, b) =>
+                    listingOrder === "bottomTop"
+                      ? new Date(a.created_at) - new Date(b.created_at)
+                      : new Date(b.created_at) - new Date(a.created_at)
+                  )
+                  .slice(0, visibleCount)
+                  .map((item) => {
+                    const isEvent = activeTab === "Events";
+                    const isClosed =
+                      isEvent && item.isExpired
+                        ? true
+                        : moment().diff(moment(item.created_at), "days") >= 15;
 
-                              <div className="activeClosed">
-                                <button className={isClosed ? "clo" : "act"}>
-                                  {isClosed ? "Closed" : "Active"}
-                                </button>
+                    return (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="listing-card"
+                      >
+                        <div className="card-inner">
+                          <img
+                            src={isEvent ? item.logo : item.company_logo}
+                            alt={isEvent ? item.title : item.company_name}
+                            className="company-logo"
+                          />
+                          <div className="listing-info">
+                            <div className="listing-header">
+                              <div>
+                                <h3>{isEvent ? item.title : item.job_title}</h3>
+                                <p>
+                                  {isEvent
+                                    ? item.category
+                                    : item.company_name}
+                                </p>
                               </div>
-
-                              <div className="listing-meta">
+                              <div className="listing-type">
+                                <FiCalendar className="icon-blue" />
                                 <span>
-                                  <span
-                                    style={{
-                                      color: isClosed ? "red" : "green",
-                                    }}
-                                  >
-                                    Posted:{" "}
-                                  </span>
-                                  <b>{postedOn[listing.id] || "N/A"}</b>
+                                  {isEvent
+                                    ? item.mode
+                                    : item.job_nature}
                                 </span>
                               </div>
+                            </div>
 
-                              <div className="listing-footer">
-                                <div>
+                            <div className="activeClosed">
+                              <button className={isClosed ? "clo" : "act"}>
+                                {isClosed ? "Expired" : "Active"}
+                              </button>
+                            </div>
+
+                            <div className="listing-meta">
+                              {isEvent ? (
+                                <>
                                   <span>
-                                    <strong>{listing.impressions}</strong>{" "}
-                                    Impressions
+                                    <b>Mode:</b> {item.mode}
                                   </span>
                                   <span>
-                                    <strong>
-                                      {appliedCounts[listing.id] || 0}
-                                    </strong>{" "}
-                                    : Registrations
+                                    <b>Prize:</b> ₹{item.winnerPrize || "N/A"}
                                   </span>
-                                </div>
-                                <div className="listing-actions">
-                                  <Tooltip
-                                    title={`View ${listing.job_nature} post`}
-                                  >
-                                    <FaEye
-                                      size={18}
-                                      onClick={() =>
-                                        navigate(`/job-details/${listing.id}`)
-                                      }
-                                      style={{ cursor: "pointer" }}
-                                    />
-                                  </Tooltip>
-                                  <Tooltip
-                                    title={`Edit ${listing.job_nature} post`}
-                                  >
-                                    <FiEdit
-                                      size={16}
-                                      onClick={() =>
-                                        navigate(
-                                          `/admin-dashboard/${listing.id}`
-                                        )
-                                      }
-                                      style={{ cursor: "pointer" }}
-                                    />
-                                  </Tooltip>
-                                </div>
+                                  <span>
+                                    <b>Days Left:</b> {item.daysLeft}
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>
+                                    <b>Posted:</b>{" "}
+                                    {postedOn[item.id] || "N/A"}
+                                  </span>
+                                  <span>
+                                    <b>Registrations:</b>{" "}
+                                    {appliedCounts[item.id] || 0}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+
+                            <div className="listing-footer">
+                              <div className="listing-actions">
+                                <Tooltip title="View">
+                                  <FaEye
+                                    size={18}
+                                    onClick={() =>
+                                      navigate(
+                                        isEvent
+                                          ? `/event-details/${item.id}`
+                                          : `/job-details/${item.id}`
+                                      )
+                                    }
+                                    style={{ cursor: "pointer" }}
+                                  />
+                                </Tooltip>
+                                <Tooltip title="Edit">
+                                  <FiEdit
+                                    size={16}
+                                    onClick={() =>
+                                      navigate(
+                                        isEvent
+                                          ? `/admin/event-edit/${item.id}`
+                                          : `/admin-dashboard/${item.id}`
+                                      )
+                                    }
+                                    style={{ cursor: "pointer" }}
+                                  />
+                                </Tooltip>
                               </div>
                             </div>
                           </div>
-                        </motion.div>
-                      );
-                    })}
-                </AnimatePresence>
-              ) : (
-                <Card style={{ textAlign: "center", padding: 40 }}>
-                  <Title level={4} style={{ color: "#bfbfbf" }}>
-                    No opportunities found
-                  </Title>
-                  <Text
-                    style={{
-                      cursor: "pointer",
-                      textDecoration: "underline",
-                      color: "#5f2eea",
-                    }}
-                    onClick={() => navigate("/post-jobs")}
-                    type="secondary"
-                  >
-                    Post new jobs
-                  </Text>
-                </Card>
-              )}
-              {visibleCount < filteredListings.length && (
-                <div style={{ textAlign: "center", marginTop: "20px" }}>
-                  <button
-                    onClick={() => setVisibleCount(visibleCount + 10)}
-                    className="see-more-btn"
-                  >
-                    See More
-                  </button>
-                </div>
-              )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+              </AnimatePresence>
             </div>
           )}
         </div>
@@ -406,17 +354,15 @@ export default function ListingDashboard() {
   );
 }
 
-const StatCard = ({ title, value, change, icon, bgColor }) => {
-  return (
-    <div className={`stat-card ${bgColor}`}>
-      <div className="stat-header">
-        <div>
-          <p className="stat-title">{title}</p>
-          <p className="stat-value">{isNaN(value) ? 0 : value}</p>
-          <p className="stat-change">{change}</p>
-        </div>
-        <div className="stat-icon">{icon}</div>
+// ✅ Reuse StatCard
+const StatCard = ({ title, value, icon, bgColor }) => (
+  <div className={`stat-card ${bgColor}`}>
+    <div className="stat-header">
+      <div>
+        <p className="stat-title">{title}</p>
+        <p className="stat-value">{isNaN(value) ? 0 : value}</p>
       </div>
+      <div className="stat-icon">{icon}</div>
     </div>
-  );
-};
+  </div>
+);

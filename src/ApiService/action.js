@@ -961,14 +961,15 @@ export const saveToken = async (userId, token) => {
 // ===================== EVENTS =====================
 
 // Create Event
-export const createEvent = async (formData) => {
+// ✅ Create Event (Base64 JSON)
+export const createEvent = async (data) => {
   try {
     const res = await axios.post(
       `${process.env.REACT_APP_API_URL}/api/events`,
-      formData,
+      data,
       {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       }
     );
@@ -978,6 +979,7 @@ export const createEvent = async (formData) => {
     throw error;
   }
 };
+
 
 // Get All Events
 export const getAllEvents = async () => {
@@ -997,6 +999,126 @@ export const deleteEvent = async (id) => {
     return response;
   } catch (error) {
     console.error("Error deleting event:", error);
+    throw error;
+  }
+};
+
+
+// ===================== EVENT REGISTRATION =====================
+
+// ✅ Register a user for an event
+export const registerForEvent = async (payload) => {
+  try {
+    const response = await api.post("/api/event-registration/register", payload);
+    return response;
+  } catch (error) {
+    console.error("❌ Error registering for event:", error);
+    throw error;
+  }
+};
+
+// ✅ Get all registered events for a specific user
+export const getUserRegisteredEvents = async (userId) => {
+  try {
+    const response = await api.get(`/api/event-registration/user/${userId}`);
+    return response;
+  } catch (error) {
+    console.error("❌ Error fetching user registered events:", error);
+    throw error;
+  }
+};
+
+// ✅ Check if a user is already registered for a specific event
+export const checkIsRegistered = async (userId, eventId) => {
+  try {
+    const response = await api.get(`/api/event-registration/check`, {
+      params: { userId, eventId },
+    });
+    return response;
+  } catch (error) {
+    console.error("❌ Error checking registration:", error);
+    throw error;
+  }
+};
+
+
+// ===================== WORKSHOPS =====================
+
+// ✅ Create Workshop
+export const createWorkshop = async (data) => {
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/api/workshops`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return res;
+  } catch (error) {
+    console.error("❌ Error creating workshop:", error);
+    throw error;
+  }
+};
+
+// ✅ Get All Workshops
+export const getAllWorkshops = async () => {
+  try {
+    const response = await api.get("/api/workshops");
+    return response;
+  } catch (error) {
+    console.error("❌ Error fetching workshops:", error);
+    throw error;
+  }
+};
+
+// ✅ Delete Workshop by ID
+export const deleteWorkshop = async (id) => {
+  try {
+    const response = await api.delete(`/api/workshops/${id}`);
+    return response;
+  } catch (error) {
+    console.error("❌ Error deleting workshop:", error);
+    throw error;
+  }
+};
+
+
+// ===================== WORKSHOP REGISTRATION =====================
+
+// ✅ Register a user for a workshop
+export const registerForWorkshop = async (payload) => {
+  try {
+    const response = await api.post("/api/workshop-registration/register", payload);
+    return response;
+  } catch (error) {
+    console.error("❌ Error registering for workshop:", error);
+    throw error;
+  }
+};
+
+// ✅ Get all registered workshops for a specific user
+export const getUserRegisteredWorkshops = async (userId) => {
+  try {
+    const response = await api.get(`/api/workshop-registration/user/${userId}`);
+    return response;
+  } catch (error) {
+    console.error("❌ Error fetching user registered workshops:", error);
+    throw error;
+  }
+};
+
+// ✅ Check if a user is already registered for a specific workshop
+export const checkIsRegisteredWorkshop = async (userId, workshopId) => {
+  try {
+    const response = await api.get(`/api/workshop-registration/check`, {
+      params: { userId, workshopId },
+    });
+    return response;
+  } catch (error) {
+    console.error("❌ Error checking workshop registration:", error);
     throw error;
   }
 };
