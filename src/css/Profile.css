@@ -689,7 +689,7 @@
   height: 80px;
   border-radius: 8px;
   object-fit: cover;
-  border: 1px solid #eff0f7;
+  border: 1px solid #cbcbcb;
   flex-shrink: 0;
 }
 
@@ -1474,7 +1474,7 @@
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border: 1px solid #d3d3d3;
   font-size: 0.9rem;
   transition: all 0.3s ease;
 }
@@ -1502,7 +1502,7 @@
 .filter-btn {
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  border: 1px solid #e9ecef;
+  border: 1px solid #d3d3d3;
   background: white;
   color: #6c757d;
   font-weight: 500;
@@ -1533,7 +1533,7 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 1px solid #e9ecef;
+  border: 1px solid #d3d3d3;
 }
 
 .listing-card:hover {
@@ -1552,7 +1552,7 @@
   height: 55px;
   border-radius: 8px;
   object-fit: contain;
-  border: 1px solid #e9ecef;
+  border: 1px solid #d3d3d3;
   padding: 7px;
 }
 
@@ -1664,7 +1664,7 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 0.75rem;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid #d3d3d3a8;
 }
 
 .listing-footer span {
@@ -1702,14 +1702,14 @@
   transform: scale(1.1);
 }
 
-.loading-spinner {
+.loading-spinners {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 200px;
 }
 
-.loading-spinner::after {
+.loading-spinners::after {
   content: "";
   width: 40px;
   height: 40px;

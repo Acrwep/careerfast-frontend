@@ -1,9 +1,11 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+
 * {
   font-family: "Inter", sans-serif;
 }
+
 .premium-register-container {
   display: flex;
   justify-content: center;
@@ -13,7 +15,7 @@
   padding: 2rem;
 }
 
-.ant-input-affix-wrapper > input.ant-input {
+.ant-input-affix-wrapper>input.ant-input {
   font-family: "Inter", sans-serif;
 }
 
@@ -33,6 +35,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -233,7 +236,6 @@
   color: rgba(255, 0, 0, 0.808);
   font-size: 13px;
   text-align: left;
-  position: absolute;
   bottom: -6px;
   animation: errorin 0.4s ease-out;
 }
@@ -243,6 +245,7 @@
     left: -25px;
     transform: translateY(0px);
   }
+
   to {
     left: 0px;
     transform: translateY(0);
@@ -258,4 +261,49 @@
   .premium-role-switcher {
     flex-direction: column;
   }
+}
+
+.workshop_details br {
+  display: none !important;
+}
+
+.workshop_details li::marker {
+  color: #7c3aed;
+}
+
+.workshop_details li {
+  padding-bottom: 10px;
+}
+
+.job-meta-item {
+  align-items: center;
+  display: flex;
+  font-size: 15px;
+  margin-bottom: 8px;
+  margin-top: 6px;
+}
+
+.premium-icon {
+  font-size: 16px;
+}
+
+.meta-icon {
+  color: #6a5cff;
+  margin-right: 10px;
+}
+
+.meta-text {
+    color: #4a4a4a;
+}
+
+.workshop_filter .ant-select-selector{
+  padding: 2px 13px !important;
+}
+
+.workshop_filter .ant-select-single.ant-select-lg:hover{
+  border-color: #5f2eea !important;
+}
+
+.workshop_filter .ant-select-multiple.ant-select-lg:hover{
+  border-color: #5f2eea !important;
 }

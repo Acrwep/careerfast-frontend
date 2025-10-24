@@ -12,7 +12,7 @@ import {
   getJobPostByUserId,
   getJobPosts,
   StatsOfPost,
-  getAllEvents, // 🆕 Import
+  getAllEvents,
 } from "../ApiService/action";
 import { FaEye } from "react-icons/fa";
 import moment from "moment/moment";
@@ -27,16 +27,16 @@ export default function ListingDashboard() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [listings, setListings] = useState([]);
-  const [events, setEvents] = useState([]); // 🆕
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loginUserId, setLoginUserId] = useState(null);
-  const navigate = useNavigate();
   const [postId, setPostId] = useState(null);
   const [totalAppliedCandidates, setTotalAppliedCandidates] = useState(null);
   const [listLoading, setListLoading] = useState(true);
   const [appliedCounts, setAppliedCounts] = useState({});
   const [visibleCount, setVisibleCount] = useState(10);
   const [postedOn, setPostedOn] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const stored = localStorage.getItem("loginDetails");
@@ -53,7 +53,7 @@ export default function ListingDashboard() {
   useEffect(() => {
     getJobPostByUserIdData();
     getJobPostsData();
-    getAllEventsData(); // 🆕 Fetch events too
+    getAllEventsData();
   }, []);
 
   useEffect(() => {
@@ -74,6 +74,7 @@ export default function ListingDashboard() {
 
         return {
           ...event,
+          type: "Event",
           isExpired,
           daysLeft: isExpired ? "Expired" : `${daysLeft} days left`,
         };
@@ -108,7 +109,9 @@ export default function ListingDashboard() {
     const payload = { user_id: loginUserId };
     try {
       const response = await getAppliedCandidatesCount(payload);
-      setTotalAppliedCandidates(Number(response?.data?.data?.candidatesCount) || 0);
+      setTotalAppliedCandidates(
+        Number(response?.data?.data?.candidatesCount) || 0
+      );
     } catch (error) {
       console.log("applied candidates count", error);
       setTotalAppliedCandidates(0);
@@ -146,22 +149,32 @@ export default function ListingDashboard() {
     }
   };
 
-  const filteredListings = listings.filter((listing) => {
-    const matchesTab = activeTab === "All" || listing.job_nature === activeTab;
+  // ✅ Merge all listings and events
+  const allCombined = [...listings, ...events.map(e => ({ ...e, isEvent: true }))];
+
+  // ✅ Filter logic (applies to all)
+  const filteredAll = allCombined.filter((item) => {
+    const isEvent = item.isEvent || item.type === "Event";
+
+    const matchesTab =
+      activeTab === "All" ||
+      (isEvent && activeTab === "Events") ||
+      (!isEvent && item.job_nature === activeTab);
+
     const matchesFilter =
-      activeFilter === "All" || listing.status === activeFilter;
+      activeFilter === "All" || item.status === activeFilter;
+
+    const title = isEvent ? item.title : item.job_title;
+    const company = isEvent ? item.category : item.company_name;
+
     const matchesSearch =
-      listing.job_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.company_name.toLowerCase().includes(searchQuery.toLowerCase());
+      title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company?.toLowerCase().includes(searchQuery.toLowerCase());
+
     return matchesTab && matchesFilter && matchesSearch;
   });
 
-  const filteredEvents = events.filter((e) =>
-    e.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const listingOrder = localStorage.getItem("listingOrder");
-
   const tabs = ["All", "Internship", "Job", "Scholarship", "Events"];
 
   return (
@@ -173,31 +186,36 @@ export default function ListingDashboard() {
             <h1>Listing</h1>
           </div>
 
+          {/* ✅ Stats */}
           <div className="stats-container">
             {listLoading ? (
               <Skeleton active />
             ) : (
-              <StatCard
-                title="Total Opportunities"
-                value={listings.length}
-                icon={<FiBriefcase />}
-                bgColor="purple"
-              />
+              <>
+                <StatCard
+                  title="Total Opportunities"
+                  value={listings.length}
+                  icon={<FiBriefcase />}
+                  bgColor="purple"
+                />
+                <StatCard
+                  title="Total Applied Candidates"
+                  value={totalAppliedCandidates}
+                  icon={<MdFactCheck />}
+                  bgColor="blue"
+                />
+                <StatCard
+                  title="Total Events"
+                  value={events.length}
+                  icon={<FiCalendar />}
+                  bgColor="orange"
+                />
+              </>
             )}
-            <StatCard
-              title="Total Applied Candidates"
-              value={totalAppliedCandidates}
-              icon={<MdFactCheck />}
-              bgColor="blue"
-            />
-            <StatCard
-              title="Total Events"
-              value={events.length}
-              icon={<FiCalendar />}
-              bgColor="orange"
-            />
           </div>
 
+
+          {/* ✅ Filters */}
           <div className="filter-container">
             <div className="search-input">
               <FiSearch className="search-icon" />
@@ -222,13 +240,13 @@ export default function ListingDashboard() {
             </div>
           </div>
 
-          {/* 🧩 JOBS / EVENTS SECTION */}
+          {/* ✅ Combined Listing */}
           {loading ? (
-            <div className="loading-spinner"></div>
+            <div className="loading-spinners"></div>
           ) : (
             <div className="listing-list">
               <AnimatePresence>
-                {(activeTab === "Events" ? filteredEvents : filteredListings)
+                {filteredAll
                   .sort((a, b) =>
                     listingOrder === "bottomTop"
                       ? new Date(a.created_at) - new Date(b.created_at)
@@ -236,7 +254,7 @@ export default function ListingDashboard() {
                   )
                   .slice(0, visibleCount)
                   .map((item) => {
-                    const isEvent = activeTab === "Events";
+                    const isEvent = item.isEvent || item.type === "Event";
                     const isClosed =
                       isEvent && item.isExpired
                         ? true
@@ -253,14 +271,26 @@ export default function ListingDashboard() {
                       >
                         <div className="card-inner">
                           <img
-                            src={isEvent ? item.logo : item.company_logo}
-                            alt={isEvent ? item.title : item.company_name}
+                            src={
+                              isEvent
+                                ? item.logo
+                                : item.company_logo
+                            }
+                            alt={
+                              isEvent
+                                ? item.title
+                                : item.company_name
+                            }
                             className="company-logo"
                           />
                           <div className="listing-info">
                             <div className="listing-header">
                               <div>
-                                <h3>{isEvent ? item.title : item.job_title}</h3>
+                                <h3>
+                                  {isEvent
+                                    ? item.title
+                                    : item.job_title}
+                                </h3>
                                 <p>
                                   {isEvent
                                     ? item.category
@@ -354,7 +384,7 @@ export default function ListingDashboard() {
   );
 }
 
-// ✅ Reuse StatCard
+// ✅ Stat Card Component
 const StatCard = ({ title, value, icon, bgColor }) => (
   <div className={`stat-card ${bgColor}`}>
     <div className="stat-header">

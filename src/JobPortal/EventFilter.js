@@ -23,10 +23,13 @@ import {
   TeamOutlined,
   UserOutlined,
   LoadingOutlined,
+  GlobalOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 import { MdWorkOutline } from "react-icons/md";
+import { FcCancel } from "react-icons/fc";
 
 const { Option } = Select;
 const { Title, Text, Paragraph } = Typography;
@@ -36,12 +39,14 @@ export default function EventFilter() {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState([]);
   const [modeFilter, setModeFilter] = useState("");
   const [minPrize, setMinPrize] = useState(null);
   const [maxPrize, setMaxPrize] = useState(null);
   const [loadingRegister, setLoadingRegister] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [sortBy, setSortBy] = useState("");
+  const [teamSizeFilter, setTeamSizeFilter] = useState("");
 
   useEffect(() => {
     getAllEventsData();
@@ -131,24 +136,70 @@ export default function EventFilter() {
   useEffect(() => {
     let result = [...allEvents];
 
-    if (categoryFilter)
-      result = result.filter((e) =>
-        e.category?.toLowerCase().includes(categoryFilter.toLowerCase())
-      );
+    // ✅ Category filter (supports multi-select)
+    if (categoryFilter.length > 0) {
+      result = result.filter((e) => {
+        const eventCats = e.category
+          ? e.category.split(",").map((c) => c.trim().toLowerCase())
+          : [];
+        return eventCats.some((cat) =>
+          categoryFilter.map((c) => c.toLowerCase()).includes(cat)
+        );
+      });
+    }
 
+    // ✅ Mode
     if (modeFilter)
       result = result.filter(
         (e) => e.mode?.toLowerCase() === modeFilter.toLowerCase()
       );
 
+    // ✅ Team size
+    if (teamSizeFilter === "1") {
+      result = result.filter((e) => e.participationType === "Individual");
+    } else if (teamSizeFilter === "2") {
+      result = result.filter(
+        (e) => e.memberLimit && parseInt(e.memberLimit) === 2
+      );
+    } else if (teamSizeFilter === "2+") {
+      result = result.filter(
+        (e) => e.memberLimit && parseInt(e.memberLimit) > 2
+      );
+    }
+
+    // ✅ Prize range
     if (minPrize !== null)
       result = result.filter((e) => parseInt(e.winnerPrize || 0) >= minPrize);
-
     if (maxPrize !== null)
       result = result.filter((e) => parseInt(e.winnerPrize || 0) <= maxPrize);
 
+    // ✅ Sort by days left
+    if (sortBy) {
+      result.sort((a, b) => {
+        const daysA =
+          typeof a.daysLeft === "string" && a.daysLeft.includes("day")
+            ? parseInt(a.daysLeft)
+            : 0;
+        const daysB =
+          typeof b.daysLeft === "string" && b.daysLeft.includes("day")
+            ? parseInt(b.daysLeft)
+            : 0;
+
+        return sortBy === "daysAsc" ? daysA - daysB : daysB - daysA;
+      });
+    }
+
     setFilteredEvents(result);
-  }, [categoryFilter, modeFilter, minPrize, maxPrize, allEvents]);
+  }, [
+    categoryFilter,
+    modeFilter,
+    teamSizeFilter,
+    minPrize,
+    maxPrize,
+    sortBy,
+    allEvents,
+  ]);
+
 
   // ✅ Handle registration
   const handleRegister = async () => {
@@ -206,176 +257,166 @@ export default function EventFilter() {
 
         {/* Main Content Container */}
         <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-          <Card
+          {/* 🔹 Modern Pill Filter Bar */}
+          <div
+            className="workshop_filter"
             style={{
+              background: "#fff",
+              borderRadius: 50,
+              padding: "14px 20px",
+              display: "flex",
               position: "sticky",
-              top: 60,
+              top: 78,
               zIndex: 20,
-              borderRadius: 18,
-              border: "1px solid rgba(229, 231, 235, 0.5)",
-              background:
-                "linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.9) 100%)",
-              boxShadow:
-                "0 6px 18px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+              alignItems: "center",
+              justifyContent: "space-around",
+              gap: "10px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
               marginBottom: 20,
-              overflow: "hidden",
-              backdropFilter: "blur(8px)",
-              transition: "all 0.3s ease",
             }}
           >
+            {/* Category Filter (Multi-select array) */}
+            <Select
+              mode="multiple"
+              placeholder="Select Category"
+              value={categoryFilter}
+              onChange={(values) => setCategoryFilter(values)}
+              size="large"
+              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+              style={{
+                minWidth: 180,
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+              }}
+            >
+              {[...new Set(allEvents.flatMap((e) =>
+                e.category
+                  ? e.category.split(",").map((c) => c.trim())
+                  : []
+              ))]
+                .filter(Boolean)
+                .map((cat, i) => (
+                  <Option key={i} value={cat}>
+                    {cat}
+                  </Option>
+                ))}
+            </Select>
 
-            {/* Filter Controls */}
-            <Row gutter={[20, 20]} align="middle">
-              {/* Category Filter */}
-              <Col xs={24} sm={12} md={6}>
-                <div
-                  style={{
-                    background: "#ffffff",
-                    borderRadius: 12,
-                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.05)",
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  <Select
-                    placeholder="Select Category"
-                    style={{
-                      width: "100%",
-                      border: "none",
-                      borderRadius: 12,
-                      padding: "6px 12px",
-                      border: "1px solid #d1d1d1"
-                    }}
-                    allowClear
-                    onChange={(value) => setCategoryFilter(value)}
-                    size="large"
-                    dropdownStyle={{
-                      borderRadius: 10,
-                    }}
-                  >
-                    {[...new Set(allEvents.map((e) => e.category))].map((cat, i) => (
-                      <Option key={i} value={cat}>
-                        {cat}
-                      </Option>
-                    ))}
-                  </Select>
-                </div>
-              </Col>
+            {/* Mode Filter */}
+            <Select
+              placeholder="Mode"
+              value={modeFilter || undefined}
+              allowClear
+              onChange={(value) => setModeFilter(value)}
+              size="large"
+              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+              style={{
+                minWidth: 140,
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+              }}
+            >
+              <Option value="Online">Online</Option>
+              <Option value="Offline">Offline</Option>
+              <Option value="Hybrid">Hybrid</Option>
+            </Select>
 
-              {/* Mode Filter */}
-              <Col xs={24} sm={12} md={4}>
-                <div
-                  style={{
-                    background: "#ffffff",
-                    borderRadius: 12,
-                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.05)",
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  <Select
-                    placeholder="Event Mode"
-                    style={{
-                      width: "100%",
-                      border: "none",
-                      borderRadius: 12,
-                      padding: "6px 12px",
-                      border: "1px solid #d1d1d1"
-                    }}
-                    allowClear
-                    onChange={(value) => setModeFilter(value)}
-                    size="large"
-                    dropdownStyle={{
-                      borderRadius: 10,
-                    }}
-                  >
-                    <Option value="Online">Online</Option>
-                    <Option value="Offline">Offline</Option>
-                  </Select>
-                </div>
-              </Col>
+            {/* Team Size Filter */}
+            <Select
+              placeholder="Team Size"
+              value={teamSizeFilter || undefined}
+              allowClear
+              onChange={(value) => setTeamSizeFilter(value)}
+              size="large"
+              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+              style={{
+                minWidth: 150,
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+              }}
+            >
+              <Option value="1">Individual (1)</Option>
+              <Option value="2">Team (2)</Option>
+              <Option value="2+">Team (2+)</Option>
+            </Select>
 
-              {/* Min Prize */}
-              <Col xs={24} sm={12} md={4}>
-                <div
-                  style={{
-                    background: "#ffffff",
-                    borderRadius: 12,
-                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.05)",
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  <InputNumber
-                    placeholder="Min Prize"
-                    style={{
-                      width: "100%",
-                      border: "none",
-                      padding: "8px 12px",
-                      borderRadius: 12,
-                    }}
-                    onChange={(val) => setMinPrize(val)}
-                    size="large"
-                    prefix={<DollarOutlined style={{ color: "#9ca3af" }} />}
-                  />
-                </div>
-              </Col>
+            {/* Days Left Sort Filter */}
+            <Select
+              placeholder="Sort By"
+              value={sortBy || undefined}
+              allowClear
+              onChange={(value) => setSortBy(value)}
+              size="large"
+              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+              style={{
+                minWidth: 200,
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+              }}
+            >
+              <Option value="daysAsc">Days Left (Low → High)</Option>
+              <Option value="daysDesc">Days Left (High → Low)</Option>
+            </Select>
 
-              {/* Max Prize */}
-              <Col xs={24} sm={12} md={4}>
-                <div
-                  style={{
-                    background: "#ffffff",
-                    borderRadius: 12,
-                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.05)",
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  <InputNumber
-                    placeholder="Max Prize"
-                    style={{
-                      width: "100%",
-                      border: "none",
-                      padding: "8px 12px",
-                      borderRadius: 12,
-                    }}
-                    onChange={(val) => setMaxPrize(val)}
-                    size="large"
-                    prefix={<DollarOutlined style={{ color: "#9ca3af" }} />}
-                  />
-                </div>
-              </Col>
+            {/* Prize Range */}
+            <InputNumber
+              placeholder="Min Prize"
+              value={minPrize}
+              onChange={(val) => setMinPrize(val)}
+              prefix={<DollarOutlined style={{ color: "#5f2eea" }} />}
+              size="large"
+              style={{
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+                width: 150,
+              }}
+            />
 
-              {/* Clear Button */}
-              <Col xs={24} sm={24} md={6}>
-                <Space wrap style={{ width: "100%", justifyContent: "flex-end" }}>
-                  <Button
-                    size="large"
-                    style={{
-                      borderRadius: 10,
-                      border: "none",
-                      fontWeight: 600,
-                      color: "#5f2eea",
-                      background: "rgba(95,46,234,0.08)",
-                      padding: "6px 20px",
-                      transition: "all 0.3s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(95,46,234,0.12)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "rgba(95,46,234,0.08)";
-                    }}
-                    onClick={() => {
-                      setCategoryFilter("");
-                      setModeFilter("");
-                      setMinPrize(null);
-                      setMaxPrize(null);
-                    }}
-                  >
-                    Clear Filters ✨
-                  </Button>
-                </Space>
-              </Col>
-            </Row>
-          </Card>
+            <InputNumber
+              placeholder="Max Prize"
+              value={maxPrize}
+              onChange={(val) => setMaxPrize(val)}
+              prefix={<DollarOutlined style={{ color: "#5f2eea" }} />}
+              size="large"
+              style={{
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+                width: 150,
+              }}
+            />
+
+            {/* Clear Filters Button */}
+            <Button
+              size="large"
+              onClick={() => {
+                setCategoryFilter([]);
+                setModeFilter("");
+                setTeamSizeFilter("");
+                setSortBy("");
+                setMinPrize(null);
+                setMaxPrize(null);
+              }}
+              icon={<FcCancel />}
+              style={{
+                borderRadius: 30,
+                height: 36,
+                padding: "0 20px",
+                border: "1px solid #ff2e2eff",
+                background: "#fdedecff",
+                color: "#ff2e2eff",
+                fontWeight: 600,
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+
 
 
           {/* Results Section */}
@@ -628,6 +669,7 @@ export default function EventFilter() {
             {/* Event Details Column */}
             <Col xs={24} lg={16}>
               <Card
+                className="workshop_details"
                 style={{
                   borderRadius: 18,
                   border: "1px solid rgba(229, 231, 235, 0.6)",

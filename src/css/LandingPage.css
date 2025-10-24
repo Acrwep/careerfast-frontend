@@ -1886,6 +1886,8 @@
   object-fit: cover;
   border: 1px solid #f1f5f9;
   background: #f8fafc;
+  margin-bottom: 10px;
+  box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
 }
 
 .my-opportunities .company-info {
@@ -1999,17 +2001,17 @@
   .my-opportunities {
     padding: 0 20px;
   }
-  
+
   .my-opportunities .opportunities-header {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
-  
+
   .my-opportunities .opportunities-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .my-opportunities .classical-tabs {
     overflow-x: auto;
     scrollbar-width: thin;

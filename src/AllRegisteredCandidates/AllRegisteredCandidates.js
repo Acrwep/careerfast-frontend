@@ -49,8 +49,9 @@ import {
 import { getUsers, getUserProfile } from "../ApiService/action";
 import { FaBehance, FaDribbble, FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa6";
 import Footer from "../Footer/Footer";
+import Header from "../Header/Header";
 
-const { Header, Content } = Layout;
+const { Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -285,64 +286,6 @@ export default function AllRegisteredCandidates() {
                 </>
             ),
         },
-        // {
-        //     title: <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>STATUS</Text>,
-        //     dataIndex: "status",
-        //     render: (status) => {
-        //         const colors = statusColors[status] || statusColors["Pending"];
-        //         return (
-        //             <Tag
-        //                 style={{
-        //                     fontWeight: 600,
-        //                     borderRadius: 16,
-        //                     padding: "4px 12px",
-        //                     background: colors.background,
-        //                     border: `1px solid ${colors.borderColor}`,
-        //                     color: colors.color,
-        //                     fontSize: 11,
-        //                     display: "flex",
-        //                     alignItems: "center",
-        //                     gap: 4,
-        //                 }}
-        //                 icon={colors.icon}
-        //             >
-        //                 {status}
-        //             </Tag>
-        //         );
-        //     },
-        // },
-        // {
-        //     title: <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>COMPATIBILITY</Text>,
-        //     dataIndex: "score",
-        //     render: (score) => (
-        //         <div style={{ minWidth: 100 }}>
-        //             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-        //                 <Text strong style={{ color: getScoreColor(score), fontSize: 14 }}>
-        //                     {score}%
-        //                 </Text>
-        //                 <TrophyOutlined style={{ color: getScoreColor(score), fontSize: 12 }} />
-        //             </div>
-        //             <div
-        //                 style={{
-        //                     height: 6,
-        //                     background: "#f0f0f0",
-        //                     borderRadius: 3,
-        //                     overflow: "hidden",
-        //                 }}
-        //             >
-        //                 <div
-        //                     style={{
-        //                         width: `${score}%`,
-        //                         height: "100%",
-        //                         background: `linear-gradient(90deg, ${getScoreColor(score)}33, ${getScoreColor(score)})`,
-        //                         borderRadius: 3,
-        //                         transition: "all 0.3s ease",
-        //                     }}
-        //                 />
-        //             </div>
-        //         </div>
-        //     ),
-        // },
         {
             title: "",
             key: "action",
@@ -396,13 +339,14 @@ export default function AllRegisteredCandidates() {
 
     return (
         <>
+            <Header />
             <Layout style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)" }}>
                 <Layout style={{ padding: 24 }}>
-                    <Header
+                    <div
                         style={{
                             borderRadius: 16,
                             background: "linear-gradient(135deg, #fff 0%, #fafafa 100%)",
-                            padding: "40px 32px",
+                            padding: "15px 32px",
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
@@ -432,7 +376,7 @@ export default function AllRegisteredCandidates() {
                                 Export Data
                             </Button>
                         </Space>
-                    </Header>
+                    </div>
 
                     {/* Statistics */}
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>

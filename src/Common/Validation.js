@@ -1,4 +1,4 @@
-const nameRegex = /^[A-Za-z\s.'\-&,/()]+$/;
+const nameRegex = /^[A-Za-z0-9\s.'\-&,/()@#%*!]+$/;
 const orgNameRegex = /^[a-zA-Z]+(?: [a-zA-Z]+)*$/;
 const phoneRegex = /^[6-9]\d{9}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

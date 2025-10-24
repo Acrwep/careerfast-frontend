@@ -47,6 +47,7 @@ import {
   ProfileOutlined,
   LockOutlined,
   DashboardOutlined,
+  ReadOutlined,
 } from "@ant-design/icons";
 
 import { Tag } from "antd";
@@ -58,6 +59,8 @@ import {
 import { getUserProfile, searchByKeyword } from "../ApiService/action";
 import { IoChevronDownOutline } from "react-icons/io5";
 import { FcApproval } from "react-icons/fc";
+import { GrWorkshop } from "react-icons/gr";
+import { FaBookOpen, FaCalendarAlt, FaChalkboardTeacher, FaGraduationCap } from "react-icons/fa";
 
 const { Title, Text } = Typography;
 
@@ -220,27 +223,50 @@ export default function Header() {
       icon: <BookOutlined />,
       path: "/internship",
     },
-    { key: "practice", label: "Practice", icon: <CodeOutlined />, path: "#" },
+    // { key: "practice", label: "Practice", icon: <CodeOutlined />, path: "#" },
   ];
 
   const moreMenuItems = [
     {
       key: "scholarships",
-      label: "Scholarships",
+      label: (
+        <div className="menu-item">
+          <FaGraduationCap className="menu-icon" />
+          <span>Scholarships</span>
+        </div>
+      ),
       onClick: () => navigate("/job-filter?filter=Scholarship"),
     },
     {
       key: "events",
-      label: "Events",
+      label: (
+        <div className="menu-item">
+          <FaCalendarAlt className="menu-icon" />
+          <span>Events</span>
+        </div>
+      ),
       onClick: () => navigate("/event-filter"),
     },
     {
       key: "workshop",
-      label: "Workshop",
+      label: (
+        <div className="menu-item">
+          <FaChalkboardTeacher className="menu-icon" />
+          <span>Workshop</span>
+        </div>
+      ),
       onClick: () => navigate("/workshop-filter"),
     },
-    // { key: "resources", label: "Resources", path: "#" },
-    // { key: "blog", label: "Blog", path: "/blogs" },
+    {
+      key: "courses",
+      label: (
+        <div className="menu-item">
+          <FaBookOpen className="menu-icon" />
+          <span>Courses</span>
+        </div>
+      ),
+      onClick: () => navigate("/course"),
+    },
   ];
 
   const location = useLocation();
@@ -254,7 +280,7 @@ export default function Header() {
         expand="md"
         className="bg-white shadow-sm py-3 elite-header"
       >
-        <Container>
+        <Container style={{ paddingLeft: 35, paddingRight: 35 }} fluid>
           <div className="d-flex gap-3 global_search">
             <Navbar.Brand>
               <img
@@ -448,6 +474,30 @@ export default function Header() {
                                 <div className="host-popup-sub">Engage your target audience</div>
                               </div>
                             </div>
+                            <div
+                              onClick={() => navigate("/post-course")}
+                              className="host-popup-item"
+                            >
+                              <ReadOutlined style={{ color: "#c60bf5ff", fontSize: 18 }} />
+                              <div className="host-popup-text">
+                                <div className="host-popup-title">Post a New Course</div>
+                                <div className="host-popup-sub">
+                                  Share your knowledge and attract eager learners
+                                </div>
+                              </div>
+                            </div>
+                            <div
+                              onClick={() => navigate("/post-workshop")}
+                              className="host-popup-item"
+                            >
+                              <GrWorkshop style={{ color: "#0b0ff5ff", fontSize: 18 }} />
+                              <div className="host-popup-text">
+                                <div className="host-popup-title">Host a Workshop</div>
+                                <div className="host-popup-sub">
+                                  Share your expertise and connect with participants through hands-on learning sessions.
+                                </div>
+                              </div>
+                            </div>
 
                             <div className="host-popup-item" style={{ opacity: 0.6 }}>
                               <ProfileOutlined style={{ color: "#6366f1", fontSize: 18 }} />
@@ -457,21 +507,6 @@ export default function Header() {
                               </div>
                               <div className="host-popup-upgrade">
                                 <LockOutlined /> Upgrade
-                              </div>
-                            </div>
-
-                            <Divider style={{ margin: "8px 0" }} />
-
-                            <div
-                              onClick={() => navigate("/admin-profile")}
-                              className="host-popup-item"
-                            >
-                              <DashboardOutlined style={{ color: "#3b82f6", fontSize: 18 }} />
-                              <div className="host-popup-text">
-                                <div className="host-popup-title">Go to organizer dashboard</div>
-                                <div className="host-popup-sub">
-                                  Manage listing, Festivals, Assessments
-                                </div>
                               </div>
                             </div>
                           </div>

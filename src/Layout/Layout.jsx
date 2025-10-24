@@ -37,6 +37,8 @@ import PostEvents from "../PostEvents/PostEvents";
 import EventFilter from "../JobPortal/EventFilter";
 import PostWorkShop from "../PostWorkShop/PostWorkShop";
 import WorkshopFilter from "../JobPortal/WorkshopFilter";
+import Courses from "../Courses/Courses";
+import PostCourses from "../Courses/PostCourses";
 
 const Layout = () => {
   const location = useLocation();
@@ -146,6 +148,8 @@ const Layout = () => {
         <Route path="/post-events" element={<PostEvents />} />
         <Route path="/post-workshop" element={<PostWorkShop />} />
         <Route path="/applied-candidates-all" element={<AllAppliedCandidates />} />
+        <Route path="/post-course" element={<PostCourses />} />
+        <Route path="/course" element={<Courses />} />
 
         {/* ✅ Restrict access only to role_id = 3 */}
         <Route

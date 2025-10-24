@@ -5,6 +5,7 @@ import {
   registerForWorkshop,
   checkIsRegisteredWorkshop,
 } from "../ApiService/action";
+import "../css/RegisterPage.css";
 import {
   Card,
   Row,
@@ -18,34 +19,43 @@ import {
   Typography,
   message,
   Spin,
+  DatePicker,
 } from "antd";
 import {
-  CalendarOutlined,
   EnvironmentOutlined,
   CheckCircleFilled,
-  TeamOutlined,
   UserOutlined,
   LoadingOutlined,
   GlobalOutlined,
   MailOutlined,
   PhoneOutlined,
+  TeamOutlined,
+  CalendarOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
+import { FaRegBuilding } from "react-icons/fa6";
 import { MdWorkOutline } from "react-icons/md";
+import { FcCancel } from "react-icons/fc";
 
 const { Option } = Select;
 const { Title, Text, Paragraph } = Typography;
+const { RangePicker } = DatePicker;
 
 export default function WorkshopFilter() {
   const [workshops, setWorkshops] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [selectedWorkshop, setSelectedWorkshop] = useState(null);
 
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState([]);
   const [modeFilter, setModeFilter] = useState("");
   const [loadingRegister, setLoadingRegister] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [locationFilter, setLocationFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState(null);
+  const [sortBy, setSortBy] = useState("");
+  const [teamSizeFilter, setTeamSizeFilter] = useState("");
 
   // ✅ Fetch all workshops
   useEffect(() => {
@@ -64,7 +74,7 @@ export default function WorkshopFilter() {
         const diff = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
         return {
           ...w,
-          daysLeft: diff > 0 ? `${diff} days left` : "Expired",
+          daysLeft: diff > 0 ? diff : 0, // store numeric days left
         };
       });
 
@@ -98,17 +108,71 @@ export default function WorkshopFilter() {
   // ✅ Filter by category & mode
   useEffect(() => {
     let result = [...workshops];
-    if (categoryFilter)
-      result = result.filter((w) =>
-        w.category?.toLowerCase().includes(categoryFilter.toLowerCase())
-      );
+
+    // ✅ Category filter
+    if (categoryFilter.length > 0) {
+      result = result.filter((w) => {
+        const cats = Array.isArray(w.category)
+          ? w.category
+          : w.category?.split(",").map((c) => c.trim().toLowerCase());
+        return cats?.some((c) =>
+          categoryFilter.map((f) => f.toLowerCase()).includes(c)
+        );
+      });
+    }
+
+    // ✅ Mode filter
     if (modeFilter)
       result = result.filter(
         (w) => w.mode?.toLowerCase() === modeFilter.toLowerCase()
       );
 
+    // ✅ Team size filter
+    if (teamSizeFilter) {
+      result = result.filter((w) => {
+        if (teamSizeFilter === "Individual") return w.participationType === "Individual";
+        if (teamSizeFilter === "Team-2") return w.memberLimit === 2;
+        if (teamSizeFilter === "Team-2plus") return w.memberLimit > 2;
+        return true;
+      });
+    }
+
+    // ✅ Location filter
+    if (locationFilter)
+      result = result.filter((w) =>
+        w.venue?.toLowerCase().includes(locationFilter.toLowerCase())
+      );
+
+    // ✅ Date range filter (overlap logic)
+    if (dateFilter) {
+      result = result.filter((w) => {
+        const start = w.startDate ? new Date(w.startDate) : null;
+        const end = w.endDate ? new Date(w.endDate) : null;
+        if (!start || !end) return false;
+        return start <= dateFilter.end && end >= dateFilter.start;
+      });
+    }
+
+    // ✅ Sorting
+    if (sortBy === "daysAsc") {
+      result.sort((a, b) => {
+        const aDays = parseInt(a.daysLeft) || Infinity;
+        const bDays = parseInt(b.daysLeft) || Infinity;
+        return aDays - bDays;
+      });
+    } else if (sortBy === "daysDesc") {
+      result.sort((a, b) => {
+        const aDays = parseInt(a.daysLeft) || -Infinity;
+        const bDays = parseInt(b.daysLeft) || -Infinity;
+        return bDays - aDays;
+      });
+    }
+
     setFiltered(result);
-  }, [categoryFilter, modeFilter, workshops]);
+  }, [categoryFilter, modeFilter, teamSizeFilter, locationFilter, dateFilter, sortBy, workshops]);
+
+
+
 
   // ✅ Register for workshop
   const handleRegister = async () => {
@@ -157,72 +221,174 @@ export default function WorkshopFilter() {
       >
         <div style={{ maxWidth: 1400, margin: "0 auto" }}>
           {/* Filters */}
-          <Card
+          <div
+            className="workshop_filter"
             style={{
+              background: "#fff",
               position: "sticky",
-              top: 60,
+              borderRadius: "50px",
+              padding: "12px 20px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              marginBottom: "20px",
+              position: "sticky",
+              top: 78,
               zIndex: 20,
-              borderRadius: 18,
-              border: "1px solid rgba(229, 231, 235, 0.5)",
-              background:
-                "linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.9) 100%)",
-              boxShadow:
-                "0 6px 18px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
-              marginBottom: 20,
-              backdropFilter: "blur(8px)",
             }}
           >
-            <Row gutter={[20, 20]} align="middle">
-              <Col xs={24} sm={12} md={8}>
-                <Select
-                  placeholder="Select Category"
-                  style={{ width: "100%", borderRadius: 12 }}
-                  allowClear
-                  onChange={(value) => setCategoryFilter(value)}
-                  size="large"
-                >
-                  {[...new Set(workshops.map((w) => w.category))].map((cat, i) => (
-                    <Option key={i} value={cat}>
-                      {cat}
-                    </Option>
-                  ))}
-                </Select>
-              </Col>
+            {/* 🔸 Filter Group - Use compact pill style */}
+            <Select
+              placeholder="Sort By"
+              value={sortBy || undefined}
+              allowClear
+              onChange={(value) => setSortBy(value)}
+              size="large"
+              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+              style={{
+                minWidth: 180,
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+              }}
+            >
+              <Option value="daysAsc">Days Left (Low → High)</Option>
+              <Option value="daysDesc">Days Left (High → Low)</Option>
+            </Select>
 
-              <Col xs={24} sm={12} md={8}>
-                <Select
-                  placeholder="Select Mode"
-                  style={{ width: "100%", borderRadius: 12 }}
-                  allowClear
-                  onChange={(value) => setModeFilter(value)}
-                  size="large"
-                >
-                  <Option value="Online">Online</Option>
-                  <Option value="Offline">Offline</Option>
-                  <Option value="Hybrid">Hybrid</Option>
-                </Select>
-              </Col>
+            <Select
+              mode="multiple"
+              placeholder="Category"
+              value={categoryFilter}
+              allowClear
+              onChange={(values) => setCategoryFilter(values)}
+              size="large"
+              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+              style={{
+                minWidth: 180,
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+              }}
+            >
+              {[...new Set(workshops.flatMap((w) =>
+                Array.isArray(w.category)
+                  ? w.category
+                  : w.category?.split(",").map((c) => c.trim())
+              ))]
+                .filter(Boolean)
+                .map((cat, i) => (
+                  <Option key={i} value={cat}>
+                    {cat}
+                  </Option>
+                ))}
+            </Select>
 
-              <Col xs={24} sm={24} md={8}>
-                <Button
-                  size="large"
-                  onClick={() => {
-                    setCategoryFilter("");
-                    setModeFilter("");
-                  }}
-                  style={{
-                    width: "100%",
-                    borderRadius: 10,
-                    color: "#5f2eea",
-                    fontWeight: 600,
-                    background: "rgba(95,46,234,0.08)",
-                  }}
-                >
-                  Clear Filters ✨
-                </Button>
-              </Col>
-            </Row>
-          </Card>
+            <Select
+              placeholder="Mode"
+              value={modeFilter || undefined}
+              allowClear
+              onChange={(value) => setModeFilter(value)}
+              size="large"
+              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+              style={{
+                minWidth: 150,
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+              }}
+            >
+              <Option value="Online">Online</Option>
+              <Option value="Offline">Offline</Option>
+              <Option value="Hybrid">Hybrid</Option>
+            </Select>
+
+            <Select
+              placeholder="Team Size"
+              value={teamSizeFilter || undefined}
+              allowClear
+              onChange={(value) => setTeamSizeFilter(value)}
+              size="large"
+              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+              style={{
+                minWidth: 150,
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+              }}
+            >
+              <Option value="Individual">Individual (1)</Option>
+              <Option value="Team-2">Team (2)</Option>
+              <Option value="Team-2plus">Team (2+)</Option>
+            </Select>
+
+            <Select
+              placeholder="Location"
+              value={locationFilter || undefined}
+              allowClear
+              onChange={(value) => setLocationFilter(value)}
+              size="large"
+              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+              style={{
+                minWidth: 160,
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+              }}
+            >
+              {[...new Set(workshops.map((w) => w.venue))].filter(Boolean).map((loc, i) => (
+                <Option key={i} value={loc}>
+                  {loc}
+                </Option>
+              ))}
+            </Select>
+
+            <RangePicker
+              size="large"
+              onChange={(dates) => {
+                if (dates && dates.length === 2) {
+                  setDateFilter({
+                    start: dates[0].startOf("day").toDate(),
+                    end: dates[1].endOf("day").toDate(),
+                  });
+                } else {
+                  setDateFilter(null);
+                }
+              }}
+              style={{
+                borderRadius: 30,
+                background: "#f9fafc",
+                border: "1px solid #d9d9d9",
+              }}
+              suffixIcon={<CalendarOutlined style={{ color: "#5f2eea" }} />}
+            />
+
+            <Button
+              size="large"
+              onClick={() => {
+                setCategoryFilter([]);
+                setModeFilter("");
+                setTeamSizeFilter("");
+                setLocationFilter("");
+                setDateFilter(null);
+                setSortBy("");
+              }}
+              icon={<FcCancel />}
+              style={{
+                borderRadius: 30,
+                height: 36,
+                padding: "0 20px",
+                border: "1px solid #ff2e2eff",
+                background: "#fdedecff",
+                color: "#ff2e2eff",
+                fontWeight: 600,
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+
 
           <Row gutter={[32, 32]}>
             {/* Workshops List */}
@@ -337,6 +503,7 @@ export default function WorkshopFilter() {
             {/* Workshop Details */}
             <Col xs={24} lg={16}>
               <Card
+                className="workshop_details"
                 style={{
                   borderRadius: 18,
                   border: "1px solid rgba(229, 231, 235, 0.6)",
@@ -410,7 +577,7 @@ export default function WorkshopFilter() {
                             <GlobalOutlined
                               style={{
                                 marginRight: 8,
-                                color: "#7c3aed",
+                                color: "#6a5cff",
                                 fontSize: 16,
                                 verticalAlign: "middle",
                               }}
@@ -421,7 +588,7 @@ export default function WorkshopFilter() {
                             <EnvironmentOutlined
                               style={{
                                 marginRight: 8,
-                                color: "#7c3aed",
+                                color: "#6a5cff",
                                 fontSize: 16,
                                 verticalAlign: "middle",
                               }}
@@ -429,6 +596,18 @@ export default function WorkshopFilter() {
                             {selectedWorkshop.venue || "Venue not specified"}
                           </Text>
                         </Space>
+                        <div className="job-meta-item">
+                          <FaRegBuilding className="meta-icon premium-icon" />
+                          <span className="meta-text">
+                            {selectedWorkshop.created_at
+                              ? new Date(selectedWorkshop.created_at).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                              : "—"}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -503,9 +682,29 @@ export default function WorkshopFilter() {
                       }}
                     />
 
-                    <Divider style={{ margin: "40px 0" }} />
+                    <Divider style={{ margin: "20px 0" }} />
 
-                    <Title level={4}>Eligibility</Title>
+                    <Title
+                      level={4}
+                      style={{
+                        color: "#1f2937",
+                        marginBottom: 16,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 4,
+                          height: 24,
+                          background: "linear-gradient(180deg,#5f2eea,#9d4edd)",
+                          borderRadius: 4,
+                        }}
+                      ></span>
+                      Eligibility
+                    </Title>
                     <Space wrap>
                       {Array.isArray(selectedWorkshop.eligibility)
                         ? selectedWorkshop.eligibility.map((e, i) => (
@@ -518,20 +717,59 @@ export default function WorkshopFilter() {
                         )}
                     </Space>
 
-                    <Divider style={{ margin: "40px 0" }} />
+                    <Divider style={{ margin: "20px 0" }} />
 
-                    <Title level={4}>Organizer & Contact</Title>
-                    <Paragraph>
+                    <Title
+                      level={4}
+                      style={{
+                        color: "#1f2937",
+                        marginBottom: 16,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 4,
+                          height: 24,
+                          background: "linear-gradient(180deg,#5f2eea,#9d4edd)",
+                          borderRadius: 4,
+                        }}
+                      ></span>
+                      Organizer & Contact
+                    </Title>
+                    <Paragraph style={{ color: "#000" }}>
                       <UserOutlined style={{ marginRight: 6, color: "#5f2eea" }} />
                       {selectedWorkshop.organizer || "N/A"}
                     </Paragraph>
                     <Paragraph>
                       <MailOutlined style={{ marginRight: 6, color: "#5f2eea" }} />
-                      {selectedWorkshop.contactEmail || "N/A"}
+                      {selectedWorkshop.contactEmail ? (
+                        <a
+                          href={`mailto:${selectedWorkshop.contactEmail}`}
+                          style={{ color: "#000", textDecoration: "none" }}
+                        >
+                          {selectedWorkshop.contactEmail}
+                        </a>
+                      ) : (
+                        "N/A"
+                      )}
                     </Paragraph>
+
                     <Paragraph>
                       <PhoneOutlined style={{ marginRight: 6, color: "#5f2eea" }} />
-                      {selectedWorkshop.contactNumber || "N/A"}
+                      {selectedWorkshop.contactNumber ? (
+                        <a
+                          href={`tel:${selectedWorkshop.contactNumber}`}
+                          style={{ color: "#000", textDecoration: "none" }}
+                        >
+                          {selectedWorkshop.contactNumber}
+                        </a>
+                      ) : (
+                        "N/A"
+                      )}
                     </Paragraph>
                   </>
                 ) : (

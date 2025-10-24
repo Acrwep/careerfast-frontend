@@ -50,6 +50,23 @@ button {
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }
 
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-icon {
+  font-size: 16px;
+  color: #525252;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.menu-item:hover .menu-icon {
+  transform: scale(1.1);
+  color: #4f46e5;
+}
+
 .floating_circle2 {
   height: 100px;
   width: 100px;

@@ -610,7 +610,7 @@ export default function PostJobs() {
       job_category: jobCategory,
       skills: skillsRequired,
       experience_type:
-        eligibility === 1 ? "Fresher" : eligibility === 2 ? "Experienced" : "",
+        eligibility === 1 ? "Fresher" : eligibility === 2 ? "Experienced" : eligibility === 3 ? "College Students" : "",
       experience_required:
         eligibility === 1
           ? selectedFresherPass
@@ -722,7 +722,7 @@ export default function PostJobs() {
           <Row>
             <Col lg={13} md={13} sm={24} xs={24}>
               <div style={{ textAlign: "left" }}>
-                <h3 style={{ fontSize: 20 }}>Post New Job</h3>
+                <h3 style={{ fontSize: 20 }}>{jobNatureId === 3 ? "Post New Scholarship" : "Post New Job"}</h3>
               </div>
 
               <div
@@ -881,36 +881,6 @@ export default function PostJobs() {
                 </div>
               </div>
 
-              <CommonInputField
-                name={"Company name"}
-                label="Company you are hiring for"
-                mandotary={true}
-                placeholder={"Enter your company name"}
-                type={"text"}
-                value={companyName}
-                onChange={(e) => {
-                  setCompanyName(e.target.value);
-                  setCompanyNameError(nameValidator(e.target.value));
-                }}
-                error={companyNameError}
-              />
-
-              <div className="form-group">
-                <CommonInputField
-                  name={"Job title"}
-                  label="Job Title/Role"
-                  mandotary={true}
-                  placeholder={"Enter your job title"}
-                  type={"text"}
-                  value={jobTitle}
-                  onChange={(e) => {
-                    setJobTitle(e.target.value);
-                    setJobTitleError(nameValidator(e.target.value));
-                  }}
-                  error={jobTitleError}
-                />
-              </div>
-
               <div style={{ marginTop: 15 }} className="form-group">
                 <Form.Item
                   layout="vertical"
@@ -923,7 +893,7 @@ export default function PostJobs() {
                     },
                   ]}
                 >
-                  <div className="job_nature">
+                  <div style={{ marginBottom: 20 }} className="job_nature">
                     {jobNatureOptions.map((item) => (
                       <button
                         key={item.id}
@@ -952,8 +922,41 @@ export default function PostJobs() {
               </div>
               {/*  */}
 
-              <div style={{ marginTop: 15 }} className="form-group">
-                {jobNatureId === 2 && (
+              <CommonInputField
+                name={"Company name"}
+                label={jobNatureId === 3 ? ("Scholarship Providing Organization") : (
+                  "Hiring Company"
+                )}
+                mandotary={true}
+                placeholder={"Enter your company name"}
+                type={"text"}
+                value={companyName}
+                onChange={(e) => {
+                  setCompanyName(e.target.value);
+                  setCompanyNameError(nameValidator(e.target.value));
+                }}
+                error={companyNameError}
+              />
+
+              <div className="form-group">
+                <CommonInputField
+                  name={"Job title"}
+                  label={jobNatureId === 3 ? ("Scholarship Name") : (
+                    "Job Title / Role"
+                  )}
+                  mandotary={true}
+                  placeholder={"Enter your job title"}
+                  type={"text"}
+                  value={jobTitle}
+                  onChange={(e) => {
+                    setJobTitle(e.target.value);
+                    setJobTitleError(nameValidator(e.target.value));
+                  }}
+                  error={jobTitleError}
+                />
+              </div>
+              {jobNatureId === 2 && (
+                <div style={{ marginTop: 15 }} className="form-group">
                   <Form.Item
                     layout="vertical"
                     label={
@@ -1005,11 +1008,11 @@ export default function PostJobs() {
                       </div>
                     )}
                   </Form.Item>
-                )}
-              </div>
+                </div>
+              )}
+              {jobNatureId === 2 && (
+                <div style={{ marginTop: 15 }} className="form-group">
 
-              <div style={{ marginTop: 15 }} className="form-group">
-                {jobNatureId === 2 && (
                   <div className="job_nature">
                     {internShipDuration.map((item) => {
                       return (
@@ -1031,11 +1034,11 @@ export default function PostJobs() {
                       );
                     })}
                   </div>
-                )}
-              </div>
 
+                </div>
+              )}
               {jobNatureId !== 3 && (
-                <div style={{ marginTop: 15 }} className="form-group">
+                <div style={{ marginTop: 8 }} className="form-group">
                   <div className="job_nature">
                     <Form.Item
                       layout="vertical"
@@ -1146,23 +1149,24 @@ export default function PostJobs() {
               {/*  */}
 
               {/* Job category */}
-              {jobNatureId !== 3 && (
-                <div style={{ marginTop: 15 }} className="form-group">
-                  <CommonSelectField
-                    label={"Job Category"}
-                    showSearch={true}
-                    value={jobCategory}
-                    mandatory={true}
-                    name={"Job category"}
-                    placeholder={"Select Job Category"}
-                    options={jobCategoryOptions}
-                    onChange={(value) => {
-                      setJobCategory(value);
-                      setJobCategoryError(selectValidator(value));
-                    }}
-                    error={jobCategoryError}
-                  />
 
+              <div style={{ marginTop: 8 }} className="form-group">
+                <CommonSelectField
+                  label={jobNatureId === 3 ? "Select Scholarship Category" : "Select Job Category"}
+                  showSearch={true}
+                  value={jobCategory}
+                  mandatory={true}
+                  name={"Job category"}
+                  placeholder={jobNatureId === 3 ? "Select Scholarship Category" : "Select Job Category"}
+                  options={jobCategoryOptions}
+                  onChange={(value) => {
+                    setJobCategory(value);
+                    setJobCategoryError(selectValidator(value));
+                  }}
+                  error={jobCategoryError}
+                />
+
+                {jobNatureId !== 3 && (
                   <CommonSelectField
                     label={"Skills Required"}
                     mandatory={true}
@@ -1179,8 +1183,10 @@ export default function PostJobs() {
                     }}
                     error={skillsRequiredError}
                   />
-                </div>
-              )}
+                )}
+              </div>
+
+
 
 
               {/* Openings */}
@@ -1224,7 +1230,7 @@ export default function PostJobs() {
               )}
 
               <div className="eligibility">
-                <h4>Eligibility</h4>
+                <h4>{jobNatureId === 3 ? ("Scholarship Eligibility") : "Eligibility"}</h4>
                 <p>
                   Add the eligibility criteria to better filter the candidates.
                 </p>
@@ -1483,7 +1489,7 @@ export default function PostJobs() {
                     marginBottom: 8,
                   }}
                 >
-                  <Text strong>Diversity Hiring</Text>
+                  <Text strong>{jobNatureId === 3 ? ("Scholarship as per Diversity") : "Diversity Hiring"}</Text>
                   <Switch
                     checked={diversityenabled}
                     onChange={setDiversityEnabled}
@@ -1579,7 +1585,7 @@ export default function PostJobs() {
                     marginTop: 28,
                   }}
                 >
-                  <label style={{ fontWeight: "bold" }}>Job Description</label>
+                  <label style={{ fontWeight: "bold" }}>{jobNatureId === 3 ? ("Scholarship Description") : "Job Description"}</label>
                   <button
                     onClick={generateWithAI}
                     style={{

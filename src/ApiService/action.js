@@ -1122,3 +1122,38 @@ export const checkIsRegisteredWorkshop = async (userId, workshopId) => {
     throw error;
   }
 };
+
+
+// ===================== COURSES =====================
+
+// ✅ Create Course (Base64)
+export const createCourse = async (data) => {
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}/api/courses`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.error("❌ Error creating course:", error);
+    throw error;
+  }
+};
+
+// ✅ Get all Courses
+export const getAllCourses = async () => {
+  try {
+    const response = await axios.get(
+      `${process.env.REACT_APP_API_URL}/api/courses`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching courses:", error);
+    throw error;
+  }
+};
