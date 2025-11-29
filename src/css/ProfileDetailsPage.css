@@ -15,6 +15,7 @@ body {
   margin-bottom: 40px;
 }
 
+
 .from-group {
   width: 100%;
 }
@@ -81,7 +82,7 @@ body {
 }
 
 .ant-select-outlined.ant-select-multiple .ant-select-selection-item {
-  background: #f3f2ff;
+  background: #e8e6ff;
   color: #6a5cff;
   padding: 0px 12px;
   border-radius: 20px;

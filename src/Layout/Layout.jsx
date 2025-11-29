@@ -39,6 +39,9 @@ import PostWorkShop from "../PostWorkShop/PostWorkShop";
 import WorkshopFilter from "../JobPortal/WorkshopFilter";
 import Courses from "../Courses/Courses";
 import PostCourses from "../Courses/PostCourses";
+import AddBlogs from "../Blogs/AddBlogs";
+import BlogSingle from "../Blogs/BlogSingle";
+import Blogs from "../Blogs/Blogs";
 
 const Layout = () => {
   const location = useLocation();
@@ -82,19 +85,32 @@ const Layout = () => {
     console.log("pathname", pathName);
     if (AccessToken) {
       dispatch(storeLoginStatus(true));
+
       if (pathName === "" || pathName === "/") {
         navigate("/job-portal", { replace: true });
-      } else if (
+        return;
+      }
+
+      if (
         pathName.includes("job-details") ||
+        pathName.includes("internship-details") ||
+        pathName.includes("scholarship-details") ||
         pathName.includes("admin-dashboard") ||
         pathName.includes("edit-opportunity") ||
-        pathName.includes("blog")
+        pathName.includes("blog") ||
+        pathName.includes("course")
       ) {
         return;
-      } else {
-        navigate(`/${pathName}`, { replace: true });
       }
-    } else {
+
+      // ✅ Allow job-filter with params (DO NOT REDIRECT)
+      if (pathName.startsWith("job-filter")) return;
+
+      // ✅ Safe redirect for others
+      navigate(`/${pathName}`, { replace: true });
+      return;
+    }
+    else {
       dispatch(storeLoginStatus(false));
       if (pathName === "register") {
         navigate("/register", { replace: true });
@@ -103,14 +119,32 @@ const Layout = () => {
       } else if (pathName === "internship") {
         navigate("/internship", { replace: true });
       } else if (pathName === "job-filter") {
-        navigate("/job-filter", { replace: true });
-      } else if (location.pathname.includes("/job-details/")) {
+        return;
+      }
+      else if (pathName === "course") {
+        navigate("/course", { replace: true });
+      }
+      else if (pathName === "event-filter") {
+        navigate("/event-filter", { replace: true });
+      }
+      else if (pathName === "workshop-filter") {
+        navigate("/workshop-filter", { replace: true });
+      }
+      else if (pathName === "blogs") {
+        return;  // allow blogs list
+      }
+      else if (location.pathname.startsWith("/blog/")) {
+        return;  // allow blog single page
+      }
+      else if (location.pathname.includes("/job-details/")) {
         return;
       } else {
         navigate("/job-portal", { replace: true });
       }
     }
   }, [location.pathname]);
+
+
   return (
     <div>
       {" "}
@@ -125,9 +159,12 @@ const Layout = () => {
         <Route path="/footer" element={<Footer />} />
         <Route path="/post-jobs" element={<PostJobs />} />
         <Route path="/job-filter" element={<JobFilter />} />
+        <Route path="/internship-filter" element={<JobFilter />} />
         <Route path="/event-filter" element={<EventFilter />} />
         <Route path="/workshop-filter" element={<WorkshopFilter />} />
-        <Route path="/job-details/:id" element={<JobDetails />} />
+        <Route path="/job-details/:slug" element={<JobDetails />} />
+        <Route path="/internship-details/:slug" element={<JobDetails />} />
+        <Route path="/scholarship-details/:slug" element={<JobDetails />} />
         <Route path="/admin-profile" element={<AdminProfile />} />
         <Route path="/main-profile" element={<MainProfile />} />
         <Route path="*" element={<NotFound />} />
@@ -150,7 +187,9 @@ const Layout = () => {
         <Route path="/applied-candidates-all" element={<AllAppliedCandidates />} />
         <Route path="/post-course" element={<PostCourses />} />
         <Route path="/course" element={<Courses />} />
-
+        <Route path="/add-blog" element={<AddBlogs />} />
+        <Route path="/blog/:slug" element={<BlogSingle />} />
+        <Route path="/blogs" element={<Blogs />} />
         {/* ✅ Restrict access only to role_id = 3 */}
         <Route
           path="/all-candidates"

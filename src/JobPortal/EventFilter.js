@@ -23,7 +23,6 @@ import {
   TeamOutlined,
   UserOutlined,
   LoadingOutlined,
-  GlobalOutlined,
   DownOutlined,
 } from "@ant-design/icons";
 import Header from "../Header/Header";
@@ -38,7 +37,7 @@ export default function EventFilter() {
   const [allEvents, setAllEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
-
+  const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState([]);
   const [modeFilter, setModeFilter] = useState("");
   const [minPrize, setMinPrize] = useState(null);
@@ -109,6 +108,7 @@ export default function EventFilter() {
 
   const getAllEventsData = async () => {
     try {
+      setLoading(true)
       const response = await getAllEvents();
       let events = response?.data?.data || [];
 
@@ -130,6 +130,9 @@ export default function EventFilter() {
       if (events.length) setSelectedEvent(events[0]);
     } catch (error) {
       console.log("get all events error", error);
+    }
+    finally {
+      setLoading(false)
     }
   };
 
@@ -247,248 +250,304 @@ export default function EventFilter() {
   return (
     <>
       <Header />
-      <div
-        style={{
-          padding: "0px 24px 40px 24px",
-          background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
-          minHeight: "100vh",
-        }}
-      >
 
-        {/* Main Content Container */}
-        <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-          {/* 🔹 Modern Pill Filter Bar */}
-          <div
-            className="workshop_filter"
-            style={{
-              background: "#fff",
-              borderRadius: 50,
-              padding: "14px 20px",
-              display: "flex",
-              position: "sticky",
-              top: 78,
-              zIndex: 20,
-              alignItems: "center",
-              justifyContent: "space-around",
-              gap: "10px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-              marginBottom: 20,
-            }}
-          >
-            {/* Category Filter (Multi-select array) */}
-            <Select
-              mode="multiple"
-              placeholder="Select Category"
-              value={categoryFilter}
-              onChange={(values) => setCategoryFilter(values)}
-              size="large"
-              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+      {loading ? (
+        <>
+          {[1, 2, 3, 4, 5].map((item) => (
+            <div
+              key={item}
               style={{
-                minWidth: 180,
-                borderRadius: 30,
-                background: "#f9fafc",
-                border: "1px solid #d9d9d9",
+                padding: "20px 80px",
+                marginBottom: 12,
+                borderRadius: 10,
+                background: "#f6f7f8",
+                border: "1px solid #eee",
               }}
             >
-              {[...new Set(allEvents.flatMap((e) =>
-                e.category
-                  ? e.category.split(",").map((c) => c.trim())
-                  : []
-              ))]
-                .filter(Boolean)
-                .map((cat, i) => (
-                  <Option key={i} value={cat}>
-                    {cat}
-                  </Option>
-                ))}
-            </Select>
-
-            {/* Mode Filter */}
-            <Select
-              placeholder="Mode"
-              value={modeFilter || undefined}
-              allowClear
-              onChange={(value) => setModeFilter(value)}
-              size="large"
-              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
-              style={{
-                minWidth: 140,
-                borderRadius: 30,
-                background: "#f9fafc",
-                border: "1px solid #d9d9d9",
-              }}
-            >
-              <Option value="Online">Online</Option>
-              <Option value="Offline">Offline</Option>
-              <Option value="Hybrid">Hybrid</Option>
-            </Select>
-
-            {/* Team Size Filter */}
-            <Select
-              placeholder="Team Size"
-              value={teamSizeFilter || undefined}
-              allowClear
-              onChange={(value) => setTeamSizeFilter(value)}
-              size="large"
-              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
-              style={{
-                minWidth: 150,
-                borderRadius: 30,
-                background: "#f9fafc",
-                border: "1px solid #d9d9d9",
-              }}
-            >
-              <Option value="1">Individual (1)</Option>
-              <Option value="2">Team (2)</Option>
-              <Option value="2+">Team (2+)</Option>
-            </Select>
-
-            {/* Days Left Sort Filter */}
-            <Select
-              placeholder="Sort By"
-              value={sortBy || undefined}
-              allowClear
-              onChange={(value) => setSortBy(value)}
-              size="large"
-              suffixIcon={<DownOutlined style={{ color: "#000" }} />}
-              style={{
-                minWidth: 200,
-                borderRadius: 30,
-                background: "#f9fafc",
-                border: "1px solid #d9d9d9",
-              }}
-            >
-              <Option value="daysAsc">Days Left (Low → High)</Option>
-              <Option value="daysDesc">Days Left (High → Low)</Option>
-            </Select>
-
-            {/* Prize Range */}
-            <InputNumber
-              placeholder="Min Prize"
-              value={minPrize}
-              onChange={(val) => setMinPrize(val)}
-              prefix={<DollarOutlined style={{ color: "#5f2eea" }} />}
-              size="large"
-              style={{
-                borderRadius: 30,
-                background: "#f9fafc",
-                border: "1px solid #d9d9d9",
-                width: 150,
-              }}
-            />
-
-            <InputNumber
-              placeholder="Max Prize"
-              value={maxPrize}
-              onChange={(val) => setMaxPrize(val)}
-              prefix={<DollarOutlined style={{ color: "#5f2eea" }} />}
-              size="large"
-              style={{
-                borderRadius: 30,
-                background: "#f9fafc",
-                border: "1px solid #d9d9d9",
-                width: 150,
-              }}
-            />
-
-            {/* Clear Filters Button */}
-            <Button
-              size="large"
-              onClick={() => {
-                setCategoryFilter([]);
-                setModeFilter("");
-                setTeamSizeFilter("");
-                setSortBy("");
-                setMinPrize(null);
-                setMaxPrize(null);
-              }}
-              icon={<FcCancel />}
-              style={{
-                borderRadius: 30,
-                height: 36,
-                padding: "0 20px",
-                border: "1px solid #ff2e2eff",
-                background: "#fdedecff",
-                color: "#ff2e2eff",
-                fontWeight: 600,
-              }}
-            >
-              Clear
-            </Button>
-          </div>
-
-
-
-          {/* Results Section */}
-          <Row style={{ marginTop: 0 }} gutter={[32, 32]}>
-            {/* Events List Column */}
-            <Col style={{
-              position: "sticky",
-              top: 170,
-              alignSelf: "flex-start",
-              height: "fit-content",
-              zIndex: 5,
-            }} xs={24} lg={8}>
-              <Card
-                style={{
-                  borderRadius: 16,
-                  border: "1px solid rgba(229, 231, 235, 0.6)",
-                  background: "linear-gradient(180deg, #ffffff 0%, #f9fafb 100%)",
-                  height: "100%",
-                  boxShadow:
-                    "0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.08)",
-                  overflow: "hidden",
-                  backdropFilter: "blur(4px)",
-                }}
-                bodyStyle={{ padding: 0 }}
-              >
-                {/* Header */}
+              <div style={{ display: "flex", gap: 12 }}>
                 <div
                   style={{
-                    padding: "24px 28px",
-                    marginBottom: 20,
-                    borderBottom: "1px solid #f1f5f9",
-                    background:
-                      "linear-gradient(90deg, rgba(95,46,234,0.1) 0%, rgba(255,255,255,0) 100%)",
+                    width: 64,
+                    height: 64,
+                    background: "#e0e0e0",
+                    borderRadius: 8,
                   }}
-                >
-                  <Title
-                    level={4}
+                ></div>
+                <div style={{ flexGrow: 1 }}>
+                  <div
                     style={{
-                      margin: 0,
-                      color: "#1f2937",
-                      fontWeight: 700,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
+                      height: 18,
+                      width: "100%",
+                      background: "#e0e0e0",
+                      marginBottom: 8,
+                      borderRadius: 4,
+                    }}
+                  ></div>
+                  <div
+                    style={{
+                      height: 12,
+                      width: "70%",
+                      background: "#e0e0e0",
+                      marginBottom: 8,
+                      borderRadius: 4,
+                    }}
+                  ></div>
+                  <div
+                    style={{
+                      height: 14,
+                      width: "50%",
+                      background: "#e0e0e0",
+                      borderRadius: 4,
+                    }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </>
+      ) : (
+        <div
+          style={{
+            padding: "0px 24px 40px 24px",
+            background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+            minHeight: "100vh",
+          }}
+        >
+
+          {/* Main Content Container */}
+          <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+            {/* 🔹 Modern Pill Filter Bar */}
+            <div
+              className="workshop_filter"
+              style={{
+                background: "#fff",
+                borderRadius: 50,
+                padding: "14px 20px",
+                display: "flex",
+                position: "sticky",
+                top: 78,
+                zIndex: 20,
+                alignItems: "center",
+                justifyContent: "space-around",
+                gap: "10px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                marginBottom: 20,
+              }}
+            >
+              {/* Category Filter (Multi-select array) */}
+              <Select
+                mode="multiple"
+                placeholder="Select Category"
+                value={categoryFilter}
+                onChange={(values) => setCategoryFilter(values)}
+                size="large"
+                suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+                style={{
+                  minWidth: 180,
+                  borderRadius: 30,
+                  background: "#f9fafc",
+                  border: "1px solid #d9d9d9",
+                }}
+              >
+                {[...new Set(allEvents.flatMap((e) =>
+                  e.category
+                    ? e.category.split(",").map((c) => c.trim())
+                    : []
+                ))]
+                  .filter(Boolean)
+                  .map((cat, i) => (
+                    <Option key={i} value={cat}>
+                      {cat}
+                    </Option>
+                  ))}
+              </Select>
+
+              {/* Mode Filter */}
+              <Select
+                placeholder="Mode"
+                value={modeFilter || undefined}
+                allowClear
+                onChange={(value) => setModeFilter(value)}
+                size="large"
+                suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+                style={{
+                  minWidth: 140,
+                  borderRadius: 30,
+                  background: "#f9fafc",
+                  border: "1px solid #d9d9d9",
+                }}
+              >
+                <Option value="Online">Online</Option>
+                <Option value="Offline">Offline</Option>
+                <Option value="Hybrid">Hybrid</Option>
+              </Select>
+
+              {/* Team Size Filter */}
+              <Select
+                placeholder="Team Size"
+                value={teamSizeFilter || undefined}
+                allowClear
+                onChange={(value) => setTeamSizeFilter(value)}
+                size="large"
+                suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+                style={{
+                  minWidth: 150,
+                  borderRadius: 30,
+                  background: "#f9fafc",
+                  border: "1px solid #d9d9d9",
+                }}
+              >
+                <Option value="1">Individual (1)</Option>
+                <Option value="2">Team (2)</Option>
+                <Option value="2+">Team (2+)</Option>
+              </Select>
+
+              {/* Days Left Sort Filter */}
+              <Select
+                placeholder="Sort By"
+                value={sortBy || undefined}
+                allowClear
+                onChange={(value) => setSortBy(value)}
+                size="large"
+                suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+                style={{
+                  minWidth: 200,
+                  borderRadius: 30,
+                  background: "#f9fafc",
+                  border: "1px solid #d9d9d9",
+                }}
+              >
+                <Option value="daysAsc">Days Left (Low → High)</Option>
+                <Option value="daysDesc">Days Left (High → Low)</Option>
+              </Select>
+
+              {/* Prize Range */}
+              <InputNumber
+                placeholder="Min Prize"
+                value={minPrize}
+                onChange={(val) => setMinPrize(val)}
+                prefix={<DollarOutlined style={{ color: "#5f2eea" }} />}
+                size="large"
+                style={{
+                  borderRadius: 30,
+                  background: "#f9fafc",
+                  border: "1px solid #d9d9d9",
+                  width: 150,
+                }}
+              />
+
+              <InputNumber
+                placeholder="Max Prize"
+                value={maxPrize}
+                onChange={(val) => setMaxPrize(val)}
+                prefix={<DollarOutlined style={{ color: "#5f2eea" }} />}
+                size="large"
+                style={{
+                  borderRadius: 30,
+                  background: "#f9fafc",
+                  border: "1px solid #d9d9d9",
+                  width: 150,
+                }}
+              />
+
+              {/* Clear Filters Button */}
+              <Button
+                size="large"
+                onClick={() => {
+                  setCategoryFilter([]);
+                  setModeFilter("");
+                  setTeamSizeFilter("");
+                  setSortBy("");
+                  setMinPrize(null);
+                  setMaxPrize(null);
+                }}
+                icon={<FcCancel />}
+                style={{
+                  borderRadius: 30,
+                  height: 36,
+                  padding: "0 20px",
+                  border: "1px solid #ff2e2eff",
+                  background: "#fdedecff",
+                  color: "#ff2e2eff",
+                  fontWeight: 600,
+                }}
+              >
+                Clear
+              </Button>
+            </div>
+
+
+
+            {/* Results Section */}
+            <Row style={{ marginTop: 0 }} gutter={[32, 32]}>
+              {/* Events List Column */}
+              <Col style={{
+                position: "sticky",
+                top: 170,
+                alignSelf: "flex-start",
+                height: "fit-content",
+                zIndex: 5,
+              }} xs={24} lg={8}>
+                <Card
+                  style={{
+                    borderRadius: 16,
+                    border: "1px solid rgba(229, 231, 235, 0.6)",
+                    background: "linear-gradient(180deg, #ffffff 0%, #f9fafb 100%)",
+                    height: "100%",
+                    boxShadow:
+                      "0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.08)",
+                    overflow: "hidden",
+                    backdropFilter: "blur(4px)",
+                  }}
+                  bodyStyle={{ padding: 0 }}
+                >
+                  {/* Header */}
+                  <div
+                    style={{
+                      padding: "24px 28px",
+                      marginBottom: 20,
+                      borderBottom: "1px solid #f1f5f9",
+                      background:
+                        "linear-gradient(90deg, rgba(95,46,234,0.1) 0%, rgba(255,255,255,0) 100%)",
                     }}
                   >
-                    <span>Available Events</span>
-                    <Text
+                    <Title
+                      level={4}
                       style={{
-                        color: "#ffffffff",
-                        fontWeight: 500,
-                        fontSize: 14,
-                        background: "#149603ff",
-                        padding: "2px 10px",
-                        borderRadius: 8,
+                        margin: 0,
+                        color: "#1f2937",
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                       }}
                     >
-                      {filteredEvents.length}
-                    </Text>
-                  </Title>
-                </div>
+                      <span>Available Events</span>
+                      <Text
+                        style={{
+                          color: "#ffffffff",
+                          fontWeight: 500,
+                          fontSize: 14,
+                          background: "#149603ff",
+                          padding: "2px 10px",
+                          borderRadius: 8,
+                        }}
+                      >
+                        {filteredEvents.length}
+                      </Text>
+                    </Title>
+                  </div>
 
-                {/* List */}
-                <div
-                  style={{
-                    maxHeight: "100vh",
-                    overflowY: "auto",
-                    padding: "12px 20px",
-                  }}
-                >
-                  <style>
-                    {`
+                  {/* List */}
+                  <div
+                    style={{
+                      maxHeight: "100vh",
+                      overflowY: "auto",
+                      padding: "12px 20px",
+                    }}
+                  >
+                    <style>
+                      {`
           ::-webkit-scrollbar {
             width: 3px;
           }
@@ -500,470 +559,450 @@ export default function EventFilter() {
             background: rgba(95, 46, 234, 0.7);
           }
         `}
-                  </style>
+                    </style>
 
-                  {filteredEvents.length > 0 ? (
-                    filteredEvents.map((event, i) => (
-                      <div
-                        key={i}
-                        onClick={() => setSelectedEvent(event)}
-                        style={{
-                          padding: "20px 18px",
-                          marginBottom: 18,
-                          borderRadius: 12,
-                          border: "1px solid transparent",
-                          background:
-                            selectedEvent?._id === event._id
-                              ? "linear-gradient(90deg, rgba(95,46,234,0.1), rgba(255,255,255,0.5))"
-                              : "rgba(255,255,255,0.9)",
-                          transition: "all 0.3s ease",
-                          boxShadow:
-                            selectedEvent?._id === event._id
-                              ? "0 4px 10px rgba(95,46,234,0.2)"
-                              : "0 2px 6px rgba(0,0,0,0.05)",
-                          cursor: "pointer",
-                          position: "relative",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-4px)";
-                          e.currentTarget.style.boxShadow =
-                            "0 6px 14px rgba(0,0,0,0.1)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0px)";
-                          e.currentTarget.style.boxShadow =
-                            selectedEvent?._id === event._id
-                              ? "0 4px 10px rgba(95,46,234,0.2)"
-                              : "0 2px 6px rgba(0,0,0,0.05)";
-                        }}
-                      >
-                        {/* Gradient side bar indicator */}
+                    {filteredEvents.length > 0 ? (
+                      filteredEvents.map((event, i) => (
                         <div
+                          key={i}
+                          onClick={() => setSelectedEvent(event)}
                           style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            height: "100%",
-                            width: selectedEvent?._id === event._id ? "4px" : "0px",
-                            background: "linear-gradient(180deg,#5f2eea,#9d4edd)",
-                            borderRadius: "4px 0 0 4px",
-                            transition: "width 0.3s ease",
+                            padding: "20px 18px",
+                            marginBottom: 18,
+                            borderRadius: 12,
+                            cursor: "pointer",
+                            transition: "all 0.25s ease",
+                            background:
+                              selectedEvent?.id === event.id
+                                ? "linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%)"
+                                : "#ffffff",
+                            border:
+                              selectedEvent?.id === event.id
+                                ? "2px solid #7c3aed"
+                                : "1px solid #d1d1d1ff",
+                            transform: selectedEvent?.id === event.id ? "scale(1.02)" : "scale(1)",
+                            boxShadow:
+                              selectedEvent?.id === event.id
+                                ? "0 6px 16px rgba(124,58,237,0.25)"
+                                : "0 2px 6px rgba(0,0,0,0.05)",
+                            position: "relative",
                           }}
-                        />
+                        >
 
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-                          <img
-                            src={event.logo}
-                            alt={event.title}
-                            style={{
-                              width: 64,
-                              height: 64,
-                              borderRadius: 10,
-                              objectFit: "cover",
-                              border: "1px solid #e5e7eb",
-                              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                            }}
-                          />
-
-                          <div style={{ flex: 1 }}>
-                            <Title
-                              level={5}
+                          <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                            <img
+                              src={event.logo}
+                              alt={event.title}
                               style={{
-                                margin: "0 0 8px 0",
-                                color: "#111827",
-                                fontWeight: 600,
+                                width: 64,
+                                height: 64,
+                                borderRadius: 10,
+                                objectFit: "cover",
+                                border: "1px solid #e5e7eb",
+                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
                               }}
-                            >
-                              {event.title}
-                            </Title>
+                            />
 
-                            <Tag
-                              color="geekblue"
-                              style={{
-                                borderRadius: 6,
-                                marginBottom: 12,
-                                fontWeight: 500,
-                                padding: "2px 10px",
-                              }}
-                            >
-                              {event.category || "General"}
-                            </Tag>
-
-                            <Space size={[12, 6]} wrap>
-                              <Text type="secondary" style={{ fontSize: 13 }}>
-                                <CalendarOutlined style={{ marginRight: 4 }} />
-                                {event.daysLeft || "15 days"}
-                              </Text>
-                              <Text type="secondary" style={{ fontSize: 13 }}>
-                                <CalendarOutlined style={{ marginRight: 4 }} />
-                                {event.type || "N/A"}
-                              </Text>
-                              <Text type="secondary" style={{ fontSize: 13 }}>
-                                <EnvironmentOutlined style={{ marginRight: 4 }} />
-                                {event.mode || "Online"}
-                              </Text>
-                              <Text
+                            <div style={{ flex: 1 }}>
+                              <Title
+                                level={5}
                                 style={{
-                                  fontSize: 13,
-                                  borderRadius: 6,
-                                  backgroundColor: "#FFF6D1",
-                                  color: "#513C06",
-                                  padding: "3px 8px",
+                                  margin: "0 0 8px 0",
+                                  color: "#111827",
                                   fontWeight: 600,
                                 }}
                               >
-                                🏆 ₹{event.winnerPrize}
-                              </Text>
-                            </Space>
+                                {event.title}
+                              </Title>
 
-                            <div style={{ marginTop: 12 }}>
-                              {event.skills?.slice(0, 2).map((s, i) => (
-                                <Tag
-                                  key={i}
+                              <Tag
+                                color="geekblue"
+                                style={{
+                                  borderRadius: 6,
+                                  marginBottom: 12,
+                                  fontWeight: 500,
+                                  padding: "2px 10px",
+                                }}
+                              >
+                                {event.category || "General"}
+                              </Tag>
+
+                              <Space size={[12, 6]} wrap>
+                                <Text type="secondary" style={{ fontSize: 13 }}>
+                                  <CalendarOutlined style={{ marginRight: 4 }} />
+                                  {event.daysLeft || "15 days"}
+                                </Text>
+                                <Text type="secondary" style={{ fontSize: 13 }}>
+                                  <CalendarOutlined style={{ marginRight: 4 }} />
+                                  {event.type || "N/A"}
+                                </Text>
+                                <Text type="secondary" style={{ fontSize: 13 }}>
+                                  <EnvironmentOutlined style={{ marginRight: 4 }} />
+                                  {event.mode || "Online"}
+                                </Text>
+                                <Text
                                   style={{
-                                    background: "#f3f4f6",
-                                    color: "#4b5563",
-                                    borderRadius: 4,
-                                    fontSize: 11,
-                                    marginBottom: 4,
-                                    border: "none",
+                                    fontSize: 13,
+                                    borderRadius: 6,
+                                    backgroundColor: "#FFF6D1",
+                                    color: "#513C06",
+                                    padding: "3px 8px",
+                                    fontWeight: 600,
                                   }}
                                 >
-                                  {s}
-                                </Tag>
-                              ))}
-                              {event.skills?.length > 2 && (
-                                <Tag
-                                  style={{
-                                    background: "#f3f4f6",
-                                    color: "#4b5563",
-                                    borderRadius: 4,
-                                    fontSize: 11,
-                                  }}
-                                >
-                                  +{event.skills.length - 2}
-                                </Tag>
-                              )}
+                                  🏆 ₹{event.winnerPrize}
+                                </Text>
+                              </Space>
+
+                              <div style={{ marginTop: 12 }}>
+                                {event.skills?.slice(0, 2).map((s, i) => (
+                                  <Tag
+                                    key={i}
+                                    style={{
+                                      background: "#f3f4f6",
+                                      color: "#4b5563",
+                                      borderRadius: 4,
+                                      fontSize: 11,
+                                      marginBottom: 4,
+                                      border: "none",
+                                    }}
+                                  >
+                                    {s}
+                                  </Tag>
+                                ))}
+                                {event.skills?.length > 2 && (
+                                  <Tag
+                                    style={{
+                                      background: "#f3f4f6",
+                                      color: "#4b5563",
+                                      borderRadius: 4,
+                                      fontSize: 11,
+                                    }}
+                                  >
+                                    +{event.skills.length - 2}
+                                  </Tag>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div style={{ padding: 60, textAlign: "center" }}>
+                        <Empty
+                          description={
+                            <span style={{ color: "#6b7280", fontWeight: 500 }}>
+                              No events match your filters
+                            </span>
+                          }
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        />
                       </div>
-                    ))
+                    )}
+                  </div>
+                </Card>
+              </Col>
+
+
+              {/* Event Details Column */}
+              <Col xs={24} lg={16}>
+                <Card
+                  className="workshop_details"
+                  style={{
+                    borderRadius: 18,
+                    border: "1px solid rgba(229, 231, 235, 0.6)",
+                    background: "linear-gradient(180deg, #ffffff 0%, #f9fafb 100%)",
+                    boxShadow:
+                      "0 6px 18px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04)",
+                    overflow: "hidden",
+                    transition: "all 0.3s ease",
+                  }}
+                  bodyStyle={{ padding: 0 }}
+                >
+                  {selectedEvent ? (
+                    <div style={{ padding: 30 }}>
+                      {/* Header Section */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 28,
+                          marginBottom: 0,
+                          borderBottom: "1px solid #f1f5f9",
+                          paddingBottom: 28,
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "relative",
+                            width: 80,
+                            height: 80,
+                            borderRadius: 16,
+                            padding: 5,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <img
+                            src={selectedEvent.logo}
+                            alt={selectedEvent.title}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              borderRadius: 16,
+                            }}
+                          />
+                        </div>
+
+                        <div style={{ flex: 1 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              marginBottom: 8,
+                            }}
+                          >
+                            <Title
+                              level={2}
+                              style={{
+                                margin: 0,
+                                color: "#111827",
+                                fontWeight: 700,
+                                letterSpacing: "-0.02em",
+                              }}
+                            >
+                              {selectedEvent.title}
+                            </Title>
+                            <Tag
+                              color="success"
+                              icon={<CheckCircleFilled />}
+                              style={{
+                                marginLeft: 12,
+                                borderRadius: 8,
+                                fontWeight: 500,
+                                background: "rgba(16,185,129,0.1)",
+                                color: "#065f46",
+                              }}
+                            >
+                              Verified
+                            </Tag>
+                          </div>
+
+                          <Paragraph
+                            style={{
+                              color: "#5f2eea",
+                              fontWeight: 600,
+                              fontSize: 16,
+                              marginBottom: 20,
+                            }}
+                          >
+                            {selectedEvent.category || "Event Category"}
+                          </Paragraph>
+
+                          <Space size={[24, 12]} wrap>
+                            <Text style={{ fontSize: 15, color: "#4b5563" }}>
+                              <TeamOutlined
+                                style={{
+                                  marginRight: 8,
+                                  color: "#7c3aed",
+                                  fontSize: 16,
+                                  verticalAlign: "middle",
+                                }}
+                              />
+                              {selectedEvent.participationType}{" "}
+                              {selectedEvent.memberLimit ? `(${selectedEvent.memberLimit})` : ""}
+                            </Text>
+                            <Text style={{ fontSize: 15, color: "#4b5563" }}>
+                              <MdWorkOutline
+                                style={{
+                                  marginRight: 8,
+                                  color: "#7c3aed",
+                                  fontSize: 16,
+                                  verticalAlign: "middle",
+                                }}
+                              />
+                              {selectedEvent.mode || "Online"}
+                            </Text>
+                          </Space>
+                        </div>
+                      </div>
+
+                      {/* Premium Register Button */}
+                      <Button
+                        type="primary"
+                        size="large"
+                        block
+                        disabled={
+                          selectedEvent.daysLeft === "Expired" || isRegistered || loadingRegister
+                        }
+                        onClick={handleRegister}
+                        style={{
+                          background:
+                            selectedEvent.daysLeft === "Expired"
+                              ? "linear-gradient(135deg, #9ca3af 0%, #d1d5db 100%)"
+                              : isRegistered
+                                ? "linear-gradient(135deg,rgba(220, 252, 231, 0.7) 0%,rgba(187, 247, 208, 0.5) 100%)"
+                                : "linear-gradient(135deg, #5f2eea 0%, #7c3aed 50%, #9d4edd 100%)",
+                          border: "none",
+                          borderRadius: 10,
+                          fontWeight: 600,
+                          height: 52,
+                          fontSize: 17,
+                          color: isRegistered ? "#15803d" : "#fff",
+                          letterSpacing: 0.2,
+                          boxShadow:
+                            selectedEvent.daysLeft === "Expired"
+                              ? "none"
+                              : "0 0px 0px -0px rgba(95,46,234,0.3)",
+                          opacity:
+                            selectedEvent.daysLeft === "Expired" || loadingRegister ? 0.6 : 1,
+                          cursor:
+                            selectedEvent.daysLeft === "Expired" || isRegistered
+                              ? "not-allowed"
+                              : "pointer",
+                          transition: "all 0.3s ease",
+                        }}
+                      >
+                        {loadingRegister ? (
+                          <Spin
+                            indicator={<LoadingOutlined style={{ fontSize: 20, color: "#fff" }} spin />}
+                          />
+                        ) : selectedEvent.daysLeft === "Expired" ? (
+                          "Registration Closed 🔒"
+                        ) : isRegistered ? (
+                          "Registered ✅"
+                        ) : (
+                          "Register Now 🚀"
+                        )}
+                      </Button>
+
+                      <Divider style={{ margin: "40px 0", background: "#ebebebff" }} />
+
+                      {/* Eligibility Section */}
+                      <div style={{ marginBottom: 40 }}>
+                        <Title
+                          level={4}
+                          style={{
+                            color: "#1f2937",
+                            marginBottom: 16,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <UserOutlined style={{ color: "#5f2eea", fontSize: 20 }} />
+                          Eligibility Criteria
+                        </Title>
+
+                        <div>
+                          {Array.isArray(selectedEvent.eligibility) ? (
+                            <Space wrap>
+                              {selectedEvent.eligibility.map((item, i) => (
+                                <Tag
+                                  key={i}
+                                  style={{
+                                    background: "linear-gradient(135deg,#ede9fe 0%,#e0e7ff 100%)",
+                                    color: "#5f2eea",
+                                    fontWeight: 500,
+                                    borderRadius: 20,
+                                    padding: "6px 14px",
+                                    fontSize: 14,
+                                    border: "none",
+                                    boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+                                  }}
+                                >
+                                  {item}
+                                </Tag>
+                              ))}
+                            </Space>
+                          ) : (
+                            <Tag
+                              style={{
+                                background: "#f3f4f6",
+                                color: "#374151",
+                                fontWeight: 500,
+                                borderRadius: 8,
+                                padding: "6px 14px",
+                                fontSize: 14,
+                                border: "1px solid #e5e7eb",
+                              }}
+                            >
+                              {selectedEvent.eligibility || "Open to all participants"}
+                            </Tag>
+                          )}
+                        </div>
+                      </div>
+
+                      <Divider style={{ background: "#ebebebff" }} />
+
+                      {/* About Section */}
+                      <div>
+                        <Title
+                          level={4}
+                          style={{
+                            color: "#1f2937",
+                            marginBottom: 16,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: 4,
+                              height: 24,
+                              background: "linear-gradient(180deg,#5f2eea,#9d4edd)",
+                              borderRadius: 4,
+                            }}
+                          ></span>
+                          About This Opportunity
+                        </Title>
+
+                        <div
+                          className="workshop_des"
+                          style={{
+                            color: "#4b5563",
+                            fontSize: 15.5,
+                            background: "#fafafa",
+                            padding: 20,
+                            borderRadius: 12,
+                            border: "1px solid #f3f4f6",
+                            boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)",
+                            whiteSpace: "pre-wrap",
+                            transition: "all 0.3s ease",
+                          }}
+                          dangerouslySetInnerHTML={{
+                            __html: selectedEvent.about,
+                          }}
+                        />
+                      </div>
+                    </div>
                   ) : (
-                    <div style={{ padding: 60, textAlign: "center" }}>
+                    <div
+                      style={{
+                        padding: 100,
+                        textAlign: "center",
+                        background: "linear-gradient(180deg, #fafafa 0%, #f3f4f6 100%)",
+                      }}
+                    >
                       <Empty
                         description={
                           <span style={{ color: "#6b7280", fontWeight: 500 }}>
-                            No events match your filters
+                            Select an event from the list to view details
                           </span>
                         }
                         image={Empty.PRESENTED_IMAGE_SIMPLE}
                       />
                     </div>
                   )}
-                </div>
-              </Card>
-            </Col>
+                </Card>
+              </Col>
 
-
-            {/* Event Details Column */}
-            <Col xs={24} lg={16}>
-              <Card
-                className="workshop_details"
-                style={{
-                  borderRadius: 18,
-                  border: "1px solid rgba(229, 231, 235, 0.6)",
-                  background: "linear-gradient(180deg, #ffffff 0%, #f9fafb 100%)",
-                  boxShadow:
-                    "0 6px 18px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04)",
-                  overflow: "hidden",
-                  transition: "all 0.3s ease",
-                }}
-                bodyStyle={{ padding: 0 }}
-              >
-                {selectedEvent ? (
-                  <div style={{ padding: 40 }}>
-                    {/* Header Section */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 28,
-                        marginBottom: 20,
-                        borderBottom: "1px solid #f1f5f9",
-                        paddingBottom: 28,
-                      }}
-                    >
-                      <div
-                        style={{
-                          position: "relative",
-                          width: 80,
-                          height: 80,
-                          borderRadius: 16,
-                          padding: 5,
-                          overflow: "hidden",
-                          boxShadow: "rgb(0 0 0 / 25%) 0px 6px 14px",
-                        }}
-                      >
-                        <img
-                          src={selectedEvent.logo}
-                          alt={selectedEvent.title}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            borderRadius: 16,
-                          }}
-                        />
-                      </div>
-
-                      <div style={{ flex: 1 }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            marginBottom: 8,
-                          }}
-                        >
-                          <Title
-                            level={2}
-                            style={{
-                              margin: 0,
-                              color: "#111827",
-                              fontWeight: 700,
-                              letterSpacing: "-0.02em",
-                            }}
-                          >
-                            {selectedEvent.title}
-                          </Title>
-                          <Tag
-                            color="success"
-                            icon={<CheckCircleFilled />}
-                            style={{
-                              marginLeft: 12,
-                              borderRadius: 8,
-                              fontWeight: 500,
-                              background: "rgba(16,185,129,0.1)",
-                              color: "#065f46",
-                            }}
-                          >
-                            Verified
-                          </Tag>
-                        </div>
-
-                        <Paragraph
-                          style={{
-                            color: "#5f2eea",
-                            fontWeight: 600,
-                            fontSize: 16,
-                            marginBottom: 20,
-                          }}
-                        >
-                          {selectedEvent.category || "Event Category"}
-                        </Paragraph>
-
-                        <Space size={[24, 12]} wrap>
-                          <Text style={{ fontSize: 15, color: "#4b5563" }}>
-                            <TeamOutlined
-                              style={{
-                                marginRight: 8,
-                                color: "#7c3aed",
-                                fontSize: 16,
-                                verticalAlign: "middle",
-                              }}
-                            />
-                            {selectedEvent.participationType}{" "}
-                            {selectedEvent.memberLimit ? `(${selectedEvent.memberLimit})` : ""}
-                          </Text>
-                          <Text style={{ fontSize: 15, color: "#4b5563" }}>
-                            <MdWorkOutline
-                              style={{
-                                marginRight: 8,
-                                color: "#7c3aed",
-                                fontSize: 16,
-                                verticalAlign: "middle",
-                              }}
-                            />
-                            {selectedEvent.mode || "Online"}
-                          </Text>
-                        </Space>
-                      </div>
-                    </div>
-
-                    {/* Premium Register Button */}
-                    <Button
-                      type="primary"
-                      size="large"
-                      block
-                      disabled={
-                        selectedEvent.daysLeft === "Expired" || isRegistered || loadingRegister
-                      }
-                      onClick={handleRegister}
-                      style={{
-                        background:
-                          selectedEvent.daysLeft === "Expired"
-                            ? "linear-gradient(135deg, #9ca3af 0%, #d1d5db 100%)"
-                            : isRegistered
-                              ? "linear-gradient(135deg,rgba(220, 252, 231, 0.7) 0%,rgba(187, 247, 208, 0.5) 100%)"
-                              : "linear-gradient(135deg, #5f2eea 0%, #7c3aed 50%, #9d4edd 100%)",
-                        border: "none",
-                        borderRadius: 10,
-                        fontWeight: 600,
-                        height: 52,
-                        fontSize: 17,
-                        color: isRegistered ? "#15803d" : "#fff",
-                        letterSpacing: 0.2,
-                        boxShadow:
-                          selectedEvent.daysLeft === "Expired"
-                            ? "none"
-                            : "0 0px 0px -0px rgba(95,46,234,0.3)",
-                        opacity:
-                          selectedEvent.daysLeft === "Expired" || loadingRegister ? 0.6 : 1,
-                        cursor:
-                          selectedEvent.daysLeft === "Expired" || isRegistered
-                            ? "not-allowed"
-                            : "pointer",
-                        transition: "all 0.3s ease",
-                      }}
-                    >
-                      {loadingRegister ? (
-                        <Spin
-                          indicator={<LoadingOutlined style={{ fontSize: 20, color: "#fff" }} spin />}
-                        />
-                      ) : selectedEvent.daysLeft === "Expired" ? (
-                        "Registration Closed 🔒"
-                      ) : isRegistered ? (
-                        "Already Registered ✅"
-                      ) : (
-                        "Register Now 🚀"
-                      )}
-                    </Button>
-
-                    <Divider style={{ margin: "40px 0", background: "#ebebebff" }} />
-
-                    {/* Eligibility Section */}
-                    <div style={{ marginBottom: 40 }}>
-                      <Title
-                        level={4}
-                        style={{
-                          color: "#1f2937",
-                          marginBottom: 16,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                        }}
-                      >
-                        <UserOutlined style={{ color: "#5f2eea", fontSize: 20 }} />
-                        Eligibility Criteria
-                      </Title>
-
-                      <div>
-                        {Array.isArray(selectedEvent.eligibility) ? (
-                          <Space wrap>
-                            {selectedEvent.eligibility.map((item, i) => (
-                              <Tag
-                                key={i}
-                                style={{
-                                  background: "linear-gradient(135deg,#ede9fe 0%,#e0e7ff 100%)",
-                                  color: "#5f2eea",
-                                  fontWeight: 500,
-                                  borderRadius: 20,
-                                  padding: "6px 14px",
-                                  fontSize: 14,
-                                  border: "none",
-                                  boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-                                }}
-                              >
-                                {item}
-                              </Tag>
-                            ))}
-                          </Space>
-                        ) : (
-                          <Tag
-                            style={{
-                              background: "#f3f4f6",
-                              color: "#374151",
-                              fontWeight: 500,
-                              borderRadius: 8,
-                              padding: "6px 14px",
-                              fontSize: 14,
-                              border: "1px solid #e5e7eb",
-                            }}
-                          >
-                            {selectedEvent.eligibility || "Open to all participants"}
-                          </Tag>
-                        )}
-                      </div>
-                    </div>
-
-                    <Divider style={{ background: "#ebebebff" }} />
-
-                    {/* About Section */}
-                    <div>
-                      <Title
-                        level={4}
-                        style={{
-                          color: "#1f2937",
-                          marginBottom: 16,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                        }}
-                      >
-                        <span
-                          style={{
-                            display: "inline-block",
-                            width: 4,
-                            height: 24,
-                            background: "linear-gradient(180deg,#5f2eea,#9d4edd)",
-                            borderRadius: 4,
-                          }}
-                        ></span>
-                        About This Opportunity
-                      </Title>
-
-                      <div
-                        style={{
-                          color: "#4b5563",
-                          fontSize: 15.5,
-                          background: "#fafafa",
-                          padding: 20,
-                          borderRadius: 12,
-                          border: "1px solid #f3f4f6",
-                          boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)",
-                          whiteSpace: "pre-wrap",
-                          transition: "all 0.3s ease",
-                        }}
-                        dangerouslySetInnerHTML={{
-                          __html: selectedEvent.about,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      padding: 100,
-                      textAlign: "center",
-                      background: "linear-gradient(180deg, #fafafa 0%, #f3f4f6 100%)",
-                    }}
-                  >
-                    <Empty
-                      description={
-                        <span style={{ color: "#6b7280", fontWeight: 500 }}>
-                          Select an event from the list to view details
-                        </span>
-                      }
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    />
-                  </div>
-                )}
-              </Card>
-            </Col>
-
-          </Row>
+            </Row>
+          </div>
         </div>
-      </div>
+      )}
       <Footer />
     </>
 

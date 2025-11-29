@@ -1157,3 +1157,61 @@ export const getAllCourses = async () => {
     throw error;
   }
 };
+
+
+// ===================== BLOGS =====================
+
+// Add Blog
+export const addBlog = async (data) => {
+  try {
+    const response = await api.post("/api/blogs/add", data);
+    return response;
+  } catch (error) {
+    console.error("❌ Error adding blog:", error);
+    throw error;
+  }
+};
+
+// Update Blog
+export const updateBlog = async (id, data) => {
+  try {
+    const response = await api.put(`/api/blogs/update/${id}`, data);
+    return response;
+  } catch (error) {
+    console.error("❌ Error updating blog:", error);
+    throw error;
+  }
+};
+
+// Get All Blogs
+export const getBlogs = async () => {
+  try {
+    const response = await api.get("/api/blogs/all-blogs");
+    return response;
+  } catch (error) {
+    console.error("❌ Error fetching blogs:", error);
+    throw error;
+  }
+};
+
+// Get Single Blog
+export const getBlogById = async (id) => {
+  try {
+    const response = await api.get(`/api/blogs/${id}`);
+    return response;
+  } catch (error) {
+    console.error("❌ Error fetching blog:", error);
+    throw error;
+  }
+};
+
+// Delete Blog
+export const deleteBlog = async (id) => {
+  try {
+    const response = await api.delete(`/api/blogs/delete/${id}`);
+    return response;
+  } catch (error) {
+    console.error("❌ Error deleting blog:", error);
+    throw error;
+  }
+};

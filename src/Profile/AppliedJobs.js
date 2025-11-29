@@ -11,6 +11,12 @@ import Header from "../Header/Header";
 import { FiClock } from "react-icons/fi";
 
 const { Title, Text } = Typography;
+const generateSlug = (text) => {
+  return text
+    ?.toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
 
 const OpportunityCard = ({ opportunity, status }) => {
   const navigate = useNavigate();
@@ -29,7 +35,21 @@ const OpportunityCard = ({ opportunity, status }) => {
 
   return (
     <Card
-      onClick={() => navigate(`/job-details/${opportunity.post_id}`)}
+      onClick={() => {
+        const jobTitleSlug = generateSlug(opportunity.job_title);
+        const companySlug = generateSlug(opportunity.company_name);
+
+        let basePath = "/job-details";
+
+        if (opportunity.job_nature === "Internship") {
+          basePath = "/internship-details";
+        } else if (opportunity.job_nature === "Scholarship") {
+          basePath = "/scholarship-details";
+        }
+
+        navigate(`${basePath}/${jobTitleSlug}-${companySlug}-${opportunity.post_id}`);
+      }}
+
       style={{
         marginBottom: 16,
         borderRadius: 12,
@@ -99,9 +119,9 @@ const OpportunityCard = ({ opportunity, status }) => {
             </Tag>
             <Tag color="blue">
               {opportunity.salary_type === "Fixed"
-                ? `$${opportunity.min_salary}`
+                ? `${opportunity.currency}${opportunity.min_salary}`
                 : opportunity.salary_type === "Range"
-                  ? `$${opportunity.min_salary} - $${opportunity.max_salary}`
+                  ? `${opportunity.currency}${opportunity.min_salary} - ${opportunity.currency}${opportunity.max_salary}`
                   : ""}
             </Tag>
           </div>

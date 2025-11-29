@@ -21,6 +21,7 @@
     "cities-list": "^1.0.3",
     "country-state-city": "^3.2.1",
     "currency-codes": "^2.2.0",
+    "currency-symbols": "^0.4.1",
     "date-fns": "^4.1.0",
     "firebase": "^11.7.3",
     "framer-motion": "^12.15.0",

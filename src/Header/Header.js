@@ -12,7 +12,6 @@ import { storeLoginStatus } from "../Redux/Slice";
 import {
   Input,
   Avatar,
-  Badge,
   Dropdown,
   Drawer,
   Space,
@@ -21,19 +20,16 @@ import {
   Progress,
   Tooltip,
   Popover,
-  Divider,
   message,
 } from "antd";
 import { AutoComplete } from "antd";
 import { useLocation } from "react-router-dom";
 
 import {
-  BellOutlined,
   UserOutlined,
   PlusOutlined,
   SearchOutlined,
   BookOutlined,
-  CodeOutlined,
   SettingOutlined,
   AppstoreOutlined,
   UserAddOutlined,
@@ -46,7 +42,6 @@ import {
   ShoppingOutlined,
   ProfileOutlined,
   LockOutlined,
-  DashboardOutlined,
   ReadOutlined,
 } from "@ant-design/icons";
 
@@ -61,6 +56,7 @@ import { IoChevronDownOutline } from "react-icons/io5";
 import { FcApproval } from "react-icons/fc";
 import { GrWorkshop } from "react-icons/gr";
 import { FaBookOpen, FaCalendarAlt, FaChalkboardTeacher, FaGraduationCap } from "react-icons/fa";
+import { Blocks, Book, BookAlert } from "lucide-react";
 
 const { Title, Text } = Typography;
 
@@ -80,9 +76,24 @@ export default function Header() {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [headerProgress, setHeaderProgress] = useState(0);
 
   useEffect(() => {
-    const token = localStorage.getItem("AccessToken");
+    const saved = localStorage.getItem("profileProgress");
+    if (saved) {
+      setHeaderProgress(parseInt(saved));
+    }
+  }, []);
+
+  const generateSlug = (text) => {
+    return text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  };
+
+
+  useEffect(() => {
     const stored = localStorage.getItem("loginDetails");
     if (stored) {
       try {
@@ -119,12 +130,12 @@ export default function Header() {
       const response = await getUserProfile(payload);
       console.log("getUserProfile", response);
       const image = response?.data?.data?.profile_image || "";
-
+      const profile = response?.data?.data;
       setProfileImage(image);
       setFname(response?.data?.data?.first_name || "");
       setEmail(response?.data?.data?.email || "");
       setLname(response?.data?.data?.last_name || "");
-
+      calculateCompletion(profile);
       // localStorage.setItem("profileImage", image);
     } catch (error) {
       console.log("getuserprofile errorddd", error);
@@ -151,6 +162,7 @@ export default function Header() {
 
       const formattedSuggestions = data.map((item) => ({
         value: item.id,
+        jobData: item,
         label: (
           <div className={`elite-suggestion-item ${item.isPremium ? "elite-premium" : ""}`}>
             <div className="elite-content-wrapper">
@@ -191,9 +203,6 @@ export default function Header() {
                     {item.workplace_type}
                   </Tag>
                 </div>
-                <div className="elite-salary-badge">
-                  <span className="elite-salary-text">${Math.floor(Math.random() * 50) + 60}k</span>
-                </div>
               </div>
             </div>
             <div className="elite-view-btn">
@@ -211,8 +220,38 @@ export default function Header() {
     }
   };
 
-  const handleSelect = (jobId) => {
-    navigate(`/job-details/${jobId}`);
+  const calculateCompletion = (profile) => {
+    let score = 0;
+    let total = 8;
+
+    if (profile.about) score++;
+    if (profile.skills?.length > 0) score++;
+    if (profile.education?.length > 0) score++;
+    if (profile.projects?.length > 0) score++;
+    if (profile.experience?.length > 0) score++;
+    if (profile.social_links) score++;
+    if (profile.resume) score++;
+    if (profile.profile_image) score++;
+
+    const percentage = Math.round((score / total) * 100);
+
+
+    // ❗ ADD THIS LINE
+    localStorage.setItem("profileProgress", percentage);
+
+    // ❗ ALSO UPDATE THE CIRCLE IMMEDIATELY (live update)
+    setHeaderProgress(percentage);
+  };
+
+  const handleSelect = (value, option) => {
+    const job = option.jobData;  // full job object
+
+    const jobTitleSlug = generateSlug(job.job_title);
+    const companySlug = generateSlug(job.company_name);
+
+    const finalUrl = `/job-details/${jobTitleSlug}-${companySlug}-${job.id}`;
+
+    navigate(finalUrl);
   };
 
   const menuItems = [
@@ -267,6 +306,16 @@ export default function Header() {
       ),
       onClick: () => navigate("/course"),
     },
+    {
+      key: "Blogs",
+      label: (
+        <div className="menu-item">
+          <Blocks size={18} className="menu-icon" />
+          <span>Blogs</span>
+        </div>
+      ),
+      onClick: () => navigate("/blogs"),
+    },
   ];
 
   const location = useLocation();
@@ -295,7 +344,7 @@ export default function Header() {
               options={suggestions}
               dropdownMatchSelectWidth={520}
               onSearch={handleSearch}
-              onSelect={handleSelect}
+              onSelect={(value, option) => handleSelect(value, option)}
               style={{ width: "100%" }}
               dropdownClassName="elite-search-dropdown"
               notFoundContent={
@@ -399,7 +448,7 @@ export default function Header() {
 
               {/* Right: User Actions */}
               <div className="align-items-center gap-3 mt-3 mt-md-0 mobile_sidebar">
-                {isLoggedIn === true ? (
+                {/* {isLoggedIn === true ? (
                   <Badge count={3}>
                     <Button className="icon-button" variant="light">
                       <BellOutlined />
@@ -407,7 +456,7 @@ export default function Header() {
                   </Badge>
                 ) : (
                   ""
-                )}
+                )} */}
 
                 {isLoggedIn === true ? (
                   <div
@@ -457,7 +506,7 @@ export default function Header() {
                               onClick={() => navigate("/post-jobs")}
                               className="host-popup-item"
                             >
-                              <ShoppingOutlined style={{ color: "#ef4444", fontSize: 18 }} />
+                              <ShoppingOutlined style={{ color: "#ef4444", fontSize: 18, marginTop: 2 }} />
                               <div className="host-popup-text">
                                 <div className="host-popup-title">Jobs, Internships</div>
                                 <div className="host-popup-sub">Hire the Right Talent</div>
@@ -468,7 +517,7 @@ export default function Header() {
                               onClick={() => navigate("/post-events")}
                               className="host-popup-item"
                             >
-                              <TrophyOutlined style={{ color: "#f59e0b", fontSize: 18 }} />
+                              <TrophyOutlined style={{ color: "#f59e0b", fontSize: 18, marginTop: 2 }} />
                               <div className="host-popup-text">
                                 <div className="host-popup-title">Cultural Events</div>
                                 <div className="host-popup-sub">Engage your target audience</div>
@@ -478,7 +527,7 @@ export default function Header() {
                               onClick={() => navigate("/post-course")}
                               className="host-popup-item"
                             >
-                              <ReadOutlined style={{ color: "#c60bf5ff", fontSize: 18 }} />
+                              <ReadOutlined style={{ color: "#c60bf5ff", fontSize: 18, marginTop: 2 }} />
                               <div className="host-popup-text">
                                 <div className="host-popup-title">Post a New Course</div>
                                 <div className="host-popup-sub">
@@ -490,7 +539,7 @@ export default function Header() {
                               onClick={() => navigate("/post-workshop")}
                               className="host-popup-item"
                             >
-                              <GrWorkshop style={{ color: "#0b0ff5ff", fontSize: 18 }} />
+                              <GrWorkshop style={{ color: "#0b0ff5ff", fontSize: 18, marginTop: 2 }} />
                               <div className="host-popup-text">
                                 <div className="host-popup-title">Host a Workshop</div>
                                 <div className="host-popup-sub">
@@ -498,9 +547,20 @@ export default function Header() {
                                 </div>
                               </div>
                             </div>
-
+                            <div
+                              onClick={() => navigate("/add-blog")}
+                              className="host-popup-item"
+                            >
+                              <BookAlert size={20} style={{ color: "#005603", marginTop: 2 }} />
+                              <div className="host-popup-text">
+                                <div className="host-popup-title">Post a Blog</div>
+                                <div className="host-popup-sub">
+                                  Share insights, stories, and updates to engage your audience and grow your community.
+                                </div>
+                              </div>
+                            </div>
                             <div className="host-popup-item" style={{ opacity: 0.6 }}>
-                              <ProfileOutlined style={{ color: "#6366f1", fontSize: 18 }} />
+                              <ProfileOutlined style={{ color: "#6366f1", fontSize: 18, marginTop: 2 }} />
                               <div className="host-popup-text">
                                 <div className="host-popup-title">Assessments</div>
                                 <div className="host-popup-sub">Evaluate candidates</div>
@@ -561,7 +621,7 @@ export default function Header() {
         onClose={onClose}
         open={open}
         closable={false}
-        style={{ padding: 0 }}
+        style={{ padding: 0, zIndex: 1022 }}
       >
         {/* Premium Header */}
         <div
@@ -603,16 +663,14 @@ export default function Header() {
               />
               <Progress
                 type="circle"
-                percent={56}
+                percent={headerProgress}
                 size={84}
                 strokeColor="#0cd10c"
                 trailColor="#fff"
                 strokeWidth={8}
                 format={() => (
-                  <span
-                    style={{ color: "white", fontSize: 12, fontWeight: 600 }}
-                  >
-                    56%
+                  <span style={{ color: "white", fontSize: 12, fontWeight: 600 }}>
+                    {headerProgress}%
                   </span>
                 )}
                 style={{
@@ -624,6 +682,7 @@ export default function Header() {
                   borderRadius: "50%",
                 }}
               />
+
             </div>
 
             <div>
@@ -778,7 +837,6 @@ export default function Header() {
                     }
                     style={{ alignItems: "center" }}
                   />
-                  <RightOutlined style={{ color: "#d9d9d9" }} />
                 </List.Item>
               )}
             />
@@ -955,10 +1013,10 @@ export default function Header() {
             height: 56px;
             border-radius: 12px;
             padding: 3px;
-            background: linear-gradient(135deg, #8b5cf6 0%, #4f46e5 100%);
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid #e3e3e3;
           }
           
           .elite-company-logo {

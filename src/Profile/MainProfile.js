@@ -1499,6 +1499,7 @@ export default function MainProfile() {
 
       resetFormFields();
       setResumeError("");
+      getUserProfileData();
       message.success("Resume saved successfully!");
     } catch (error) {
       console.error("Base64 conversion or upload failed:", error);
@@ -1812,32 +1813,36 @@ export default function MainProfile() {
       ];
 
       const completedSections = sections.filter(Boolean).length;
-      return Math.round((completedSections / sections.length) * 100);
+      const percentage = Math.round(
+        (completedSections / sections.length) * 100
+      );
+
+      // ⭐ Save the correct new value
+      localStorage.setItem("profileProgress", percentage);
+
+      return percentage;
     };
 
-    // Extract job preferences from profile data
+    // Extract job preferences
     const extractJobPreferences = () => {
       const preferences = [];
 
-      if (userTypeactiveButton) {
-        preferences.push(userTypeactiveButton);
-      }
-
-      if (location) {
-        preferences.push(location);
-      }
+      if (userTypeactiveButton) preferences.push(userTypeactiveButton);
+      if (location) preferences.push(location);
 
       return preferences;
     };
 
-    // Set the profile stats
+    const completion = calculateCompletion();
+
+    // Set final stats
     setProfileStats({
-      completionPercentage: calculateCompletion(),
+      completionPercentage: completion,
       lastUpdated: createdAt || new Date().toISOString(),
       jobPreferences: extractJobPreferences(),
       applicationStats: {
-        jobsThisMonth: 0, // You would need to implement this
-        interviewsScheduled: 0, // You would need to implement this
+        jobsThisMonth: 0,
+        interviewsScheduled: 0,
       },
     });
   }, [
@@ -1850,8 +1855,10 @@ export default function MainProfile() {
     isSocialLinks,
     userTypeactiveButton,
     location,
-    createdAt,
+    createdAt
   ]);
+
+
 
   // --- Tab Content Components ---
   const TabContent = {
@@ -3438,7 +3445,7 @@ export default function MainProfile() {
                         }}
                       >
                         <div className="card-content">
-                          <div className="card-header">
+                          <div style={{ display: "flex" }} className="card-header">
                             <span
                               className={
                                 company.currentlyWorking
@@ -3612,7 +3619,7 @@ export default function MainProfile() {
                         >
                           <div className="card-glow"></div>
                           <div className="card-content">
-                            <div className="card-header">
+                            <div style={{ display: "flex" }} className="card-header">
                               <span className="project-type-badge">
                                 {proj.project_type}
                                 <span className="badge-accent"></span>
@@ -4492,7 +4499,6 @@ export default function MainProfile() {
             </div>
 
             {/* Resume upload  Sections */}
-            {/* Resume upload  Sections */}
             <div style={{ marginTop: 25 }} className="profile-sections">
               <div className="profile-section-card userprofile_cards">
                 <div className="skills_card">
@@ -4739,7 +4745,7 @@ export default function MainProfile() {
                                       key={company.id || index}
                                       className="experience-card"
                                     >
-                                      <div className="card-header">
+                                      <div style={{ display: "flex" }} className="card-header">
                                         <div className="company-info">
                                           <h3 className="company-name">
                                             {company.workingCompanyName || "Not specified"}

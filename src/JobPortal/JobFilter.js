@@ -1,1953 +1,835 @@
-import React, { useEffect, useState } from "react";
+// src/pages/JobFilter.jsx
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Row,
   Col,
   Card,
-  Typography,
   Space,
   Button,
-  Dropdown,
-  Drawer,
   Radio,
-  Divider,
-  Input,
   Checkbox,
-  message,
   Skeleton,
-  Tooltip,
-  Badge,
+  Drawer,
+  Empty,
 } from "antd";
 import {
   ClockCircleOutlined,
-  ThunderboltFilled,
   CrownFilled,
-  DownOutlined,
-  CloseOutlined,
-  EnvironmentOutlined,
-  FilterOutlined,
+  ThunderboltFilled,
 } from "@ant-design/icons";
-import "../css/JobFilter.css";
-import { FaTransgender } from "react-icons/fa6";
-import { FiUser } from "react-icons/fi";
-import {
-  FaRegCalendarAlt,
-  FaRegBuilding,
-  FaMapMarkerAlt,
-} from "react-icons/fa";
-import CommonSelectField from "../Common/CommonSelectField";
-import {
-  applyForJob,
-  checkIsJobApplied,
-  checkIsJobSaved,
-  getJobCategoryData,
-  getJobPosts,
-  getSavedJobs,
-  removeSavedJobs,
-  saveJobPost,
-  userApplyJob,
-} from "../ApiService/action";
-import { FaLink } from "react-icons/fa6";
-import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
-import { FaCheckCircle } from "react-icons/fa";
-import { CommonToaster } from "../Common/CommonToaster";
-import { FaHeart, FaRegHeart } from "react-icons/fa6";
-import { IoMdCalendar } from "react-icons/io";
-import { IoIosShareAlt } from "react-icons/io";
-import { LuCalendarDays } from "react-icons/lu";
-import { HiOutlineStatusOnline } from "react-icons/hi";
-import { GrLocation } from "react-icons/gr";
-import { CgWorkAlt } from "react-icons/cg";
-import { BiCategoryAlt } from "react-icons/bi";
-import Header from "../Header/Header";
-import additional1 from "../images/additional1.png";
-import additional2 from "../images/additional2.png";
-import additional3 from "../images/additional3.png";
-import additional4 from "../images/additional4.png";
-import additional5 from "../images/additional5.png";
-import additional6 from "../images/additional6.png";
-import cities from "cities-list";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const { Text } = Typography;
+import Header from "../Header/Header";
+import CommonSelectField from "../Common/CommonSelectField";
+
+import { getAllCourses, getJobCategoryData, getJobPosts } from "../ApiService/action";
+
+import { FaMapMarkerAlt } from "react-icons/fa";
+import { FiUser } from "react-icons/fi";
+import { CgWorkAlt } from "react-icons/cg";
+import { LuCalendarDays } from "react-icons/lu";
+import { BiCategoryAlt } from "react-icons/bi";
+import { CheckCircle, RefreshCcwIcon } from "lucide-react";
+
+import cities from "cities-list";
+import "../css/JobFilter.css";
+
+const generateSlug = (text = "") =>
+  String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 const workTypes = ["In Office", "On Field", "Work From Home"];
 const jobNature = ["Job", "Internship", "Scholarship"];
-const userTypes = ["Fresher", "Professionals", "College Students"];
 
 export default function JobFilter() {
-  const [openApplyNow, setOpenApplyNow] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [courses, setCourses] = useState([]);
+  const [categorySearch, setCategorySearch] = useState("");
+  /** -------------------- STATE -------------------- **/
+  const [loading, setLoading] = useState(true);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  const [jobNatureVisible, setJobNatureVisible] = useState(false);
+  // Data
+  const [jobs, setJobs] = useState([]);
+  const [activeJob, setActiveJob] = useState(null);
+  const [jobCategoryOptions, setJobCategoryOptions] = useState([]);
+
+  // Filters
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedLocations, setSelectedLocations] = useState([]);
+  const [selectedWorkingDays, setSelectedWorkingDays] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedSort, setSelectedSort] = useState(null);
+  const [selectedUserType, setSelectedUserType] = useState("");
   const [jobNatureSelected, setJobNatureSelected] = useState("");
 
-  const [visible, setVisible] = useState(false);
-  const [selected, setSelected] = useState([]);
-  const [newWorkLocation, setNewWorkLocation] = useState([]);
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [tempSelected, setTempSelected] = useState([]);
-  const [workTypevisible, setWorkTypeVisible] = useState(false);
-  const [statusVisible, setStatusVisible] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedType, setSelectedType] = useState(null);
-  const [workingDaysVisible, setWorkingDaysVisible] = useState(false);
-  const [selectedWorkingDays, setSelectedWorkingDays] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState("");
-  const [jobCategoryOptions, setJobCategoryOptions] = useState([]);
-  const [userCatergoryvisible, setUserCatergoryVisible] = useState(false);
-  const [selectedSort, setSelectedSort] = useState(null);
-  const [backendJobs, setBackendJobs] = useState([]);
-  const [postDetails, setPostDetails] = useState([]);
-  const [loginUserId, setLoginUserId] = useState(null);
-  const [answers, setAnswers] = useState("");
-  const [isApplied, setIsApplied] = useState({});
-  const [savedJobMap, setSavedJobMap] = useState({});
-  const [isSaved, setIsSaved] = useState({});
-  const [jobLoading, setJobLoading] = useState(true);
-  const [jobDetailsLoading, setJobDetailsLoading] = useState(false);
-  const [tempStatus, setTempStatus] = useState(selectedStatus);
-  const [tempWorkingDays, setTempWorkingDays] = useState("");
-  const [tempTypes, setTempTypes] = useState([]);
-  const [tempCategories, setTempCategories] = useState([]);
-  const [appliedDates, setAppliedDates] = useState({});
-  const [fName, setFname] = useState("");
-  const [lName, setLname] = useState("");
-  const [userTypeVisible, setUserTypeVisible] = useState(false);
-  const [selectedUserType, setSelectedUserType] = useState("");
-  const [tempUserType, setTempUserType] = useState("");
+  // Derived
+  const [allCities, setAllCities] = useState([]);
 
+  /** -------------------- EFFECTS -------------------- **/
 
-  const [activeFilters, setActiveFilters] = useState({
-    jobNature: false,
-    salary: false,
-    status: false,
-    workingDays: false,
-    location: false,
-    workType: false,
-    category: false,
-  });
-  const activeFilterCount = Object.values(activeFilters).filter(Boolean).length;
-  const location = useLocation();
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const filterType = params.get("filter");
-
-    if (filterType === "Job") {
-      setJobNatureSelected("Job");
-    } else if (filterType === "Internship") {
-      setJobNatureSelected("Internship");
-    } else if (filterType === "Scholarship") {
-      setJobNatureSelected("Scholarship");
-    }
-  }, [location.search]);
-
-
-  useEffect(() => {
-    setActiveFilters({
-      jobNature: !!jobNatureSelected,
-      salary: !!selectedSort,
-      status: !!selectedStatus,
-      workingDays: !!selectedWorkingDays,
-      location: selected.length > 0,
-      workType: selectedTypes.length > 0,
-      category: selectedCategories.length > 0,
-      userType: !!selectedUserType,
-    });
-  }, [
-    jobNatureSelected,
-    selectedSort,
-    selectedStatus,
-    selectedWorkingDays,
-    selected,
-    selectedTypes,
-    selectedCategories,
-    selectedUserType,
-  ]);
-
-
+  // Title
   useEffect(() => {
     document.title = "CareerFast | Find Jobs";
   }, []);
 
   useEffect(() => {
-    const allCities = Object.keys(cities).map((city) => ({
-      label: city,
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const res = await getAllCourses();
+      setCourses(res);
+    } catch (error) {
+      console.log("Error loading courses:", error);
+    }
+  };
+
+  // Cities
+  useEffect(() => {
+    const mapped = Object.keys(cities).map((city) => ({
       value: city,
+      label: city,
       country: cities[city].country,
     }));
 
-    console.log("allCities", allCities);
-    setNewWorkLocation(allCities);
+    // Add "Pan India" at the top
+    setAllCities([
+      { value: "Pan India", label: "Pan India" },
+      ...mapped
+    ]);
   }, []);
 
+
+  // Categories (with custom merge preserved)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await getJobCategoryData();
+        const backend =
+          res?.data?.data?.map((item) => ({
+            label: item?.category_name || "",
+            value: item?.category_name || "",
+          })) || [];
+
+        const custom = JSON.parse(localStorage.getItem("customCategories") || "[]")
+          .filter(Boolean)
+          .map((c) => ({ label: c, value: c }));
+
+        const merged = [
+          ...backend,
+          ...custom.filter((c) => !backend.some((b) => b.value === c.value)),
+        ].filter((i) => i.label?.trim());
+
+        merged.sort((a, b) =>
+          String(a.label).localeCompare(String(b.label), "en", { sensitivity: "base" })
+        );
+
+        setJobCategoryOptions(merged);
+      } catch {
+        // silent
+      }
+    })();
+  }, []);
+
+  // URL preselects
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const filterType = params.get("filter");
+    const categorySlug = params.get("category");
+
+    if (filterType && jobNature.includes(filterType)) {
+      setJobNatureSelected(filterType);
+    }
+
+    if (categorySlug && jobCategoryOptions.length) {
+      const matched = jobCategoryOptions.find(
+        (c) => generateSlug(c.value) === categorySlug
+      );
+      if (matched) {
+        setSelectedCategories([matched.value]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, jobNatureOptionsToKey(jobCategoryOptions)]);
+
+  // Fetch jobs when filters change
   useEffect(() => {
     fetchJobs();
-    getJobCategoryDataTypes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    selectedSort,
-    selectedCategories,
-    selectedTypes,
-    selected,
+    selectedCategories.join("|"),
+    selectedTypes.join("|"),
+    selectedLocations.join("|"),
     selectedWorkingDays,
     selectedStatus,
+    selectedSort,
     jobNatureSelected,
     selectedUserType,
-    isApplied,
   ]);
 
-  useEffect(() => {
-    if (backendJobs.length > 0 && !postDetails.length) {
-      const firstJob = transformJob(backendJobs[0]);
-      setPostDetails([firstJob]);
-      checkIsJobAppliedData(firstJob.id);
-    }
-  }, [backendJobs]);
+  /** -------------------- HELPERS -------------------- **/
+  function jobNatureOptionsToKey(opts) {
+    return opts.map((o) => o.value).join("|");
+  }
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("loginDetails");
-      console.log("login details", stored);
-      if (stored) {
-        const loginDetails = JSON.parse(stored);
-        setLoginUserId(loginDetails.id);
-        setFname(loginDetails.first_name);
-        setLname(loginDetails.last_name);
-      }
-    } catch (error) {
-      console.error("Invalid JSON in localStorage", error);
-    }
-  }, []);
-
-  const fetchJobs = async () => {
-    const payload = {
-      job_categories: selectedCategories || [],
-      workplace_type: selectedTypes || [],
-      work_location: selected || [],
-      working_days: selectedWorkingDays || "",
-      status: selectedStatus || "",
-      job_nature: jobNatureSelected || "",
+  const payload = useMemo(
+    () => ({
+      job_categories: selectedCategories,
+      workplace_type: selectedTypes,
+      work_location: selectedLocations,
+      working_days: selectedWorkingDays,
+      status: selectedStatus,
+      job_nature: jobNatureSelected,
       salary_sort:
         selectedSort === "highToLow"
           ? "high_to_low"
           : selectedSort === "lowToHigh"
             ? "low_to_high"
             : "",
-    };
+    }),
+    [
+      selectedCategories,
+      selectedTypes,
+      selectedLocations,
+      selectedWorkingDays,
+      selectedStatus,
+      jobNatureSelected,
+      selectedSort,
+    ]
+  );
 
-    try {
-      const response = await getJobPosts(payload);
-      console.log("getJobPosts response", response);
+  const filteredCategoryOptions = useMemo(() => {
+    return jobCategoryOptions.filter((item) =>
+      item.label.toLowerCase().includes(categorySearch.toLowerCase())
+    );
+  }, [jobCategoryOptions, categorySearch]);
 
-      let jobs = response?.data?.data?.data || [];
-
-      if (selectedUserType) {
-        jobs = jobs.filter((job) => {
-          const level = (job.experience_type || "").toLowerCase();
-          const selected = selectedUserType.toLowerCase();
-
-          if (selected === "College Students")
-            return level.includes("Students") || level.includes("College");
-
-          return level.includes(selected);
-        });
-      }
-
-      if (Array.isArray(jobs)) {
-        setBackendJobs(jobs);
-      } else {
-        console.warn("Unexpected job data format", response);
-      }
-    } catch (error) {
-      console.error("getJobPosts error", error);
-    } finally {
-      setTimeout(() => {
-        checkIsJobAppliedData();
-        setJobLoading(false);
-      }, 300);
-    }
-  };
-
-
-  const checkIsJobAppliedData = async (postId) => {
-    if (!loginUserId || !postId) return;
-
-    const payload = {
-      user_id: loginUserId,
-      job_post_id: postId,
-    };
-    try {
-      const response = await checkIsJobApplied(payload);
-      setIsApplied((prev) => ({
-        ...prev,
-        [postId]: response?.data?.data || false,
-      }));
-    } catch (error) {
-      console.log("is applied error", error);
-      setIsApplied((prev) => ({
-        ...prev,
-        [postId]: false,
-      }));
-    }
-  };
-
-  const checkIsJobSavedData = async (postId) => {
-    if (!loginUserId || !postId) return;
-
-    if (isSaved[postId] !== undefined) return;
-
-    const payload = {
-      user_id: loginUserId,
-      job_post_id: postId,
-    };
-
-    try {
-      const response = await checkIsJobSaved(payload);
-      setIsSaved((prev) => ({
-        ...prev,
-        [postId]: response?.data?.data || false,
-      }));
-    } catch (error) {
-      console.log("is saved error", error);
-      setIsSaved((prev) => ({
-        ...prev,
-        [postId]: false,
-      }));
-    }
-  };
-
-
-  useEffect(() => {
-    if (postDetails.length > 0) {
-      const jobId = postDetails[0]?.id;
-      if (jobId) {
-        checkIsJobSavedData(jobId);
-      }
-    }
-  }, [postDetails]);
-
-  const handleWishlistToggle = async (jobId) => {
-    try {
-      const currentlySaved = isSaved[jobId];
-
-      if (currentlySaved) {
-        await removeSavedJobsData(jobId);
-        CommonToaster("Removed from wishlist 💔", "error");
-      } else {
-        await saveJobPostData(jobId);
-        CommonToaster("Added to wishlist ❤️", "success");
-      }
-
-      setIsSaved((prev) => ({
-        ...prev,
-        [jobId]: !currentlySaved,
-      }));
-    } catch (error) {
-      console.error("Wishlist toggle failed:", error);
-      CommonToaster("Failed to update wishlist", "error");
-    }
-  };
-
-  const saveJobPostData = async (jobId) => {
-    if (!loginUserId || !jobId) return;
-
-    const payload = {
-      user_id: loginUserId,
-      job_post_id: jobId,
-    };
-
-    try {
-      const response = await saveJobPost(payload);
-
-      if (response?.data?.data?.id) {
-        setSavedJobMap((prev) => ({
-          ...prev,
-          [jobId]: response.data.data.id,
-        }));
-      }
-
-      return response;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    if (loginUserId) {
-      getSavedJobsData();
-    }
-  }, [loginUserId]);
-
-  const getSavedJobsData = async () => {
-    try {
-      const response = await getSavedJobs({ user_id: loginUserId });
-      const savedJobs = response?.data?.data || [];
-
-      const savedJobIdsMap = {};
-      savedJobs.forEach((job) => {
-        savedJobIdsMap[job.job_post_id] = true;
-      });
-
-      setIsSaved(savedJobIdsMap);
-      const jobMap = {};
-      savedJobs.forEach((job) => {
-        jobMap[job.job_post_id] = job.id;
-      });
-      setSavedJobMap(jobMap);
-    } catch (error) {
-      console.log("Get saved job error", error);
-    }
-  };
-
-  const removeSavedJobsData = async (jobId) => {
-    try {
-      const savedJobId = savedJobMap[jobId];
-
-      if (!savedJobId) {
-        const response = await getSavedJobs({ user_id: loginUserId });
-        const savedJobs = response?.data?.data || [];
-
-        const jobToRemove = savedJobs.find((job) => job.job_post_id === jobId);
-        if (jobToRemove) {
-          await removeSavedJobs({ id: jobToRemove.id });
-        } else {
-          throw new Error("Saved job not found");
-        }
-      } else {
-        await removeSavedJobs({ id: savedJobId });
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Remove saved job error:", error);
-      throw error;
-    }
-  };
-
-  const getJobCategoryDataTypes = async () => {
-    try {
-      const response = await getJobCategoryData();
-      const jobCategoryFormatted =
-        response?.data?.data?.map((item) => ({
-          label: item.category_name,
-          value: item.category_name,
-        })) || [];
-      setJobCategoryOptions(jobCategoryFormatted);
-    } catch (error) {
-      console.log("job category error", error);
-    }
-  };
 
   const transformJob = (job) => {
     const postedDate = new Date(job.created_at);
     const today = new Date();
-    const timeDiff = today - postedDate;
-    const daysPassed = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-
+    const daysPassed = Math.floor((today - postedDate) / (1000 * 60 * 60 * 24));
     const totalActiveDays = 15;
     const daysLeft = totalActiveDays - daysPassed;
+
+    const safeQs = Array.isArray(job?.questions) ? job.questions : [];
 
     return {
       id: job.id,
       title: job.job_title,
       company: job.company_name,
-      benefits: job.benefits,
       logo: job.company_logo,
-      created_date: job.created_at,
       job_description: job.job_description,
-      openings: job.openings,
-      postedDate,
+      date_posted: job.date_posted,
       working_days: job.working_days,
       daysLeft: daysLeft >= 0 ? `${daysLeft} days left` : "Expired",
       level: job.experience_type,
-      date_posted: job.date_posted,
       salary:
         job.salary_type === "Fixed"
-          ? `$${job.min_salary || "N/A"}`
+          ? `${job.currency} ${job.min_salary || "N/A"}`
           : job.salary_type === "Range"
-            ? `$${job.min_salary || "N/A"} - $${job.max_salary || "N/A"}`
+            ? `${job.currency} ${job.min_salary || "N/A"} - ${job.currency} ${job.max_salary || "N/A"}`
             : "Negotiable",
-      location: `${job.workplace_type}${job.work_location ? ` • ${job.work_location}` : ""
-        }`,
-      diversity_hiring: job.diversity_hiring,
+      location: (() => {
+        const locations = Array.isArray(job.work_location)
+          ? job.work_location.join(", ")
+          : "";
+
+        return `${job.workplace_type}${locations ? ` • ${locations}` : ""}`;
+      })(),
+      diversity_hiring: job.diversity_hiring || [],
       job_category: job.job_category,
       type: job.job_nature,
-      premium: true,
-      urgent: false,
-      skills: job.skills,
+      openings: job.openings,
+      benefits: job.benefits || [],
+      skills: job.skills || [],
       eligibility: job.experience_required?.join(", "),
       status: daysLeft >= 0 ? "Live" : "Expired",
-      questions: job.questions?.map((q) => q.question) || [],
-      questions_with_ids:
-        job.questions?.map((q) => ({
-          id: q.id,
-          question: q.question,
-          isrequired: q.isrequired,
-        })) || [],
+      // keeping questions mapping harmlessly, though not used in UI now
+      questions: safeQs.map((q) => q?.question || ""),
+      questions_with_ids: safeQs.map((q) => ({
+        id: q?.id || null,
+        question: q?.question || "",
+        isrequired: !!q?.isrequired,
+      })),
     };
   };
 
-  const handleShare = (job) => {
-    const jobLink = `${window.location.origin}/job-details/${job.id}`;
-
-    if (navigator.share) {
-      navigator
-        .share({
-          title: job.title,
-          text: `Check out this job at ${job.company}!`,
-          url: jobLink,
-        })
-        .then(() => console.log("Share successful"))
-        .catch((err) => console.error("Share failed:", err));
-    } else {
-      navigator.clipboard.writeText(jobLink).then(() => {
-        alert("Job link copied to clipboard!");
-      });
-    }
-  };
-
-  const handleCopy = (job) => {
-    const jobUrl = `${window.location.origin}/job-details/${job.id}`;
-
-    navigator.clipboard
-      .writeText(jobUrl)
-      .then(() => {
-        message.success("Job link copied to clipboard!");
-      })
-      .catch(() => {
-        message.error("Failed to copy job link");
-      });
-  };
-
-  useEffect(() => {
+  const fetchJobs = async () => {
+    setLoading(true);
     try {
-      const storedAppliedDates = localStorage.getItem("appliedDates");
-      if (storedAppliedDates) {
-        setAppliedDates(JSON.parse(storedAppliedDates));
-      }
-    } catch (error) {
-      console.error("Error loading applied dates from localStorage", error);
-    }
-  }, []);
+      const res = await getJobPosts(payload);
+      let raw = res?.data?.data?.data || [];
 
-  // Save applied dates to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("appliedDates", JSON.stringify(appliedDates));
-  }, [appliedDates]);
-
-  const applyForJobData = async () => {
-    const token = localStorage.getItem("AccessToken");
-    if (!token) {
-      message.error("Please login before applying.");
-      return;
-    }
-
-    const jobId = postDetails[0]?.id;
-    const questionsWithIds = postDetails[0]?.questions_with_ids || [];
-
-    const missingRequired = questionsWithIds.some(
-      (q, index) => q.isrequired && !answers[index]?.trim()
-    );
-
-    if (missingRequired) {
-      message.warning("Please answer all required questions before applying.");
-      return;
-    }
-
-    const structuredAnswers = questionsWithIds.map((q, index) => ({
-      questionId: q.id,
-      answer: answers[index] || "",
-    }));
-
-    const payload = {
-      postId: jobId,
-      userId: loginUserId,
-      answers: structuredAnswers,
-    };
-
-    try {
-      const response = await applyForJob(payload, token);
-      console.log("apply jobs", response);
-
-      setIsApplied((prev) => ({
-        ...prev,
-        [jobId]: true,
-      }));
-
-      const appliedDate = response.data.appliedJob.created_at;
-      setAppliedDates((prev) => ({
-        ...prev,
-        [jobId]: appliedDate,
-      }));
-
-      const notifyResponse = await userApplyJob(payload);
-
-      if (notifyResponse.data.success) {
-        message.success("Application submitted! Recruiter has been notified 🚀");
-      } else {
-        message.warning(notifyResponse.data.message);
+      if (selectedUserType) {
+        const filterKey = selectedUserType.toLowerCase();
+        raw = raw.filter((j) =>
+          (j.experience_type || "").toLowerCase().includes(filterKey)
+        );
       }
 
-      setOpenApplyNow(false);
-    } catch (error) {
-      console.error("apply jobs error", error);
-      message.error("Error while applying for the job");
+      const list = raw.map(transformJob);
+      setJobs(list);
+      setActiveJob(list[0] || null);
+    } catch (err) {
+      console.error("Fetch jobs error:", err);
+      setJobs([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-
-  const showDrawer = async () => {
-    const jobId = postDetails[0]?.id;
-
-    if (postDetails[0]?.questions?.length > 0) {
-      setOpenApplyNow(true);
-    } else {
-      try {
-        const token = localStorage.getItem("AccessToken");
-        if (!token) {
-          message.error("Please login before applying.");
-          return;
-        }
-        const payload = {
-          postId: jobId,
-          userId: loginUserId,
-          answers: [],
-        };
-        const response = await applyForJob(payload, token);
-        console.log("applyForJob", response);
-
-        setIsApplied((prev) => ({ ...prev, [jobId]: true }));
-        const appliedDate = response.data.appliedJob.created_at;
-        setAppliedDates((prev) => ({
-          ...prev,
-          [jobId]: appliedDate,
-        }));
-
-        const notifyResponse = await userApplyJob({
-          postId: jobId,
-          userId: loginUserId,
-          answers: [],
-        });
-
-        if (notifyResponse.data.success) {
-          message.success("Applied successfully! Recruiter has been notified.");
-        } else {
-          message.warning(notifyResponse.data.message);
-        }
-      } catch (error) {
-        console.error("Apply error:", error);
-        message.error("Error while applying for job.");
-      }
-    }
-  };
-
-  const onClose = () => {
-    setOpenApplyNow(false);
-    setAnswers("");
-  };
-
-  const handleJobNatureChange = (checkedValue) => {
-    setJobNatureSelected(checkedValue);
-  };
-
-  const handleJobNatureClear = () => {
-    setJobNatureSelected("");
-    fetchJobs();
-    setJobNatureVisible(false);
-  };
-
-  const dropdownItems = () => (
-    <div style={{ padding: 16, width: 220, background: "#fff" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: 8,
-        }}
-      >
-        <strong>Job Nature</strong>
-        <a onClick={handleJobNatureClear} style={{ color: "#f5222d" }}>
-          Clear
-        </a>
+  /** -------------------- SIDEBAR FILTER UI (UNCHANGED) -------------------- **/
+  const FilterSidebar = (
+    <div className="filter_box premium-filter-sidebar">
+      {/* Header */}
+      <div className="filter-header">
+        <h3 className="filter-main-title">
+          <BiCategoryAlt className="filter-title-icon" />
+          Filters
+        </h3>
+        <div className="filter-count">
+          {[
+            selectedCategories.length,
+            selectedTypes.length,
+            selectedLocations.length,
+            selectedWorkingDays ? 1 : 0,
+            selectedStatus ? 1 : 0,
+            selectedSort ? 1 : 0,
+            selectedUserType ? 1 : 0,
+            jobNatureSelected ? 1 : 0,
+          ].reduce((a, b) => a + b, 0)}{" "}
+          active filter
+        </div>
       </div>
-      <div>
+
+
+      {/* Reset Button */}
+      <Button
+        className="premium-reset-btn"
+        onClick={() => {
+          setSelectedCategories([]);
+          setSelectedTypes([]);
+          setSelectedLocations([]);
+          setSelectedWorkingDays("");
+          setSelectedStatus("");
+          setSelectedSort(null);
+          setSelectedUserType("");
+          setJobNatureSelected("");
+          const params = new URLSearchParams(location.search);
+          params.delete("filter");
+          params.delete("category");
+          navigate(
+            { pathname: location.pathname, search: params.toString() ? `?${params}` : "" },
+            { replace: true }
+          );
+        }}
+        icon={<RefreshCcwIcon size={17} />}
+      >
+        Reset All Filters
+      </Button>
+
+      {/* Post Type */}
+      <div className="filter_group premium-filter-group">
+        <div className="filter-header-group">
+          <h4 className="filter_title">
+            <CrownFilled className="filter-icon" />
+            Post Type
+          </h4>
+          {jobNatureSelected && (
+            <span
+              className="clear-filter"
+              onClick={() => {
+                setJobNatureSelected("");
+                const params = new URLSearchParams(location.search);
+                params.delete("filter");
+                navigate(
+                  {
+                    pathname: location.pathname,
+                    search: params.toString() ? `?${params}` : "",
+                  },
+                  { replace: true }
+                );
+              }}
+            >
+              Clear
+            </span>
+          )}
+        </div>
         <Radio.Group
-          className="custom-radio"
-          onChange={(e) => handleJobNatureChange(e.target.value)}
           value={jobNatureSelected}
-          style={{ display: "flex", flexDirection: "column", gap: 0 }}
+          onChange={(e) => {
+            const v = e.target.value;
+            setJobNatureSelected(v);
+            const params = new URLSearchParams(location.search);
+            if (v) params.set("filter", v);
+            else params.delete("filter");
+            navigate(
+              {
+                pathname: location.pathname,
+                search: params.toString() ? `?${params}` : "",
+              },
+              { replace: true }
+            );
+          }}
+          className="filter_radio premium-radio-group"
         >
-          {jobNature.map((type) => (
-            <Radio key={type} value={type} style={{ marginBottom: 8 }}>
-              {type}
+          {jobNature.map((t) => (
+            <Radio key={t} value={t} className="premium-radio">
+              <span className="radio-label">{t}</span>
             </Radio>
           ))}
         </Radio.Group>
       </div>
-      <Divider style={{ margin: "12px 0" }} />
-    </div>
-  );
 
-  const JobCard = ({ job }) => (
-    <>
-      {jobLoading ? (
-        <Skeleton active />
-      ) : (
-        <Card
-          className="premium-job-card"
-          onClick={() => handleClickedjob(job)}
-        >
-          <div className="premium-content">
-            <div className="premium-headers">
-              <img src={job.logo} alt={job.company} className="premium-logo" />
-              <div className="premium-title-section">
-                <div className="premium-job-titles">
-                  <h3 className="premium-titles">{job.title}</h3>
-                  <span
-                    className={
-                      job.status === "Live"
-                        ? "status-badge"
-                        : job.status === "Expired"
-                          ? "status-badge-red"
-                          : ""
-                    }
-                  >
-                    {job.status}
-                  </span>
-                </div>
-
-                <div className="premium-company">({job.company})</div>
-              </div>
-            </div>
-
-            <div className="premium-details">
-              <span className="premium-detail-item">
-                <ClockCircleOutlined />
-                {job.daysLeft}
-              </span>
-              {job.type !== "Scholarship" && (
-                <span className="premium-detail-item">
-                  <EnvironmentOutlined />
-                  {job.location}
-                </span>
-              )}
-              <span className="premium-detail-item">Salary: {job.salary}</span>
-            </div>
-            {job.type !== "Scholarship" && (
-              <div className="premium-skills">
-                {job.skills.map((skill, index) => (
-                  <span key={skill} className="premium-skill">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <div className="premium-footer">
-              <span className="premium-level">
-                {job.level ? <CrownFilled /> : <ThunderboltFilled />}
-                {job.level}
-              </span>
-              <span
-                className={
-                  job.type === "Job"
-                    ? "premium-badges"
-                    : job.type === "Internship"
-                      ? "regular-badge"
-                      : job.type === "College Students"
-                        ? "regular-badge"
-                        : "urgent-badge"
-                }
-              >
-                {job.type}
-              </span>
-            </div>
-          </div>
-        </Card>
-      )}
-    </>
-  );
-
-  const handleClickedjob = (item) => {
-    let arr = [];
-    arr.push(item);
-    setPostDetails(arr);
-    checkIsJobAppliedData(item.id);
-    setJobLoading(false);
-    setJobDetailsLoading(true);
-    const timer = setTimeout(() => {
-      setJobDetailsLoading(false);
-    }, 700);
-    return () => clearTimeout(timer);
-  };
-
-  const renderLocation = () => {
-    const applyLocationFilter = () => {
-      setSelected(tempSelected);
-      console.log("Selected Locations:", tempSelected);
-      setVisible(false);
-    };
-
-    const handleLocationClear = () => {
-      setTempSelected([]);
-      setSelected([]);
-      setVisible(false);
-    };
-    return (
-      <div
-        className="allCities"
-        style={{ width: 300, padding: 16, background: "#fff" }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: 12,
-          }}
-        >
-          <Text strong>Location</Text>
-          <Button type="link" size="small" danger onClick={handleLocationClear}>
-            Clear
-          </Button>
+      {/* Salary */}
+      <div className="filter_group premium-filter-group salary_filter_group">
+        <div className="filter-header-group">
+          <h4 className="filter_title">
+            <ThunderboltFilled className="filter-icon" />
+            Salary
+          </h4>
+          {selectedSort && (
+            <span className="clear-filter" onClick={() => setSelectedSort(null)}>
+              Clear
+            </span>
+          )}
         </div>
         <CommonSelectField
-          showSearch
-          allowClear
-          style={{ width: "100%" }}
-          placeholder="Select location(s)"
-          value={tempSelected}
-          onChange={(values) => setTempSelected(values)}
-          optionLabelProp="label"
-          optionFilterProp="label"
-          options={newWorkLocation.map((item) => ({
-            value: item.value,
-            label: item.label,
-            customLabel: <span>{item.label}</span>,
-          }))}
+          placeholder="Select Salary Range"
+          value={selectedSort}
+          onChange={setSelectedSort}
+          options={[
+            { label: "💰 High to Low", value: "highToLow" },
+            { label: "💸 Low to High", value: "lowToHigh" },
+          ]}
+          className="premium-select"
         />
-        <div style={{ textAlign: "right", paddingTop: 15 }}>
-          <Button
-            type="primary"
-            onClick={applyLocationFilter}
-            className="apply_filter"
-            shape="round"
-          >
-            Apply Filter →
-          </Button>
-        </div>
       </div>
-    );
-  };
 
-  useEffect(() => {
-    if (statusVisible) {
-      return;
-    }
-  }, [tempStatus, statusVisible]);
-
-  const handleStatusApply = () => {
-    setSelectedStatus(tempStatus);
-    setStatusVisible(false);
-  };
-
-  const handleStatusClear = () => {
-    setTempStatus(null);
-    setSelectedStatus(null);
-    setStatusVisible(false);
-  };
-
-  const renderStatus = () => {
-    return (
-      <div style={{ padding: 16, width: 220, background: "#fff" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: 8,
-          }}
-        >
-          <strong>Status</strong>
-          <a onClick={handleStatusClear} style={{ color: "#f5222d" }}>
-            Clear
-          </a>
+      {/* Status */}
+      <div className="filter_group premium-filter-group">
+        <div className="filter-header-group">
+          <h4 className="filter_title">
+            <CheckCircle className="filter-icon" />
+            Status
+          </h4>
+          {selectedStatus && (
+            <span className="clear-filter" onClick={() => setSelectedStatus("")}>
+              Clear
+            </span>
+          )}
         </div>
-
         <Radio.Group
-          className="custom-radio"
-          onChange={(e) => setTempStatus(e.target.value)}
-          value={tempStatus || selectedStatus} // Use tempStatus if available, otherwise selectedStatus
-          style={{ display: "flex", flexDirection: "column", gap: 8 }}
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="filter_radio premium-radio-group"
         >
-          <Radio value="Live">Live</Radio>
-          <Radio value="Expired">Expired</Radio>
+          <Radio value="Live" className="premium-radio">
+            <span className="radio-label status-live">🟢 Live</span>
+          </Radio>
+          <Radio value="Expired" className="premium-radio">
+            <span className="radio-label status-expired">🔴 Expired</span>
+          </Radio>
         </Radio.Group>
-
-        <Divider style={{ margin: "12px 0" }} />
-
-        <Button
-          className="apply_filter"
-          type="primary"
-          shape="round"
-          block
-          onClick={handleStatusApply}
-        >
-          Apply Filter
-        </Button>
       </div>
-    );
-  };
 
-  const renderWorkingDays = () => {
-    const handleWorkingDaysClear = () => {
-      setTempWorkingDays("");
-      setSelectedWorkingDays("");
-      fetchJobs();
-      setWorkingDaysVisible(false);
-    };
-
-    const handleWorkingDaysApply = () => {
-      setSelectedWorkingDays(tempWorkingDays);
-      setWorkingDaysVisible(false);
-    };
-
-    return (
-      <div style={{ padding: 16, width: 220, background: "#fff" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: 8,
-          }}
-        >
-          <strong>Working Days</strong>
-          <a onClick={handleWorkingDaysClear} style={{ color: "#f5222d" }}>
-            Clear
-          </a>
-        </div>
-
-        <Radio.Group
-          className="custom-radio"
-          onChange={(e) => setTempWorkingDays(e.target.value)}
-          value={tempWorkingDays}
-          style={{ display: "flex", flexDirection: "column", gap: 8 }}
-        >
-          <Radio value="5 Working days">5 Working days</Radio>
-          <Radio value="6 Working days">6 Working days</Radio>
-        </Radio.Group>
-
-        <Divider style={{ margin: "12px 0" }} />
-
-        <Button
-          className="apply_filter"
-          type="primary"
-          shape="round"
-          block
-          onClick={handleWorkingDaysApply}
-        >
-          Apply Filter
-        </Button>
-      </div>
-    );
-  };
-
-  const handleTempCheckboxChange = (type) => {
-    setTempTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    );
-  };
-
-  const handleClear = () => {
-    setTempTypes([]);
-    setSelectedTypes([]);
-    setWorkTypeVisible(false);
-  };
-
-  useEffect(() => {
-    if (selectedTypes.length > 0) {
-      fetchJobs(selectedTypes);
-    }
-  }, [selectedTypes]);
-
-  const handleWorkTypeFilter = () => {
-    setSelectedTypes([...tempTypes]);
-    setWorkTypeVisible(false);
-  };
-
-  const dropdownContent = () => (
-    <div style={{ padding: 16, width: 220, background: "#fff" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: 8,
-        }}
-      >
-        <strong>Type</strong>
-        <a onClick={handleClear} style={{ color: "#f5222d" }}>
-          Clear
-        </a>
-      </div>
-      <div>
-        {workTypes.map((type) => (
-          <div key={type} style={{ marginBottom: 8 }}>
-            <Checkbox
-              checked={tempTypes.includes(type)}
-              onChange={() => handleTempCheckboxChange(type)}
-            >
-              {type}
-            </Checkbox>
+      {/* Working Days */}
+      {jobNatureSelected !== "Scholarship" && (
+        <div className="filter_group premium-filter-group">
+          <div className="filter-header-group">
+            <h4 className="filter_title">
+              <LuCalendarDays className="filter-icon" />
+              Working Days
+            </h4>
+            {selectedWorkingDays && (
+              <span className="clear-filter" onClick={() => setSelectedWorkingDays("")}>
+                Clear
+              </span>
+            )}
           </div>
-        ))}
+          <Radio.Group
+            value={selectedWorkingDays}
+            onChange={(e) => setSelectedWorkingDays(e.target.value)}
+            className="filter_radio premium-radio-group"
+          >
+            <Radio value="5 Working days" className="premium-radio">
+              <span className="radio-label">5 Days/Week</span>
+            </Radio>
+            <Radio value="6 Working days" className="premium-radio">
+              <span className="radio-label">6 Days/Week</span>
+            </Radio>
+          </Radio.Group>
+        </div>
+      )}
+
+      {/* Location */}
+      {jobNatureSelected !== "Scholarship" && (
+        <div className="filter_group premium-filter-group salary_filter_group">
+          <div className="filter-header-group">
+            <h4 className="filter_title">
+              <FaMapMarkerAlt className="filter-icon" />
+              Location
+            </h4>
+            {selectedLocations.length > 0 && (
+              <span className="clear-filter" onClick={() => setSelectedLocations([])}>
+                Clear
+              </span>
+            )}
+          </div>
+          <CommonSelectField
+            mode="multiple"
+            allowClear
+            showSearch
+            placeholder="🌍 Search locations..."
+            value={selectedLocations}
+            onChange={setSelectedLocations}
+            options={allCities}
+            optionLabelProp="label"
+            optionFilterProp="label"
+            className="premium-select multi-select"
+          />
+        </div>
+      )}
+
+      {/* Work Type */}
+      {jobNatureSelected !== "Scholarship" && (
+        <div className="filter_group premium-filter-group">
+          <div className="filter-header-group">
+            <h4 className="filter_title">
+              <CgWorkAlt className="filter-icon" />
+              Work Type
+            </h4>
+            {selectedTypes.length > 0 && (
+              <span className="clear-filter" onClick={() => setSelectedTypes([])}>
+                Clear
+              </span>
+            )}
+          </div>
+          <Checkbox.Group
+            value={selectedTypes}
+            onChange={setSelectedTypes}
+            className="filter_checkbox premium-checkbox-group"
+          >
+            {workTypes.map((t) => (
+              <Checkbox key={t} value={t} className="premium-checkbox">
+                <span className="checkbox-label">
+                  {t === "Work From Home"}
+                  {t === "In Office"}
+                  {t === "On Field"}
+                  {t}
+                </span>
+              </Checkbox>
+            ))}
+          </Checkbox.Group>
+        </div>
+      )}
+
+      {/* User Type */}
+      <div className="filter_group premium-filter-group">
+        <div className="filter-header-group">
+          <h4 className="filter_title">
+            <FiUser className="filter-icon" />
+            User Type
+          </h4>
+          {selectedUserType && (
+            <span className="clear-filter" onClick={() => setSelectedUserType("")}>
+              Clear
+            </span>
+          )}
+        </div>
+        <Radio.Group
+          value={selectedUserType}
+          onChange={(e) => setSelectedUserType(e.target.value)}
+          className="filter_radio premium-radio-group"
+        >
+          <Radio value="Fresher" className="premium-radio">
+            <span className="radio-label">Fresher</span>
+          </Radio>
+          <Radio value="Experienced" className="premium-radio">
+            <span className="radio-label">Experienced</span>
+          </Radio>
+          <Radio value="College Students" className="premium-radio">
+            <span className="radio-label">College Students</span>
+          </Radio>
+        </Radio.Group>
       </div>
-      <Divider style={{ margin: "12px 0" }} />
-      <Button
-        className="apply_filter"
-        type="primary"
-        shape="round"
-        block
-        onClick={handleWorkTypeFilter}
-      >
-        Apply Filter
-      </Button>
+
+      {/* Category */}
+      {/* Category */}
+      <div className="filter_group premium-filter-group">
+        <div className="filter-header-group">
+          <h4 className="filter_title">
+            <BiCategoryAlt className="filter-icon" />
+            Category
+          </h4>
+          {selectedCategories.length > 0 && (
+            <span className="clear-filter" onClick={() => setSelectedCategories([])}>
+              Clear
+            </span>
+          )}
+        </div>
+
+        {/* ✅ Search field above category list */}
+        <input
+          type="text"
+          value={categorySearch}
+          onChange={(e) => setCategorySearch(e.target.value)}
+          placeholder="🔍 Search categories..."
+          className="category-search-input"
+        />
+        {selectedCategories.length > 0 && (
+          <div style={{ marginBottom: 10, display: "flex", gap: 5 }} className="selected-tags">
+            {selectedCategories.slice(0, 3).map((category) => (
+              <span key={category} className="selected-tag">
+                {category}
+              </span>
+            ))}
+            {selectedCategories.length > 3 && (
+              <span className="selected-tag-more">
+                +{selectedCategories.length - 3} more
+              </span>
+            )}
+          </div>
+        )}
+        {/* ✅ Checkbox list (filtered) */}
+        <Checkbox.Group
+          value={selectedCategories}
+          onChange={setSelectedCategories}
+          className="filter_checkbox premium-checkbox-group category-group"
+          options={filteredCategoryOptions}
+        />
+      </div>
     </div>
   );
 
-  const handleUserCategoryClear = () => {
-    setTempCategories([]);
-    setSelectedCategories([]);
-    fetchJobs();
-    setUserCatergoryVisible(false);
-  };
+  /** -------------------- JOB CARD (BRAND NEW UNIQUE CLASSES) -------------------- **/
+  const JobCard = ({ job }) => (
+    <Card
+      className={`cf4-card-wrapper ${activeJob?.id === job.id ? "cf4-active" : ""}`}
+      onClick={() => setActiveJob(job)}
+      hoverable
+    >
+      <div onClick={() => {
+        const jobTitleSlug = generateSlug(job.title);
+        const companySlug = generateSlug(job.company);
 
-  const handleUserCategoryApply = () => {
-    setSelectedCategories(tempCategories);
-    setUserCatergoryVisible(false);
-  };
+        let basePath = "";
 
+        if (job.type === "Job") {
+          basePath = "/job-details";
+        } else if (job.type === "Internship") {
+          basePath = "/internship-details";
+        } else if (job.type === "Scholarship") {
+          basePath = "/scholarship-details";
+        }
 
-  const userCatergory = () => (
-    <div style={{ padding: 16, width: 260, background: "#fff" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: 8,
-        }}
-      >
-        <strong>Catergory</strong>
-        <a onClick={handleUserCategoryClear} style={{ color: "#f5222d" }}>
-          Clear
-        </a>
+        const finalUrl = `${basePath}/${jobTitleSlug}-${companySlug}-${job.id}`;
+        navigate(finalUrl);
+      }} className="cf4-card-inner">
+
+        {/* Floating badge */}
+        <div className={`cf4-status-badge 
+      ${job.status === "Expired" ? "cf4-expired-tag" : job.status === "Live" ? "cf4-active-tag" : ""}`
+        }>
+          {job.status}
+        </div>
+
+        {/* Top Section */}
+        <div className="cf4-header">
+          <div className="cf4-logo-box">
+            <img src={job.logo} alt={job.company} className="cf4-logo" />
+          </div>
+
+          <div className="cf4-title-box">
+            <h3 className="cf4-title">{job.title}</h3>
+            <p className="cf4-company">({job.company})</p>
+          </div>
+        </div>
+
+        {/* Meta Info */}
+        <div className="cf4-meta">
+          <span className="cf4-meta-item">
+            <ClockCircleOutlined /> {job.daysLeft}
+          </span>
+
+          {job.type !== "Scholarship" && (
+            <span className="cf4-meta-item">
+              <FaMapMarkerAlt /> {job.location}
+            </span>
+          )}
+
+          <span className="cf4-meta-item">{job.salary}</span>
+        </div>
+
+        {/* Floating Skills */}
+        {job.type !== "Scholarship" && (
+          <div className="cf4-skill-container">
+            {job.skills.slice(0, 6).map((s, i) => (
+              <span key={i} className="cf4-skill-chip">
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="cf4-footer">
+          <span className="cf4-level-chip">
+            {job.level}
+          </span>
+
+          <span
+            className={`cf4-type-badge ${job.type === "Job"
+              ? "cf4-type-job"
+              : job.type === "Internship"
+                ? "cf4-type-intern"
+                : "cf4-type-scholar"
+              }`}
+          >
+            {job.type}
+          </span>
+        </div>
       </div>
-      <Checkbox.Group
-        options={jobCategoryOptions}
-        value={tempCategories}
-        onChange={setTempCategories}
-        style={{
-          gap: 8,
-          maxHeight: "200px",
-          overflowY: "scroll",
-        }}
-      />
-      <Divider style={{ margin: "12px 0" }} />
-      <Button
-        type="primary"
-        shape="round"
-        className="apply_filter"
-        block
-        onClick={handleUserCategoryApply}
-      >
-        Apply Filter
-      </Button>
-    </div>
+    </Card>
   );
 
+
+  /** -------------------- RENDER -------------------- **/
   return (
     <>
       <Header />
+
+      {/* Mobile filter trigger reserved (kept hidden) */}
+      <div className="details_page" style={{ padding: "20px 16px 0 16px" }}>
+        <div className="job-filter-top-actions" style={{ display: "none" }} />
+        <Button
+          className="apply_filter"
+          type="primary"
+          onClick={() => setMobileFilterOpen(true)}
+          style={{ display: "none" }}
+        >
+          Open Filters
+        </Button>
+      </div>
+
       <section
         className="job_filter"
         style={{
-          padding: "10px 60px 48px 60px",
-          background:
-            "linear-gradient(135deg, rgb(247 247 247) 0%, rgb(244 238 255) 100%)",
+          padding: "16px 24px 48px",
+          background: "linear-gradient(135deg, rgb(247 247 247) 0%, rgb(244 238 255) 100%)",
         }}
       >
-        <div
-          className="job-filter-topbar"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 22,
-            padding: "16px 24px",
-            borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
-            backgroundColor: "#fff",
-            flexWrap: "wrap",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
-            borderRadius: "12px 12px 0 0",
-            marginBottom: 25,
-          }}
-        >
-          {/* Job Type */}
-          <Dropdown
-            popupRender={dropdownItems}
-            trigger={["click"]}
-            open={jobNatureVisible}
-            onOpenChange={(visible) => setJobNatureVisible(visible)}
-          >
-            <Badge
-              count={activeFilters.jobNature ? "•" : 0}
-              offset={[-6, 2]}
-              color="green"
-            >
-              <Button
-                className="job-filter-job"
-                shape="round"
-                type={activeFilters.jobNature ? "primary" : "default"}
-                onClick={() => setJobNatureVisible(!jobNatureVisible)}
-              >
-                <Space>
-                  <span style={{ fontWeight: 500, color: "#fff" }}>
-                    {jobNatureSelected || "Job Type"}
-                  </span>
-                  <DownOutlined style={{ fontSize: 12, color: "#fff" }} />
-                </Space>
-              </Button>
-            </Badge>
-          </Dropdown>
+        <Row gutter={24}>
+          {/* Left Sidebar */}
+          <Col xs={0} md={7} lg={6} className="filter_sidebar">
+            {FilterSidebar}
+          </Col>
 
-          {/* Salary Filter */}
-          <Badge count={activeFilters.salary ? "•" : 0} offset={[-4, 2]} color="green">
-            {selectedSort ? (
-              <Button
-                shape="round"
-                type="primary"
-                style={{
-                  border: "1px solid #4f46e5",
-                  backgroundColor: "#f3f2ff",
-                  color: "#6a5cff",
-                  fontWeight: 500,
-                  padding: "0 12px",
-                  height: 36,
-                }}
-                onClick={() => {
-                  setSelectedSort(null);
-                  fetchJobs();
-                }}
-              >
-                <Space>
-                  {selectedSort === "highToLow"
-                    ? "Salary (High to Low)"
-                    : "Salary (Low to High)"}
-                  <CloseOutlined style={{ fontSize: 12 }} />
-                </Space>
-              </Button>
-            ) : (
-              <CommonSelectField
-                style={{
-                  border: "1px solid rgb(0 0 0 / 20%)",
-                  background: "#fff",
-                  padding: "0 5px",
-                  height: 36,
-                  borderRadius: 20,
-                  color: "#2d3748",
-                  fontWeight: 500,
-                }}
-                onChange={(value) => setSelectedSort(value)}
-                placeholder="Select Salary Filter"
-                options={[
-                  { id: 1, label: "Salary (High to Low)", value: "highToLow" },
-                  { id: 2, label: "Salary (Low to High)", value: "lowToHigh" },
-                ]}
-              />
-            )}
-          </Badge>
-
-          {/* Status */}
-          <Dropdown
-            popupRender={renderStatus}
-            trigger={["click"]}
-            open={statusVisible}
-            onOpenChange={setStatusVisible}
-          >
-            <Badge count={activeFilters.status ? "•" : 0} offset={[-6, 2]} color="green">
-              <Button
-                shape="round"
-                style={{
-                  border: activeFilters.status
-                    ? "1px solid #4f46e5"
-                    : "1px solid rgb(0 0 0 / 20%)",
-                  background: activeFilters.status ? "#f3f2ff" : "#fff",
-                  padding: "0 16px",
-                  height: 36,
-                  color: activeFilters.status ? "#6a5cff" : "#2d3748",
-                  fontWeight: 500,
-                }}
-              >
-                <Space>
-                  <HiOutlineStatusOnline /> Status
-                  <DownOutlined
-                    style={{
-                      fontSize: 12,
-                      color: activeFilters.status ? "#6a5cff" : "#2d3748",
-                    }}
-                  />
-                </Space>
-              </Button>
-            </Badge>
-          </Dropdown>
-
-          {/* Working Days */}
-          {jobNatureSelected !== "Scholarship" && (
-            <Dropdown
-              popupRender={renderWorkingDays}
-              trigger={["click"]}
-              open={workingDaysVisible}
-              onOpenChange={setWorkingDaysVisible}
-            >
-              <Badge
-                count={activeFilters.workingDays ? "•" : 0}
-                offset={[-6, 2]}
-                color="green"
-              >
-                <Button
-                  shape="round"
-                  style={{
-                    border: activeFilters.workingDays
-                      ? "1px solid #4f46e5"
-                      : "1px solid rgb(0 0 0 / 20%)",
-                    background: activeFilters.workingDays ? "#f3f2ff" : "#fff",
-                    padding: "0 16px",
-                    height: 36,
-                    color: activeFilters.workingDays ? "#6a5cff" : "#2d3748",
-                    fontWeight: 500,
-                  }}
+          {/* Right Content - Job list only (details removed) */}
+          <Col xs={24} md={17} lg={18}>
+            {loading ? (
+              <Space direction="vertical" size={24} style={{ width: "100%" }}>
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} active />
+                ))}
+              </Space>
+            ) : jobs.length === 0 ? (
+              <Card style={{ borderRadius: 12 }}>
+                <Empty
+                  image={require("../images/job_search.jpeg")}
+                  imageStyle={{ height: 300 }}
+                  description={<span>We couldn’t find any opportunities that match your filters.</span>}
                 >
-                  <Space>
-                    <LuCalendarDays /> Working Days
-                    <DownOutlined
-                      style={{
-                        fontSize: 12,
-                        color: activeFilters.workingDays ? "#6a5cff" : "#2d3748",
-                      }}
-                    />
-                  </Space>
-                </Button>
-              </Badge>
-            </Dropdown>
-          )}
-
-          {/* Location — hidden if Scholarship */}
-          {jobNatureSelected !== "Scholarship" && (
-            <Dropdown
-              popupRender={renderLocation}
-              trigger={["click"]}
-              open={visible}
-              onOpenChange={setVisible}
-            >
-              <Badge count={activeFilters.location ? "•" : 0} offset={[-6, 2]} color="green">
-                <Button
-                  shape="round"
-                  style={{
-                    border: activeFilters.location
-                      ? "1px solid #4f46e5"
-                      : "1px solid rgb(0 0 0 / 20%)",
-                    background: activeFilters.location ? "#f3f2ff" : "#fff",
-                    padding: "0 16px",
-                    height: 36,
-                    color: activeFilters.location ? "#6a5cff" : "#2d3748",
-                    fontWeight: 500,
-                  }}
-                >
-                  <Space>
-                    <GrLocation /> Location
-                    <DownOutlined
-                      style={{
-                        fontSize: 12,
-                        color: activeFilters.location ? "#6a5cff" : "#2d3748",
-                      }}
-                    />
-                  </Space>
-                </Button>
-              </Badge>
-            </Dropdown>
-          )}
-
-          {/* Work Type */}
-          {jobNatureSelected !== "Scholarship" && (
-            <Dropdown
-              popupRender={dropdownContent}
-              trigger={["click"]}
-              open={workTypevisible}
-              onOpenChange={setWorkTypeVisible}
-            >
-              <Badge count={activeFilters.workType ? "•" : 0} offset={[-6, 2]} color="green">
-                <Button
-                  shape="round"
-                  style={{
-                    border: activeFilters.workType
-                      ? "1px solid #4f46e5"
-                      : "1px solid rgb(0 0 0 / 20%)",
-                    background: activeFilters.workType ? "#f3f2ff" : "#fff",
-                    padding: "0 16px",
-                    height: 36,
-                    color: activeFilters.workType ? "#6a5cff" : "#2d3748",
-                    fontWeight: 500,
-                  }}
-                >
-                  <Space>
-                    <CgWorkAlt /> Work Type
-                    <DownOutlined
-                      style={{
-                        fontSize: 12,
-                        color: activeFilters.workType ? "#6a5cff" : "#2d3748",
-                      }}
-                    />
-                  </Space>
-                </Button>
-              </Badge>
-            </Dropdown>
-          )}
-
-          {/* ✅ User Type */}
-          <Dropdown
-            popupRender={() => (
-              <div style={{ padding: 16, width: 220, background: "#fff" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: 8,
-                  }}
-                >
-                  <strong>User Type</strong>
-                  <a
+                  <Button
+                    style={{ background: "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)" }}
+                    type="primary"
+                    shape="round"
                     onClick={() => {
-                      setTempUserType("");
+                      setSelectedCategories([]);
+                      setSelectedTypes([]);
+                      setSelectedLocations([]);
+                      setSelectedWorkingDays("");
+                      setSelectedStatus("");
+                      setSelectedSort(null);
                       setSelectedUserType("");
+                      setJobNatureSelected("");
                       fetchJobs();
-                      setUserTypeVisible(false);
                     }}
-                    style={{ color: "#f5222d" }}
                   >
-                    Clear
-                  </a>
-                </div>
-                <Radio.Group
-                  className="custom-radio"
-                  onChange={(e) => setTempUserType(e.target.value)}
-                  value={tempUserType || selectedUserType}
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
-                  <Radio value="Fresher">Fresher</Radio>
-                  <Radio value="Experienced">Experienced</Radio>
-                  <Radio value="College Students">College Students</Radio>
-                </Radio.Group>
+                    Explore All Opportunities
+                  </Button>
+                </Empty>
+              </Card>
+            ) : (
+              <Row gutter={24}>
+                {/* ✅ Row 2 — Your Job Cards */}
+                <Col xs={0} md={7} lg={16}>
+                  <div className="cf4-job-list-wrapper">
+                    {jobs.map((job) => (
+                      <JobCard key={job.id} job={job} />
+                    ))}
+                  </div>
+                </Col>
+                <Col xs={0} md={7} lg={8}>
+                  {/* ✅ Row 3 — Courses */}
+                  <div className="cf4-course-box">
+                    <h3 className="cf4-section-title">Recommended Courses</h3>
 
-                <Divider style={{ margin: "12px 0" }} />
-                <Button
-                  className="apply_filter"
-                  type="primary"
-                  shape="round"
-                  block
-                  onClick={() => {
-                    setSelectedUserType(tempUserType);
-                    setUserTypeVisible(false);
-                    fetchJobs();
-                  }}
-                >
-                  Apply Filter
-                </Button>
-              </div>
-            )}
-            trigger={["click"]}
-            open={userTypeVisible}
-            onOpenChange={setUserTypeVisible}
-          >
-            <Badge count={activeFilters.userType ? "•" : 0} offset={[-6, 2]} color="green">
-              <Button
-                shape="round"
-                style={{
-                  border: activeFilters.userType
-                    ? "1px solid #4f46e5"
-                    : "1px solid rgb(0 0 0 / 20%)",
-                  background: activeFilters.userType ? "#f3f2ff" : "#fff",
-                  padding: "0 16px",
-                  height: 36,
-                  color: activeFilters.userType ? "#6a5cff" : "#2d3748",
-                  fontWeight: 500,
-                }}
-              >
-                <Space>
-                  <FiUser /> User Type
-                  <DownOutlined
-                    style={{
-                      fontSize: 12,
-                      color: activeFilters.userType ? "#6a5cff" : "#2d3748",
-                    }}
-                  />
-                </Space>
-              </Button>
-            </Badge>
-          </Dropdown>
-
-          {/* Category */}
-          <Dropdown
-            popupRender={userCatergory}
-            trigger={["click"]}
-            open={userCatergoryvisible}
-            onOpenChange={setUserCatergoryVisible}
-          >
-            <Badge
-              count={activeFilters.category ? "•" : 0}
-              offset={[-6, 2]}
-              color="green"
-            >
-              <Button
-                shape="round"
-                style={{
-                  border: activeFilters.category
-                    ? "1px solid #4f46e5"
-                    : "1px solid rgb(0 0 0 / 20%)",
-                  background: activeFilters.category ? "#f3f2ff" : "#fff",
-                  padding: "0 16px",
-                  height: 36,
-                  color: activeFilters.category ? "#6a5cff" : "#2d3748",
-                  fontWeight: 500,
-                }}
-              >
-                <Space>
-                  <BiCategoryAlt /> Category
-                  <DownOutlined
-                    style={{
-                      fontSize: 12,
-                      color: activeFilters.category ? "#6a5cff" : "#2d3748",
-                    }}
-                  />
-                </Space>
-              </Button>
-            </Badge>
-          </Dropdown>
-
-          {/* Filter Counter */}
-          {activeFilterCount > 0 && (
-            <div
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <Badge
-                count={activeFilterCount}
-                size="small"
-                style={{ backgroundColor: "#52c41a" }}
-              >
-                <FilterOutlined style={{ color: "#52c41a", fontSize: "16px" }} />
-              </Badge>
-              <span style={{ marginLeft: "8px", fontSize: "14px", color: "#666" }}>
-                filter{activeFilterCount !== 1 ? "s" : ""}
-              </span>
-            </div>
-          )}
-        </div>
-
-
-        <div>
-          {jobLoading ? (
-            // 🔹 Loading skeletons
-            <Space direction="vertical" size={24} style={{ width: "100%" }}>
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} active />
-              ))}
-            </Space>
-          ) : backendJobs.length === 0 ? (
-            <div
-              style={{
-                minHeight: "80vh",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                textAlign: "center",
-                background: "#fff",
-                borderRadius: 12,
-                boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-                marginTop: 0,
-                padding: 40,
-              }}
-            >
-              <img
-                src={require("../images/job_search.jpeg")}
-                alt="No Data"
-                style={{
-                  width: 220,
-                  marginBottom: 24,
-                  filter: "drop-shadow(0px 4px 10px rgba(0,0,0,0.1))",
-                }}
-              />
-              <h2
-                style={{
-                  color: "#1e1e1e",
-                  fontWeight: 700,
-                  marginBottom: 10,
-                  fontSize: "1.8rem",
-                }}
-              >
-                No Jobs Found
-              </h2>
-              <p
-                style={{
-                  color: "#666",
-                  fontSize: "1rem",
-                  maxWidth: 480,
-                  marginBottom: 24,
-                  lineHeight: 1.6,
-                }}
-              >
-                We couldn’t find any opportunities that match your filters.
-                Try adjusting your filters or explore all available jobs.
-              </p>
-              <Button
-                type="primary"
-                shape="round"
-                size="large"
-                style={{
-                  backgroundColor: "#4f46e5",
-                  borderColor: "#4f46e5",
-                  padding: "0 32px",
-                  fontWeight: 600,
-                  fontSize: "16px",
-                }}
-                onClick={() => {
-                  // Reset all filters before refetch
-                  setJobNatureSelected("");
-                  setSelectedUserType("");
-                  setSelectedCategories([]);
-                  setSelectedTypes([]);
-                  setSelected([]);
-                  setSelectedStatus("");
-                  setSelectedWorkingDays("");
-                  fetchJobs();
-                }}
-              >
-                Explore All Opportunities
-              </Button>
-            </div>
-          ) : (
-            <Row gutter={32}>
-              <Col className="job_filter_left" lg={7} xs={24} md={8}>
-                <Space direction="vertical" size={24} style={{ width: "100%" }}>
-                  {backendJobs.map((job) => (
-                    <JobCard key={job.id} job={transformJob(job)} />
-                  ))}
-                </Space>
-              </Col>
-
-
-              <Col className="job_filter_left" lg={17} xs={24} md={16}>
-                <section className="premium-job-details">
-                  {postDetails.map((job) => (
-                    <React.Fragment key={job.id}>
-                      {jobDetailsLoading ? (
-                        <Skeleton active />
-                      ) : (
-                        <>
-                          <div className="premium-job-card">
-                            <div className="">
-                              <div className="premium-border"></div>
-                              <div className="premium-indicator">
-                                <span
-                                  className={
-                                    job.status === "Live"
-                                      ? "status-badge"
-                                      : job.status === "Expired"
-                                        ? "status-badge-red"
-                                        : ""
-                                  }
-                                >
-                                  {job.status}
-                                </span>
-                              </div>
-
-                              <div className="company-logo-wrapper">
-                                <img
-                                  src={job.logo}
-                                  alt="Company Logo"
-                                  className="premium-logo"
-                                />
-                              </div>
-
-                              <div className="job-content">
-                                <h2 className="premium-job-title">{job.title}</h2>
-
-                                <div className="job-meta-item">
-                                  <FaRegBuilding className="meta-icon premium-icon" />
-                                  <span className="meta-text">{job.company}</span>
-                                  <span className="verified-badge">Verified</span>
-                                </div>
-                                {job.type !== "Scholarship" && (
-                                  <div className="job-meta-item">
-                                    <FaMapMarkerAlt className="meta-icon premium-icon" />
-                                    <span className="meta-text">
-                                      {job.location}
-                                    </span>
-                                  </div>
-                                )}
-
-                                <div className="job-meta-item">
-                                  <FaRegCalendarAlt className="meta-icon premium-icon" />
-                                  <span className="meta-text">
-                                    Posted: {job.date_posted}
-                                  </span>
-                                </div>
-
-                                <div className="job-tags">
-                                  <span className="tag">{job.type}</span>
-                                  {job.type !== "Scholarship" && (
-                                    <span className="tag">{job.working_days}</span>
-                                  )}
-                                  <span className="tag">{job.salary}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="side_job_details">
-                              <div className="side_job_actions">
-                                <div className="side_job_action_buttons">
-                                  <div className="side_job_action_icons">
-                                    <span
-                                      className="side_job_action_icon"
-                                      onClick={() => handleWishlistToggle(job.id)}
-                                    >
-                                      {isSaved[job.id] ? (
-                                        <FaHeart
-                                          size={20}
-                                          className="side_job_action_icon heart active"
-                                        />
-                                      ) : (
-                                        <FaRegHeart
-                                          size={20}
-                                          className="side_job_action_icon heart"
-                                        />
-                                      )}
-                                    </span>
-                                    <span className="side_job_action_icon">
-                                      <IoMdCalendar
-                                        size={20}
-                                        className="side_job_action_icon calendar"
-                                      />
-                                    </span>
-                                  </div>
-                                  <div style={{ display: "flex", gap: 10 }}>
-                                    <Tooltip title="Copy link">
-                                      <span className="side_job_action_icon">
-                                        <FaLink
-                                          size={20}
-                                          onClick={() => handleCopy(job)}
-                                        />
-                                      </span>
-                                    </Tooltip>
-                                    <span className="side_job_action_icon">
-                                      <Tooltip title="Share link">
-                                        <IoIosShareAlt
-                                          size={20}
-                                          onClick={() => handleShare(job)}
-                                        />{" "}
-                                      </Tooltip>
-                                    </span>
-                                  </div>
-                                </div>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "center",
-                                  }}
-                                >
-                                  {isApplied[job.id] === true ? (
-                                    <Tooltip
-                                      title={
-                                        appliedDates[job.id]
-                                          ? `Applied on ${new Date(
-                                            appliedDates[job.id]
-                                          ).toLocaleDateString("en-US", {
-                                            month: "short",
-                                            day: "numeric",
-                                            year: "numeric",
-                                          })}`
-                                          : "Applied recently"
-                                      }
-                                      placement="top"
-                                      arrow={true}
-                                      overlayInnerStyle={{
-                                        padding: "6px 10px",
-                                        borderRadius: "8px",
-                                        fontSize: "13px",
-                                        fontWeight: 500,
-                                        background: "#111827",
-                                        color: "#fff",
-                                      }}
-                                    >
-                                      <div className="side_job_applied_badge tooltip-badge">
-                                        <FaCheckCircle className="applied-icon" />
-                                        <span className="applied-text">
-                                          Applied
-                                        </span>
-                                      </div>
-                                    </Tooltip>
-                                  ) : (
-                                    <button
-                                      onClick={showDrawer}
-                                      disabled={job.status !== "Live"}
-                                      className={
-                                        job.status === "Live"
-                                          ? "side_job_apply_button primary"
-                                          : "side_job_apply_button disabled"
-                                      }
-                                    >
-                                      Apply Now
-                                    </button>
-                                  )}
-                                </div>
-                                <Drawer
-                                  size="default"
-                                  title="Apply Now"
-                                  closable={{ "aria-label": "Close Button" }}
-                                  onClose={onClose}
-                                  open={openApplyNow}
-                                >
-                                  <p>
-                                    Hi {fName} {lName}! We request you to take a
-                                    couple of minutes to update your profile.
-                                  </p>
-
-                                  {/* ✅ Show applied date if available */}
-                                  {postDetails[0]?.applied_at && (
-                                    <p
-                                      style={{
-                                        marginTop: 12,
-                                        fontWeight: "500",
-                                        color: "#555",
-                                      }}
-                                    >
-                                      Applied on:{" "}
-                                      {new Date(
-                                        postDetails[0].applied_at
-                                      ).toLocaleDateString("en-IN", {
-                                        year: "numeric",
-                                        month: "short",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </p>
-                                  )}
-
-                                  {postDetails[0]?.questions?.length > 0 && (
-                                    <div className="job-questions-section">
-                                      <h4>Application Questions</h4>
-                                      {postDetails[0].questions.map(
-                                        (question, index) => (
-                                          <div
-                                            key={question.id || index}
-                                            className="question-item"
-                                          >
-                                            <p>{question}</p>
-                                            <Input.TextArea
-                                              rows={3}
-                                              placeholder="Your answer..."
-                                              className="premium-input"
-                                              value={answers[index] || ""}
-                                              onChange={(e) => {
-                                                const newAnswers = [...answers];
-                                                newAnswers[index] =
-                                                  e.target.value;
-                                                setAnswers(newAnswers);
-                                              }}
-                                            />
-                                          </div>
-                                        )
-                                      )}
-                                      <div>
-                                        <button
-                                          className="premium-apply"
-                                          onClick={applyForJobData}
-                                        >
-                                          Submit
-                                        </button>
-                                      </div>
-                                    </div>
-                                  )}
-                                </Drawer>
-                              </div>
-
-                              <div className="side_job_eligibility">
-                                <h4 className="side_job_eligibility_title">
-                                  Eligibility
-                                </h4>
-                                <div className="side_job_eligibility_details">
-                                  <span className="side_job_eligibility_item">
-                                    <MdOutlineSchool /> {job.level}
-                                  </span>
-                                  <span className="side_job_eligibility_item">
-                                    <MdOutlineWorkOutline /> {job.eligibility || "N/A"}
-                                  </span>
-                                  <span className="side_job_eligibility_item">
-                                    <FaTransgender />{" "}
-                                    {job.diversity_hiring.map(
-                                      (diversity_hiring, index) => (
-                                        <span key={diversity_hiring}>
-                                          {diversity_hiring}
-                                          {index <
-                                            job.diversity_hiring.length - 1 &&
-                                            ", "}
-                                        </span>
-                                      )
-                                    )}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="section-card job-description">
-                            {job.type === "Scholarship" ? (
-                              <h2 className="section-title">Scholarship Details</h2>
-                            ) : (
-                              <h2 className="section-title">Job Description</h2>
-                            )}
-                            {job.type !== "Scholarship" && (
-                              <h6>
-                                {job.company} is hiring for the role of {job.title}!
-                              </h6>
-                            )}
-                            <div
-                              className="job-description-content"
-                              dangerouslySetInnerHTML={{
-                                __html: job.job_description,
-                              }}
+                    {courses.length === 0 ? (
+                      <Skeleton active />
+                    ) : (
+                      <div className="cf4-course-list">
+                        {courses.slice(0, 5).map((course) => (
+                          <div
+                            key={course.id}
+                            className="cf4-course-item"
+                            onClick={() => {
+                              if (course.link?.startsWith("http")) {
+                                window.open(course.link, "_blank");
+                              } else {
+                                navigate(`/course/${course.id}`);
+                              }
+                            }}
+                            style={{ cursor: "pointer" }}
+                          >
+                            <img
+                              src={course.image}
+                              alt={course.title}
+                              className="cf4-course-thumb"
                             />
-                          </div>
-                          {job.type !== "Scholarship" && (
-                            <div className="section-card">
-                              <h2 className="section-title">
-                                Additional Information
-                              </h2>
-
-                              <div className="info-card">
-                                <div className="info-card-content">
-                                  <h4>Skills Required</h4>
-                                  <p>
-                                    {job.skills.map((skill, index) => (
-                                      <span key={index} className="premium-skill">
-                                        {skill}
-                                        {index < job.skills.length - 1 && (
-                                          <span className="skill-separator">
-                                            {" "}
-                                            |{" "}
-                                          </span>
-                                        )}
-                                      </span>
-                                    ))}
-                                  </p>
-                                </div>
-
-                                <img
-                                  className="info-card-image"
-                                  src={additional1}
-                                  alt="Location"
-                                />
-                              </div>
-
-                              <div className="info-card">
-                                <div className="info-card-content">
-                                  <h4>Job Openings</h4>
-                                  <p>{job.openings}</p>
-                                </div>
-                                <img
-                                  className="info-card-image"
-                                  src={additional2}
-                                  alt="Experience"
-                                />
-                              </div>
-
-                              <div className="info-card">
-                                <div className="info-card-content">
-                                  <h4>Job Benefits</h4>
-                                  <p>
-                                    {(job.benefits || []).map(
-                                      (benefit, index, arr) => (
-                                        <span key={benefit} className="premium-skill">
-                                          {benefit}
-                                          {index < arr.length - 1 && (
-                                            <span className="separator"> | </span>
-                                          )}
-                                        </span>
-                                      )
-                                    )}
-                                  </p>
-                                </div>
-
-                                <img
-                                  className="info-card-image"
-                                  src={additional3}
-                                  alt="Salary"
-                                />
-                              </div>
-
-                              <div className="info-card">
-                                <div className="info-card-content">
-                                  <h4>Job Catergory</h4>
-                                  <p>{job.job_category}</p>
-                                </div>
-                                <img
-                                  className="info-card-image"
-                                  src={additional4}
-                                  alt="Work Details"
-                                />
-                              </div>
-
-                              <div className="info-card">
-                                <div className="info-card-content">
-                                  <h4>Work Schedule</h4>
-                                  <p>
-                                    <b>Working Days</b>: {job.working_days}
-                                  </p>
-                                </div>
-                                <img
-                                  className="info-card-image"
-                                  src={additional5}
-                                  alt="Work Details"
-                                />
-                              </div>
-
-                              <div className="info-card">
-                                <div className="info-card-content">
-                                  <h4>Job Type / Nature</h4>
-                                  <p>
-                                    <b>Job Type</b>: {job.location}
-                                  </p>
-                                  <p>
-                                    <b>Job Nature</b>: {job.type}
-                                  </p>
-                                </div>
-                                <img
-                                  className="info-card-image"
-                                  src={additional6}
-                                  alt="Work Details"
-                                />
-                              </div>
+                            <div className="cf4-course-info">
+                              <h4 className="cf4-course-title">{course.title}</h4>
+                              <p className="cf4-course-desc">
+                                {course.description?.slice(0, 70)}...
+                              </p>
                             </div>
-                          )}
-                        </>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </section>
-              </Col>
-            </Row>
-          )}
-        </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Col>
+              </Row>
+
+            )}
+          </Col>
+        </Row>
       </section>
+
+      {/* Mobile Filters Drawer */}
+      <Drawer
+        width={320}
+        title="Filters"
+        onClose={() => setMobileFilterOpen(false)}
+        open={mobileFilterOpen}
+        className="header-drawer"
+      >
+        {FilterSidebar}
+      </Drawer>
     </>
   );
 }

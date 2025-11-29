@@ -9,14 +9,13 @@ import {
   ArrowRightOutlined,
   LeftOutlined,
   RightOutlined,
-  LockOutlined,
 } from "@ant-design/icons";
 import "../css/LandingPage.css";
 import { motion } from "framer-motion";
 import ParticlesBg from "particles-bg";
 import post_jobs1 from "../images/post_jobs1.png";
 import Header from "../Header/Header";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -25,47 +24,52 @@ import {
   getJobPostByUserId,
   getJobPosts,
   StatsOfPost,
+  getJobCategoryData,
+  getBlogs
 } from "../ApiService/action";
 import { PiCurrencyDollarDuotone } from "react-icons/pi";
 import logo1 from "../images/logo1.svg";
 import logo2 from "../images/logo2.svg";
 import logo3 from "../images/logo3.svg";
 import logo4 from "../images/logo4.svg";
-import logo5 from "../images/logo4.svg";
+import logo5 from "../images/flipcart.webp";
+import logo6 from "../images/samsung-8.svg";
+import logo7 from "../images/tata-1.svg";
+import logo8 from "../images/tesla-pure.svg";
+import logo9 from "../images/amazon.svg";
+import logo10 from "../images/hundai.png";
+import logo11 from "../images/apple.png";
+import logo12 from "../images/hp.webp";
+import logo13 from "../images/facebook.webp";
 import bannerImg from "../images/internship_banner.jpg";
 import need_content_img from "../images/need_guidence.webp";
-import company_logos1 from "../images/counter_box1.png";
+import company_logos1 from "../images/counter_box2.png";
 import company_logos2 from "../images/verified.png";
 import company_logos3 from "../images/applied.png";
-import recruiter1 from "../images/recruiter1.png";
 import need_guidence1 from "../images/need_guidence1.png";
-import post_jobs from "../images/post_jobs.webp";
-import tipsImg from "../images/tips.jpg";
-import tipsImg2 from "../images/tips2.jpg";
-import tipsImg3 from "../images/tips3.jpg";
+import post_jobs from "../images/post_jobs.jpg";
+import {
+  FaLaptopCode,
+  FaBullhorn,
+  FaChartBar,
+  FaPalette,
+  FaHospitalAlt,
+  FaPlaneDeparture,
+  FaBookOpen,
+  FaTools,
+  FaBriefcase,
+  FaMicrochip
+} from "react-icons/fa";
+import { Loader } from "lucide-react";
+
+const generateSlug = (text) => {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
 
 const { Title, Text } = Typography;
-
-const tipsData = [
-  {
-    title: "Top 10 Skills Companies Want in 2025",
-    img: tipsImg,
-    description: "Discover the most in-demand skills that will future-proof your career in the coming years.",
-    readTime: "5 min read"
-  },
-  {
-    title: "How to Crack Your Next Interview",
-    img: tipsImg2,
-    description: "Master the art of interviewing with these proven techniques and strategies.",
-    readTime: "7 min read"
-  },
-  {
-    title: "Remote Jobs vs Onsite: Which is Better?",
-    img: tipsImg3,
-    description: "Compare the pros and cons of remote and onsite work arrangements.",
-    readTime: "6 min read"
-  }
-];
 
 const gradientColors = [
   "linear-gradient(to right, #0f3443, #34e89e)",
@@ -116,6 +120,14 @@ const companies = [
   { id: 3, logo: logo3 },
   { id: 4, logo: logo4 },
   { id: 5, logo: logo5 },
+  { id: 6, logo: logo6 },
+  { id: 7, logo: logo7 },
+  { id: 8, logo: logo8 },
+  { id: 9, logo: logo9 },
+  { id: 10, logo: logo10 },
+  { id: 11, logo: logo11 },
+  { id: 12, logo: logo12 },
+  { id: 13, logo: logo13 },
 ];
 const loopedCompanies = [...companies, ...companies];
 
@@ -129,13 +141,31 @@ export default function InternshipLandingPage() {
   const [appliedCounts, setAppliedCounts] = useState({});
   const jobTypeJobs = backendJobs.filter((jobs) => jobs.job_nature === "Internship");
   const [isVisible, setIsVisible] = useState(false);
-
   // 🔹 Loader state
+  const [blogTips, setBlogTips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleBlogs, setVisibleBlogs] = useState(6);
 
   useEffect(() => {
     setIsVisible(true);
+    loadBlogsForTips();
   }, []);
+
+  const loadBlogsForTips = async () => {
+    try {
+      const res = await getBlogs();
+      const blogs = res.data || [];
+      setBlogTips(blogs.slice(0, 10));
+    } catch (error) {
+      console.error("Error fetching blog tips:", error);
+    }
+  };
+
+
+  const loadMoreBlogs = () => {
+    setVisibleBlogs((prev) => prev + 3);
+  };
+
 
   const settings = {
     dots: true,
@@ -181,8 +211,18 @@ export default function InternshipLandingPage() {
     }),
   };
 
-
-  const icons = ["💻", "📊", "🎨", "📢", "💰", "🏥", "⚙️", "✈️", "📚", "🔬"];
+  const icons = [
+    <FaLaptopCode />,
+    <FaChartBar />,
+    <FaPalette />,
+    <FaBullhorn />,
+    <FaHospitalAlt />,
+    <FaTools />,
+    <FaPlaneDeparture />,
+    <FaBookOpen />,
+    <FaBriefcase />,
+    <FaMicrochip />
+  ];
 
   useEffect(() => {
     document.title = "CareerFast | Internship Portal";
@@ -202,35 +242,46 @@ export default function InternshipLandingPage() {
     }
   }, []);
 
+  const fetchCategories = async () => {
+    try {
+      const response = await getJobCategoryData();
+
+      const backendCategories =
+        response?.data?.data?.map(cat => cat.category_name) || [];
+
+      setCategory(backendCategories);
+
+      // ✅ Count jobs per category using backendJobs
+      const counts = {};
+      backendJobs.forEach(job => {
+        if (Array.isArray(job.job_category)) {
+          job.job_category.forEach(cat => {
+            counts[cat] = (counts[cat] || 0) + 1;
+          });
+        }
+      });
+
+      setCategoryCounts(counts);
+
+    } catch (err) {
+      console.error("Category fetch failed:", err);
+    }
+  };
+
   const getJobPostsData = async () => {
-    setLoading(true); // start loader
+    setLoading(true);
     try {
       const response = await getJobPosts({});
       const jobs = response?.data?.data?.data || [];
-      const jobCategories = [...new Set(jobs.flatMap((job) => job.job_category || []))];
-      setCategory(jobCategories);
-
-      const categoryCounts = jobs.reduce((acc, job) => {
-        (job.job_category || []).forEach((cat) => {
-          acc[cat] = (acc[cat] || 0) + 1;
-        });
-        return acc;
-      }, {});
-      setCategoryCounts(categoryCounts);
-
-      if (Array.isArray(jobs)) {
-        const uniqueJobs = jobs.filter(
-          (job, index, self) => index === self.findIndex((j) => j.id === job.id)
-        );
-        setBackendJobs(uniqueJobs);
-      }
+      setBackendJobs(jobs);
     } catch (error) {
       message.error("Please Login");
-      console.error("get job post error", error);
     } finally {
-      setLoading(false); // stop loader
+      setLoading(false);
+      fetchCategories(); // ✅ call here
     }
   };
+
 
   useEffect(() => {
     getJobPostByUserIdData();
@@ -321,7 +372,7 @@ export default function InternshipLandingPage() {
                 transition={{ delay: 0.5, duration: 0.8 }}
               >
                 <motion.button
-                  onClick={() => navigate("/job-filter?filter=Internship")}
+                  onClick={() => navigate("/internship-filter?filter=Internship")}
                   className="primary-btn"
                   whileHover={{ scale: 1.08 }}
                   whileTap={{ scale: 0.95 }}
@@ -453,7 +504,7 @@ export default function InternshipLandingPage() {
             variants={fadeInUp}
           >
             <h4>Explore Categories</h4>
-            <a onClick={() => navigate("/job-filter")} className="view-all">
+            <a onClick={() => navigate("/internship-filter")} className="view-all">
               View all
             </a>
           </motion.div>
@@ -463,16 +514,13 @@ export default function InternshipLandingPage() {
               <motion.div
                 key={index}
                 className="category-card"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeInUp}
-                // custom={index}
-                whileHover={{ scale: 1.02 }}
+                onClick={() => {
+                  const categorySlug = generateSlug(cat);
+                  navigate(`/job-filter?category=${categorySlug}`);
+                }}
               >
                 <div className="card-icon">{icons[index % icons.length]}</div>
                 <h5>{cat}</h5>
-                <p className="job-count">{categoryCounts[cat] || 0} jobs found</p>
               </motion.div>
             ))}
           </Slider>
@@ -576,9 +624,21 @@ export default function InternshipLandingPage() {
                                 Location
                               </span>
                               <span>
-                                {jobs.work_location
-                                  ? jobs.work_location
-                                  : "WFH"}
+                                {(() => {
+                                  try {
+                                    const arr = JSON.parse(jobs.work_location);
+
+                                    // Show FIRST 2 only
+                                    if (Array.isArray(arr)) {
+                                      const firstTwo = arr.slice(0, 2).join(", ");
+                                      return arr.length > 2 ? `${firstTwo}, ...` : firstTwo;
+                                    }
+
+                                    return jobs.work_location;
+                                  } catch {
+                                    return jobs.work_location;
+                                  }
+                                })()}
                               </span>
                             </div>
                           </div>
@@ -602,12 +662,11 @@ export default function InternshipLandingPage() {
                             </span>
                           </div>
                           <div className="elite-meta-item elite-salary">
-                            <PiCurrencyDollarDuotone />
                             <span>
                               {jobs.salary_type === "Range"
-                                ? `${jobs.min_salary} - ${jobs.max_salary}`
+                                ? `${jobs.currency} ${jobs.min_salary} - ${jobs.max_salary}`
                                 : jobs.salary_type === "Fixed"
-                                  ? jobs.min_salary
+                                  ? `${jobs.currency} ${jobs.min_salary}`
                                   : ""}
                             </span>
                           </div>
@@ -615,7 +674,12 @@ export default function InternshipLandingPage() {
                       </div>
 
                       <motion.div
-                        onClick={() => navigate(`/job-details/${jobs.id}`)}
+                        onClick={() => {
+                          const jobTitleSlug = generateSlug(jobs.job_title);
+                          const companySlug = generateSlug(jobs.company_name);
+                          const finalUrl = `/internship-details/${jobTitleSlug}-${companySlug}-${jobs.id}`;
+                          navigate(finalUrl);
+                        }}
                         className="elite-job-cta"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.95 }}
@@ -650,7 +714,7 @@ export default function InternshipLandingPage() {
               Keep track of your recent and in-progress listings to stay on top of what you've posted.
             </p>
           </div>
-          <a onClick={() => navigate("/job-filter")} className="view-all-link">
+          <a onClick={() => navigate("/internship-filter")} className="view-all-link">
             View all opportunities →
           </a>
         </div>
@@ -666,7 +730,12 @@ export default function InternshipLandingPage() {
               <motion.div
                 key={job.id}
                 className="classical-opportunity-card"
-                onClick={() => navigate(`/job-details/${job.id}`)}
+                onClick={() => {
+                  const jobTitleSlug = generateSlug(job.job_title);
+                  const companySlug = generateSlug(job.company_name);
+                  const finalUrl = `/job-details/${jobTitleSlug}-${companySlug}-${job.id}`;
+                  navigate(finalUrl);
+                }}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
@@ -689,7 +758,23 @@ export default function InternshipLandingPage() {
                 <div className="card-details">
                   <div className="detail-item">
                     <span className="label">Location:</span>
-                    <span>{job.location || "Remote"}</span>
+                    <span>
+                      {(() => {
+                        try {
+                          const arr = JSON.parse(job.work_location);
+
+                          // Show FIRST 2 only
+                          if (Array.isArray(arr)) {
+                            const firstTwo = arr.slice(0, 2).join(", ");
+                            return arr.length > 2 ? `${firstTwo}, ...` : firstTwo;
+                          }
+
+                          return job.work_location;
+                        } catch {
+                          return job.work_location;
+                        }
+                      })()}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="label">Posted:</span>
@@ -823,7 +908,7 @@ export default function InternshipLandingPage() {
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeInUp}
-            ><h2>25K+</h2><p>Verified Recruiters</p><img className="verified_img" src={recruiter1}></img><div className="company-logos2"><img src={company_logos2} alt="Jobs Counter" /></div></motion.div>
+            ><h2>25K+</h2><p>Verified Recruiters</p><div className="company-logos2"><img src={company_logos2} alt="Jobs Counter" /></div></motion.div>
           </Col>
           <Col md={8}>
             <motion.div
@@ -886,154 +971,135 @@ export default function InternshipLandingPage() {
 
         <div className="section-headers">
           <div className="header-decoration">
-            <h4>Career Tips & Insights</h4>
+            <h4>Career Fast Blogs</h4>
           </div>
-          <p>Stay updated with the latest hiring trends & interview hacks</p>
+          <p>Stay updated with the latest blog trends & interview hacks</p>
         </div>
 
         <Row gutter={[30, 30]}>
-          {tipsData.map((tip, index) => (
-            <Col
-              xs={24}
-              sm={12}
-              lg={8}
-              key={index}
-              className="tip-col"
-            >
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeInUp}
-                custom={index}
-                whileHover={{ y: -2, scale: 1.01 }}
-              >
-                <Card
-                  className="premium-tip-card"
-                  cover={
-                    <div className="card-image-container">
-                      <img alt={tip.title} src={tip.img} />
-                      <div className="image-overlay"></div>
-                      <div className="read-time">{tip.readTime}</div>
-                    </div>
-                  }
-                  hoverable
-                >
-                  <div className="card-contents">
-                    <h3>{tip.title}</h3>
-                    <p>{tip.description}</p>
-                    <a href="/blogs" className="premium-read-more">
-                      Read More <i className="fas fa-arrow-right"></i>
-                    </a>
-                  </div>
-                </Card>
-              </motion.div>
+          {blogTips.length === 0 ? (
+            <Col span={24} style={{ textAlign: "center" }}>
+              <h3>No Blogs Found</h3>
+              <p style={{ color: "#666" }}>Check back later for new blog updates.</p>
             </Col>
-          ))}
+          ) : (
+            blogTips.slice(0, visibleBlogs).map((tip, index) => (
+              <Col
+                xs={24}
+                sm={12}
+                lg={8}
+                key={index}
+                className="tip-col"
+              >
+                <motion.div
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={fadeInUp}
+                  custom={index}
+                  whileHover={{ y: -2, scale: 1.01 }}
+                >
+                  <Card
+                    className="premium-tip-card"
+                    cover={
+                      <div className="card-image-container">
+                        <img alt={tip.blogTitle} src={tip.blogImage} />
+                        <div className="image-overlay"></div>
+                        <div className="read-time">{tip.readingTime || "3 min read"}</div>
+                      </div>
+                    }
+                    hoverable
+                  >
+                    <div className="card-contents">
+                      <h3>{tip.blogTitle?.slice(0, 60) + "..."}</h3>
+                      <p>{tip.overview?.slice(0, 100) + "..."}</p>
+                      <a
+                        href={`/blog/${generateSlug(tip.blogTitle)}`}
+                        className="premium-read-more"
+                      >
+                        Read More <i className="fas fa-arrow-right"></i>
+                      </a>
+                    </div>
+                  </Card>
+                </motion.div>
+              </Col>
+            ))
+          )}
         </Row>
-
+        {visibleBlogs < blogTips.length && (
+          <div style={{ textAlign: "center", marginTop: "20px" }}>
+            <button
+              onClick={loadMoreBlogs}
+              className="premium-load-more"
+              style={{
+                padding: "7px 15px",
+                background: "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
+                color: "#fff",
+                borderRadius: "6px",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "14px",
+              }}
+            >
+              Load More <Loader style={{ marginTop: -2 }} size={16} />
+            </button>
+          </div>
+        )}
         <div className="section-footer">
-          <p>Explore more career resources in our <a href="/blog">Careerfast</a></p>
+          <p>Explore more career resources in our <a href="/job-portal">Careerfast</a></p>
         </div>
       </div>
 
 
-      {/* Post Your Jobs & Internships */}
+      {/* Post Your Jobs & Internships - CLEAN UI */}
       <motion.div
-        className="post_jobs"
-        initial="hidden"
-        whileInView="visible"
+        className="postJobsContainer"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
         viewport={{ once: true }}
-        variants={fadeInUp}
       >
-        <Row className="post_jobs_row">
-          <Col
-            style={{ placeContent: "center" }}
-            lg={12}
-            sm={24}
-            md={24}
-            xs={24}
-          >
-            <div
-              className={`post_jobs_glass ${roleId !== 3 ? "blur-access" : ""
-                }`}
+        <Row className="postJobsWrapper">
+
+          {/* Left Content */}
+          <Col lg={12} md={24} xs={24} className="postJobsLeft">
+            <h2 className="pjTitle">
+              Post Your <span>Jobs & Internships</span>
+            </h2>
+
+            <p className="pjSubtitle">
+              Reach thousands of active job seekers — from fresh graduates to experienced professionals.
+              Post your openings and connect with the right talent instantly.
+            </p>
+
+            <button
+              className="pjPrimaryBtn"
+              onClick={() => {
+                if (!loginUserId) {
+                  message.warning("Please login to post a job");
+                  navigate("/login");
+                } else if (roleId === 3) {
+                  navigate("/post-jobs");
+                } else {
+                  message.error("Access restricted! Only employers can post jobs.");
+                }
+              }}
             >
-              <div> <h2 className="post_jobs_title">Post Your <span className="highlight">Jobs & Internships</span></h2> <span className="post_jobs_text">  Connect with top talent actively seeking opportunities across various domains. Whether you're hiring for full-time roles, part-time positions, or internships. <br></br> Tap into a diverse and dynamic talent pool of fresh graduates, experienced professionals, and industry-ready interns. Post your opportunities with ease and start building your dream team today.</span> </div>
+              Get Started
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </Col>
 
-              <div className="post_jobs_btn">
-                <img style={{ width: "60%" }} src={post_jobs1} alt="icon" />
-                <button
-                  onClick={() => {
-                    if (!loginUserId) {
-                      message.warning("Please login to post a job");
-                      navigate("/login"); // redirect to login page
-                    } else if (roleId === 3) {
-                      navigate("/post-jobs");
-                    } else {
-                      message.error("Access restricted! Only employers can post jobs.");
-                    }
-                  }}
-                  className="primary-btn"
-                >
-                  <span>Post Jobs Now</span>
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M5 12H19M19 12L12 5M19 12L12 19"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-
-              </div>
-              {roleId !== 3 && (
-                <div className="access-restricted-overlay">
-                  <div className="access-restricted-content">
-                    <LockOutlined
-                      style={{
-                        fontSize: "32px",
-                        color: "#fff",
-                        marginBottom: "16px",
-                      }}
-                    />
-                    <h3 style={{ color: "#fff", marginBottom: "8px" }}>
-                      Access Restricted
-                    </h3>
-                    <p style={{ color: "#fff", textAlign: "center" }}>
-                      This feature is only available for employers. Please
-                      contact support if you believe this is an error.
-                    </p>
-                  </div>
-                </div>
-              )}
+          {/* Right Image */}
+          <Col lg={12} md={24} xs={24} className="postJobsRight">
+            <div className="pjImageWrapper">
+              <img src={post_jobs} alt="Post Jobs" className="pjImage" />
             </div>
           </Col>
 
-          <Col
-            style={{ placeContent: "center" }}
-            lg={12}
-            sm={24}
-            md={24}
-            xs={24}
-          >
-            <div
-              className={`post_jobs_div1 ${roleId !== 3 ? "blur-access" : ""
-                }`}
-            >
-              <div> <img src={post_jobs} alt="Post Job Illustration" /> </div>
-              {roleId !== 3 && (
-                <div className="access-restricted-overlay"></div>
-              )}
-            </div>
-          </Col>
         </Row>
       </motion.div>
       {/*  */}

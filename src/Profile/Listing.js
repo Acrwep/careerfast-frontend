@@ -19,6 +19,12 @@ import moment from "moment/moment";
 import { useNavigate } from "react-router-dom";
 import Header from "../Header/Header";
 import { MdFactCheck } from "react-icons/md";
+const generateSlug = (text) => {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
 
 const { Title, Text } = Typography;
 
@@ -345,14 +351,24 @@ export default function ListingDashboard() {
                                 <Tooltip title="View">
                                   <FaEye
                                     size={18}
-                                    onClick={() =>
-                                      navigate(
-                                        isEvent
-                                          ? `/event-details/${item.id}`
-                                          : `/job-details/${item.id}`
-                                      )
-                                    }
-                                    style={{ cursor: "pointer" }}
+                                    onClick={() => {
+                                      if (isEvent) {
+                                        navigate(`/event-details/${item.id}`);
+                                      } else {
+                                        const jobTitleSlug = generateSlug(item.job_title);
+                                        const companySlug = generateSlug(item.company_name);
+
+                                        let basePath = "/job-details";
+
+                                        if (item.job_nature === "Internship") {
+                                          basePath = "/internship-details";
+                                        } else if (item.job_nature === "Scholarship") {
+                                          basePath = "/scholarship-details";
+                                        }
+
+                                        navigate(`${basePath}/${jobTitleSlug}-${companySlug}-${item.id}`);
+                                      }
+                                    }}
                                   />
                                 </Tooltip>
                                 <Tooltip title="Edit">

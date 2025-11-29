@@ -163,7 +163,7 @@
   border: 1px solid rgb(0 0 0 / 20%);
   text-align: center;
   place-content: center;
-  height: 200px;
+  height: 150px;
 }
 
 .job-categories .slick-prev:before,
@@ -182,7 +182,7 @@
 }
 
 .card-icon {
-  font-size: 32px;
+  font-size: 26px;
   margin-bottom: 12px;
 }
 
@@ -1070,9 +1070,6 @@
   line-height: normal !important;
 }
 
-.post_jobs_text {
-  font-size: 16px;
-}
 
 .need_guidence img {
   width: 100%;
@@ -1270,18 +1267,22 @@
 }
 
 .company-logos2 img {
-  width: 50%;
+  width: 77%;
   object-fit: contain;
+  margin-top: -21px;
 }
 
 .company-logos3 img {
-  width: 100%;
+  width: 85%;
   object-fit: contain;
+  margin-top: -47px;
 }
 
 .company-logos1 img {
   width: 100%;
   object-fit: contain;
+  margin-top: -28px;
+  margin-left: 44px;
 }
 
 .verified-row {
@@ -1346,54 +1347,8 @@
 
 /* post jobs */
 
-.post_jobs_title {
-  margin: 0px !important;
-  padding-bottom: 15px;
-}
-
-.post_jobs_title {
-  color: rgba(0, 0, 0, 0.88);
-  font-weight: 600;
-  font-size: 38px !important;
-}
-
 .post_jobs .highlight {
   color: rgb(95, 46, 234);
-}
-
-.post_jobs {
-  padding: 50px 130px;
-}
-
-.post_jobs_row {
-  background-color: #8780ff3d;
-  padding: 30px 60px;
-  border-radius: 20px;
-}
-
-.post_jobs_div {
-  text-align: left;
-}
-
-.post_jobs_btn {
-  display: flex;
-  align-items: center;
-}
-
-.post_jobs_div img {
-  width: 45%;
-}
-
-.post_jobs_div .primary-btn {
-  margin-top: 20px;
-}
-
-.post_jobs_div1 {
-  text-align: end;
-}
-
-.post_jobs_div1 img {
-  width: 80%;
 }
 
 @media (max-width: 600px) {
@@ -1472,10 +1427,6 @@
 
   .post_jobs_row {
     padding: 30px 15px;
-  }
-
-  .post_jobs_text {
-    font-size: 14px;
   }
 
   .post_jobs_btn {
@@ -1628,16 +1579,17 @@
 
 .career-tips .premium-tip-card {
   width: 100%;
-  max-width: 360px;
-  height: 430px;
+  max-width: 400px;
+  height: 440px;
   border: none;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px rgb(178 158 255 / 23%);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   background: white;
   position: relative;
   z-index: 1;
+  border: 1px solid #e3e3e3;
 }
 
 .career-tips .premium-tip-card:hover {
@@ -1708,7 +1660,7 @@
   color: #64748b;
   font-size: 0.95rem;
   line-height: 1.5;
-  margin-bottom: 20px;
+  margin-bottom: 4px;
 }
 
 .career-tips .premium-read-more {
@@ -2016,4 +1968,225 @@
     overflow-x: auto;
     scrollbar-width: thin;
   }
+}
+
+
+/* NEW CLEAN POST JOBS SECTION */
+.postJobsContainer {
+  padding: 30px 130px 70px 130px;
+}
+
+.postJobsWrapper {
+  background: #f6f0ff;
+  border-radius: 22px;
+  padding: 50px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(100, 46, 234, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Decorative Shapes */
+.postJobsWrapper::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  background: #e6dbff;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.postJobsWrapper::after {
+  content: "";
+  position: absolute;
+  bottom: -50px;
+  left: -50px;
+  width: 220px;
+  height: 220px;
+  background: #d1c4ff;
+  border-radius: 50%;
+  opacity: 0.4;
+}
+
+.postJobsLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  z-index: 2;
+}
+
+.pjTitle {
+  font-size: 42px;
+  font-weight: 700;
+  color: #1f1f1f;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.pjTitle span {
+  color: #5f2eea;
+}
+
+.pjSubtitle {
+  font-size: 17px;
+  color: #4e4e4e;
+  line-height: 1.7;
+  max-width: 520px;
+  margin-bottom: 0px;
+}
+
+.pjPrimaryBtn {
+  margin-top: 20px;
+  width: 30%;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%);
+  border: none;
+  padding: 14px 26px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s ease;
+  box-shadow: 0 5px 18px rgba(95, 46, 234, 0.25);
+}
+
+.pjPrimaryBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(95, 46, 234, 0.35);
+}
+
+.pjPrimaryBtn svg {
+  transition: 0.3s ease;
+}
+
+.pjPrimaryBtn:hover svg {
+  transform: translateX(5px);
+}
+
+/* IMAGE SECTION */
+.pjImageWrapper {
+  width: 95%;
+  display: flex;
+  justify-content: center;
+  z-index: 2;
+}
+
+.pjImage {
+  width: 90%;
+  border-radius: 18px;
+}
+
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .postJobsContainer {
+    padding: 40px 20px;
+  }
+
+  .postJobsWrapper {
+    padding: 25px;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .pjTitle {
+    font-size: 32px;
+  }
+
+  .pjSubtitle {
+    font-size: 15px;
+    margin: 0 auto;
+  }
+
+  .pjPrimaryBtn {
+    justify-content: center;
+    width: 80%;
+  }
+
+  .pjImageWrapper {
+    margin-top: 20px;
+    width: 100%;
+  }
+}
+
+
+
+
+/* ---------- NEW PREMIUM CATEGORY CARDS ---------- */
+
+.category-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  padding: 24px;
+  cursor: pointer;
+  text-align: center;
+  height: 160px;
+  border: 1px solid rgba(140, 82, 255, 0.15);
+  box-shadow: 0 6px 22px rgba(80, 0, 170, 0.08);
+  transition: all 0.35s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 12px 34px rgba(80, 0, 170, 0.15);
+  border-color: #7f5af0;
+}
+
+/* Glow highlight */
+.category-card::after {
+  content: "";
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 60px;
+  background: radial-gradient(circle,
+      rgba(127, 90, 240, 0.25) 0%,
+      transparent 70%);
+  transition: 0.4s ease;
+}
+
+.category-card:hover::after {
+  bottom: -10px;
+  opacity: 1;
+}
+
+/* Icon bubble */
+.card-icon {
+  width: 45px;
+  height: 45px;
+  margin: 0 auto 14px auto;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7f5af0, #5f2eea);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 6px 15px rgba(95, 46, 234, 0.35);
+  transition: all 0.3s ease;
+}
+
+.category-card:hover .card-icon {
+  transform: scale(1.15) rotate(5deg);
+}
+
+/* Title */
+.category-card h5 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  color: #2a2a2a;
+  letter-spacing: 0.3px;
 }

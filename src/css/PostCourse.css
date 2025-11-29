@@ -38,8 +38,12 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
+.course-form .form-group{
+  margin-bottom: 20px;
+}
+
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0rem;
   position: relative;
 }
 
@@ -457,7 +461,7 @@
 /* Card header with image */
 .card-header {
   position: relative;
-  display: block !important;
+  display: block;
   margin-bottom: 0px !important;
 }
 

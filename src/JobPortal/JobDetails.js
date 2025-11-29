@@ -12,6 +12,7 @@ import {
   Button,
   message,
   Tooltip,
+  Spin,
 } from "antd";
 import {
   FaRegBuilding,
@@ -61,39 +62,59 @@ const getTabs = (jobType) => {
 
 
 export default function JobDetails() {
-  const [wishlisted, setWishlisted] = useState(false);
   const [activeTab, setActiveTab] = useState("Job Description");
   const [postDetails, setPostDetails] = useState([]);
   const [backendJobs, setBackendJobs] = useState([]);
+  const [appliedDates, setAppliedDates] = useState({});
   const [openApplyNow, setOpenApplyNow] = useState(false);
   const [answers, setAnswers] = useState("");
   const [loginUserId, setLoginUserId] = useState(null);
-  const { id } = useParams();
   const [isApplied, setIsApplied] = useState({});
   const [isSaved, setIsSaved] = useState({});
   const [wishlistedJobs, setWishlistedJobs] = useState({});
   const [savedJobMap, setSavedJobMap] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = "CareerFast | Job Details";
     fetchJobs();
   }, []);
 
-  useEffect(() => {
-    console.log("Job ID from URL:", id);
-  }, [id]);
+  const { slug } = useParams();
+  const jobId = slug?.split("-").pop();
 
   useEffect(() => {
-    if (backendJobs.length > 0 && id) {
-      const selectedJob = backendJobs.find((job) => job.id.toString() === id);
+    console.log("Job ID from URL:", jobId);
+  }, [jobId]);
+
+  useEffect(() => {
+    if (backendJobs.length > 0 && jobId) {
+      const selectedJob = backendJobs.find(job => job.id.toString() === jobId);
+
       if (selectedJob) {
         setPostDetails([transformJob(selectedJob)]);
+        checkIsJobAppliedData(selectedJob.id);
       } else {
-        console.warn("Job not found with id:", id);
+        console.warn("Job not found with id:", jobId);
       }
-      checkIsJobAppliedData(selectedJob.id);
     }
-  }, [backendJobs, id]);
+  }, [backendJobs, jobId]);
+
+  useEffect(() => {
+    try {
+      const storedAppliedDates = localStorage.getItem("appliedDates");
+      if (storedAppliedDates) {
+        setAppliedDates(JSON.parse(storedAppliedDates));
+      }
+    } catch (error) {
+      console.error("Error loading applied dates from localStorage", error);
+    }
+  }, []);
+
+  // Save applied dates to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("appliedDates", JSON.stringify(appliedDates));
+  }, [appliedDates]);
 
   useEffect(() => {
     try {
@@ -108,6 +129,7 @@ export default function JobDetails() {
   }, []);
 
   const fetchJobs = async () => {
+    setLoading(true);
     const payload = {};
 
     try {
@@ -126,6 +148,7 @@ export default function JobDetails() {
     } finally {
       setTimeout(() => {
         checkIsJobAppliedData();
+        setLoading(false)
       }, 300);
     }
   };
@@ -178,12 +201,21 @@ export default function JobDetails() {
       level: job.experience_type,
       salary:
         job.salary_type === "Fixed"
-          ? `$${job.min_salary || "N/A"}`
+          ? `${job.currency}${job.min_salary || "N/A"}`
           : job.salary_type === "Range"
-            ? `$${job.min_salary || "N/A"} - $${job.max_salary || "N/A"}`
+            ? `${job.currency}${job.min_salary || "N/A"} - ${job.currency}${job.max_salary || "N/A"}`
             : "Negotiable",
-      location: `${job.workplace_type}${job.work_location ? ` • ${job.work_location}` : ""
-        }`,
+      location: (() => {
+        try {
+          const parsed = JSON.parse(job.work_location);
+          const locations = Array.isArray(parsed) ? parsed.join(", ") : job.work_location;
+
+          return `${job.workplace_type}${locations ? ` • ${locations}` : ""}`;
+        } catch {
+          // if not JSON, fallback safely
+          return `${job.workplace_type}${job.work_location ? ` • ${job.work_location}` : ""}`;
+        }
+      })(),
       diversity_hiring: job.diversity_hiring,
       type: job.job_nature,
       premium: true,
@@ -234,12 +266,18 @@ export default function JobDetails() {
     try {
       const response = await applyForJob(payload, token); // pass token to API helper
       console.log("apply jobs", response);
-      message.success("Job applied successfully");
+      message.success("Application submitted! Recruiter has been notified 🚀");
       setIsApplied((prev) => ({
         ...prev,
         [jobId]: true,
       }));
+      const appliedDate = response.data.appliedJob.created_at;
+      setAppliedDates((prev) => ({
+        ...prev,
+        [jobId]: appliedDate,
+      }));
       setOpenApplyNow(false);
+
     } catch (error) {
       console.error("apply jobs error", error);
       message.error("Error while applying");
@@ -426,6 +464,22 @@ export default function JobDetails() {
     },
   ];
 
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          background: "#fff",
+        }}
+      >
+        <Spin size="large" tip="Loading details..." />
+      </div>
+    );
+  }
+
   return (
     <>
       <Header />
@@ -497,16 +551,17 @@ export default function JobDetails() {
                   <div className="side_job_actions">
                     <div className="side_job_action_buttons">
                       <div className="side_job_action_icons">
-                        <span className="side_job_action_icon">
+                        <span
+                          className="side_job_action_icon"
+                          onClick={() => handleWishlistToggle(job.id)}
+                        >
                           {isSaved[job.id] ? (
                             <FaHeart
-                              style={{ cursor: "no-drop" }}
                               size={20}
                               className="side_job_action_icon heart active"
                             />
                           ) : (
                             <FaRegHeart
-                              style={{ cursor: "no-drop" }}
                               size={20}
                               className="side_job_action_icon heart"
                             />
@@ -538,9 +593,32 @@ export default function JobDetails() {
                     </div>
                     <div style={{ display: "flex", justifyContent: "center" }}>
                       {isApplied[job.id] === true ? (
-                        <div className="side_job_applied_badge">
-                          <FaCheckCircle /> Applied
-                        </div>
+                        <Tooltip
+                          title={
+                            appliedDates[job.id]
+                              ? `Applied on ${new Date(appliedDates[job.id]).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}`
+                              : "Applied recently"
+                          }
+                          placement="top"
+                          arrow={true}
+                          overlayInnerStyle={{
+                            padding: "6px 10px",
+                            borderRadius: "8px",
+                            fontSize: "13px",
+                            fontWeight: 500,
+                            background: "#111827",
+                            color: "#fff",
+                          }}
+                        >
+                          <div className="side_job_applied_badge tooltip-badge">
+                            <FaCheckCircle className="applied-icon" />
+                            <span className="applied-text">Applied</span>
+                          </div>
+                        </Tooltip>
                       ) : (
                         <button
                           onClick={showDrawer}
@@ -687,6 +765,9 @@ export default function JobDetails() {
                             {(job.benefits || []).map((benefit, index) => (
                               <span key={benefit} className="premium-skill">
                                 {benefit}
+                                {index < job.benefits.length - 1 && (
+                                  <span className="skill-separator"> | </span>
+                                )}
                               </span>
                             ))}
                           </p>
@@ -701,7 +782,16 @@ export default function JobDetails() {
                       <div className="info-card">
                         <div className="info-card-content">
                           <h4>Job Catergory</h4>
-                          <p>{job.job_category}</p>
+                          <p>
+                            {(job.job_category || []).map((cat, index) => (
+                              <span key={cat} className="premium-skill">
+                                {cat}
+                                {index < job.job_category.length - 1 && (
+                                  <span className="skill-separator"> | </span>
+                                )}
+                              </span>
+                            ))}
+                          </p>
                         </div>
                         <img
                           className="info-card-image"

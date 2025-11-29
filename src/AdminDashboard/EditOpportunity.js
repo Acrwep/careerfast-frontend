@@ -80,6 +80,8 @@ import { State, City } from "country-state-city";
 import { HiMiniComputerDesktop } from "react-icons/hi2";
 import { MdOutlineEventNote } from "react-icons/md";
 import { MdOutlineSchool, MdOutlineWorkOutline } from "react-icons/md";
+import currencySymbol from "currency-symbols";
+import currencyCodes from "currency-codes";
 import { FaTransgender } from "react-icons/fa6";
 import additional1 from "../images/additional1.png";
 import additional2 from "../images/additional2.png";
@@ -419,7 +421,7 @@ const EditOpportunity = () => {
   const [activeSection, setActiveSection] = useState(null);
   const [salaryData, setSalaryData] = useState([]);
   const [salaryTypeActiveButton, setSalaryTypeActiveButton] = useState("");
-  const [currency, setCurrency] = useState("INR");
+  const [currency, setCurrency] = useState({ code: "INR", symbol: "₹" });
   const [fixedSalary, setFixedSalary] = useState(null);
   const [salaryMin, setSalaryMin] = useState(null);
   const [salaryMax, setSalaryMax] = useState(null);
@@ -525,9 +527,9 @@ const EditOpportunity = () => {
       level: job.experience_type,
       salary:
         job.salary_type === "Fixed"
-          ? `$${job.min_salary || "N/A"}`
+          ? `${job.currency || "N/A"}${job.min_salary || "N/A"}`
           : job.salary_type === "Range"
-            ? `$${job.min_salary || "N/A"} - $${job.max_salary || "N/A"}`
+            ? `${job.currency || "N/A"}${job.min_salary || "N/A"} - ${job.currency || "N/A"}${job.max_salary || "N/A"}`
             : "Negotiable",
       location: `${job.workplace_type}${job.work_location ? ` • ${job.work_location}` : ""
         }`,
@@ -856,7 +858,8 @@ const EditOpportunity = () => {
           : salaryTypeActiveButton === 2
             ? "Range"
             : "Negotiable",
-      currency, // 👈 include currency
+      currency_code: currency.code,
+      currency_symbol: currency.symbol,
       min_salary:
         salaryTypeActiveButton === 1
           ? Number(fixedSalary) || 0
@@ -1504,15 +1507,22 @@ const EditOpportunity = () => {
 
                   <div className="job_nature">
                     <Select
-                      value={currency}
-                      onChange={(value) => setCurrency(value)}
-                      style={{ width: 120 }}
+                      showSearch
+                      value={currency.code}
+                      onChange={(code) =>
+                        setCurrency({
+                          code,
+                          symbol: currencySymbol(code)
+                        })
+                      }
+                      style={{ width: 150 }}
                     >
-                      <Option value="INR">₹ (INR)</Option>
-                      <Option value="USD">$ (USD)</Option>
-                      <Option value="EUR">€ (EUR)</Option>
+                      {currencyCodes.codes().map((code) => (
+                        <Option key={code} value={code}>
+                          {`${currencySymbol(code)} - ${code}`}
+                        </Option>
+                      ))}
                     </Select>
-
                     <InputNumber
                       style={{ width: "60%", marginLeft: 12 }}
                       value={fixedSalary}
@@ -1530,15 +1540,22 @@ const EditOpportunity = () => {
                   <p>The salary on the job page will be shown in years only.</p>
                   <div className="job_nature">
                     <Select
-                      value={currency}
-                      onChange={(value) => setCurrency(value)}
-                      style={{ width: 100 }}
+                      showSearch
+                      value={currency.code}
+                      onChange={(code) =>
+                        setCurrency({
+                          code,
+                          symbol: currencySymbol(code)
+                        })
+                      }
+                      style={{ width: 150 }}
                     >
-                      <Option value="INR">₹ (INR)</Option>
-                      <Option value="USD">$ (USD)</Option>
-                      <Option value="EUR">€ (EUR)</Option>
+                      {currencyCodes.codes().map((code) => (
+                        <Option key={code} value={code}>
+                          {`${currencySymbol(code)} - ${code}`}
+                        </Option>
+                      ))}
                     </Select>
-
                     <InputNumber
                       value={salaryMin}
                       onChange={(value) => setSalaryMin(value)}
@@ -2007,7 +2024,10 @@ const EditOpportunity = () => {
                         <div className="job-tags">
                           <span className="tag">{job.type}</span>
                           <span className="tag">{job.working_days}</span>
-                          <span className="tag">{job.salary}</span>
+                          <span className="tag">
+                            {job.currency_symbol}
+                            {job.salary}
+                          </span>
                         </div>
                       </div>
                     </div>

@@ -1,4 +1,4 @@
-import React, { StrictMode, useEffect, useState } from "react";
+import React, { StrictMode, useEffect, useRef, useState } from "react";
 import {
   Row,
   Col,
@@ -49,8 +49,8 @@ import "react-quill/dist/quill.snow.css";
 import CommonInputField from "../Common/CommonInputField";
 import CommonSelectField from "../Common/CommonSelectField";
 import { nameValidator, selectValidator } from "../Common/Validation";
-import { useNavigate } from "react-router-dom"; // For navigation
-import { State, City } from "country-state-city";
+import { useNavigate } from "react-router-dom";
+import dummyLogo from "../images/dummy_img.jpg";
 import {
   getBenifitsData,
   getDuration,
@@ -68,9 +68,29 @@ import {
   sendNotification
 } from "../ApiService/action";
 import Header from "../Header/Header";
+import currencySymbol from "currency-symbols";
 import currencyCodes from "currency-codes";
 import Footer from "../Footer/Footer";
+import cities from "cities-list";
 const { Option } = Select;
+const DEFAULT_CONTENT = `
+  <p><strong>About the Opportunity:</strong></p>
+  <ul>
+    <li></li>
+    <li></li>
+  </ul>
+  <p style="margin-top: 30px;"><strong>Responsibilities of the Candidate:</strong></p>
+  <ul>
+    <li></li>
+    <li></li>
+  </ul>
+  <p><strong>Requirements:</strong></p>
+  <ul>
+    <li></li>
+    <li></li>
+  </ul>
+`
+
 export default function PostJobs() {
   const [jobNatureId, setJobNatureId] = useState(null);
   const [workTypeActiveButton, setWorkTypeActiveButton] = useState(null);
@@ -105,7 +125,7 @@ export default function PostJobs() {
   const [workplaceTypeError, setWorkplaceTypeError] = useState("");
   const [workplaceTypeData, setWorkplaceTypeData] = useState([]);
   const [workplaceLocation, setWorkplaceLocation] = useState([]);
-  const [jobCategory, setJobCategory] = useState("");
+  const [jobCategory, setJobCategory] = useState([]);
   const [jobCategoryError, setJobCategoryError] = useState("");
   const [jobCategoryOptions, setJobCategoryOptions] = useState([]);
   const [skillsRequired, setSkillsRequired] = useState([]);
@@ -120,13 +140,13 @@ export default function PostJobs() {
   const [eligibilityYearData, setEligibilityYearData] = useState([]);
   const [workLocation, setWorkLocation] = useState("");
   const [workLocationError, setWorkLocationError] = useState("");
-  const [specificLocation, setSpecificLocation] = useState("");
+  const [specificLocation, setSpecificLocation] = useState([]);
   // const [specificLocationName, setSpecificLocationName] = useState("");
   const [otherBenifits, setOtherBenifits] = useState([]);
   const [gender, setGender] = useState([]);
   const [salaryData, setSalaryData] = useState([]);
   // salary
-  const [currency, setCurrency] = useState("INR");
+  const [currency, setCurrency] = useState("₹");
   const [fixedSalary, setFixedSalary] = useState("");
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
@@ -135,17 +155,16 @@ export default function PostJobs() {
   const [workingDays, setWorkingDays] = useState("");
   const [workingDaysName, setWorkingDaysName] = useState("");
   const [workingDaysError, setWorkingDaysError] = useState("");
-  const MAX_LENGTH = 3000;
-  const [jobDescription, setJobDescription] = useState("");
+  const MAX_LENGTH = 300000;
+  const [value, setValue] = useState(DEFAULT_CONTENT);
 
   const [workLocationOption, setWorkLocationOption] = useState([]);
   const [openQuestionModal, setOpenQuestionModal] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [openDrawer, setOpenDrawer] = useState(false);
-  const [logoUrl, setLogoUrl] = useState(
-    "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-  );
+  const [logoUrl, setLogoUrl] = useState(dummyLogo);
+  const quillRef = useRef(null);
   // const [logoFile, setLogoFile] = useState(null);
   const [questions, setQuestions] = useState([
     {
@@ -155,7 +174,21 @@ export default function PostJobs() {
       isrequired: false,
     },
   ]);
-  // const [touched, setTouched] = useState(false);
+
+  useEffect(() => {
+    loadCitiesAPI();
+  }, []);
+
+  const loadCitiesAPI = () => {
+    const allCities = Object.keys(cities).map((city) => ({
+      label: city,
+      value: city,
+      country: cities[city].country,
+    }));
+
+    setWorkLocationOption(allCities); // ✅ replace your previous city list
+  };
+
 
   const navigate = useNavigate();
   const now = new Date();
@@ -178,7 +211,7 @@ export default function PostJobs() {
       // Reset hidden fields when Scholarship is selected
       setWorkplaceType("");
       setWorkTypeActiveButton(null);
-      setJobCategory("");
+      setJobCategory([]);
       setSkillsRequired([]);
       setJobOpenings("");
       setWorkingDays("");
@@ -196,21 +229,6 @@ export default function PostJobs() {
     getJobNatureData();
   }, []);
 
-  useEffect(() => {
-    const loadCities = () => {
-      const states = State.getStatesOfCountry("IN");
-      const cities = states.flatMap((state) =>
-        City.getCitiesOfState("IN", state.isoCode)
-      );
-      const formatted = cities.map((city) => ({
-        label: city.name,
-        value: city.name,
-      }));
-      setWorkLocationOption(formatted);
-    };
-
-    loadCities();
-  }, []);
 
   const getJobNatureData = async () => {
     try {
@@ -395,33 +413,14 @@ export default function PostJobs() {
 
   const visibleBenefits = showMore ? otherBenifits : otherBenifits.slice(0, 4);
 
-  const defaultContent = `
-  <p><strong>About the Opportunity:</strong></p>
-  <ul>
-    <li></li>
-    <li></li>
-  </ul>
-  <p style="margin-top: 30px;"><strong>Responsibilities of the Candidate:</strong></p>
-  <ul>
-    <li></li>
-    <li></li>
-  </ul>
-  <p><strong>Requirements:</strong></p>
-  <ul>
-    <li></li>
-    <li></li>
-  </ul>
-`;
-
-  const [value, setValue] = useState(defaultContent);
-
   const handleChange = (content, delta, source, editor) => {
-    if (editor.getLength() <= MAX_LENGTH + 1) {
-      // setTouched(true);
-      setValue(content);
-      setJobDescription(content);
-    }
+    const textLength = editor.getText().trim().length;
+
+    if (textLength > MAX_LENGTH) return;
+
+    setValue(content);
   };
+
 
   const generateWithAI = () => {
     // Replace this with actual AI call
@@ -603,11 +602,11 @@ export default function PostJobs() {
               : "",
       work_location:
         workLocation === 1
-          ? specificLocation
+          ? specificLocation // Now an array of locations
           : workLocation === 2
             ? "Pan India"
             : "",
-      job_category: jobCategory,
+      job_category: jobCategory, // Now an array of categories
       skills: skillsRequired,
       experience_type:
         eligibility === 1 ? "Fresher" : eligibility === 2 ? "Experienced" : eligibility === 3 ? "College Students" : "",
@@ -619,6 +618,7 @@ export default function PostJobs() {
             : "",
       salary_type:
         salaryDetails === 1 ? "Fixed" : salaryDetails === 2 ? "Range" : "",
+      currency: currency,
       min_salary: salaryDetails === 1 ? fixedSalary : salaryMin,
       max_salary: salaryDetails === 2 ? salaryMax : null,
       diversity_hiring: allDiversity,
@@ -626,7 +626,7 @@ export default function PostJobs() {
       created_at: fetchDateTime,
       openings: jobOpenings,
       working_days: workingDaysName,
-      job_description: jobDescription,
+      job_description: value,
     };
   };
 
@@ -881,7 +881,7 @@ export default function PostJobs() {
                 </div>
               </div>
 
-              <div style={{ marginTop: 15 }} className="form-group">
+              <div style={{ marginTop: 15, marginBottom: 15 }} className="form-group">
                 <Form.Item
                   layout="vertical"
                   label={<span style={{ fontWeight: 500 }}>Post Nature </span>}
@@ -893,7 +893,7 @@ export default function PostJobs() {
                     },
                   ]}
                 >
-                  <div style={{ marginBottom: 20 }} className="job_nature">
+                  <div style={{ marginBottom: 0, }} className="job_nature">
                     {jobNatureOptions.map((item) => (
                       <button
                         key={item.id}
@@ -938,7 +938,7 @@ export default function PostJobs() {
                 error={companyNameError}
               />
 
-              <div className="form-group">
+              <div style={{ marginBottom: 0 }} className="form-group">
                 <CommonInputField
                   name={"Job title"}
                   label={jobNatureId === 3 ? ("Scholarship Name") : (
@@ -956,7 +956,7 @@ export default function PostJobs() {
                 />
               </div>
               {jobNatureId === 2 && (
-                <div style={{ marginTop: 15 }} className="form-group">
+                <div style={{ marginTop: 15, marginBottom: 0 }} className="form-group">
                   <Form.Item
                     layout="vertical"
                     label={
@@ -1038,7 +1038,7 @@ export default function PostJobs() {
                 </div>
               )}
               {jobNatureId !== 3 && (
-                <div style={{ marginTop: 8 }} className="form-group">
+                <div style={{ marginTop: 0 }} className="form-group">
                   <div className="job_nature">
                     <Form.Item
                       layout="vertical"
@@ -1130,18 +1130,24 @@ export default function PostJobs() {
                     )}
 
                     {workLocationActiveButton === 1 ? (
-                      <CommonSelectField
-                        style={{ marginTop: "20px" }}
-                        showSearch={true}
-                        name={"specific_location"}
-                        placeholder={"Select location"}
-                        value={specificLocation}
-                        onChange={(value, option) => {
-                          setSpecificLocation(value);
-                          // setSpecificLocationName(option.label);
-                        }}
-                        options={workLocationOption}
-                      />
+                      <>
+                        <p style={{ fontSize: 15, marginTop: "20px", marginBottom: "15px", fontWeight: 500, color: "#333", marginBottom: 5 }}><span style={{ color: "red" }}>*</span> Select Location</p>
+                        <Select
+                          mode="multiple"
+                          className="ant-select ant-select-in-form-item premium-input main_select"
+                          style={{ width: "100%" }}
+                          showSearch={true}
+                          placeholder={"Select multiple locations"}
+                          value={specificLocation}
+                          onChange={(value) => {
+                            setSpecificLocation(value);
+                          }}
+                          options={workLocationOption}
+                          filterOption={(input, option) =>
+                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                          }
+                        />
+                      </>
                     ) : null}
                   </Form.Item>
                 ) : null}
@@ -1150,48 +1156,78 @@ export default function PostJobs() {
 
               {/* Job category */}
 
-              <div style={{ marginTop: 8 }} className="form-group">
-                <CommonSelectField
-                  label={jobNatureId === 3 ? "Select Scholarship Category" : "Select Job Category"}
-                  showSearch={true}
+              <div style={{ marginTop: 18, marginBottom: 7 }} className="form-group">
+                <p style={{ fontSize: 15, fontWeight: 500, color: "#333", marginBottom: 5 }}><span style={{ color: "red" }}>*</span> Select Category</p>
+                <Select
+                  mode="multiple"
+                  className="ant-select ant-select-in-form-item premium-input main_select"
+                  showSearch
+                  placeholder="Select or add multiple categories"
                   value={jobCategory}
-                  mandatory={true}
-                  name={"Job category"}
-                  placeholder={jobNatureId === 3 ? "Select Scholarship Category" : "Select Job Category"}
+                  style={{ width: "100%", marginBottom: 15 }}
                   options={jobCategoryOptions}
                   onChange={(value) => {
                     setJobCategory(value);
-                    setJobCategoryError(selectValidator(value));
+                    // Add new custom categories to options
+                    const newCategories = value.filter(
+                      (v) => !jobCategoryOptions.some((opt) => opt.value === v)
+                    );
+                    if (newCategories.length > 0) {
+                      const newOptions = newCategories.map((cat) => ({
+                        label: cat,
+                        value: cat,
+                      }));
+                      setJobCategoryOptions((prev) => [...prev, ...newOptions]);
+                    }
+                    // Save custom categories to localStorage
+                    let customCats = JSON.parse(localStorage.getItem("customCategories") || "[]");
+                    newCategories.forEach((cat) => {
+                      if (!customCats.includes(cat)) {
+                        customCats.push(cat);
+                      }
+                    });
+                    localStorage.setItem("customCategories", JSON.stringify(customCats));
+
+                    if (setJobCategoryError) {
+                      setJobCategoryError(value.length > 0 ? "" : "Please select category");
+                    }
                   }}
-                  error={jobCategoryError}
                 />
 
                 {jobNatureId !== 3 && (
-                  <CommonSelectField
-                    label={"Skills Required"}
-                    mandatory={true}
-                    name={"skill_required"}
-                    showSearch={true}
-                    mode="multiple"
-                    placeholder={"Select skills"}
-                    style={{ height: 56 }}
-                    value={skillsRequired}
-                    options={skillsRequiredOptions}
-                    onChange={(value) => {
-                      setSkillsRequired(value);
-                      setSkillsRequiredError(selectValidator(value));
-                    }}
-                    error={skillsRequiredError}
-                  />
+                  <>
+                    <p style={{ fontSize: 15, fontWeight: 500, color: "#333", marginBottom: 5 }}><span style={{ color: "red" }}>*</span> Skills Required</p>
+                    <Select
+                      className="ant-select ant-select-in-form-item premium-input main_select"
+                      mode="tags"
+                      showSearch
+                      value={skillsRequired}
+                      placeholder="Select or add skills"
+                      style={{ width: "100%", marginBottom: 10 }}
+                      options={skillsRequiredOptions}
+                      onChange={(value) => {
+                        setSkillsRequired(value);
+                        const newOnes = value.filter(
+                          (v) => !skillsRequiredOptions.some((opt) => opt.value === v)
+                        );
+                        if (newOnes.length > 0) {
+                          const newOptions = newOnes.map((item) => ({
+                            label: item,
+                            value: item
+                          }));
+                          setSkillsRequiredOption((prev) => [...prev, ...newOptions]);
+                        }
+                        setSkillsRequiredError(selectValidator(value));
+                      }}
+                    />
+                  </>
                 )}
               </div>
 
 
-
-
               {/* Openings */}
               {jobNatureId !== 3 && (
-                <div style={{ marginTop: 0 }} className="form-group">
+                <div style={{ marginTop: 0, marginBottom: 0 }} className="form-group">
                   <CommonInputField
                     name={"Job Openings"}
                     label="Job Openings"
@@ -1210,7 +1246,7 @@ export default function PostJobs() {
 
               {/* working days */}
               {jobNatureId !== 3 && (
-                <div style={{ marginTop: 0 }} className="form-group">
+                <div style={{ marginTop: 0, marginBottom: 0 }} className="form-group">
                   <CommonSelectField
                     label={"Working Days"}
                     showSearch={true}
@@ -1400,17 +1436,15 @@ export default function PostJobs() {
                         <Select
                           showSearch
                           value={currency}
-                          onChange={(value) => setCurrency(value)}
-                          style={{ width: 100 }}
-                          optionFilterProp="children"
+                          onChange={(code) => setCurrency(currencySymbol(code))}
+                          style={{ width: 150 }}
                         >
-                          {currencyCodes.data.map((c) => (
-                            <Option key={c.code} value={c.code}>
-                              {c.symbol_native || c.symbol || c.code} ({c.code})
+                          {currencyCodes.codes().map((code) => (
+                            <Option key={code} value={code}>
+                              {`${currencySymbol(code)} - ${code}`}
                             </Option>
                           ))}
                         </Select>
-
                         <Input
                           style={{ width: "60%" }}
                           value={fixedSalary}
@@ -1431,13 +1465,12 @@ export default function PostJobs() {
                         <Select
                           showSearch
                           value={currency}
-                          onChange={(value) => setCurrency(value)}
-                          style={{ width: 100 }}
-                          optionFilterProp="children"
+                          onChange={(code) => setCurrency(currencySymbol(code))}
+                          style={{ width: 150 }}
                         >
-                          {currencyCodes.data.map((c) => (
-                            <Option key={c.code} value={c.code}>
-                              {c.symbol_native || c.symbol || c.code} ({c.code})
+                          {currencyCodes.codes().map((code) => (
+                            <Option key={code} value={code}>
+                              {`${currencySymbol(code)} - ${code}`}
                             </Option>
                           ))}
                         </Select>

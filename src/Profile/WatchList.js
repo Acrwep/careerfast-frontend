@@ -11,8 +11,6 @@ import {
 } from "antd";
 import {
   SearchOutlined,
-  CalendarOutlined,
-  HeartOutlined,
   HeartFilled,
 } from "@ant-design/icons";
 import { debounce } from "lodash";
@@ -60,6 +58,13 @@ const OpportunityCard = ({ opportunity, onSave }) => {
       CommonToaster("Failed to remove job", "error");
       setSaved(true); // rollback if API fails
     }
+  };
+
+  const generateSlug = (text = "") => {
+    return String(text)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   };
 
   const isClosed =
@@ -130,9 +135,21 @@ const OpportunityCard = ({ opportunity, onSave }) => {
                     type="text"
                     style={{ background: "#e9e0fe", marginLeft: 10 }}
                     icon={<FaRegEye color="#5f2eea" />}
-                    onClick={() =>
-                      navigate(`/job-details/${opportunity.job_post_id}`)
-                    }
+                    onClick={() => {
+                      const jobTitleSlug = generateSlug(opportunity.job_title);
+                      const companySlug = generateSlug(opportunity.company_name);
+
+                      let basePath = "/job-details";
+
+                      if (opportunity.job_nature === "Internship") {
+                        basePath = "/internship-details";
+                      } else if (opportunity.job_nature === "Scholarship") {
+                        basePath = "/scholarship-details";
+                      }
+
+                      navigate(`${basePath}/${jobTitleSlug}-${companySlug}-${opportunity.id}`);
+                    }}
+
                     aria-label="Toggle favourite"
                   />
                 </Tooltip>
@@ -161,7 +178,7 @@ const OpportunityCard = ({ opportunity, onSave }) => {
                   ? `$${opportunity.min_salary}`
                   : opportunity.salary_type === "Range"
                     ? `$${opportunity.min_salary} - $${opportunity.max_salary}`
-                    : ""}
+                    : "-"}
               </Tag>
             </div>
 

@@ -9,7 +9,6 @@
 }
 .hide-premium-input-error {
   /* position: absolute; */
-  transform: translateX(-26px);
   opacity: 0;
   transition: all 0.3s ease-in-out;
 }

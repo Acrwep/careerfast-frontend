@@ -154,8 +154,8 @@ const ProfileDetails = () => {
       jobTitle: "",
       companyName: "",
       designation: "",
-      workingStartDate: "",
-      workingEndDate: "",
+      workingStartDate: "Select Date",
+      workingEndDate: "Select Date",
       customSkill: "",
       skills: [],
       currentlyWorking: false,
@@ -180,6 +180,7 @@ const ProfileDetails = () => {
         workingEndDate: "",
         customSkill: "",
         currentlyWorking: false,
+        skills: [],
       },
     ]);
   };
@@ -243,14 +244,15 @@ const ProfileDetails = () => {
 
   const handleCustomSkillAdd = (index) => {
     const trimmed = companies[index].customSkill?.trim();
+
     if (
       trimmed &&
-      !companies[index].skills.some(
+      !((companies[index].skills || []).some(
         (skill) => skill.toLowerCase() === trimmed.toLowerCase()
-      )
+      ))
     ) {
       const updatedCompanies = [...companies];
-      updatedCompanies[index].skills.push(trimmed);
+      updatedCompanies[index].skills = [...(updatedCompanies[index].skills || []), trimmed];
       updatedCompanies[index].customSkill = "";
       setCompanies(updatedCompanies);
     }
@@ -504,7 +506,6 @@ const ProfileDetails = () => {
       userTypeValidate ||
       courseValidate ||
       startDateValidate ||
-      endDateValidate ||
       fresherCourseValidate ||
       fresherStartDateValidate ||
       fresherEndtDateValidate
@@ -670,9 +671,8 @@ const ProfileDetails = () => {
     try {
       const response = await insertProfileData(payload);
       console.log("my profile", response);
-      // const profileDetails = response.data.data[0];
-      // console.log("profileDetails", profileDetails);
       message.success("Profile inserted successfully!");
+      setProgress(100);
       setCurrentStep(3);
     } catch (error) {
       console.log("my profile error", error);
@@ -789,7 +789,8 @@ const ProfileDetails = () => {
                     className="error-message"
                     style={{
                       color: "red",
-                      marginTop: "8px",
+                      top: "35px",
+                      textAlign: "center",
                       position: "absolute",
                     }}
                   >
@@ -1663,7 +1664,7 @@ const ProfileDetails = () => {
 
                       <div className="form-group">
                         <div style={{ marginTop: 8, marginBottom: 0 }}>
-                          {company.skills.map((skill) => (
+                          {(company.skills || []).map((skill) => (
                             <Tag
                               key={skill}
                               closable
@@ -1912,7 +1913,11 @@ const ProfileDetails = () => {
       </div>
 
       <div className="progress-container">
-        <Progress percent={progress} strokeColor="#8d3ffb" showInfo={false} />
+        <Progress
+          percent={progress}
+          strokeColor={progress === 100 ? "#52c41a" : "#8d3ffb"}
+          showInfo={false}
+        />
         <Text strong>{progress}% Complete</Text>
       </div>
       <Form

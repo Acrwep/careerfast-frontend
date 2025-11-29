@@ -53,9 +53,9 @@ export default function UserProfile() {
 
     ...(roleId === 3
       ? [
-          { key: "listing", icon: <FaListOl />, label: "Manage Listing" },
-          { key: "applied", icon: <VscGitStashApply />, label: "Applied Jobs" },
-        ]
+        { key: "listing", icon: <FaListOl />, label: "Manage Listing" },
+        { key: "applied", icon: <VscGitStashApply />, label: "Applied Jobs" },
+      ]
       : [{ key: "applied", icon: <FaListOl />, label: "Applied Jobs" }]),
 
     {
@@ -147,26 +147,7 @@ export default function UserProfile() {
             {lname}
           </h3>
           <p className="profile-email">{email}</p>
-
-          <div className="profile-completion">
-            <div className="progress-header">
-              <span style={{ color: "#000" }}>Profile Completion</span>
-              <span
-                style={{ color: "#000" }}
-                onClick={() => {
-                  console.log(sideBar);
-                }}
-              >
-                56%
-              </span>
-            </div>
-            <Progress
-              percent={56}
-              strokeColor="#22c55e"
-              showInfo={false}
-              className="profile-progress"
-            />
-          </div>
+          <hr />
         </div>
 
         <Menu

@@ -25,6 +25,7 @@ import {
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import { changePassword } from "../ApiService/action";
+import { confirmPasswordValidation, passwordValidator } from "../Common/Validation";
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -121,6 +122,8 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [activeTab, setActiveTab] = useState("notifications");
+  const [newPasswordError, setNewPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
   useEffect(() => {
     try {
@@ -135,27 +138,45 @@ export default function Settings() {
   }, []);
 
   const handleChangePassword = async () => {
-    if (newPassword !== confirmPassword) {
-      message.error("Passwords do not match");
+    if (!currentPassword || currentPassword.trim() === "") {
+      message.error("Current password is required");
       return;
     }
 
-    const payload = {
-      user_id: loginUserId,
-      currentPassword: currentPassword,
-      newPassword: newPassword,
-    };
+    const newPassErr = passwordValidator(newPassword);
+    const confirmErr = confirmPasswordValidation(newPassword, confirmPassword);
+
+    setNewPasswordError(newPassErr);
+    setConfirmPasswordError(confirmErr);
+
+    if (newPassErr || confirmErr) {
+      message.error("Please fix password errors");
+      return;
+    }
 
     try {
-      await changePassword(payload);
+      const payload = {
+        user_id: loginUserId,
+        currentPassword,
+        newPassword,
+      };
+
+      const res = await changePassword(payload);
+
       message.success("Password changed successfully!");
+
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error) {
+      setNewPasswordError("");
+      setConfirmPasswordError("");
+
+    } catch (err) {
       message.error("Invalid current password!");
     }
   };
+
+
 
   return (
     <div>
@@ -232,8 +253,12 @@ export default function Settings() {
                       Use a strong, unique password for better security.
                     </SettingDescription>
                   </SettingContent>
+
                   <Divider />
+
                   <Form layout="vertical" style={{ maxWidth: 500 }}>
+
+                    {/* ✅ CURRENT PASSWORD */}
                     <Form.Item label="Current Password">
                       <PasswordInput
                         placeholder="Enter current password"
@@ -244,26 +269,53 @@ export default function Settings() {
                         }
                       />
                     </Form.Item>
+
+                    {/* ✅ NEW PASSWORD */}
                     <Form.Item label="New Password">
                       <PasswordInput
                         placeholder="Enter new password"
                         value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setNewPassword(value);
+                          setNewPasswordError(passwordValidator(value));
+                        }}
+                        status={newPasswordError ? "error" : ""}
                         iconRender={(visible) =>
                           visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
                         }
                       />
+                      {newPasswordError && (
+                        <div style={{ color: "red", marginTop: -10, marginBottom: 10 }}>
+                          {newPasswordError}
+                        </div>
+                      )}
                     </Form.Item>
+
+                    {/* ✅ CONFIRM PASSWORD */}
                     <Form.Item label="Confirm New Password">
                       <PasswordInput
                         placeholder="Confirm new password"
                         value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setConfirmPassword(value);
+                          setConfirmPasswordError(
+                            confirmPasswordValidation(newPassword, value)
+                          );
+                        }}
+                        status={confirmPasswordError ? "error" : ""}
                         iconRender={(visible) =>
                           visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
                         }
                       />
+                      {confirmPasswordError && (
+                        <div style={{ color: "red", marginTop: -10, marginBottom: 10 }}>
+                          {confirmPasswordError}
+                        </div>
+                      )}
                     </Form.Item>
+
                     <Space>
                       <PremiumButton
                         type="primary"
@@ -272,11 +324,14 @@ export default function Settings() {
                       >
                         Update Password
                       </PremiumButton>
+
                       <Button
                         onClick={() => {
                           setCurrentPassword("");
                           setNewPassword("");
                           setConfirmPassword("");
+                          setNewPasswordError("");
+                          setConfirmPasswordError("");
                         }}
                       >
                         Cancel

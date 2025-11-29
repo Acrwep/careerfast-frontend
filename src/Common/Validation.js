@@ -1,4 +1,4 @@
-const nameRegex = /^[A-Za-z0-9\s.'\-&,/()@#%*!]+$/;
+const nameRegex = /^[A-Za-z0-9\s.'\-&,/()@#%*!-'"?|{};:]+$/;
 const orgNameRegex = /^[a-zA-Z]+(?: [a-zA-Z]+)*$/;
 const phoneRegex = /^[6-9]\d{9}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -11,7 +11,7 @@ export const nameValidator = (name) => {
   let error = "";
   if (!name || name.length <= 0) {
     error = " is required ";
-  } else if (!nameRegex.test(name) || name.length < 3) {
+  } else if (!nameRegex.test(name) || name.length < 1) {
     error = " is not valid ";
   }
   return error;
