@@ -3,7 +3,10 @@ import { getBlogs } from "../ApiService/action";
 import { Card, Col, Row, Skeleton } from "antd";
 import { motion } from "framer-motion";
 import Header from "../Header/Header";
-export default function () {
+import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+export default function Blogs() {
+    const navigate = useNavigate();
     const [isVisible, setIsVisible] = useState(false);
     const [blogTips, setBlogTips] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -49,6 +52,14 @@ export default function () {
 
     return (
         <div>
+            <Helmet>
+                <title>CareerFast | Career Advice & Blogs</title>
+                <meta
+                    name="description"
+                    content="Read insightful blogs and career advice to help you navigate your professional journey and land your dream job."
+                />
+                <link rel="canonical" href="https://careerfast.in/blogs" />
+            </Helmet>
             <Header />
             {/* Blog Banner */}
             <motion.div
@@ -110,6 +121,7 @@ export default function () {
                                     whileHover={{ y: -2, scale: 1.01 }}
                                 >
                                     <Card
+                                        onClick={() => navigate(`/blog/${generateSlug(tip.blogTitle)}`)}
                                         className="premium-tip-card"
                                         cover={
                                             <div className="card-image-container">

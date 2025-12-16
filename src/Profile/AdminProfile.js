@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Layout, Menu, Progress, Avatar, Modal } from "antd";
 import { SettingOutlined } from "@ant-design/icons";
 import "../css/Profile.css";
@@ -35,8 +36,10 @@ const siderStyle = {
 };
 
 export default function UserProfile() {
+  const { activeTab } = useParams();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
-  const [sideBar, setSideBar] = useState("mainprofile");
+  const [sideBar, setSideBar] = useState(activeTab || "mainprofile");
   const [loginUserId, setLoginUserId] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [fname, setFname] = useState("");
@@ -49,7 +52,6 @@ export default function UserProfile() {
   const menuItems = [
     { key: "mainprofile", icon: <FaUserPen />, label: "Your profile" },
     { key: "wishlist", icon: <FaRegHeart />, label: "Wishlist" },
-    { key: "settings", icon: <SettingOutlined />, label: "Settings" },
 
     ...(roleId === 3
       ? [
@@ -63,6 +65,7 @@ export default function UserProfile() {
       icon: <GrUserSettings />,
       label: "Account Settings",
     },
+    { key: "settings", icon: <SettingOutlined />, label: "Settings" },
     { key: "prosubscription", icon: <FcApproval />, label: "Pro Subscription" },
   ];
 
@@ -82,17 +85,18 @@ export default function UserProfile() {
         const storedImage = localStorage.getItem("profileImage");
         if (storedImage) setAvatarUrl(storedImage);
       }
-
-      const activeTab = localStorage.getItem("activeAdminTab");
-      if (activeTab) {
-        setSideBar(activeTab);
-      }
-
-      console.log("stored", stored);
     } catch (error) {
       console.error("Invalid JSON in localStorage", error);
     }
   }, []);
+
+  useEffect(() => {
+    if (activeTab) {
+      setSideBar(activeTab);
+    } else {
+      setSideBar("mainprofile");
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     console.log("loginUserId updated", loginUserId);
@@ -156,7 +160,7 @@ export default function UserProfile() {
           defaultSelectedKeys={["1"]}
           items={menuItems}
           selectedKeys={[sideBar]}
-          onClick={(e) => setSideBar(e.key)}
+          onClick={(e) => navigate(`/admin-profile/${e.key}`)}
           className="profile-menu"
         />
       </Sider>

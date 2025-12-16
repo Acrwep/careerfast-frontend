@@ -49,7 +49,7 @@ export default function Footer() {
                 <li>
                   <a
                     style={{ cursor: "pointer" }}
-                    onClick={() => navigate("/job-filter")}
+                    onClick={() => navigate("/blogs")}
                     className="footer-menu-link"
                   >
                     Blog

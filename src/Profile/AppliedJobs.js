@@ -18,6 +18,20 @@ const generateSlug = (text) => {
     .replace(/^-+|-+$/g, "");
 };
 
+// Helper function to convert currency code to symbol
+const getCurrencySymbol = (currencyCode) => {
+  const currencyMap = {
+    'INR': '₹',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'AUD': 'A$',
+    'CAD': 'C$',
+  };
+  return currencyMap[currencyCode] || currencyCode;
+};
+
 const OpportunityCard = ({ opportunity, status }) => {
   const navigate = useNavigate();
   const getStatusColor = (status) => {
@@ -36,18 +50,31 @@ const OpportunityCard = ({ opportunity, status }) => {
   return (
     <Card
       onClick={() => {
-        const jobTitleSlug = generateSlug(opportunity.job_title);
-        const companySlug = generateSlug(opportunity.company_name);
+        const safeSlug = (val) => {
+          if (!val) return "";
+          if (Array.isArray(val)) return generateSlug(val.join(" "));
+          try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) return generateSlug(parsed.join(" "));
+            return generateSlug(parsed);
+          } catch {
+            return generateSlug(val);
+          }
+        };
+
+        const jobNature = generateSlug(opportunity.job_nature || "");
+        const jobTitle = generateSlug(opportunity.job_title || "");
+        const companyName = generateSlug(opportunity.company_name || "");
+        const locationSlug = safeSlug(opportunity.work_location);
+        const workplaceType = generateSlug(opportunity.workplace_type || "");
+        const experienceType = generateSlug(opportunity.experience_type || "");
+        const experienceRequired = safeSlug(opportunity.experience_required);
 
         let basePath = "/job-details";
+        if (opportunity.job_nature === "Internship") basePath = "/internship-details";
+        if (opportunity.job_nature === "Scholarship") basePath = "/scholarship-details";
 
-        if (opportunity.job_nature === "Internship") {
-          basePath = "/internship-details";
-        } else if (opportunity.job_nature === "Scholarship") {
-          basePath = "/scholarship-details";
-        }
-
-        navigate(`${basePath}/${jobTitleSlug}-${companySlug}-${opportunity.post_id}`);
+        navigate(`${basePath}/${jobNature}-${jobTitle}-${companyName}-${locationSlug}-${workplaceType}-${experienceType}-${experienceRequired}-${opportunity.post_id}`);
       }}
 
       style={{
@@ -115,13 +142,20 @@ const OpportunityCard = ({ opportunity, status }) => {
             }}
           >
             <Tag color="green">
-              {opportunity.work_location ? opportunity.work_location : "WFH"}
+              {(() => {
+                let location = opportunity.work_location;
+                if (!location || location === "[]" || location === '[""]' || location === '[""]') {
+                  return opportunity.workplace_type;
+                }
+                if (location === "Work From Home") return "WFH";
+                return location;
+              })()}
             </Tag>
             <Tag color="blue">
               {opportunity.salary_type === "Fixed"
-                ? `${opportunity.currency}${opportunity.min_salary}`
+                ? `${getCurrencySymbol(opportunity.currency)}${opportunity.min_salary}`
                 : opportunity.salary_type === "Range"
-                  ? `${opportunity.currency}${opportunity.min_salary} - ${opportunity.currency}${opportunity.max_salary}`
+                  ? `${getCurrencySymbol(opportunity.currency)}${opportunity.min_salary} - ${getCurrencySymbol(opportunity.currency)}${opportunity.max_salary}`
                   : ""}
             </Tag>
           </div>
@@ -131,7 +165,7 @@ const OpportunityCard = ({ opportunity, status }) => {
             style={{ display: "flex", alignItems: "center", gap: 4 }}
           >
             <CalendarOutlined /> Applied on:{" "}
-            {new Date(opportunity.created_at).toLocaleDateString()}
+            {new Date(opportunity.created_at).toLocaleDateString("en-GB")}
           </Text>
         </div>
       </div>

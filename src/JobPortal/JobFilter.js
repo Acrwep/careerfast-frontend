@@ -1,5 +1,6 @@
 // src/pages/JobFilter.jsx
 import React, { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import {
   Row,
   Col,
@@ -36,6 +37,20 @@ import "../css/JobFilter.css";
 
 const generateSlug = (text = "") =>
   String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+// Helper function to convert currency code to symbol
+const getCurrencySymbol = (currencyCode) => {
+  const currencyMap = {
+    'INR': '₹',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'AUD': 'A$',
+    'CAD': 'C$',
+  };
+  return currencyMap[currencyCode] || currencyCode;
+};
 
 const workTypes = ["In Office", "On Field", "Work From Home"];
 const jobNature = ["Job", "Internship", "Scholarship"];
@@ -229,9 +244,9 @@ export default function JobFilter() {
       level: job.experience_type,
       salary:
         job.salary_type === "Fixed"
-          ? `${job.currency} ${job.min_salary || "N/A"}`
+          ? `${getCurrencySymbol(job.currency)} ${job.min_salary || "N/A"}`
           : job.salary_type === "Range"
-            ? `${job.currency} ${job.min_salary || "N/A"} - ${job.currency} ${job.max_salary || "N/A"}`
+            ? `${getCurrencySymbol(job.currency)} ${job.min_salary || "N/A"} - ${getCurrencySymbol(job.currency)} ${job.max_salary || "N/A"}`
             : "Negotiable",
       location: (() => {
         const locations = Array.isArray(job.work_location)
@@ -249,6 +264,9 @@ export default function JobFilter() {
       eligibility: job.experience_required?.join(", "),
       status: daysLeft >= 0 ? "Live" : "Expired",
       // keeping questions mapping harmlessly, though not used in UI now
+      raw_location: job.work_location,
+      raw_workplace_type: job.workplace_type,
+      raw_experience_required: job.experience_required,
       questions: safeQs.map((q) => q?.question || ""),
       questions_with_ids: safeQs.map((q) => ({
         id: q?.id || null,
@@ -614,8 +632,25 @@ export default function JobFilter() {
       hoverable
     >
       <div onClick={() => {
-        const jobTitleSlug = generateSlug(job.title);
-        const companySlug = generateSlug(job.company);
+        const safeSlug = (val) => {
+          if (!val) return "";
+          if (Array.isArray(val)) return generateSlug(val.join(" "));
+          try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) return generateSlug(parsed.join(" "));
+            return generateSlug(parsed);
+          } catch {
+            return generateSlug(val);
+          }
+        };
+
+        const jobNature = generateSlug(job.type || "");
+        const jobTitle = generateSlug(job.title || "");
+        const companyName = generateSlug(job.company || "");
+        const locationSlug = safeSlug(job.raw_location);
+        const workplaceType = generateSlug(job.raw_workplace_type || "");
+        const experienceType = generateSlug(job.level || "");
+        const experienceRequired = safeSlug(job.raw_experience_required);
 
         let basePath = "";
 
@@ -627,7 +662,7 @@ export default function JobFilter() {
           basePath = "/scholarship-details";
         }
 
-        const finalUrl = `${basePath}/${jobTitleSlug}-${companySlug}-${job.id}`;
+        const finalUrl = `${basePath}/${jobNature}-${jobTitle}-${companyName}-${locationSlug}-${workplaceType}-${experienceType}-${experienceRequired}-${job.id}`;
         navigate(finalUrl);
       }} className="cf4-card-inner">
 
@@ -701,6 +736,14 @@ export default function JobFilter() {
   /** -------------------- RENDER -------------------- **/
   return (
     <>
+      <Helmet>
+        <title>CareerFast | Browse Jobs & Internships</title>
+        <meta
+          name="description"
+          content="Filter and search for the best jobs and internships matching your skills and preferences on CareerFast."
+        />
+        <link rel="canonical" href="https://careerfast.in/job-filter" />
+      </Helmet>
       <Header />
 
       {/* Mobile filter trigger reserved (kept hidden) */}

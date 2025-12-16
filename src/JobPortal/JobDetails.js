@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 import {
   Row,
@@ -61,6 +62,23 @@ const getTabs = (jobType) => {
 };
 
 
+const generateSlug = (text = "") =>
+  String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+// Helper function to convert currency code to symbol
+const getCurrencySymbol = (currencyCode) => {
+  const currencyMap = {
+    'INR': '₹',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'AUD': 'A$',
+    'CAD': 'C$',
+  };
+  return currencyMap[currencyCode] || currencyCode;
+};
+
 export default function JobDetails() {
   const [activeTab, setActiveTab] = useState("Job Description");
   const [postDetails, setPostDetails] = useState([]);
@@ -76,7 +94,7 @@ export default function JobDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "CareerFast | Job Details";
+    // handled by Helmet
     fetchJobs();
   }, []);
 
@@ -201,9 +219,9 @@ export default function JobDetails() {
       level: job.experience_type,
       salary:
         job.salary_type === "Fixed"
-          ? `${job.currency}${job.min_salary || "N/A"}`
+          ? `${getCurrencySymbol(job.currency)}${job.min_salary || "N/A"}`
           : job.salary_type === "Range"
-            ? `${job.currency}${job.min_salary || "N/A"} - ${job.currency}${job.max_salary || "N/A"}`
+            ? `${getCurrencySymbol(job.currency)}${job.min_salary || "N/A"} - ${getCurrencySymbol(job.currency)}${job.max_salary || "N/A"}`
             : "Negotiable",
       location: (() => {
         try {
@@ -223,6 +241,9 @@ export default function JobDetails() {
       skills: job.skills,
       eligibility: job.experience_required?.join(", "),
       status: daysLeft >= 0 ? "Live" : "Expired",
+      raw_location: job.work_location,
+      raw_workplace_type: job.workplace_type,
+      raw_experience_required: job.experience_required,
       questions: job.questions?.map((q) => q.question) || [],
       questions_with_ids:
         job.questions?.map((q) => ({
@@ -410,7 +431,31 @@ export default function JobDetails() {
   };
 
   const handleShare = (job) => {
-    const jobLink = `${window.location.origin}/job-details/${job.id}`;
+    const safeSlug = (val) => {
+      if (!val) return "";
+      if (Array.isArray(val)) return generateSlug(val.join(" "));
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return generateSlug(parsed.join(" "));
+        return generateSlug(parsed);
+      } catch {
+        return generateSlug(val);
+      }
+    };
+
+    const jobNature = generateSlug(job.type || "");
+    const jobTitle = generateSlug(job.title || "");
+    const companyName = generateSlug(job.company || "");
+    const locationSlug = safeSlug(job.raw_location);
+    const workplaceType = generateSlug(job.raw_workplace_type || "");
+    const experienceType = generateSlug(job.level || "");
+    const experienceRequired = safeSlug(job.raw_experience_required);
+
+    let basePath = "/job-details";
+    if (job.type === "Internship") basePath = "/internship-details";
+    if (job.type === "Scholarship") basePath = "/scholarship-details";
+
+    const jobLink = `${window.location.origin}${basePath}/${jobNature}-${jobTitle}-${companyName}-${locationSlug}-${workplaceType}-${experienceType}-${experienceRequired}-${job.id}`;
 
     if (navigator.share) {
       navigator
@@ -429,7 +474,31 @@ export default function JobDetails() {
   };
 
   const handleCopy = (job) => {
-    const jobUrl = `${window.location.origin}/job-details/${job.id}`;
+    const safeSlug = (val) => {
+      if (!val) return "";
+      if (Array.isArray(val)) return generateSlug(val.join(" "));
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return generateSlug(parsed.join(" "));
+        return generateSlug(parsed);
+      } catch {
+        return generateSlug(val);
+      }
+    };
+
+    const jobNature = generateSlug(job.type || "");
+    const jobTitle = generateSlug(job.title || "");
+    const companyName = generateSlug(job.company || "");
+    const locationSlug = safeSlug(job.raw_location);
+    const workplaceType = generateSlug(job.raw_workplace_type || "");
+    const experienceType = generateSlug(job.level || "");
+    const experienceRequired = safeSlug(job.raw_experience_required);
+
+    let basePath = "/job-details";
+    if (job.type === "Internship") basePath = "/internship-details";
+    if (job.type === "Scholarship") basePath = "/scholarship-details";
+
+    const jobUrl = `${window.location.origin}${basePath}/${jobNature}-${jobTitle}-${companyName}-${locationSlug}-${workplaceType}-${experienceType}-${experienceRequired}-${job.id}`;
 
     navigator.clipboard
       .writeText(jobUrl)
@@ -449,18 +518,111 @@ export default function JobDetails() {
   const items = [
     {
       key: "1",
-      label: "This is panel header 1",
-      children: <p>{text}</p>,
+      label: "How do I apply for this job?",
+      children: (
+        <p>
+          To apply, click on the <b>Apply Now</b> button on this page. If the employer
+          has added screening questions, you will be asked to answer them before
+          submitting your application. Once submitted, your profile will be shared
+          directly with the recruiter.
+        </p>
+      ),
     },
     {
       key: "2",
-      label: "This is panel header 2",
-      children: <p>{text}</p>,
+      label: "Do I need to be logged in to apply?",
+      children: (
+        <p>
+          Yes. You must be logged in to apply for any job. Logging in allows recruiters
+          to view your profile, track your application status, and contact you if you
+          are shortlisted.
+        </p>
+      ),
     },
     {
       key: "3",
-      label: "This is panel header 3",
-      children: <p>{text}</p>,
+      label: "Can I apply for the same job more than once?",
+      children: (
+        <p>
+          No. Each candidate can apply only once for a job. If you have already applied,
+          the <b>Apply Now</b> button will be disabled and marked as <b>Applied</b>.
+        </p>
+      ),
+    },
+    {
+      key: "4",
+      label: "How can I check if my application was submitted successfully?",
+      children: (
+        <p>
+          Once your application is submitted, you will see an <b>Applied</b> badge on
+          the job page. You can also track all your applications from the
+          <b> My Applications</b> section in your dashboard.
+        </p>
+      ),
+    },
+    {
+      key: "5",
+      label: "What does ‘Saved Job’ or ‘Wishlist’ mean?",
+      children: (
+        <p>
+          Saving a job allows you to bookmark it for later review. Saved jobs can be
+          accessed anytime from your <b>Saved Jobs</b> section without having to search
+          again.
+        </p>
+      ),
+    },
+    {
+      key: "6",
+      label: "Who can see my application details?",
+      children: (
+        <p>
+          Only the employer who posted the job can view your application details,
+          including your profile information and answers to screening questions.
+          Your data is kept secure and confidential.
+        </p>
+      ),
+    },
+    {
+      key: "7",
+      label: "What happens after I apply?",
+      children: (
+        <p>
+          After applying, your profile is reviewed by the recruiter. If shortlisted,
+          they may contact you via email or phone for further steps such as interviews
+          or assessments.
+        </p>
+      ),
+    },
+    {
+      key: "8",
+      label: "Can I edit my answers after applying?",
+      children: (
+        <p>
+          No. Once an application is submitted, answers cannot be edited. Please review
+          all your responses carefully before submitting.
+        </p>
+      ),
+    },
+    {
+      key: "9",
+      label: "What does ‘Expired’ job status mean?",
+      children: (
+        <p>
+          An <b>Expired</b> status means the application deadline has passed and the job
+          is no longer accepting applications. You can still view the job details but
+          cannot apply.
+        </p>
+      ),
+    },
+    {
+      key: "10",
+      label: "Is applying for jobs on CareerFast free?",
+      children: (
+        <p>
+          Yes. Applying for jobs on CareerFast is completely free for candidates.
+          There are no hidden charges for job applications.
+        </p>
+      ),
     },
   ];
 
@@ -482,6 +644,16 @@ export default function JobDetails() {
 
   return (
     <>
+      {postDetails.length > 0 && (
+        <Helmet>
+          <title>{`${postDetails[0].title} at ${postDetails[0].company} | CareerFast`}</title>
+          <meta
+            name="description"
+            content={`Apply for ${postDetails[0].title} at ${postDetails[0].company}. ${postDetails[0].job_description?.substring(0, 150)}...`}
+          />
+          <link rel="canonical" href={`https://careerfast.in/job-details/${slug}`} />
+        </Helmet>
+      )}
       <Header />
       <section className="premium-job-details job_filter details_page">
         <Row>
@@ -596,11 +768,7 @@ export default function JobDetails() {
                         <Tooltip
                           title={
                             appliedDates[job.id]
-                              ? `Applied on ${new Date(appliedDates[job.id]).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })}`
+                              ? `Applied on ${new Date(appliedDates[job.id]).toLocaleDateString("en-GB")}`
                               : "Applied recently"
                           }
                           placement="top"
@@ -851,13 +1019,9 @@ export default function JobDetails() {
             {activeTab === "FAQs & Discussions" && (
               <div className="reviews-tab premium-indigo-theme">
                 <div className="indigo-header">
-                  <div className="review-badge">
-                    <StarFilled style={{ color: "#ffc107" }} />
-                    <span>4.9/5.0</span>
-                  </div>
-                  <h2 className="indigo-title">What Our Clients Say</h2>
+                  <h2 className="indigo-title">Application Help & FAQs</h2>
                   <p className="indigo-subtitle">
-                    Trusted by thousands of satisfied customers
+                    Clear answers to common questions about job applications and recruiter processes.
                   </p>
                 </div>
 

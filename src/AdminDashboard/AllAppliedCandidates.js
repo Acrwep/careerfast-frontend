@@ -129,7 +129,7 @@ export default function AllAppliedCandidates() {
             <Text type="secondary">
               Applied Date:{" "}
               {record.created_at
-                ? new Date(record.created_at).toLocaleDateString()
+                ? new Date(record.created_at).toLocaleDateString("en-GB")
                 : "-"}
             </Text>
           </div>

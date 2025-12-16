@@ -42,6 +42,9 @@ import PostCourses from "../Courses/PostCourses";
 import AddBlogs from "../Blogs/AddBlogs";
 import BlogSingle from "../Blogs/BlogSingle";
 import Blogs from "../Blogs/Blogs";
+import MentorList from "../Mentors/MentorList";
+import MentorDetails from "../Mentors/MentorDetails";
+import CompetitionsLandingPage from "../Competitions/CompetitionsLandingPage";
 
 const Layout = () => {
   const location = useLocation();
@@ -98,7 +101,10 @@ const Layout = () => {
         pathName.includes("admin-dashboard") ||
         pathName.includes("edit-opportunity") ||
         pathName.includes("blog") ||
-        pathName.includes("course")
+        pathName.includes("course") ||
+        pathName.includes("mentor") ||
+        pathName.includes("competitions") ||
+        pathName.includes("admin-profile")
       ) {
         return;
       }
@@ -136,6 +142,9 @@ const Layout = () => {
       else if (location.pathname.startsWith("/blog/")) {
         return;  // allow blog single page
       }
+      else if (pathName === "mentors" || pathName === "mentor" || pathName === "competitions") {
+        return;
+      }
       else if (location.pathname.includes("/job-details/")) {
         return;
       } else {
@@ -165,7 +174,7 @@ const Layout = () => {
         <Route path="/job-details/:slug" element={<JobDetails />} />
         <Route path="/internship-details/:slug" element={<JobDetails />} />
         <Route path="/scholarship-details/:slug" element={<JobDetails />} />
-        <Route path="/admin-profile" element={<AdminProfile />} />
+        <Route path="/admin-profile/:activeTab?" element={<AdminProfile />} />
         <Route path="/main-profile" element={<MainProfile />} />
         <Route path="*" element={<NotFound />} />
         <Route path="/dummy" element={<Dummy />} />
@@ -190,6 +199,9 @@ const Layout = () => {
         <Route path="/add-blog" element={<AddBlogs />} />
         <Route path="/blog/:slug" element={<BlogSingle />} />
         <Route path="/blogs" element={<Blogs />} />
+        <Route path="/mentors" element={<MentorList />} />
+        <Route path="/mentor/:id" element={<MentorDetails />} />
+        <Route path="/competitions" element={<CompetitionsLandingPage />} />
         {/* ✅ Restrict access only to role_id = 3 */}
         <Route
           path="/all-candidates"

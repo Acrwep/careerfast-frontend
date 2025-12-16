@@ -1188,8 +1188,8 @@ export default function MainProfile() {
               company_name: newCompany.workingCompanyName,
               designation: newCompany.designation,
               start_date: newCompany.workingStartDate,
-              end_date: newCompany.currentlyWorking ? "" : newCompany.workingEndDate,
-              currently_working: newCompany.currentlyWorking,
+              end_date: newCompany.currentlyWorking ? null : newCompany.workingEndDate,
+              currently_working: newCompany.currentlyWorking ? 1 : 0,
             },
           ],
         };
@@ -1197,13 +1197,13 @@ export default function MainProfile() {
         const response = await insertExperience(payload);
 
         const finalCompanies = companies.map((c) =>
-          c.isNew ? { ...c, id: response.data.id, isNew: false } : c
+          c.isNew ? { ...c, id: response.data.id || Date.now(), isNew: false } : c
         );
 
         // ✅ Add immediately to state
         const savedCompany = {
           ...newCompany,
-          id: response.data.id,
+          id: response.data.id || Date.now(),
           isNew: false,
         };
 
@@ -1223,9 +1223,9 @@ export default function MainProfile() {
           designation: companyToUpdate.designation,
           start_date: companyToUpdate.workingStartDate,
           end_date: companyToUpdate.currentlyWorking
-            ? ""
+            ? null
             : companyToUpdate.workingEndDate,
-          currently_working: companyToUpdate.currentlyWorking,
+          currently_working: companyToUpdate.currentlyWorking ? 1 : 0,
           user_id: loginUserId,
         };
 
@@ -5657,7 +5657,7 @@ export default function MainProfile() {
                       </strong>
                     </div>
                     <p className="premium-detail-text">
-                      {new Date(profileStats.lastUpdated).toLocaleDateString()}
+                      {new Date(profileStats.lastUpdated).toLocaleDateString("en-GB")}
                     </p>
                   </div>
 

@@ -38,6 +38,7 @@ import CommonInputField from "../Common/CommonInputField";
 import CommonPasswordField from "../Common/CommonPasswordField";
 import { getOrganizationType, register } from "../ApiService/action";
 import CommonSelectField from "../Common/CommonSelectField";
+import { Helmet } from "react-helmet-async";
 
 const { Title, Text, Link } = Typography;
 
@@ -143,8 +144,7 @@ const RegisterPage = () => {
       setTimeout(() => {
         setIsLoading(false);
         message.success(
-          `${
-            activeTab === "candidate" ? "Candidate" : "Recruiter"
+          `${activeTab === "candidate" ? "Candidate" : "Recruiter"
           } registered successfully!`
         );
         navigate("/login");
@@ -175,7 +175,7 @@ const RegisterPage = () => {
   ];
 
   useEffect(() => {
-    document.title = "CareerFast | Register";
+    // handled by Helmet
     setEmail("");
     setPassword("");
     setFname("");
@@ -185,6 +185,14 @@ const RegisterPage = () => {
 
   return (
     <div className="loginpage_container">
+      <Helmet>
+        <title>CareerFast | Register</title>
+        <meta
+          name="description"
+          content="Join CareerFast today! Create an account as a candidate to find jobs or as a recruiter to hire top talent."
+        />
+        <link rel="canonical" href="https://careerfast.in/register" />
+      </Helmet>
       <Row>
         <Col span={12}>
           {" "}
@@ -435,9 +443,8 @@ const RegisterPage = () => {
                   >
                     {isLoading
                       ? "Registering..."
-                      : `Create ${
-                          activeTab === "candidate" ? "Candidate" : "Recruiter"
-                        } Account`}
+                      : `Create ${activeTab === "candidate" ? "Candidate" : "Recruiter"
+                      } Account`}
                   </Button>
                 </Form.Item>
                 <div style={{ textAlign: "center", marginTop: 20 }}>

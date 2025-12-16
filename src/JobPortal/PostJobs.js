@@ -602,11 +602,11 @@ export default function PostJobs() {
               : "",
       work_location:
         workLocation === 1
-          ? specificLocation // Now an array of locations
+          ? specificLocation
           : workLocation === 2
             ? "Pan India"
             : "",
-      job_category: jobCategory, // Now an array of categories
+      job_category: jobCategory,
       skills: skillsRequired,
       experience_type:
         eligibility === 1 ? "Fresher" : eligibility === 2 ? "Experienced" : eligibility === 3 ? "College Students" : "",
@@ -647,6 +647,7 @@ export default function PostJobs() {
   const publish = async (payload) => {
     try {
       setIsLoading(true); // start loader immediately
+      console.log("📤 Sending job post payload:", payload);
       const response = await createJobPost(payload);
 
       message.success("Posted Successfully.");
@@ -656,7 +657,15 @@ export default function PostJobs() {
 
       navigate("/job-portal");
     } catch (error) {
-      console.error("Error posting job", error);
+      console.error("❌ Error posting job:", error);
+
+      // Display specific error message from backend
+      const errorMessage = error.response?.data?.details ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to post job. Please try again.";
+
+      message.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

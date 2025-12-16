@@ -19,7 +19,6 @@ import company_logos2 from "../images/verified.png";
 import company_logos3 from "../images/applied.png";
 import need_content_img from "../images/need_guidence.webp";
 import need_guidence1 from "../images/need_guidence1.png";
-import { PiCurrencyDollarDuotone } from "react-icons/pi";
 import { useNavigate } from "react-router-dom";
 import logo1 from "../images/logo1.svg";
 import logo2 from "../images/logo2.svg";
@@ -60,12 +59,27 @@ import {
 } from "../ApiService/action";
 import Footer from "../Footer/Footer";
 import { Loader } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 const generateSlug = (text) => {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+};
+
+// Helper function to convert currency code to symbol
+const getCurrencySymbol = (currencyCode) => {
+  const currencyMap = {
+    'INR': '₹',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'AUD': 'A$',
+    'CAD': 'C$',
+  };
+  return currencyMap[currencyCode] || currencyCode;
 };
 
 const { Title, Text } = Typography;
@@ -172,7 +186,6 @@ export default function JobPortalLandingPage() {
     setVisibleBlogs((prev) => prev + 3);
   };
 
-
   const settings = {
     dots: true,
     infinite: backendJobs.length > 3,
@@ -254,7 +267,6 @@ export default function JobPortalLandingPage() {
     <FaBriefcase />,
     <FaMicrochip />
   ];
-  const jobTypeJobs = backendJobs.filter((jobs) => jobs.job_nature === "Job");
 
   useEffect(() => {
     document.title = "CareerFast | Job Portal";
@@ -303,14 +315,14 @@ export default function JobPortalLandingPage() {
   const getJobPostsData = async () => {
     setLoading(true);
     try {
-      const response = await getJobPosts({});
+      const response = await getJobPosts({ limit: 15, job_nature: "Job" });
       const jobs = response?.data?.data?.data || [];
-      setBackendJobs(jobs);
+      setBackendJobs(jobs.slice(0, 15));
     } catch (error) {
       message.error("Please Login");
     } finally {
       setLoading(false);
-      fetchCategories(); // ✅ call here
+      fetchCategories();
     }
   };
 
@@ -325,7 +337,7 @@ export default function JobPortalLandingPage() {
       return;
     }
 
-    const payload = { user_id: getUserDetails.id };
+    const payload = { user_id: getUserDetails.id, limit: 6 }; // Fetch all user posts
     try {
       const response = await getJobPostByUserId(payload);
       const jobs = response?.data?.data || [];
@@ -370,6 +382,18 @@ export default function JobPortalLandingPage() {
   // ✅ Render rest of the page only after data is ready
   return (
     <div>
+      <Helmet>
+        <title>CareerFast | Job Portal - Find Your Dream Job</title>
+        <meta
+          name="description"
+          content="Explore thousands of job opportunities on CareerFast. Connect with top employers and fast-track your career today."
+        />
+        <meta
+          name="keywords"
+          content="jobs, career, recruitment, hiring, job portal, employment"
+        />
+        <link rel="canonical" href="https://careerfast.in/job-portal" />
+      </Helmet>
       <Header />
       {/* Hero Section */}
       <Row className="job-portal">
@@ -631,126 +655,153 @@ export default function JobPortalLandingPage() {
             </motion.div>
           </div>
         </div>
-        {jobTypeJobs.length > 0 ? (
+        {backendJobs.length > 0 ? (
           <Slider {...settings} className="elite-job-carousel">
-            {backendJobs
-              .filter((jobs) => jobs.job_nature === "Job")
-              .map((jobs, index) => {
-                const randomGradient =
-                  gradientColors[
-                  Math.floor(Math.random() * gradientColors.length)
-                  ];
-                return (
-                  <motion.div
-                    key={jobs.id}
-                    className="elite-job-slide"
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    variants={fadeInUp}
+            {backendJobs.map((jobs, index) => {
+              const randomGradient =
+                gradientColors[
+                Math.floor(Math.random() * gradientColors.length)
+                ];
+              return (
+                <motion.div
+                  key={jobs.id}
+                  className="elite-job-slide"
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={fadeInUp}
+                >
+                  <Card
+                    className="elite-job-card"
+                    style={{ background: randomGradient }}
                   >
-                    <Card
-                      className="elite-job-card"
-                      style={{ background: randomGradient }}
+                    <div className="elite-job-tag">{jobs.job_nature}</div>
+
+                    <div className="elite-logo-wrapper">
+                      <img
+                        src={jobs.company_logo}
+                        alt={jobs.company_name}
+                        className="elite-company-logo"
+                      />
+                      <div className="elite-logo-backdrop"></div>
+                    </div>
+
+                    <div className="elite-job-content">
+                      <Title level={4} className="elite-job-title">
+                        {jobs.job_title}
+                      </Title>
+                      <Text className="elite-company-name">
+                        {jobs.company_name}
+                      </Text>
+
+                      <div className="elite-job-details">
+                        <div className="elite-detail-item">
+                          <EnvironmentOutlined className="elite-detail-icon" />
+                          <div>
+                            <span className="elite-detail-label">Location</span>
+                            <span>
+                              {(() => {
+                                let locations = [];
+
+                                if (jobs.work_location) {
+                                  try {
+                                    const parsed = Array.isArray(jobs.work_location)
+                                      ? jobs.work_location
+                                      : JSON.parse(jobs.work_location);
+
+                                    if (Array.isArray(parsed) && parsed.length > 0) {
+                                      locations = parsed;
+                                    }
+                                  } catch {
+                                    // ignore parse error
+                                  }
+                                }
+
+                                // 👉 If location exists, show it
+                                if (locations.length > 0) {
+                                  const firstTwo = locations.slice(0, 2).join(", ");
+                                  return locations.length > 2 ? `${firstTwo}, ...` : firstTwo;
+                                }
+
+                                // 👉 Fallback to workplace_type
+                                return jobs.workplace_type || "Not specified";
+                              })()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="elite-detail-item">
+                          <StarOutlined className="elite-detail-icon" />
+                          <div>
+                            <span className="elite-detail-label">
+                              Level
+                            </span>
+                            <span>{jobs.experience_type}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="elite-job-meta">
+                        <div className="elite-meta-item">
+                          <TeamOutlined />
+                          <span>
+                            {" "}
+                            {appliedCounts[jobs.id] || 0} applicants
+                          </span>
+                        </div>
+                        <div className="elite-meta-item elite-salary">
+                          <span>
+                            {jobs.salary_type === "Range"
+                              ? `${getCurrencySymbol(jobs.currency)} ${jobs.min_salary} - ${jobs.max_salary} LPA`
+                              : jobs.salary_type === "Fixed"
+                                ? `${getCurrencySymbol(jobs.currency)} ${jobs.min_salary} LPA`
+                                : ""}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <motion.div
+                      onClick={() => {
+                        const safeSlug = (val) => {
+                          if (!val) return "";
+                          if (Array.isArray(val)) return generateSlug(val.join(" "));
+                          try {
+                            const parsed = JSON.parse(val);
+                            if (Array.isArray(parsed)) return generateSlug(parsed.join(" "));
+                            return generateSlug(parsed);
+                          } catch {
+                            return generateSlug(val);
+                          }
+                        };
+
+                        const jobNature = generateSlug(jobs.job_nature || "");
+                        const jobTitle = generateSlug(jobs.job_title || "");
+                        const companyName = generateSlug(jobs.company_name || "");
+                        const locationSlug = safeSlug(jobs.work_location);
+                        const workplaceType = generateSlug(jobs.workplace_type || "");
+                        const experienceType = generateSlug(jobs.experience_type || "");
+                        const experienceRequired = safeSlug(jobs.experience_required);
+
+                        const finalUrl = `/job-details/${jobNature}-${jobTitle}-${companyName}-${locationSlug}-${workplaceType}-${experienceType}-${experienceRequired}-${jobs.id}`;
+                        navigate(finalUrl);
+                      }}
+                      className="elite-job-cta"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.95 }}
                     >
-                      <div className="elite-job-tag">{jobs.job_nature}</div>
-
-                      <div className="elite-logo-wrapper">
-                        <img
-                          src={jobs.company_logo}
-                          alt={jobs.company_name}
-                          className="elite-company-logo"
-                        />
-                        <div className="elite-logo-backdrop"></div>
-                      </div>
-
-                      <div className="elite-job-content">
-                        <Title level={4} className="elite-job-title">
-                          {jobs.job_title}
-                        </Title>
-                        <Text className="elite-company-name">
-                          {jobs.company_name}
-                        </Text>
-
-                        <div className="elite-job-details">
-                          <div className="elite-detail-item">
-                            <EnvironmentOutlined className="elite-detail-icon" />
-                            <div>
-                              <span className="elite-detail-label">Location</span>
-                              <span>
-                                {(() => {
-                                  const arr = Array.isArray(jobs.work_location)
-                                    ? jobs.work_location
-                                    : (() => {
-                                      try {
-                                        return JSON.parse(jobs.work_location);
-                                      } catch {
-                                        return [jobs.work_location];
-                                      }
-                                    })();
-
-                                  const firstTwo = arr.slice(0, 2).join(", ");
-                                  return arr.length > 2 ? `${firstTwo}, ...` : firstTwo;
-                                })()}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="elite-detail-item">
-                            <StarOutlined className="elite-detail-icon" />
-                            <div>
-                              <span className="elite-detail-label">
-                                Level
-                              </span>
-                              <span>{jobs.experience_type}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="elite-job-meta">
-                          <div className="elite-meta-item">
-                            <TeamOutlined />
-                            <span>
-                              {" "}
-                              {appliedCounts[jobs.id] || 0} applicants
-                            </span>
-                          </div>
-                          <div className="elite-meta-item elite-salary">
-                            <span>
-                              {jobs.salary_type === "Range"
-                                ? `${jobs.currency} ${jobs.min_salary} - ${jobs.max_salary}`
-                                : jobs.salary_type === "Fixed"
-                                  ? `${jobs.currency} ${jobs.min_salary}`
-                                  : ""}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <motion.div
-                        onClick={() => {
-                          const jobTitleSlug = generateSlug(jobs.job_title);
-                          const companySlug = generateSlug(jobs.company_name);
-                          const finalUrl = `/job-details/${jobTitleSlug}-${companySlug}-${jobs.id}`;
-                          navigate(finalUrl);
-                        }}
-                        className="elite-job-cta"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <ArrowRightOutlined
-                          style={{ color: "#5f2eea" }}
-                          className="elite-cta-icon"
-                        />
-
-                        <span style={{ color: "#5f2eea" }}>
-                          View Details
-                        </span>
-                      </motion.div>
-                    </Card>
-                  </motion.div>
-                );
-              })}
+                      <ArrowRightOutlined
+                        style={{ color: "#5f2eea" }}
+                        className="elite-cta-icon"
+                      />
+                      <span style={{ color: "#5f2eea" }}>
+                        View Details
+                      </span>
+                    </motion.div>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </Slider>
         ) : (
           <div className="no-jobs-found">
@@ -775,20 +826,36 @@ export default function JobPortalLandingPage() {
         </div>
 
         {/* Opportunities Grid */}
-        {/* Opportunities Grid */}
         <div className="opportunities-grid">
           {backendJobs
-            .filter((job) => job.job_nature === "Job") // ✅ only jobs
             .sort((a, b) => new Date(b.posted_date) - new Date(a.posted_date)) // ✅ newest first
-            .slice(0, 4) // ✅ limit to 4
+            .slice(0, 4) // ✅ Show only first 4
             .map((job) => (
               <motion.div
                 key={job.id}
                 className="classical-opportunity-card"
                 onClick={() => {
-                  const jobTitleSlug = generateSlug(job.job_title);
-                  const companySlug = generateSlug(job.company_name);
-                  const finalUrl = `/job-details/${jobTitleSlug}-${companySlug}-${job.id}`;
+                  const safeSlug = (val) => {
+                    if (!val) return "";
+                    if (Array.isArray(val)) return generateSlug(val.join(" "));
+                    try {
+                      const parsed = JSON.parse(val);
+                      if (Array.isArray(parsed)) return generateSlug(parsed.join(" "));
+                      return generateSlug(parsed);
+                    } catch {
+                      return generateSlug(val);
+                    }
+                  };
+
+                  const jobNature = generateSlug(job.job_nature || "");
+                  const jobTitle = generateSlug(job.job_title || "");
+                  const companyName = generateSlug(job.company_name || "");
+                  const locationSlug = safeSlug(job.work_location);
+                  const workplaceType = generateSlug(job.workplace_type || "");
+                  const experienceType = generateSlug(job.experience_type || "");
+                  const experienceRequired = safeSlug(job.experience_required);
+
+                  const finalUrl = `/job-details/${jobNature}-${jobTitle}-${companyName}-${locationSlug}-${workplaceType}-${experienceType}-${experienceRequired}-${job.id}`;
                   navigate(finalUrl);
                 }}
                 initial="hidden"
@@ -815,19 +882,22 @@ export default function JobPortalLandingPage() {
                     <span className="label">Location:</span>
                     <span>
                       {(() => {
+                        let arr = [];
+
                         try {
-                          const arr = JSON.parse(job.work_location);
-
-                          // Show FIRST 2 only
-                          if (Array.isArray(arr)) {
-                            const firstTwo = arr.slice(0, 2).join(", ");
-                            return arr.length > 2 ? `${firstTwo}, ...` : firstTwo;
-                          }
-
-                          return job.work_location;
+                          // If JSON array → parse
+                          arr = JSON.parse(job.work_location);
                         } catch {
-                          return job.work_location;
+                          // If plain string → convert to array
+                          arr = [job.work_location];
                         }
+
+                        // Ensure it's an array
+                        if (!Array.isArray(arr)) arr = [arr];
+
+                        // Join first 2 only
+                        const firstTwo = arr.slice(0, 2).join(", ");
+                        return arr.length > 2 ? `${firstTwo}, ...` : firstTwo;
                       })()}
                     </span>
                   </div>
@@ -864,11 +934,13 @@ export default function JobPortalLandingPage() {
         variants={fadeInUp}
       >
         <Row
+          onClick={() => navigate("/mentors")}
           className="need_guidence_row"
           style={{
             background:
               "linear-gradient(90deg, rgb(217 186 255) 0%, rgb(255, 255, 255) 100%)",
             borderRadius: "30px",
+            cursor: "pointer",
           }}
         >
           <Col
@@ -898,7 +970,7 @@ export default function JobPortalLandingPage() {
             xs={24}
             sm={24}
           >
-            <div> <Text className="need_guidence_text">Need Guidence?</Text> <h1 className="need_guidence_title"> Get Winning Tips From <span>Top Mentors</span></h1> </div>
+            <div > <Text className="need_guidence_text">Need Guidence?</Text> <h1 className="need_guidence_title"> Get Winning Tips From <span >Top Mentors</span></h1> </div>
           </Col>
         </Row>
       </motion.div>
@@ -911,7 +983,6 @@ export default function JobPortalLandingPage() {
           className="elite-title-wrapper"
           initial="hidden"
           whileInView="visible"
-          variants={fadeInUp}
           viewport={{ once: true }}
         >
           <h2 className="elite-title">
@@ -929,7 +1000,6 @@ export default function JobPortalLandingPage() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              variants={fadeInUp}
               custom={index}
             >
               <motion.div whileHover={{ scale: 1.05 }}>
@@ -943,8 +1013,6 @@ export default function JobPortalLandingPage() {
           ))}
         </Slider>
       </div>
-
-      {/*  */}
 
       {/* counting */}
       <div className="counter">
@@ -1027,9 +1095,18 @@ export default function JobPortalLandingPage() {
         </div>
 
         <div className="section-headers">
-          <div className="header-decoration">
-            <h4>Career Fast Blogs</h4>
-          </div>
+          <motion.div
+            className="elite-title-wrapper"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            <h2 className="elite-title">
+              <span className="elite-title-text">
+                Career Fast Blogs
+              </span>
+            </h2>
+          </motion.div>
           <p>Stay updated with the latest blog trends & interview hacks</p>
         </div>
 
@@ -1058,6 +1135,7 @@ export default function JobPortalLandingPage() {
                 >
                   <Card
                     className="premium-tip-card"
+                    onClick={() => navigate(`/blog/${generateSlug(tip.blogTitle)}`)}
                     cover={
                       <div className="card-image-container">
                         <img alt={tip.blogTitle} src={tip.blogImage} />

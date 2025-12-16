@@ -16,6 +16,16 @@
   font-family: "Inter", sans-serif !important;
 }
 
+.my-opportunities .detail-item span:last-child {
+  display: inline-block;
+  max-width: 170px;
+  /* you can adjust */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
 /* loader */
 .ant-spin-lg .ant-spin-dot-holder i {
   width: 30px;
@@ -616,6 +626,10 @@
   position: relative;
 }
 
+.elite-job-slide .ant-card-body {
+  padding: 10px;
+}
+
 .ant-empty .ant-empty-image {
   height: auto;
   margin-bottom: 8px;
@@ -706,7 +720,7 @@
 }
 
 .elite-job-title {
-  font-size: 24px !important;
+  font-size: 20px !important;
   font-weight: 600 !important;
   color: #fff !important;
   margin-bottom: 3px !important;
@@ -715,7 +729,7 @@
 }
 
 .elite-company-name {
-  font-size: 1rem;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
   margin-bottom: 25px;

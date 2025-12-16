@@ -654,11 +654,7 @@ export default function WorkshopFilter() {
                             <FaRegBuilding className="meta-icon premium-icon" />
                             <span className="meta-text">
                               {selectedWorkshop.created_at
-                                ? new Date(selectedWorkshop.created_at).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })
+                                ? new Date(selectedWorkshop.created_at).toLocaleDateString("en-GB")
                                 : "—"}
                             </span>
                           </div>

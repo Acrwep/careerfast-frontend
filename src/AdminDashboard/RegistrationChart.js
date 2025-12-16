@@ -451,6 +451,19 @@ const RegistrationDashboard = () => {
                 <Space>
                   <DashboardOutlined style={{ color: '#6366F1' }} />
                   <Title level={5} style={{ margin: 0 }}>Registration Trends</Title>
+                  <Alert
+                    style={{
+                      marginTop: 7,
+                      marginBottom: 0,
+                      fontSize: 12,
+                      padding: "3px 5px",
+                      border: "none",
+                      display: "inline-flex",
+                    }}
+                    message="Here is the gender distribution chart for overall post"
+                    type="warning"
+                    showIcon
+                  />
                 </Space>
               }
               extra={

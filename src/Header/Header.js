@@ -43,6 +43,7 @@ import {
   ProfileOutlined,
   LockOutlined,
   ReadOutlined,
+  CodeOutlined,
 } from "@ant-design/icons";
 
 import { Tag } from "antd";
@@ -246,10 +247,34 @@ export default function Header() {
   const handleSelect = (value, option) => {
     const job = option.jobData;  // full job object
 
-    const jobTitleSlug = generateSlug(job.job_title);
-    const companySlug = generateSlug(job.company_name);
+    const safeSlug = (val) => {
+      if (!val) return "";
+      if (Array.isArray(val)) return generateSlug(val.join(" "));
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return generateSlug(parsed.join(" "));
+        return generateSlug(parsed);
+      } catch {
+        return generateSlug(val);
+      }
+    };
 
-    const finalUrl = `/job-details/${jobTitleSlug}-${companySlug}-${job.id}`;
+    const jobNature = generateSlug(job.job_nature || "");
+    const jobTitle = generateSlug(job.job_title || "");
+    const companyName = generateSlug(job.company_name || "");
+    const locationSlug = safeSlug(job.work_location);
+    const workplaceType = generateSlug(job.workplace_type || "");
+    const experienceType = generateSlug(job.experience_type || "");
+    const experienceRequired = safeSlug(job.experience_required);
+
+    let basePath = "/job-details";
+    if (job.job_nature === "Internship") basePath = "/internship-details";
+    if (job.job_nature === "Scholarship") basePath = "/scholarship-details";
+
+    const finalUrl = `${basePath}/${jobNature}-${jobTitle}-${companyName}-${locationSlug}-${workplaceType}-${experienceType}-${experienceRequired}-${job.id}`;
+
+
+
 
     navigate(finalUrl);
   };
@@ -262,7 +287,8 @@ export default function Header() {
       icon: <BookOutlined />,
       path: "/internship",
     },
-    // { key: "practice", label: "Practice", icon: <CodeOutlined />, path: "#" },
+    { key: "mentorships", label: "Mentorships", icon: <CodeOutlined />, path: "/mentors" },
+    { key: "competitions", label: "Competitions", icon: <TrophyOutlined />, path: "/competitions" },
   ];
 
   const moreMenuItems = [
@@ -330,7 +356,7 @@ export default function Header() {
         className="bg-white shadow-sm py-3 elite-header"
       >
         <Container style={{ paddingLeft: 35, paddingRight: 35 }} fluid>
-          <div className="d-flex gap-3 global_search">
+          <div className="d-flex gap-1 global_search">
             <Navbar.Brand>
               <img
                 onClick={() => navigate("/job-portal")}
@@ -400,7 +426,7 @@ export default function Header() {
             </Offcanvas.Header>
             <Offcanvas.Body>
               {/* Center: Navigation */}
-              <Nav className="justify-content-center flex-grow-1 align-items-start gap-3">
+              <Nav className="justify-content-center flex-grow-1 align-items-start gap-2">
                 {menuItems.map((item) => (
                   <Nav.Link
                     disabled={item.key === "practice" ? true : false}
@@ -696,8 +722,7 @@ export default function Header() {
               <div style={{ marginTop: 12 }}>
                 <Button
                   onClick={() => {
-                    localStorage.setItem("activeAdminTab", "mainprofile");
-                    navigate("/admin-profile");
+                    navigate("/admin-profile/mainprofile");
                   }}
                   type="text"
                   style={{
@@ -745,9 +770,8 @@ export default function Header() {
                         <span
                           style={{ cursor: "pointer", color: "#4f46e5" }}
                           onClick={() => {
-                            localStorage.setItem("activeAdminTab", "listing");
-                            localStorage.setItem("listingOrder", "topBottom"); // add this
-                            navigate("/admin-profile");
+                            localStorage.setItem("listingOrder", "topBottom");
+                            navigate("/admin-profile/listing");
                           }}
                         >
                           Manage Listings
@@ -762,8 +786,7 @@ export default function Header() {
                     <span
                       style={{ cursor: "pointer", color: "#4f46e5" }}
                       onClick={() => {
-                        localStorage.setItem("activeAdminTab", "wishlist");
-                        navigate("/admin-profile");
+                        navigate("/admin-profile/wishlist");
                       }}
                     >
                       Wishlist
@@ -776,11 +799,7 @@ export default function Header() {
                     <span
                       style={{ cursor: "pointer", color: "#4f46e5" }}
                       onClick={() => {
-                        localStorage.setItem(
-                          "activeAdminTab",
-                          "accountsettings"
-                        );
-                        navigate("/admin-profile");
+                        navigate("/admin-profile/accountsettings");
                       }}
                     >
                       Account Settings
@@ -793,11 +812,7 @@ export default function Header() {
                     <span
                       style={{ cursor: "pointer", color: "#4f46e5" }}
                       onClick={() => {
-                        localStorage.setItem(
-                          "activeAdminTab",
-                          "prosubscription"
-                        );
-                        navigate("/admin-profile");
+                        navigate("/admin-profile/prosubscription");
                       }}
                     >
                       Pro Subscription
@@ -852,8 +867,7 @@ export default function Header() {
                     <span
                       style={{ cursor: "pointer", color: "#4f46e5" }}
                       onClick={() => {
-                        localStorage.setItem("activeAdminTab", "applied");
-                        navigate("/admin-profile");
+                        navigate("/admin-profile/applied");
                       }}
                     >
                       Applied Jobs
@@ -1217,6 +1231,7 @@ export default function Header() {
           /* Elite search input */
           .elite-search-input {
             border-radius: 12px;
+            width: 150px !important;
             border: 1px solid #b6b1ff;
             padding: 12px 18px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);

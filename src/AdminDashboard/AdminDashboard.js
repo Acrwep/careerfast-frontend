@@ -94,6 +94,7 @@ import {
   getUserProfile,
 } from "../ApiService/action";
 import { requestForToken } from "../firebase/fireBase";
+import { Helmet } from "react-helmet-async";
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -132,7 +133,7 @@ export default function AdminDashboard() {
   }, [id]);
 
   useEffect(() => {
-    document.title = "CareerFast | Admin Dashboard";
+    // handled by Helmet
     getJobPostsData();
   }, []);
   useEffect(() => {
@@ -399,13 +400,31 @@ export default function AdminDashboard() {
     </text>
   );
 
-  const CustomTooltip = ({ active, payload }) => {
+  const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <Card size="small" style={{ borderRadius: 8 }}>
-          <Text strong>{payload[0].name}</Text>
-          <br />
-          <Text type="secondary">{payload[0].value}</Text>
+        <Card size="small" style={{ borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} bordered={false}>
+          {label && (
+            <div style={{ marginBottom: 8, fontWeight: "600", color: "#475569" }}>
+              {label}
+            </div>
+          )}
+          {payload.map((entry, index) => (
+            <div key={index} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  backgroundColor: entry.color || entry.payload.fill || "#6366F1",
+                }}
+              />
+              <Text strong style={{ color: "#1e293b" }}>
+                {entry.name}:
+              </Text>
+              <Text style={{ color: "#64748b" }}>{entry.value}</Text>
+            </div>
+          ))}
         </Card>
       );
     }
@@ -432,6 +451,14 @@ export default function AdminDashboard() {
 
   return (
     <Layout className="admin-dashboard" style={{ minHeight: "100vh" }}>
+      <Helmet>
+        <title>CareerFast | Admin Dashboard</title>
+        <meta
+          name="description"
+          content="Manage your job postings, candidates, and recruitment analytics on the CareerFast Admin Dashboard."
+        />
+        <link rel="canonical" href="https://careerfast.in/admin-dashboard" />
+      </Helmet>
       <Sider
         trigger={null}
         collapsible
@@ -670,21 +697,6 @@ export default function AdminDashboard() {
                 <Title level={2} style={{ margin: 0 }}>
                   Hello {fname} {lname}! 👋
                 </Title>
-                <Select
-                  defaultValue="this_week"
-                  style={{
-                    width: 180,
-                    background: "#E9E0FE",
-                    padding: "0px 5px 0px 10px",
-                    borderRadius: "6px",
-                  }}
-                  suffixIcon={<FaChevronDown style={{ fontSize: 12 }} />}
-                >
-                  <Option value="this_week">This Week</Option>
-                  <Option value="last_week">Last Week</Option>
-                  <Option value="this_month">This Month</Option>
-                  <Option value="last_month">Last Month</Option>
-                </Select>
               </div>
               <div>
                 <Tooltip title="Overall summary details">
@@ -1840,7 +1852,7 @@ export default function AdminDashboard() {
                                       style={{ fontSize: 12 }}
                                     >
                                       📅 Posted on:{" "}
-                                      {createdDate.toLocaleDateString()}
+                                      {createdDate.toLocaleDateString("en-GB")}
                                     </Text>
                                     <div
                                       style={{

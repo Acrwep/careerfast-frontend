@@ -35,6 +35,7 @@ import {
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { requestForToken } from "../firebase/fireBase";
+import { Helmet } from "react-helmet-async";
 const { Title, Text, Link } = Typography;
 
 const LoginPage = () => {
@@ -65,7 +66,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "CareerFast | Login";
+    // handled by Helmet
     setEmail("");
   }, [activeTab]);
 
@@ -363,6 +364,14 @@ const LoginPage = () => {
   };
   return (
     <div className="loginpage_container">
+      <Helmet>
+        <title>CareerFast | Login</title>
+        <meta
+          name="description"
+          content="Login to your CareerFast account to manage your profile, apply for jobs, or post new opportunities."
+        />
+        <link rel="canonical" href="https://careerfast.in/login" />
+      </Helmet>
       <Row>
         <Col span={12}>
           {" "}

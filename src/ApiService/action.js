@@ -3,7 +3,6 @@ import { Modal } from "antd";
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
-  headers: { "Content-Type": "application/json" },
 });
 
 let isModalVisible = false;
@@ -12,28 +11,33 @@ let modalInstance = null;
 api.interceptors.request.use(
   (config) => {
     const AccessToken = localStorage.getItem("AccessToken");
-    // console.log("my token", AccessToken);
-
-    const loginDetails = localStorage.getItem("loginDetails");
-    // console.log("login details", loginDetails);
-
-    if (loginDetails) {
-      const convertJson = JSON.parse(loginDetails);
-      // console.log(convertJson);
-    }
 
     if (AccessToken) {
       const expired = isTokenExpired(AccessToken);
-      if (expired === true) {
+
+      if (expired) {
         ShowModal();
-        return Promise.reject(new Error("Token is expired"));
+
+        localStorage.removeItem("AccessToken");
+
+        // ❌ Cancel request — do NOT continue
+        return Promise.reject({
+          response: {
+            status: 401,
+            data: { message: "TokenExpired" },
+          },
+        });
       }
+
       config.headers.Authorization = `Bearer ${AccessToken}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
+
+
 
 // TokenExpired
 const isTokenExpired = (token) => {
@@ -124,7 +128,7 @@ export const login = async (payload) => {
 
 export const getUsers = async (payload) => {
   try {
-    const response = await api.get("api/getUsers", {
+    const response = await api.get("/api/getUsers", {
       params: payload,
     });
     return response;
@@ -265,7 +269,7 @@ export const getSkillsData = async () => {
 
 export const getJobCategoryData = async () => {
   try {
-    const response = await api.get("api/getJobCategories");
+    const response = await api.get("/api/getJobCategories");
     return response;
   } catch (error) {
     throw error;
@@ -373,7 +377,7 @@ export const getJobPostByUserId = async (payload) => {
 
 export const getUserTypeData = async () => {
   try {
-    const response = await api.get("api/getUserType");
+    const response = await api.get("/api/getUserType");
     return response;
   } catch (error) {
     throw error;
@@ -384,7 +388,7 @@ export const getUserTypeData = async () => {
 
 export const updateResume = async (payload) => {
   try {
-    const response = await api.put("api/updateResume", payload);
+    const response = await api.put("/api/updateResume", payload);
     return response;
   } catch (error) {
     throw error;
@@ -395,7 +399,7 @@ export const updateResume = async (payload) => {
 
 export const updateAbout = async (payload) => {
   try {
-    const response = await api.put("api/updateAbout", payload);
+    const response = await api.put("/api/updateAbout", payload);
     return response;
   } catch (error) {
     throw error;
@@ -406,7 +410,7 @@ export const updateAbout = async (payload) => {
 
 export const updateSkills = async (payload) => {
   try {
-    const response = await api.put("api/updateSkills", payload);
+    const response = await api.put("/api/updateSkills", payload);
     return response;
   } catch (error) {
     throw error;
@@ -557,7 +561,7 @@ export const getUserProfile = async (payload) => {
 
 export const getQualification = async () => {
   try {
-    const response = await api.get("api/getQualification");
+    const response = await api.get("/api/getQualification");
     return response;
   } catch (error) {
     throw error;
@@ -568,7 +572,7 @@ export const getQualification = async () => {
 
 export const getCourses = async () => {
   try {
-    const response = await api.get("api/getCourses");
+    const response = await api.get("/api/getCourses");
     return response;
   } catch (error) {
     throw error;
@@ -579,7 +583,7 @@ export const getCourses = async () => {
 
 export const getSpecialization = async () => {
   try {
-    const response = await api.get("api/getSpecialization");
+    const response = await api.get("/api/getSpecialization");
     return response;
   } catch (error) {
     throw error;
@@ -590,7 +594,7 @@ export const getSpecialization = async () => {
 
 export const getColleges = async () => {
   try {
-    const response = await api.get("api/getColleges");
+    const response = await api.get("/api/getColleges");
     return response;
   } catch (error) {
     throw error;
@@ -601,7 +605,7 @@ export const getColleges = async () => {
 
 export const getCourseType = async () => {
   try {
-    const response = await api.get("api/getCourseType");
+    const response = await api.get("/api/getCourseType");
     return response;
   } catch (error) {
     throw error;
@@ -612,7 +616,7 @@ export const getCourseType = async () => {
 
 export const getJobPosts = async (payload) => {
   try {
-    const response = await api.post("api/getJobPosts", payload);
+    const response = await api.post("/api/getJobPosts", payload);
     return response;
   } catch (error) {
     throw error;
@@ -623,7 +627,7 @@ export const getJobPosts = async (payload) => {
 
 export const applyForJob = async (payload) => {
   try {
-    const response = await api.post("api/applyForJob", payload);
+    const response = await api.post("/api/applyForJob", payload);
     return response;
   } catch (error) {
     throw error;
@@ -634,7 +638,7 @@ export const applyForJob = async (payload) => {
 
 export const getJobAppliedCandidates = async (payload) => {
   try {
-    const response = await api.get("api/getJobAppliedCandidates", {
+    const response = await api.get("/api/getJobAppliedCandidates", {
       params: payload,
     });
     return response;
@@ -647,7 +651,7 @@ export const getJobAppliedCandidates = async (payload) => {
 
 export const checkIsJobApplied = async (payload) => {
   try {
-    const response = await api.get("api/checkIsJobApplied", {
+    const response = await api.get("/api/checkIsJobApplied", {
       params: payload,
     });
     return response;
@@ -660,7 +664,7 @@ export const checkIsJobApplied = async (payload) => {
 
 export const isProfileUpdated = async (payload) => {
   try {
-    const response = await api.get("api/isProfileUpdated", {
+    const response = await api.get("/api/isProfileUpdated", {
       params: payload,
     });
     return response;
@@ -673,7 +677,7 @@ export const isProfileUpdated = async (payload) => {
 
 export const saveJobPost = async (payload) => {
   try {
-    const response = await api.post("api/saveJobPost", payload);
+    const response = await api.post("/api/saveJobPost", payload);
     return response;
   } catch (error) {
     throw error;
@@ -684,7 +688,7 @@ export const saveJobPost = async (payload) => {
 
 export const getSavedJobs = async (payload) => {
   try {
-    const response = await api.get("api/getSavedJobs", {
+    const response = await api.get("/api/getSavedJobs", {
       params: payload,
     });
     return response;
@@ -710,7 +714,7 @@ export const removeSavedJobs = async (payload) => {
 
 export const checkIsJobSaved = async (payload) => {
   try {
-    const response = await api.get("api/checkIsJobSaved", {
+    const response = await api.get("/api/checkIsJobSaved", {
       params: payload,
     });
     return response;
@@ -734,7 +738,7 @@ export const updateProfileImage = async (payload) => {
 
 export const getUserAppliedJobs = async (payload) => {
   try {
-    const response = await api.get("api/userAppliedJobs", {
+    const response = await api.get("/api/userAppliedJobs", {
       params: payload,
     });
     return response;
@@ -747,7 +751,7 @@ export const getUserAppliedJobs = async (payload) => {
 
 export const searchByKeyword = async (payload) => {
   try {
-    const response = await api.get("api/searchByKeyword", {
+    const response = await api.get("/api/searchByKeyword", {
       params: payload,
     });
     return response;
@@ -760,7 +764,7 @@ export const searchByKeyword = async (payload) => {
 
 export const updateJobBasicDetails = async (payload) => {
   try {
-    const response = await api.put("api/updateJobBasicDetails", payload);
+    const response = await api.put("/api/updateJobBasicDetails", payload);
     return response;
   } catch (error) {
     throw error;
@@ -771,7 +775,7 @@ export const updateJobBasicDetails = async (payload) => {
 
 export const updateJobNature = async (payload) => {
   try {
-    const response = await api.put("api/updateJobNature", payload);
+    const response = await api.put("/api/updateJobNature", payload);
     return response;
   } catch (error) {
     throw error;
@@ -782,7 +786,7 @@ export const updateJobNature = async (payload) => {
 
 export const updateEligibility = async (payload) => {
   try {
-    const response = await api.put("api/updateEligibility", payload);
+    const response = await api.put("/api/updateEligibility", payload);
     return response;
   } catch (error) {
     throw error;
@@ -793,7 +797,7 @@ export const updateEligibility = async (payload) => {
 
 export const updateJobDescription = async (payload) => {
   try {
-    const response = await api.put("api/updateJobDescription", payload);
+    const response = await api.put("/api/updateJobDescription", payload);
     return response;
   } catch (error) {
     throw error;
@@ -804,7 +808,7 @@ export const updateJobDescription = async (payload) => {
 
 export const updateUserAppliedJobStatus = async (payload) => {
   try {
-    const response = await api.put("api/updateUserAppliedJobStatus", payload);
+    const response = await api.put("/api/updateUserAppliedJobStatus", payload);
     return response;
   } catch (error) {
     throw error;
@@ -815,7 +819,7 @@ export const updateUserAppliedJobStatus = async (payload) => {
 
 export const getUserJobPostStatus = async (payload) => {
   try {
-    const response = await api.get("api/getUserJobPostStatus", {
+    const response = await api.get("/api/getUserJobPostStatus", {
       params: payload,
     });
     return response;
@@ -828,7 +832,7 @@ export const getUserJobPostStatus = async (payload) => {
 
 export const changePassword = async (payload) => {
   try {
-    const response = await api.put("api/changePassword", payload);
+    const response = await api.put("/api/changePassword", payload);
     return response;
   } catch (error) {
     throw error;
@@ -839,7 +843,7 @@ export const changePassword = async (payload) => {
 
 export const getAppliedCandidatesCount = async (payload) => {
   try {
-    const response = await api.get("api/getAppliedCandidatesCount", {
+    const response = await api.get("/api/getAppliedCandidatesCount", {
       params: payload,
     });
     return response;
@@ -852,7 +856,7 @@ export const getAppliedCandidatesCount = async (payload) => {
 
 export const StatsOfPost = async (payload) => {
   try {
-    const response = await api.get("api/StatsOfPost", {
+    const response = await api.get("/api/StatsOfPost", {
       params: payload,
     });
     return response;
@@ -865,7 +869,7 @@ export const StatsOfPost = async (payload) => {
 
 export const getAllCandidateByRecruiter = async (payload) => {
   try {
-    const response = await api.get("api/getAllCandidateByRecruiter", {
+    const response = await api.get("/api/getAllCandidateByRecruiter", {
       params: payload,
     });
     return response;
@@ -878,7 +882,7 @@ export const getAllCandidateByRecruiter = async (payload) => {
 
 export const dailyStreak = async (payload) => {
   try {
-    const response = await api.post("api/dailyStreak", payload);
+    const response = await api.post("/api/dailyStreak", payload);
     return response;
   } catch (error) {
     throw error;
@@ -889,7 +893,7 @@ export const dailyStreak = async (payload) => {
 
 export const getDailyStreak = async (payload) => {
   try {
-    const response = await api.get("api/getDailyStreak", {
+    const response = await api.get("/api/getDailyStreak", {
       params: payload,
     });
     return response;
@@ -906,8 +910,8 @@ export const sendNotification = async () => {
       {
         title: "New Job Post Created 🚀",
         body: "Check out the job post details and apply now!",
-        link: "https://careerfast.com/job-portal", // ✅ correct way
-        icon: "/favicon.png", // ✅ will be added as `data`
+        link: "https://careerfast.com/job-portal",
+        icon: "/favicon.png",
       }
     );
     return res.data;

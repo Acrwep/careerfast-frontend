@@ -136,18 +136,33 @@ const OpportunityCard = ({ opportunity, onSave }) => {
                     style={{ background: "#e9e0fe", marginLeft: 10 }}
                     icon={<FaRegEye color="#5f2eea" />}
                     onClick={() => {
-                      const jobTitleSlug = generateSlug(opportunity.job_title);
-                      const companySlug = generateSlug(opportunity.company_name);
+                      const safeSlug = (val) => {
+                        if (!val) return "";
+                        if (Array.isArray(val)) return generateSlug(val.join(" "));
+                        try {
+                          const parsed = JSON.parse(val);
+                          if (Array.isArray(parsed)) return generateSlug(parsed.join(" "));
+                          return generateSlug(parsed);
+                        } catch {
+                          return generateSlug(val);
+                        }
+                      };
+
+                      const jobNature = generateSlug(opportunity.job_nature || "");
+                      const jobTitle = generateSlug(opportunity.job_title || "");
+                      const companyName = generateSlug(opportunity.company_name || "");
+                      const locationSlug = safeSlug(opportunity.work_location);
+                      const workplaceType = generateSlug(opportunity.workplace_type || "");
+                      const experienceType = generateSlug(opportunity.experience_type || "");
+                      const experienceRequired = safeSlug(opportunity.experience_required);
 
                       let basePath = "/job-details";
+                      if (opportunity.job_nature === "Internship") basePath = "/internship-details";
+                      if (opportunity.job_nature === "Scholarship") basePath = "/scholarship-details";
 
-                      if (opportunity.job_nature === "Internship") {
-                        basePath = "/internship-details";
-                      } else if (opportunity.job_nature === "Scholarship") {
-                        basePath = "/scholarship-details";
-                      }
+                      const jobId = opportunity.job_post_id || opportunity.id;
 
-                      navigate(`${basePath}/${jobTitleSlug}-${companySlug}-${opportunity.id}`);
+                      navigate(`${basePath}/${jobNature}-${jobTitle}-${companyName}-${locationSlug}-${workplaceType}-${experienceType}-${experienceRequired}-${jobId}`);
                     }}
 
                     aria-label="Toggle favourite"

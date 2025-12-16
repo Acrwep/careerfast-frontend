@@ -12,7 +12,6 @@ import {
   Alert,
   Form,
   Select,
-  Input,
   InputNumber,
   message,
   Upload,
@@ -23,7 +22,6 @@ import {
 } from "antd";
 import {
   EditOutlined,
-  PictureOutlined,
   ProfileOutlined,
   SolutionOutlined,
   FileTextOutlined,
@@ -99,6 +97,20 @@ import { useParams } from "react-router-dom";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+
+// Helper function to convert currency code to symbol
+const getCurrencySymbol = (currencyCode) => {
+  const currencyMap = {
+    'INR': '₹',
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'AUD': 'A$',
+    'CAD': 'C$',
+  };
+  return currencyMap[currencyCode] || currencyCode;
+};
 
 const StyledCard = styled(Card)`
   transition: all 0.3s ease;
@@ -427,7 +439,7 @@ const EditOpportunity = () => {
   const [salaryMax, setSalaryMax] = useState(null);
   const [companyName, setCompanyName] = useState("");
   const [jobTitle, setJobTitle] = useState("");
-  const [jobCategory, setJobCategory] = useState("");
+  const [jobCategory, setJobCategory] = useState([]);
   const [jobCategoryOptions, setJobCategoryOptions] = useState([]);
   const [value, setValue] = useState(defaultContent);
   const MAX_LENGTH = 3000;
@@ -437,7 +449,7 @@ const EditOpportunity = () => {
   const [workLocation, setWorkLocation] = useState("");
   const [workplaceLocation, setWorkplaceLocation] = useState("");
   const [workLocationActiveButton, setWorkLocationActiveButton] = useState("");
-  const [specificLocation, setSpecificLocation] = useState("");
+  const [specificLocation, setSpecificLocation] = useState([]);
   const [workLocationOption, setWorkLocationOption] = useState([]);
   const [eligibilityData, setEligibilityData] = useState([]);
   const [experienceRequiredActiveButton, setExperienceRequiredActiveButton] =
@@ -527,9 +539,9 @@ const EditOpportunity = () => {
       level: job.experience_type,
       salary:
         job.salary_type === "Fixed"
-          ? `${job.currency || "N/A"}${job.min_salary || "N/A"}`
+          ? `${getCurrencySymbol(job.currency || "N/A")}${job.min_salary || "N/A"}`
           : job.salary_type === "Range"
-            ? `${job.currency || "N/A"}${job.min_salary || "N/A"} - ${job.currency || "N/A"}${job.max_salary || "N/A"}`
+            ? `${getCurrencySymbol(job.currency || "N/A")}${job.min_salary || "N/A"} - ${getCurrencySymbol(job.currency || "N/A")}${job.max_salary || "N/A"}`
             : "Negotiable",
       location: `${job.workplace_type}${job.work_location ? ` • ${job.work_location}` : ""
         }`,
@@ -549,6 +561,7 @@ const EditOpportunity = () => {
           question: q.question,
           isrequired: q.isrequired,
         })) || [],
+      raw_work_location: job.work_location,
     };
   };
 
@@ -629,7 +642,7 @@ const EditOpportunity = () => {
       setLogoUrl(job.logo || null);
       if (!jobTitle) setJobTitle(job.title || "");
       setSkillsRequired(job.skills || []);
-      setJobCategory(job.job_category[0]);
+      setJobCategory(job.job_category || []);
       setJobOpenings(job.openings || "");
       setWorkingDays(job.working_days || []);
       setWorkingDaysName(job.working_days || "");
@@ -656,16 +669,26 @@ const EditOpportunity = () => {
       }
 
       if (!workTypeActiveButton) {
-        if (job.location?.includes("In Office")) setWorkTypeActiveButton(1);
-        else if (job.location?.includes("Work From Home")) setWorkTypeActiveButton(2);
-        else if (job.location?.includes("On Field")) setWorkTypeActiveButton(3);
+        if (job.location?.includes("In Office")) {
+          setWorkTypeActiveButton(1);
+          setWorkplaceType(1);
+        } else if (job.location?.includes("Work From Home")) {
+          setWorkTypeActiveButton(2);
+          setWorkplaceType(2);
+        } else if (job.location?.includes("On Field")) {
+          setWorkTypeActiveButton(3);
+          setWorkplaceType(3);
+        }
       }
 
       if (!workLocationActiveButton) {
-        if (job.location?.includes("Pan India")) setWorkLocationActiveButton(2);
-        else if (job.location?.includes("•")) {
+        if (job.raw_work_location?.includes("Pan India")) {
+          setWorkLocationActiveButton(2);
+          setWorkLocation(2);
+        } else if (job.raw_work_location && job.raw_work_location.length > 0) {
           setWorkLocationActiveButton(1);
-          setSpecificLocation(job.location.split("•")[1]?.trim());
+          setWorkLocation(1);
+          setSpecificLocation(job.raw_work_location);
         }
       }
 
@@ -793,8 +816,8 @@ const EditOpportunity = () => {
         workLocation === 1
           ? specificLocation
           : workLocation === 2
-            ? "Pan India"
-            : "",
+            ? ["Pan India"]
+            : [],
     };
 
     try {
@@ -850,8 +873,8 @@ const EditOpportunity = () => {
         eligibility === 1
           ? selectedFresherPass
           : eligibility === 2
-            ? experienceRequired
-            : "",
+            ? [experienceRequired]
+            : [],
       salary_type:
         salaryTypeActiveButton === 1
           ? "Fixed"
@@ -904,7 +927,7 @@ const EditOpportunity = () => {
     };
 
     try {
-      const response = updateJobDescription(payload);
+      const response = await updateJobDescription(payload);
       console.log("jobnature update", response);
       message.success("Updated Successfully");
       fetchJobs();
@@ -1201,6 +1224,7 @@ const EditOpportunity = () => {
               <CommonSelectField
                 label={"Job Category"}
                 showSearch={true}
+                mode="multiple"
                 value={jobCategory}
                 placeholder={"Select Job Category"}
                 options={jobCategoryOptions}
@@ -1430,6 +1454,7 @@ const EditOpportunity = () => {
                     <CommonSelectField
                       style={{ marginTop: "20px" }}
                       showSearch={true}
+                      mode="multiple"
                       placeholder={"Select location"}
                       value={specificLocation}
                       onChange={(value, option) => {
