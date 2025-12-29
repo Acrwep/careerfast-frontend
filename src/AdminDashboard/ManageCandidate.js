@@ -450,62 +450,12 @@ export default function ManageCandidate() {
     }
     ,
     {
-      title: <Text type="secondary">COMPATIBILITY</Text>,
+      title: <Text type="secondary">ACTION</Text>,
       dataIndex: "score",
-      render: (score) => (
-        <div style={{ position: "relative", width: 60 }}>
-          <div
-            style={{
-              height: 6,
-              background: "#f0f0f0",
-              borderRadius: 3,
-              marginBottom: 4,
-            }}
-          >
-            <div
-              style={{
-                width: `${score}%`,
-                height: "100%",
-                background:
-                  "linear-gradient(135deg, #7f5af0 0%, #5f2eea 50%, #4b1ea0 100%)",
-                borderRadius: 3,
-              }}
-            />
-          </div>
-          <Text strong>{score}%</Text>
-        </div>
-      ),
-    },
-
-    {
-      title: "",
-      key: "action",
       render: (_, record) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: "view",
-                icon: <EyeOutlined />,
-                label: "View Profile",
-                onClick: () => handleGetUserProfile(record.id),
-              },
-              {
-                key: "email",
-                icon: <MailOutlined />,
-                label: "Send Email",
-              },
-            ],
-          }}
-          trigger={["hover"]}
-          styles={{ dropdown: { boxShadow: "none" } }} // ✅ correct
-        >
-          <Button
-            shape="circle"
-            icon={<MoreOutlined />}
-            style={{ border: "none", boxShadow: "none" }}
-          />
-        </Dropdown>
+        <div style={{ position: "relative" }}>
+          <Text style={{ cursor: "pointer" }} onClick={() => handleGetUserProfile(record.id)} strong><EyeOutlined /> View Profile</Text>
+        </div>
       ),
     },
   ];

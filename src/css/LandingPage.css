@@ -129,7 +129,7 @@
 
 .job-categories {
   margin-top: 60px;
-  padding: 0px 100px 50px 100px;
+  padding: 0px 100px 24px 100px;
 }
 
 .section-header {
@@ -612,8 +612,13 @@
 }
 
 .elite-job-carousel .slick-list {
-  padding: 40px 0 60px !important;
+  padding: 40px 0 40px !important;
   margin: 0 -15px;
+}
+
+.ant-radio-checked .ant-radio-inner {
+  border-color: #5f2eea !important;
+  background-color: #5f2eea !important;
 }
 
 .elite-job-carousel .slick-slide {

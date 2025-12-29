@@ -47,10 +47,7 @@
   background-color: #5f2eea;
 }
 
-.ant-table-wrapper
-  .ant-table-tbody
-  .ant-table-row.ant-table-row-selected
-  > .ant-table-cell {
+.ant-table-wrapper .ant-table-tbody .ant-table-row.ant-table-row-selected>.ant-table-cell {
   background: rgb(243, 242, 255) !important;
 }
 
@@ -80,12 +77,10 @@
 }
 
 .admin-dashboard .view_all_can {
-  background: linear-gradient(
-    135deg,
-    #7f5af0 0%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      #7f5af0 0%,
+      #5f2eea 50%,
+      #4b1ea0 100%) !important;
 }
 
 /* main.ant-layout-content.css-dev-only-do-not-override-1m2bkf9 {
@@ -98,33 +93,10 @@
 }
 
 .admin-dashboard .view_all_can:hover {
-  background: linear-gradient(
-    135deg,
-    #7f5af0 0%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
-}
-
-.account_settings {
-  background: linear-gradient(
-    135deg,
-    #7f5af0 0%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
-  color: #fff !important;
-  border: none !important;
-}
-
-.account_settings:hover {
-  background: linear-gradient(
-    135deg,
-    #7f5af0 0%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
-  color: #fff !important;
+  background: linear-gradient(135deg,
+      #7f5af0 0%,
+      #5f2eea 50%,
+      #4b1ea0 100%) !important;
 }
 
 .admin-dashboard .ant-card:hover {
@@ -317,7 +289,8 @@
 }
 
 .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 .colorChoose {
@@ -356,12 +329,10 @@
 
 .edi_page_logo p {
   margin-bottom: 0px;
-  background: linear-gradient(
-    135deg,
-    #7f5af0 0%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      #7f5af0 0%,
+      #5f2eea 50%,
+      #4b1ea0 100%) !important;
   padding: 8px;
   color: #fff;
   border-radius: 0px 0px 10px 10px;
@@ -382,12 +353,10 @@
 
 .uploadNew_profile:hover {
   color: #fff !important;
-  background: linear-gradient(
-    135deg,
-    #7f5af0 0%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      #7f5af0 0%,
+      #5f2eea 50%,
+      #4b1ea0 100%) !important;
 }
 
 .recent-candidates {
@@ -446,17 +415,17 @@
   background: rgba(106, 92, 255, 0.2) !important;
 }
 
-.recent-candidates .ant-card-body > div {
+.recent-candidates .ant-card-body>div {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
 }
 
 /* For WebKit browsers */
-.recent-candidates .ant-card-body > div::-webkit-scrollbar {
+.recent-candidates .ant-card-body>div::-webkit-scrollbar {
   width: 6px;
 }
 
-.recent-candidates .ant-card-body > div::-webkit-scrollbar-thumb {
+.recent-candidates .ant-card-body>div::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 4px;
 }

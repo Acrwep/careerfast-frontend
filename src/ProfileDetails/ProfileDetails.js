@@ -98,6 +98,7 @@ const ProfileDetails = () => {
   const [selectedState, setSelectedState] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
   const [address, setAddress] = useState("");
+  const [addressError, setAddressError] = useState("");
   const [open, setOpen] = useState(false);
   const [editPhoto, setEditPhoto] = useState("");
   const [editPhotoError, setEditPhotoError] = useState("");
@@ -455,6 +456,7 @@ const ProfileDetails = () => {
     const countryValidate = selectValidator(countryId);
     const stateValidate = selectValidator(state);
     const cityValidate = selectValidator(city);
+    const addressValidate = selectValidator(address);
     const editPhotoValidate = fileValidator(editPhoto);
     const genderValidate = genderValidator(gender);
     const userTypeValidate = userTypeValidator(userType);
@@ -480,6 +482,7 @@ const ProfileDetails = () => {
     setCountryError(countryValidate);
     setStateError(stateValidate);
     setCityError(cityValidate);
+    setAddressError(addressValidate);
     setEditPhotoError(editPhotoValidate);
     setUserTypeError(userTypeValidate);
     setGenderError(genderValidate);
@@ -501,6 +504,7 @@ const ProfileDetails = () => {
       countryValidate ||
       stateValidate ||
       cityValidate ||
+      addressValidate ||
       genderValidate ||
       editPhotoValidate ||
       userTypeValidate ||
@@ -608,8 +612,8 @@ const ProfileDetails = () => {
           job_title: company.jobTitle,
           company_name: company.companyName,
           designation: company.designation,
-          start_date: company.workingStartDate,
-          end_date: company.workingEndDate,
+          start_date: company.workingStartDate || null,
+          end_date: company.workingEndDate || null,
           currently_working: company.currentlyWorking,
           skills: company.skills,
         }))
@@ -618,10 +622,10 @@ const ProfileDetails = () => {
             job_title: "Fresher",
             company_name: "",
             designation: "",
-            start_date: "",
-            end_date: "",
+            start_date: null,
+            end_date: null,
             currently_working: false,
-            skills: selectedSkills, // ⬅️ fresher skills
+            skills: selectedSkills,
           },
         ];
 
@@ -676,7 +680,17 @@ const ProfileDetails = () => {
       setCurrentStep(3);
     } catch (error) {
       console.log("my profile error", error);
-      message.error("Fill all the required fields");
+      if (error?.response?.data?.message) {
+        if (error?.response?.data?.required) {
+          message.error(
+            `Missing fields: ${error.response.data.required.join(", ")}`
+          );
+        } else {
+          message.error(error.response.data.message);
+        }
+      } else {
+        message.error("Fill all the required fields");
+      }
     }
   };
 
@@ -1364,8 +1378,11 @@ const ProfileDetails = () => {
                   value={address}
                   onChange={(e) => {
                     setAddress(e.target.value);
+                    setAddressError(selectValidator(e.target.value));
                   }}
                   placeholder={"Enter Your Address"}
+                  mandatory={true}
+                  error={addressError}
                 />
               </div>
             </div>

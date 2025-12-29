@@ -64,8 +64,7 @@ import {
   getYears,
   getSkillsData,
   getJobCategoryData,
-  createJobPost,
-  sendNotification
+  createJobPost
 } from "../ApiService/action";
 import Header from "../Header/Header";
 import currencySymbol from "currency-symbols";
@@ -649,17 +648,11 @@ export default function PostJobs() {
       setIsLoading(true); // start loader immediately
       console.log("📤 Sending job post payload:", payload);
       const response = await createJobPost(payload);
-
       message.success("Posted Successfully.");
-
-      // ✅ Trigger FCM notification after posting
-      await sendNotification();
-
       navigate("/job-portal");
     } catch (error) {
       console.error("❌ Error posting job:", error);
 
-      // Display specific error message from backend
       const errorMessage = error.response?.data?.details ||
         error.response?.data?.message ||
         error.message ||
@@ -686,7 +679,6 @@ export default function PostJobs() {
     };
 
     await publish(payload);
-    navigate("/job-portal");
   };
 
   // Publish without questions
@@ -698,7 +690,6 @@ export default function PostJobs() {
     console.log("job posted", payload);
 
     await publish(payload);
-    navigate("/job-portal");
   };
 
   const handleFresherPassClick = (item) => {
@@ -1642,33 +1633,29 @@ export default function PostJobs() {
                     🧠 Generate with AI
                   </button>
                 </div>
-                <StrictMode>
-
-
-                  <ReactQuill
-                    value={value}
-                    onChange={handleChange}
-                    modules={{
-                      toolbar: [
-                        ["bold", "italic", "underline", "strike"],
-                        [{ list: "ordered" }, { list: "bullet" }],
-                        ["link", "image"],
-                        ["clean"],
-                      ],
-                    }}
-                    formats={[
-                      "bold",
-                      "italic",
-                      "underline",
-                      "strike",
-                      "list",
-                      "bullet",
-                      "link",
-                      "image",
-                    ]}
-                    style={{ height: "300px", marginBottom: "8px" }}
-                  />
-                </StrictMode>
+                <ReactQuill
+                  value={value}
+                  onChange={handleChange}
+                  modules={{
+                    toolbar: [
+                      ["bold", "italic", "underline", "strike"],
+                      [{ list: "ordered" }, { list: "bullet" }],
+                      ["link", "image"],
+                      ["clean"],
+                    ],
+                  }}
+                  formats={[
+                    "bold",
+                    "italic",
+                    "underline",
+                    "strike",
+                    "list",
+                    "bullet",
+                    "link",
+                    "image",
+                  ]}
+                  style={{ height: "300px", marginBottom: "8px" }}
+                />
                 <div
                   style={{
                     textAlign: "right",

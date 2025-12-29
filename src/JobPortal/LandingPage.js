@@ -573,7 +573,6 @@ export default function JobPortalLandingPage() {
         </Col>
       </Row>
 
-
       <Col>
         <div className="job-categories">
           <motion.div
@@ -716,14 +715,12 @@ export default function JobPortalLandingPage() {
                                     // ignore parse error
                                   }
                                 }
+                                const validLocations = locations.filter(loc => loc && loc.trim() !== "");
 
-                                // 👉 If location exists, show it
-                                if (locations.length > 0) {
-                                  const firstTwo = locations.slice(0, 2).join(", ");
-                                  return locations.length > 2 ? `${firstTwo}, ...` : firstTwo;
+                                if (validLocations.length > 0) {
+                                  const firstTwo = validLocations.slice(0, 2).join(", ");
+                                  return validLocations.length > 2 ? `${firstTwo}, ...` : firstTwo;
                                 }
-
-                                // 👉 Fallback to workplace_type
                                 return jobs.workplace_type || "Not specified";
                               })()}
                             </span>
@@ -920,7 +917,7 @@ export default function JobPortalLandingPage() {
           <div className="empty-state">
             <div className="empty-icon">📋</div>
             <p>No opportunities found</p>
-            <button className="create-opportunity-btn">Create Your First Opportunity</button>
+            <button onClick={() => navigate("/post-jobs")} className="create-opportunity-btn">Create Your First Opportunity</button>
           </div>
         )}
       </div>

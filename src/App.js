@@ -8,7 +8,8 @@ import { Provider } from "react-redux";
 import { store } from "./Redux/store";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import ScrollToTop from "./ScrollTop/ScrollToTop";
-import { requestForToken, onMessageListener } from "./firebase/fireBase";
+import { requestForToken, messaging } from "./firebase/fireBase";
+import { onMessage } from "firebase/messaging";
 import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import { HelmetProvider, Helmet } from "react-helmet-async";
@@ -28,6 +29,16 @@ function App() {
 
   const [isTokenFound, setTokenFound] = useState(false);
 
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/firebase-messaging-sw.js")
+        .then(() => console.log("✅ Firebase Service Worker registered"))
+        .catch((err) => console.error("❌ SW registration failed", err));
+    }
+  }, []);
+
+
   // 1️⃣ Request notification permission & FCM token
   useEffect(() => {
     const initFCM = async () => {
@@ -43,12 +54,21 @@ function App() {
       if (token) {
         console.log("✅ FCM Token:", token);
 
+        // 🔹 Check if we've already subscribed this token
+        const subscribedToken = localStorage.getItem("fcm_subscribed_token");
+        if (subscribedToken === token) {
+          console.log("✅ Already subscribed to allUsers topic");
+          return;
+        }
+
         // 🔹 Subscribe this token to allUsers topic
         try {
           await axios.post(`${process.env.REACT_APP_API_URL}/api/subscribe-topic`, {
             token,
           });
           console.log("✅ Token subscribed to allUsers topic");
+          // Store the token to prevent re-subscription
+          localStorage.setItem("fcm_subscribed_token", token);
         } catch (err) {
           console.error("❌ Failed to subscribe to topic:", err);
         }
@@ -58,28 +78,13 @@ function App() {
     initFCM();
   }, []);
 
-  // 2️⃣ Foreground notifications → show clickable native Notification
+  // 2️⃣ Listen for foreground messages (when app is open)
   useEffect(() => {
-    onMessageListener()
-      .then((payload) => {
-        console.log("📩 Foreground notification received:", payload);
-
-        const title = payload.notification?.title || "CareerFast";
-        const body = payload.notification?.body || "";
-        const icon = payload.data?.icon || "/favicon.png";
-        const link =
-          payload?.fcmOptions?.link ||
-          payload?.data?.click_action ||
-          "https://careerfast.in/job-portal";
-
-        // Show browser Notification instead of toast
-        if (Notification.permission === "granted") {
-          const n = new Notification(title, { body, icon });
-          n.onclick = () => window.open(link, "_blank");
-        }
-      })
-      .catch((err) => console.log("onMessageListener failed:", err));
+    onMessage(messaging, (payload) => {
+      console.log("📩 Foreground message received:", payload);
+    });
   }, []);
+
 
   console.log("isTokenFound", isTokenFound);
 

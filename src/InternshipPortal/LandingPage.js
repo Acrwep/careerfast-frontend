@@ -657,13 +657,16 @@ export default function InternshipLandingPage() {
                                   }
                                 }
 
-                                // 👉 If location exists, show it
-                                if (locations.length > 0) {
-                                  const firstTwo = locations.slice(0, 2).join(", ");
-                                  return locations.length > 2 ? `${firstTwo}, ...` : firstTwo;
+                                // 👉 Filter out empty strings from locations
+                                const validLocations = locations.filter(loc => loc && loc.trim() !== "");
+
+                                // 👉 If valid locations exist, show them
+                                if (validLocations.length > 0) {
+                                  const firstTwo = validLocations.slice(0, 2).join(", ");
+                                  return validLocations.length > 2 ? `${firstTwo}, ...` : firstTwo;
                                 }
 
-                                // 👉 Fallback to workplace_type
+                                // 👉 Fallback to workplace_type if no valid locations
                                 return jobs.workplace_type || "Not specified";
                               })()}
                             </span>
@@ -854,7 +857,7 @@ export default function InternshipLandingPage() {
           <div className="empty-state">
             <div className="empty-icon">📋</div>
             <p>No opportunities found</p>
-            <button className="create-opportunity-btn">Create Your First Opportunity</button>
+            <button onClick={() => navigate("/post-jobs")} className="create-opportunity-btn">Create Your First Opportunity</button>
           </div>
         )}
       </div>

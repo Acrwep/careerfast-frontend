@@ -581,15 +581,6 @@ export default function AdminDashboard() {
                 </Text>
               </div>
             </div>
-            <Button
-              type="primary"
-              ghost
-              icon={<IoSettingsSharp size={16} />}
-              style={{ width: "100%" }}
-              className="account_settings"
-            >
-              Account Settings
-            </Button>
           </div>
         )}
       </Sider>

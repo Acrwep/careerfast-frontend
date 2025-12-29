@@ -68,12 +68,46 @@ export default function ListingDashboard() {
     getAppliedCandidatesCountData();
   }, [loginUserId]);
 
-  // Fetch paginated data when page, activeTab, or loginUserId changes
+  // Fetch paginated data when page, activeTab, loginUserId, or search changes
   useEffect(() => {
-    if (loginUserId) {
-      getJobPostByUserIdData(page, pageSize, activeTab);
+    if (!loginUserId) return;
+
+    if (activeTab === "Events") {
+      // ✅ Client-side handling for Events
+      let filtered = [...events];
+
+      // 1. Search
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(
+          (e) =>
+            (e.title || "").toLowerCase().includes(q) ||
+            (e.category || "").toLowerCase().includes(q)
+        );
+      }
+
+      // 2. Sort (Respect listingOrder)
+      const order = localStorage.getItem("listingOrder");
+      filtered.sort((a, b) =>
+        order === "bottomTop"
+          ? new Date(a.created_at) - new Date(b.created_at)
+          : new Date(b.created_at) - new Date(a.created_at)
+      );
+
+      setTotalItems(filtered.length);
+
+      // 3. Paginate
+      const start = (page - 1) * pageSize;
+      const paginated = filtered.slice(start, start + pageSize);
+
+      setListings(paginated);
+      setLoading(false);
+    } else {
+      // ✅ Server-side handling for Jobs
+      getJobPostByUserIdData(page, pageSize, activeTab, searchQuery.trim());
     }
-  }, [page, pageSize, loginUserId, activeTab]);
+    // eslint-disable-next-line
+  }, [page, pageSize, loginUserId, activeTab, events, searchQuery]);
 
   const getAllEventsData = async () => {
     try {
@@ -133,14 +167,20 @@ export default function ListingDashboard() {
     }
   };
 
-  const getJobPostByUserIdData = async (currentPage = 1, limit = pageSize, tab = "All") => {
+  const getJobPostByUserIdData = async (
+    currentPage = 1,
+    limit = pageSize,
+    tab = "All",
+    search = ""
+  ) => {
     const getUserDetails = JSON.parse(localStorage.getItem("loginDetails"));
     if (!getUserDetails?.id) return;
 
     const payload = {
       user_id: getUserDetails.id,
       page: currentPage,
-      limit: limit
+      limit: limit,
+      search: search, // ✅ Pass search query
     };
 
     // Add job_nature filter if not "All" or "Events"
@@ -159,7 +199,7 @@ export default function ListingDashboard() {
       setTotalItems(total);
 
       // Set total opportunities count only when on "All" tab (unfiltered total)
-      if (tab === "All") {
+      if (tab === "All" && !search) {
         setTotalOpportunitiesCount(total);
       }
 
