@@ -12,7 +12,8 @@ import { requestForToken, messaging } from "./firebase/fireBase";
 import { onMessage } from "firebase/messaging";
 import axios from "axios";
 import { ToastContainer } from "react-toastify";
-import { HelmetProvider, Helmet } from "react-helmet-async";
+import { HelmetProvider } from "react-helmet-async";
+
 
 function App() {
   // disable console logs in production
@@ -90,31 +91,9 @@ function App() {
 
   return (
     <div className="App">
-      <GoogleOAuthProvider clientId={CLIENT_ID}>
-        <Provider store={store}>
-          <HelmetProvider>
-            <Helmet>
-              <title>CareerFast - Job Portal</title>
-              <meta
-                name="description"
-                content="CareerFast is a modern job portal connecting candidates with top employers. Apply faster and grow your career today."
-              />
-              <meta property="og:title" content="CareerFast - Job Portal" />
-              <meta
-                property="og:description"
-                content="CareerFast is a modern job portal connecting candidates with top employers. Apply faster and grow your career today."
-              />
-              <meta property="og:type" content="website" />
-              <meta property="og:url" content="https://careerfast.in" />
-              <meta property="og:image" content="https://careerfast.in/favicon.png" />
-              <meta name="twitter:card" content="summary_large_image" />
-              <meta name="twitter:title" content="CareerFast - Job Portal" />
-              <meta
-                name="twitter:description"
-                content="Discover jobs, connect with employers, and accelerate your career with CareerFast."
-              />
-              <meta name="twitter:image" content="https://careerfast.in/favicon.png" />
-            </Helmet>
+      <HelmetProvider>
+        <GoogleOAuthProvider clientId={CLIENT_ID}>
+          <Provider store={store}>
             <BrowserRouter>
               <ScrollToTop />
               <Layout />
@@ -131,9 +110,9 @@ function App() {
                 theme="colored"
               />
             </BrowserRouter>
-          </HelmetProvider>
-        </Provider>
-      </GoogleOAuthProvider>
+          </Provider>
+        </GoogleOAuthProvider>
+      </HelmetProvider>
     </div>
   );
 }

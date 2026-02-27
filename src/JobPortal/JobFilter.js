@@ -1,6 +1,6 @@
 // src/pages/JobFilter.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Helmet } from "react-helmet-async";
+
 import {
   Row,
   Col,
@@ -62,12 +62,18 @@ export default function JobFilter() {
   const [categorySearch, setCategorySearch] = useState("");
   /** -------------------- STATE -------------------- **/
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Data
   const [jobs, setJobs] = useState([]);
   const [activeJob, setActiveJob] = useState(null);
   const [jobCategoryOptions, setJobCategoryOptions] = useState([]);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalJobs, setTotalJobs] = useState(0);
 
   // Filters
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -84,10 +90,6 @@ export default function JobFilter() {
 
   /** -------------------- EFFECTS -------------------- **/
 
-  // Title
-  useEffect(() => {
-    document.title = "CareerFast | Find Jobs";
-  }, []);
 
   useEffect(() => {
     fetchCourses();
@@ -170,9 +172,11 @@ export default function JobFilter() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, jobNatureOptionsToKey(jobCategoryOptions)]);
 
-  // Fetch jobs when filters change
+  // Fetch jobs when filters change (reset to page 1)
   useEffect(() => {
-    fetchJobs();
+    setPage(1);
+    setJobs([]);
+    fetchJobs(1, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     selectedCategories.join("|"),
@@ -184,6 +188,26 @@ export default function JobFilter() {
     jobNatureSelected,
     selectedUserType,
   ]);
+
+  // Infinite scroll listener
+  useEffect(() => {
+    const handleScroll = () => {
+      if (loadingMore || !hasMore) return;
+
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight;
+
+      // Trigger when user is 300px from bottom
+      if (scrollTop + clientHeight >= scrollHeight - 300) {
+        loadMoreJobs();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingMore, hasMore, page]);
 
   /** -------------------- HELPERS -------------------- **/
   function jobNatureOptionsToKey(opts) {
@@ -276,11 +300,23 @@ export default function JobFilter() {
     };
   };
 
-  const fetchJobs = async () => {
-    setLoading(true);
+  const fetchJobs = async (pageNum = 1, isReset = false) => {
+    if (isReset) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
     try {
-      const res = await getJobPosts(payload);
+      const paginatedPayload = {
+        ...payload,
+        page: pageNum,
+        limit: 20,
+      };
+
+      const res = await getJobPosts(paginatedPayload);
       let raw = res?.data?.data?.data || [];
+      const meta = res?.data?.data?.meta || {};
 
       if (selectedUserType) {
         const filterKey = selectedUserType.toLowerCase();
@@ -290,13 +326,32 @@ export default function JobFilter() {
       }
 
       const list = raw.map(transformJob);
-      setJobs(list);
-      setActiveJob(list[0] || null);
+
+      if (isReset) {
+        setJobs(list);
+        setActiveJob(list[0] || null);
+      } else {
+        setJobs((prevJobs) => [...prevJobs, ...list]);
+      }
+
+      setHasMore(meta.hasMore || false);
+      setTotalJobs(meta.total || 0);
     } catch (err) {
       console.error("Fetch jobs error:", err);
-      setJobs([]);
+      if (isReset) {
+        setJobs([]);
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMoreJobs = () => {
+    if (!loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchJobs(nextPage, false);
     }
   };
 
@@ -736,14 +791,7 @@ export default function JobFilter() {
   /** -------------------- RENDER -------------------- **/
   return (
     <>
-      <Helmet>
-        <title>CareerFast | Browse Jobs & Internships</title>
-        <meta
-          name="description"
-          content="Filter and search for the best jobs and internships matching your skills and preferences on CareerFast."
-        />
-        <link rel="canonical" href="https://careerfast.in/job-filter" />
-      </Helmet>
+
       <Header />
 
       {/* Mobile filter trigger reserved (kept hidden) */}
@@ -800,7 +848,9 @@ export default function JobFilter() {
                       setSelectedSort(null);
                       setSelectedUserType("");
                       setJobNatureSelected("");
-                      fetchJobs();
+                      setPage(1);
+                      setJobs([]);
+                      fetchJobs(1, true);
                     }}
                   >
                     Explore All Opportunities
@@ -815,6 +865,20 @@ export default function JobFilter() {
                     {jobs.map((job) => (
                       <JobCard key={job.id} job={job} />
                     ))}
+
+                    {/* Loading more indicator */}
+                    {loadingMore && (
+                      <div style={{ textAlign: 'center', padding: '20px' }}>
+                        <Skeleton active />
+                      </div>
+                    )}
+
+                    {/* End of results message */}
+                    {!hasMore && jobs.length > 0 && (
+                      <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                        <p>You've reached the end of the results ({totalJobs} total jobs)</p>
+                      </div>
+                    )}
                   </div>
                 </Col>
                 <Col xs={0} md={7} lg={8}>

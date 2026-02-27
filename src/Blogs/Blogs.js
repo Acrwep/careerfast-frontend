@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { getBlogs } from "../ApiService/action";
 import { Card, Col, Row, Skeleton } from "antd";
 import { motion } from "framer-motion";
 import Header from "../Header/Header";
 import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+
 export default function Blogs() {
     const navigate = useNavigate();
     const [isVisible, setIsVisible] = useState(false);
@@ -28,7 +29,7 @@ export default function Blogs() {
             setLoading(true);
             const res = await getBlogs();
             const blogs = res.data || [];
-            setBlogTips(blogs.slice(0, 10));
+            setBlogTips(blogs);
         } catch (error) {
             console.error("Error fetching blog tips:", error);
         } finally {
@@ -36,30 +37,82 @@ export default function Blogs() {
         }
     };
 
-    // Variants for reusability
-    const fadeInUp = {
-        hidden: { opacity: 0, y: 40 },
-        visible: (i = 1) => ({
-            opacity: 1,
-            y: 0,
-            transition: {
-                delay: i * 0.2,
-                duration: 0.4,
-                ease: "easeOut",
-            },
-        }),
-    };
 
     return (
         <div>
             <Helmet>
-                <title>CareerFast | Career Advice & Blogs</title>
+                {/* Primary Meta Tags */}
+                <html lang="en" />
+                <title>CareerFast Blogs | Career Insights, Tips & Strategies</title>
                 <meta
                     name="description"
-                    content="Read insightful blogs and career advice to help you navigate your professional journey and land your dream job."
+                    content="Stay updated with the latest career insights, job search strategies, interview tips, and professional development advice. Expert guidance to boost your career growth."
                 />
-                <link rel="canonical" href="https://careerfast.in/blogs" />
+                <meta
+                    name="keywords"
+                    content="career blogs, job search tips, interview preparation, career advice, professional development, career growth, job hunting strategies, resume tips, CareerFast blogs"
+                />
+                <meta name="author" content="CareerFast" />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://careerfast.com/blogs" />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="https://careerfast.com/blogs" />
+                <meta property="og:title" content="CareerFast Blogs | Career Insights, Tips & Strategies" />
+                <meta
+                    property="og:description"
+                    content="Stay updated with the latest career insights, job search strategies, interview tips, and professional development advice."
+                />
+                <meta property="og:image" content="https://careerfast.com/og-image-blogs.jpg" />
+                <meta property="og:site_name" content="CareerFast" />
+                <meta property="og:locale" content="en_US" />
+
+                {/* Twitter */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:url" content="https://careerfast.com/blogs" />
+                <meta name="twitter:title" content="CareerFast Blogs | Career Insights, Tips & Strategies" />
+                <meta
+                    name="twitter:description"
+                    content="Stay updated with the latest career insights, job search strategies, interview tips, and professional development advice."
+                />
+                <meta name="twitter:image" content="https://careerfast.com/twitter-image-blogs.jpg" />
+
+                {/* Structured Data - JSON-LD */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Blog",
+                        "name": "CareerFast Blogs",
+                        "url": "https://careerfast.com/blogs",
+                        "description": "Career insights, strategies & tips to boost your career growth",
+                        "publisher": {
+                            "@type": "Organization",
+                            "name": "CareerFast",
+                            "url": "https://careerfast.com"
+                        }
+                    })}
+                </script>
+                {blogTips.length > 0 && (
+                    <script type="application/ld+json">
+                        {JSON.stringify({
+                            "@context": "https://schema.org",
+                            "@type": "ItemList",
+                            "name": "Blog Posts",
+                            "numberOfItems": blogTips.length,
+                            "itemListElement": blogTips.map((blog, index) => ({
+                                "@type": "BlogPosting",
+                                "position": index + 1,
+                                "headline": blog.blogTitle,
+                                "description": blog.overview,
+                                "image": blog.blogImage,
+                                "url": `https://careerfast.com/blog/${generateSlug(blog.blogTitle)}`
+                            }))
+                        })}
+                    </script>
+                )}
             </Helmet>
+
             <Header />
             {/* Blog Banner */}
             <motion.div
@@ -116,7 +169,6 @@ export default function Blogs() {
                                     initial="hidden"
                                     whileInView="visible"
                                     viewport={{ once: true }}
-                                    variants={fadeInUp}
                                     custom={index}
                                     whileHover={{ y: -2, scale: 1.01 }}
                                 >

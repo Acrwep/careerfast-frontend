@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { checkIsRegistered, getAllEvents, getUserProfile, registerForEvent } from "../ApiService/action";
 import {
   Card,
@@ -249,6 +250,82 @@ export default function EventFilter() {
 
   return (
     <>
+      <Helmet>
+        {/* Primary Meta Tags */}
+        <html lang="en" />
+        <title>CareerFast | Events - Discover Career Development Events & Competitions</title>
+        <meta
+          name="description"
+          content="Browse and register for career development events, tech competitions, and professional networking opportunities. Connect with industry leaders and win exciting prizes."
+        />
+        <meta
+          name="keywords"
+          content="career events, tech events, professional events, networking events, competitions, hackathons, career development, tech competitions, industry events, CareerFast events"
+        />
+        <meta name="author" content="CareerFast" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://careerfast.com/event-filter" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://careerfast.com/event-filter" />
+        <meta property="og:title" content="CareerFast | Events - Discover Career Development Events & Competitions" />
+        <meta
+          property="og:description"
+          content="Browse and register for career development events, tech competitions, and professional networking opportunities."
+        />
+        <meta property="og:image" content="https://careerfast.com/og-image-events.jpg" />
+        <meta property="og:site_name" content="CareerFast" />
+        <meta property="og:locale" content="en_US" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://careerfast.com/event-filter" />
+        <meta name="twitter:title" content="CareerFast | Events - Discover Career Development Events & Competitions" />
+        <meta
+          name="twitter:description"
+          content="Browse and register for career development events, tech competitions, and professional networking opportunities."
+        />
+        <meta name="twitter:image" content="https://careerfast.com/twitter-image-events.jpg" />
+
+        {/* Structured Data - JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "Career Events - CareerFast",
+            "url": "https://careerfast.com/event-filter",
+            "description": "Browse and register for career development events, tech competitions, and professional networking opportunities.",
+            "provider": {
+              "@type": "Organization",
+              "name": "CareerFast",
+              "url": "https://careerfast.com"
+            }
+          })}
+        </script>
+        {filteredEvents.length > 0 && (
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              "name": "Available Events",
+              "numberOfItems": filteredEvents.length,
+              "itemListElement": filteredEvents.map((event, index) => ({
+                "@type": "Event",
+                "position": index + 1,
+                "name": event.title,
+                "description": event.description,
+                "eventAttendanceMode": event.mode === "Online" ? "https://schema.org/OnlineEventAttendanceMode" : "https://schema.org/OfflineEventAttendanceMode",
+                "offers": {
+                  "@type": "Offer",
+                  "price": event.winnerPrize || "0",
+                  "priceCurrency": "INR"
+                }
+              }))
+            })}
+          </script>
+        )}
+      </Helmet>
       <Header />
 
       {loading ? (

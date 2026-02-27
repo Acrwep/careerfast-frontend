@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import React from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -73,7 +73,6 @@ import {
   Tag,
   List,
   Timeline,
-  Select,
   Drawer,
   message,
   Skeleton,
@@ -94,10 +93,9 @@ import {
   getUserProfile,
 } from "../ApiService/action";
 import { requestForToken } from "../firebase/fireBase";
-import { Helmet } from "react-helmet-async";
+
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 
 export default function AdminDashboard() {
@@ -106,20 +104,17 @@ export default function AdminDashboard() {
   const {
     token: { colorPrimary },
   } = theme.useToken();
-  const [postId, setPostId] = useState(null);
   const [loginUserId, setLoginUserId] = useState(null);
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
   const [role_name, setRoleName] = useState("");
   const [profileImage, setProfileImage] = useState(null);
-  const [appliedUser, setAppliedUser] = useState([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("1");
   const [selectedUser, setSelectedUser] = useState(null);
   const navigate = useNavigate();
-  const [jobTitle, setJobTitle] = useState([]);
   const [postDetails, setPostDetails] = useState([]);
   const [maleCount, setMaleCount] = useState(null);
   const [femaleCount, setFemaleCount] = useState(null);
@@ -128,46 +123,6 @@ export default function AdminDashboard() {
   const [domainCount, setDomainCount] = useState([]);
   const [allAppliedUsers, setAllAppliedUsers] = useState([])
 
-  useEffect(() => {
-    console.log("Post ID from URL:", id);
-  }, [id]);
-
-  useEffect(() => {
-    // handled by Helmet
-    getJobPostsData();
-  }, []);
-  useEffect(() => {
-    // 🔹 Save/update recruiter FCM token when dashboard loads
-    requestForToken();
-  }, []);
-
-  useEffect(() => {
-    getAppliedCandidatesCountData();
-  }, [loginUserId]);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("loginDetails");
-      console.log("login details", stored);
-      if (stored) {
-        const loginDetails = JSON.parse(stored);
-        setLoginUserId(loginDetails.id);
-        setFname(loginDetails.first_name);
-        setLname(loginDetails.last_name);
-        setRoleName(loginDetails.role_name);
-
-        if (loginDetails.role_id === 2) {
-          navigate("/job-portal");
-          return;
-        }
-      }
-    } catch (error) {
-      console.error("Invalid JSON in localStorage", error);
-    } finally {
-      getUserProfileData();
-    }
-  });
-
   const handleLogout = () => {
     localStorage.removeItem("loginDetails");
     setLoginUserId(null);
@@ -175,7 +130,7 @@ export default function AdminDashboard() {
     message.error("Your'e logged out");
   };
 
-  const getUserProfileData = async () => {
+  const getUserProfileData = useCallback(async () => {
     const payload = {
       user_id: loginUserId,
     };
@@ -187,30 +142,22 @@ export default function AdminDashboard() {
     } catch (error) {
       console.log("getuserprofile erroxxr", error);
     }
-  };
+  }, [loginUserId]);
 
-  const getJobPostsData = async () => {
+  const getJobPostsData = useCallback(async () => {
     const payload = {};
     try {
       const response = await getJobPosts(payload);
       const jobs = response?.data?.data?.data || [];
       console.log("jobsss", jobs);
       setPostDetails(jobs);
-      if (id) {
-        const matchedJob = jobs.find((job) => String(job.id) === String(id));
-        setJobTitle(matchedJob ? matchedJob.job_title : "");
-      }
       console.log("job post", response);
     } catch (error) {
       console.log("applied candidate", error);
     }
-  };
+  }, []);
 
-  useEffect(() => {
-    getAllCandidateByRecruiterData()
-  }, [loginUserId])
-
-  const getAllCandidateByRecruiterData = async () => {
+  const getAllCandidateByRecruiterData = useCallback(async () => {
     const payload = {
       user_id: loginUserId
     }
@@ -222,16 +169,9 @@ export default function AdminDashboard() {
     } catch (error) {
       console.log("getAllCandidateByRecruiter", error)
     }
-  }
+  }, [loginUserId]);
 
-
-  useEffect(() => {
-    if (activeTab === "1" && id) {
-      getJobAppliedCandidatesData();
-    }
-  }, [activeTab, id]);
-
-  const getJobAppliedCandidatesData = async () => {
+  const getJobAppliedCandidatesData = useCallback(async () => {
     setLoading(true);
 
     if (!id) {
@@ -240,24 +180,20 @@ export default function AdminDashboard() {
       return;
     }
 
-    setPostId(id);
     const payload = { post_id: id };
-
     try {
       const response = await getJobAppliedCandidates(payload);
-      const users = response?.data?.data[0]?.users;
-      setAppliedUser(Array.isArray(users) ? users : []);
+      console.log("getJobAppliedCandidates", response)
     } catch (error) {
       console.error("Error fetching applied candidates:", error);
-      setAppliedUser([]);
     } finally {
       setTimeout(() => {
         setLoading(false);
       }, 700);
     }
-  };
+  }, [id]);
 
-  const getAppliedCandidatesCountData = async () => {
+  const getAppliedCandidatesCountData = useCallback(async () => {
     const payload = {
       user_id: loginUserId,
       id: id,
@@ -280,7 +216,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.log("getAppliedCandidatesCount", error);
     }
-  };
+  }, [loginUserId, id]);
 
   const handleGetUserProfile = async (userId) => {
     const payload = {
@@ -301,6 +237,65 @@ export default function AdminDashboard() {
       setSelectedUser(null);
     }
   };
+
+  useEffect(() => {
+    console.log("Post ID from URL:", id);
+  }, [id]);
+
+  useEffect(() => {
+    // handled by Helmet
+    getJobPostsData();
+  }, [getJobPostsData]);
+
+  useEffect(() => {
+    // 🔹 Save/update recruiter FCM token when dashboard loads
+    requestForToken();
+  }, []);
+
+  useEffect(() => {
+    if (loginUserId) {
+      getAppliedCandidatesCountData();
+    }
+  }, [loginUserId, getAppliedCandidatesCountData]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      console.log("login details", stored);
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setLoginUserId(loginDetails.id);
+        setFname(loginDetails.first_name);
+        setLname(loginDetails.last_name);
+        setRoleName(loginDetails.role_name);
+
+        if (loginDetails.role_id === 2) {
+          navigate("/job-portal");
+          return;
+        }
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    if (loginUserId) {
+      getUserProfileData();
+    }
+  }, [loginUserId, getUserProfileData]);
+
+  useEffect(() => {
+    if (loginUserId) {
+      getAllCandidateByRecruiterData()
+    }
+  }, [loginUserId, getAllCandidateByRecruiterData]);
+
+  useEffect(() => {
+    if (activeTab === "1" && id) {
+      getJobAppliedCandidatesData();
+    }
+  }, [activeTab, id, getJobAppliedCandidatesData]);
 
   const menuItems = [
     {
@@ -451,14 +446,7 @@ export default function AdminDashboard() {
 
   return (
     <Layout className="admin-dashboard" style={{ minHeight: "100vh" }}>
-      <Helmet>
-        <title>CareerFast | Admin Dashboard</title>
-        <meta
-          name="description"
-          content="Manage your job postings, candidates, and recruitment analytics on the CareerFast Admin Dashboard."
-        />
-        <link rel="canonical" href="https://careerfast.in/admin-dashboard" />
-      </Helmet>
+
       <Sider
         trigger={null}
         collapsible
@@ -1640,7 +1628,7 @@ export default function AdminDashboard() {
                                         </Badge>
                                       }
                                       title={
-                                        <a className="candidate-name">{`${item.first_name} ${item.last_name}`}</a>
+                                        <span className="candidate-name">{`${item.first_name} ${item.last_name}`}</span>
                                       }
                                       description={
                                         <div className="candidate-info">
@@ -1659,7 +1647,7 @@ export default function AdminDashboard() {
                               )}
                             />
                             <div style={{ textAlign: "center", marginTop: 20, marginBottom: 10 }}>
-                              <a className="see-more-btn" onClick={() => navigate("/applied-candidates-all")} style={{ cursor: "pointer" }}>View All</a>
+                              <button className="see-more-btn" onClick={() => navigate("/applied-candidates-all")} style={{ cursor: "pointer", background: "none", border: "none" }}>View All</button>
                             </div>
 
                           </div>
@@ -2033,6 +2021,7 @@ export default function AdminDashboard() {
             <EditOpportunity /> {/* Tab 2 content */}
           </Content>
         )}
+
 
         {String(activeTab) === "4" && <JobDetails />}
         {String(activeTab) === "5" && <RegistrationChart />}

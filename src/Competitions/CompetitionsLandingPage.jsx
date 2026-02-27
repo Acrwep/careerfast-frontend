@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Typography, Row, Col, Card, Button, Input, Select, Tag, Avatar, Badge, Space } from "antd";
 import { motion } from "framer-motion";
 import {
@@ -18,10 +19,9 @@ import Footer from "../Footer/Footer";
 import "./Competitions.css";
 import ParticlesBg from "particles-bg";
 import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+
 
 const { Title, Text, Paragraph } = Typography;
-const { Option } = Select;
 
 // Mock Data
 const activeCompetitions = [
@@ -114,15 +114,20 @@ const CompetitionsLandingPage = () => {
 
     const [modalType, setModalType] = useState(null);
     const [activeCompetition, setActiveCompetition] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [form] = Form.useForm();
 
     const openModal = (type, competition = null) => {
         setModalType(type);
         setActiveCompetition(competition);
+        form.resetFields();
     };
 
     const closeModal = () => {
         setModalType(null);
         setActiveCompetition(null);
+        form.resetFields();
+        setLoading(false);
     };
 
 
@@ -140,9 +145,83 @@ const CompetitionsLandingPage = () => {
     return (
         <div className="competitions-page">
             <Helmet>
-                <title>Competitions | CareerFast - Challenge Yourself</title>
-                <meta name="description" content="Join top-tier coding, design, and tech competitions. Win prizes, gain recognition, and boost your career." />
+                {/* Primary Meta Tags */}
+                <html lang="en" />
+                <title>CareerFast | Coding Competitions & Hackathons - Challenge Yourself</title>
+                <meta
+                    name="description"
+                    content="Compete with the best minds globally. Join coding competitions, hackathons, and challenges from top companies. Showcase your skills, solve real-world problems, and win exciting prizes up to $500k+."
+                />
+                <meta
+                    name="keywords"
+                    content="coding competitions, hackathons, programming challenges, tech competitions, coding contests, developer challenges, algorithm competitions, data science challenges, design hackathons, blockchain hackathons, CareerFast"
+                />
+                <meta name="author" content="CareerFast" />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://careerfast.com/competitions" />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="https://careerfast.com/competitions" />
+                <meta property="og:title" content="CareerFast | Coding Competitions & Hackathons - Challenge Yourself" />
+                <meta
+                    property="og:description"
+                    content="Compete with the best minds globally. Join coding competitions, hackathons, and challenges from top companies. Win prizes up to $500k+."
+                />
+                <meta property="og:image" content="https://careerfast.com/og-image-competitions.jpg" />
+                <meta property="og:site_name" content="CareerFast" />
+                <meta property="og:locale" content="en_US" />
+
+                {/* Twitter */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:url" content="https://careerfast.com/competitions" />
+                <meta name="twitter:title" content="CareerFast | Coding Competitions & Hackathons - Challenge Yourself" />
+                <meta
+                    name="twitter:description"
+                    content="Compete with the best minds globally. Join coding competitions, hackathons, and challenges from top companies. Win prizes up to $500k+."
+                />
+                <meta name="twitter:image" content="https://careerfast.com/twitter-image-competitions.jpg" />
+
+                {/* Structured Data - JSON-LD */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "WebPage",
+                        "name": "Coding Competitions & Hackathons - CareerFast",
+                        "url": "https://careerfast.com/competitions",
+                        "description": "Compete with the best minds globally. Join coding competitions, hackathons, and challenges from top companies.",
+                        "provider": {
+                            "@type": "Organization",
+                            "name": "CareerFast",
+                            "url": "https://careerfast.com"
+                        }
+                    })}
+                </script>
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "ItemList",
+                        "name": "Active Competitions",
+                        "description": "Browse active coding competitions and hackathons",
+                        "numberOfItems": activeCompetitions.length,
+                        "itemListElement": activeCompetitions.map((comp, index) => ({
+                            "@type": "Event",
+                            "position": index + 1,
+                            "name": comp.title,
+                            "organizer": {
+                                "@type": "Organization",
+                                "name": comp.organizer
+                            },
+                            "offers": {
+                                "@type": "Offer",
+                                "price": comp.prizePool,
+                                "priceCurrency": "USD"
+                            }
+                        }))
+                    })}
+                </script>
             </Helmet>
+
             <Header />
 
             {/* Hero Section */}
@@ -316,8 +395,8 @@ const CompetitionsLandingPage = () => {
                                 <Paragraph style={{ color: 'rgba(255,255,255,0.8)', fontSize: '16px' }}>
                                     Check out our practice arena where you can solve problems at your own pace, learn new skills, and prepare for the big leagues.
                                 </Paragraph>
-                                <Button size="large" className="practice-btn" onClick={() => openModal("practice")}>
-                                    Go to Practice Arena
+                                <Button size="large" className="practice-btn" onClick={() => navigate("/job-portal")}>
+                                    Explore More
                                 </Button>
                             </Col>
                             <Col xs={24} md={10} style={{ textAlign: 'center' }}>
@@ -379,25 +458,95 @@ const CompetitionsLandingPage = () => {
                                 <Title level={3}>🏆 Register for Competition</Title>
                                 <Text type="secondary">{activeCompetition?.title}</Text>
 
-                                <Form layout="vertical" style={{ marginTop: 20 }}>
-                                    <Form.Item label="Full Name" required style={{ marginBottom: 16 }}>
-                                        <Input placeholder="Your full name" />
+                                <Form
+                                    form={form}
+                                    layout="vertical"
+                                    style={{ marginTop: 20 }}
+                                    onFinish={async (values) => {
+                                        try {
+                                            setLoading(true);
+                                            const { sendCompetitionRegistration } = await import('../ApiService/action');
+
+                                            const payload = {
+                                                fullName: values.fullName,
+                                                email: values.email,
+                                                phoneNumber: values.phoneNumber,
+                                                skillLevel: values.skillLevel,
+                                                competitionTitle: activeCompetition?.title,
+                                                competitionOrganizer: activeCompetition?.organizer
+                                            };
+
+                                            const response = await sendCompetitionRegistration(payload);
+
+                                            if (response.status === 200) {
+                                                Modal.success({
+                                                    title: 'Registration Successful!',
+                                                    content: 'Your registration has been submitted successfully. We will contact you soon.',
+                                                    centered: true,
+                                                    onOk: () => {
+                                                        window.location.reload();
+                                                    }
+                                                });
+                                                closeModal();
+                                            }
+                                        } catch (error) {
+                                            console.error('Registration error:', error);
+                                            Modal.error({
+                                                title: 'Registration Failed',
+                                                content: error.response?.data?.error || 'Something went wrong. Please try again.',
+                                                centered: true,
+                                            });
+                                        } finally {
+                                            setLoading(false);
+                                        }
+                                    }}
+                                >
+                                    <Form.Item
+                                        label="Full Name"
+                                        name="fullName"
+                                        rules={[{ required: true, message: 'Please enter your full name' }]}
+                                        style={{ marginBottom: 16 }}
+                                    >
+                                        <Input placeholder="Your full name" disabled={loading} />
                                     </Form.Item>
 
-                                    <Form.Item label="Email Address" required style={{ marginBottom: 16 }}>
-                                        <Input type="email" placeholder="you@example.com" />
+                                    <Form.Item
+                                        label="Email Address"
+                                        name="email"
+                                        rules={[
+                                            { required: true, message: 'Please enter your email' },
+                                            { type: 'email', message: 'Please enter a valid email' }
+                                        ]}
+                                        style={{ marginBottom: 16 }}
+                                    >
+                                        <Input type="email" placeholder="you@example.com" disabled={loading} />
                                     </Form.Item>
 
-                                    <Form.Item label="Skill Level" style={{ marginBottom: 16 }}>
-                                        <Select placeholder="Select your level" popupClassName="premium-dropdown">
+                                    <Form.Item
+                                        label="Phone Number"
+                                        name="phoneNumber"
+                                        rules={[
+                                            { pattern: /^[0-9]{10,15}$/, message: 'Please enter a valid phone number (10-15 digits)' }
+                                        ]}
+                                        style={{ marginBottom: 16 }}
+                                    >
+                                        <Input placeholder="Your phone number" disabled={loading} />
+                                    </Form.Item>
+
+                                    <Form.Item
+                                        label="Skill Level"
+                                        name="skillLevel"
+                                        style={{ marginBottom: 16 }}
+                                    >
+                                        <Select placeholder="Select your level" popupClassName="premium-dropdown" disabled={loading}>
                                             <Select.Option value="Beginner">Beginner</Select.Option>
                                             <Select.Option value="Intermediate">Intermediate</Select.Option>
                                             <Select.Option value="Advanced">Advanced</Select.Option>
                                         </Select>
                                     </Form.Item>
 
-                                    <Button type="primary" block size="large">
-                                        Confirm Registration
+                                    <Button type="primary" htmlType="submit" block size="large" loading={loading}>
+                                        {loading ? 'Submitting...' : 'Confirm Registration'}
                                     </Button>
                                 </Form>
                             </>

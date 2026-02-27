@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   Layout,
-  Menu,
   Button,
   Table,
   Tag,
@@ -10,7 +9,6 @@ import {
   Space,
   Typography,
   Card,
-  Dropdown,
   Select,
   Skeleton,
   Tooltip,
@@ -41,7 +39,6 @@ import {
   MailOutlined,
   SearchOutlined,
   FilterOutlined,
-  MoreOutlined,
   CheckOutlined,
   StopOutlined,
 } from "@ant-design/icons";
@@ -53,7 +50,6 @@ import {
   updateUserAppliedJobStatus,
 } from "../ApiService/action";
 import { useParams } from "react-router-dom";
-import { CommonToaster } from "../Common/CommonToaster";
 
 
 const { Header, Content } = Layout;
@@ -61,7 +57,6 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 export default function ManageCandidate() {
-  const [postId, setPostId] = useState(null);
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [appliedUser, setAppliedUser] = useState([]);
@@ -72,7 +67,7 @@ export default function ManageCandidate() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobTitle, setJobTitle] = useState("");
   const [appliedUserId, setAppliedUserId] = useState(null);
-  const [postDetails, setPostDetails] = useState([]);
+
 
   const statusColors = {
     Shortlisted: {
@@ -135,7 +130,6 @@ export default function ManageCandidate() {
 
   const getJobAppliedCandidatesData = async () => {
     if (!id) return;
-    setPostId(id);
     setLoading(true);
 
     try {
@@ -203,6 +197,7 @@ export default function ManageCandidate() {
       user_id: userId,
     };
 
+
     try {
       const response = await getUserProfile(payload);
       setOpen(true);
@@ -223,7 +218,6 @@ export default function ManageCandidate() {
     try {
       const response = await getJobPosts(payload);
       const jobs = response?.data?.data?.data || [];
-      setPostDetails(jobs);
       if (id) {
         const matchedJob = jobs.find((job) => String(job.id) === String(id));
         setJobTitle(matchedJob ? matchedJob.job_title : "");
@@ -530,24 +524,10 @@ export default function ManageCandidate() {
                 >
                   <Option value="all">All Status</Option>
                   <Option value="pending">Pending</Option>
-                  <Option value="shortlist">Shortlisted</Option>
+                  <Option value="shortlisted">Shortlisted</Option>
                   <Option value="rejected">Rejected</Option>
-                  <Option value="sent mail">Sent Mail</Option>
+                  <Option value="mail sent">Sent Mail</Option>
                 </Select>
-              </Space>
-
-              <Space>
-                {/* <Button size="large" icon={<DownloadOutlined />}>
-                  Export
-                </Button> */}
-                <Button
-                  className="view_all_can"
-                  size="large"
-                  icon={<MailOutlined />}
-                  type="primary"
-                >
-                  Email Selected
-                </Button>
               </Space>
             </div>
 

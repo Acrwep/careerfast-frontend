@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getBlogById, deleteBlog, updateBlog, getBlogs } from "../ApiService/action";
 import { message, Modal, Tooltip } from "antd";
-import { Helmet } from "react-helmet-async";
+
 import "../css/Blogs.css";
 import Header from "../Header/Header";
 import { Edit, Trash } from "lucide-react";
@@ -177,16 +177,7 @@ export default function BlogSingle() {
 
     return (
         <>
-            {blog && (
-                <Helmet>
-                    <title>{`${blog.blogTitle} | CareerFast Blog`}</title>
-                    <meta
-                        name="description"
-                        content={blog.overview ? blog.overview.slice(0, 160) : "Read this insightful blog on CareerFast."}
-                    />
-                    <link rel="canonical" href={`https://careerfast.in/blog/${slug}`} />
-                </Helmet>
-            )}
+
             <Header />
 
             <div className="singleblog-container">

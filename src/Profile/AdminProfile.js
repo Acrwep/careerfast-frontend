@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Layout, Menu, Progress, Avatar, Modal } from "antd";
+import { Layout, Menu, Progress, Avatar, Modal, Badge } from "antd";
 import { SettingOutlined } from "@ant-design/icons";
 import "../css/Profile.css";
 import { FaUserPen } from "react-icons/fa6";
@@ -16,10 +16,16 @@ import ProSubscription from "./ProSubscription";
 import BookMark from "./BookMark";
 import Listing from "./Listing";
 import AppliedJobs from "./AppliedJobs";
+import AppliedCandidates from "./AppliedCandidates";
 import AccountSettings from "./AccountSettings";
-import { getUserProfile } from "../ApiService/action";
+import {
+  getUserProfile,
+  getAllAppliedCandidates,
+  getUserJobPostStatus,
+} from "../ApiService/action";
 import { VscGitStashApply } from "react-icons/vsc";
 import { GrUserSettings } from "react-icons/gr";
+import { UserCheck } from "lucide-react";
 
 const { Sider } = Layout;
 
@@ -48,6 +54,48 @@ export default function UserProfile() {
   const [isLoading, setIsLoading] = useState(true);
   const [roleId, setRoleId] = useState(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (roleId === 3) {
+      fetchPendingCount();
+    }
+  }, [roleId]);
+
+  const fetchPendingCount = async () => {
+    try {
+      const response = await getAllAppliedCandidates();
+      const users = response?.data?.data || [];
+
+      const statuses = await Promise.all(
+        users.map(async (user) => {
+          let latestStatus = "Pending";
+          if (user.applied_jobs_id) {
+            try {
+              const statusRes = await getUserJobPostStatus({
+                applied_job_id: user.applied_jobs_id,
+              });
+              const statusList = statusRes?.data?.data;
+              if (Array.isArray(statusList) && statusList.length > 0) {
+                statusList.sort(
+                  (a, b) => new Date(b.changed_at) - new Date(a.changed_at)
+                );
+                latestStatus = statusList[0]?.status || "Pending";
+              }
+            } catch (err) {
+              console.error("Status fetch error", err);
+            }
+          }
+          return latestStatus;
+        })
+      );
+
+      const count = statuses.filter((status) => status === "Pending").length;
+      setPendingCount(count);
+    } catch (error) {
+      console.error("Error fetching candidates for badge:", error);
+    }
+  };
 
   const menuItems = [
     { key: "mainprofile", icon: <FaUserPen />, label: "Your profile" },
@@ -57,6 +105,22 @@ export default function UserProfile() {
       ? [
         { key: "listing", icon: <FaListOl />, label: "Manage Listing" },
         { key: "applied", icon: <VscGitStashApply />, label: "Applied Jobs" },
+        {
+          key: "appliedcandidates",
+          icon: <UserCheck size={16} />,
+          label: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span>Applied Candidates</span>
+              {pendingCount > 0 && <Badge count={pendingCount} />}
+            </div>
+          ),
+        },
       ]
       : [{ key: "applied", icon: <FaListOl />, label: "Applied Jobs" }]),
 
@@ -185,6 +249,8 @@ export default function UserProfile() {
             <ProSubscription />
           ) : sideBar === "applied" ? (
             <AppliedJobs />
+          ) : sideBar === "appliedcandidates" ? (
+            <AppliedCandidates onStatusChange={fetchPendingCount} />
           ) : (
             ""
           )}

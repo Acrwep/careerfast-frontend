@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import { Typography, Card, message, Col, Row, Empty, Spin } from "antd";
 import Footer from "../Footer/Footer";
 
@@ -14,8 +15,8 @@ import "../css/LandingPage.css";
 import { motion } from "framer-motion";
 import ParticlesBg from "particles-bg";
 import Header from "../Header/Header";
-import { useNavigate, useParams } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { useNavigate } from "react-router-dom";
+
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -59,7 +60,7 @@ import {
   FaBriefcase,
   FaMicrochip
 } from "react-icons/fa";
-import { Loader } from "lucide-react";
+
 
 const generateSlug = (text) => {
   return text
@@ -146,17 +147,17 @@ const loopedCompanies = [...companies, ...companies];
 
 export default function InternshipLandingPage() {
   const [backendJobs, setBackendJobs] = useState([]);
+  const [myOpportunities, setMyOpportunities] = useState([]); // User's posted internships
   const [roleId, setRoleId] = useState(null);
   const [loginUserId, setLoginUserId] = useState(null);
   const navigate = useNavigate();
   const [category, setCategory] = useState([]);
-  const [categoryCounts, setCategoryCounts] = useState({});
   const [appliedCounts, setAppliedCounts] = useState({});
   const [isVisible, setIsVisible] = useState(false);
   // 🔹 Loader state
   const [blogTips, setBlogTips] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [visibleBlogs, setVisibleBlogs] = useState(6);
+
 
   useEffect(() => {
     setIsVisible(true);
@@ -171,11 +172,6 @@ export default function InternshipLandingPage() {
     } catch (error) {
       console.error("Error fetching blog tips:", error);
     }
-  };
-
-
-  const loadMoreBlogs = () => {
-    setVisibleBlogs((prev) => prev + 3);
   };
 
 
@@ -236,25 +232,7 @@ export default function InternshipLandingPage() {
     <FaMicrochip />
   ];
 
-  useEffect(() => {
-    // handled by Helmet
-    getJobPostsData();
-  }, []);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("loginDetails");
-      if (stored) {
-        const loginDetails = JSON.parse(stored);
-        setRoleId(loginDetails.role_id);
-        setLoginUserId(loginDetails.id);
-      }
-    } catch (error) {
-      console.error("Invalid JSON in localStorage", error);
-    }
-  }, []);
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const response = await getJobCategoryData();
 
@@ -272,14 +250,12 @@ export default function InternshipLandingPage() {
         }
       });
 
-      setCategoryCounts(counts);
-
     } catch (err) {
       console.error("Category fetch failed:", err);
     }
-  };
+  }, [backendJobs]);
 
-  const getJobPostsData = async () => {
+  const getJobPostsData = useCallback(async () => {
     setLoading(true);
     try {
       const response = await getJobPosts({ limit: 15, job_nature: "Internship" });
@@ -289,9 +265,33 @@ export default function InternshipLandingPage() {
       message.error("Please Login");
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // handled by Helmet
+    getJobPostsData();
+  }, [getJobPostsData]);
+
+  useEffect(() => {
+    // Fetch categories after backendJobs is updated
+    if (backendJobs.length > 0) {
       fetchCategories();
     }
-  };
+  }, [backendJobs, fetchCategories]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("loginDetails");
+      if (stored) {
+        const loginDetails = JSON.parse(stored);
+        setRoleId(loginDetails.role_id);
+        setLoginUserId(loginDetails.id);
+      }
+    } catch (error) {
+      console.error("Invalid JSON in localStorage", error);
+    }
+  }, []);
 
 
   useEffect(() => {
@@ -306,6 +306,9 @@ export default function InternshipLandingPage() {
     try {
       const response = await getJobPostByUserId(payload);
       const jobs = response?.data?.data || [];
+
+      // Store user's jobs in myOpportunities state
+      setMyOpportunities(jobs);
 
       const counts = {};
       for (let job of jobs) {
@@ -326,28 +329,99 @@ export default function InternshipLandingPage() {
   // ✅ Loader overlay
   if (loading) {
     return (
-      <div style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        background: "#fff",
-      }}>
-        <Spin size="large" tip="Loading internships..." />
-      </div>
+      <>
+        <Helmet>
+          <title>CareerFast | Find Internships</title>
+          <meta
+            name="description"
+            content="Discover premium internship opportunities with top-tier companies and unlock your professional potential."
+          />
+        </Helmet>
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          background: "#fff",
+        }}>
+          <Spin size="large" tip="Loading internships..." />
+        </div>
+      </>
     );
   }
 
   return (
     <div className="">
       <Helmet>
-        <title>CareerFast | Internship Portal</title>
+        {/* Primary Meta Tags */}
+        <html lang="en" />
+        <title>CareerFast | Find Internships - Launch Your Career with Top Companies</title>
         <meta
           name="description"
-          content="Kickstart your career with top internships. Find opportunities to gain experience and grow your skills with CareerFast."
+          content="Discover premium internship opportunities with top-tier companies. Connect with 25K+ verified recruiters, explore 100K+ internship listings, and kickstart your professional journey with CareerFast."
         />
-        <link rel="canonical" href="https://careerfast.in/internship" />
+        <meta
+          name="keywords"
+          content="internships, internship opportunities, student internships, career internships, internship portal, summer internships, paid internships, top companies, internship listings, career development, professional training, CareerFast"
+        />
+        <meta name="author" content="CareerFast" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://careerfast.com/internship-portal" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://careerfast.com/internship-portal" />
+        <meta property="og:title" content="CareerFast | Find Internships - Launch Your Career with Top Companies" />
+        <meta
+          property="og:description"
+          content="Discover premium internship opportunities with top-tier companies. Connect with 25K+ verified recruiters and explore 100K+ internship listings."
+        />
+        <meta property="og:image" content="https://careerfast.com/og-image-internships.jpg" />
+        <meta property="og:site_name" content="CareerFast" />
+        <meta property="og:locale" content="en_US" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://careerfast.com/internship-portal" />
+        <meta name="twitter:title" content="CareerFast | Find Internships - Launch Your Career with Top Companies" />
+        <meta
+          name="twitter:description"
+          content="Discover premium internship opportunities with top-tier companies. Connect with 25K+ verified recruiters and explore 100K+ internship listings."
+        />
+        <meta name="twitter:image" content="https://careerfast.com/twitter-image-internships.jpg" />
+
+        {/* Structured Data - JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "CareerFast - Internships",
+            "url": "https://careerfast.com/internship-portal",
+            "description": "Discover premium internship opportunities with top-tier companies. Connect with 25K+ verified recruiters and explore 100K+ internship listings.",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://careerfast.com/internship-filter?search={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": "Internship Categories",
+            "description": "Browse internships by category on CareerFast",
+            "numberOfItems": category.length,
+            "itemListElement": category.map((cat, index) => ({
+              "@type": "ListItem",
+              "position": index + 1,
+              "name": cat,
+              "url": `https://careerfast.com/internship-filter?category=${generateSlug(cat)}`
+            }))
+          })}
+        </script>
       </Helmet>
+
       <Header />
       <Row className="job-portal">
         <ParticlesBg type="cobweb" bg={true} color="#7f5af0" num={50} />
@@ -522,9 +596,9 @@ export default function InternshipLandingPage() {
             variants={fadeInUp}
           >
             <h4>Explore Categories</h4>
-            <a onClick={() => navigate("/internship-filter")} className="view-all">
+            <button onClick={() => navigate("/internship-filter")} className="view-all" style={{ background: "none", border: "none", cursor: "pointer" }}>
               View all
-            </a>
+            </button>
           </motion.div>
 
           <Slider {...sliderSettings}>
@@ -658,7 +732,7 @@ export default function InternshipLandingPage() {
                                 }
 
                                 // 👉 Filter out empty strings from locations
-                                const validLocations = locations.filter(loc => loc && loc.trim() !== "");
+                                const validLocations = locations.filter(loc => loc && typeof loc === 'string' && loc.trim() !== "");
 
                                 // 👉 If valid locations exist, show them
                                 if (validLocations.length > 0) {
@@ -762,14 +836,14 @@ export default function InternshipLandingPage() {
               Keep track of your recent and in-progress listings to stay on top of what you've posted.
             </p>
           </div>
-          <a onClick={() => navigate("/internship-filter")} className="view-all-link">
+          <button onClick={() => navigate("/internship-filter")} className="view-all-link" style={{ background: "none", border: "none", cursor: "pointer" }}>
             View all opportunities →
-          </a>
+          </button>
         </div>
 
         {/* Opportunities Grid */}
         <div className="opportunities-grid">
-          {backendJobs
+          {myOpportunities
             .sort((a, b) => new Date(b.posted_date) - new Date(a.posted_date))
             .slice(0, 4)
             .map((job) => (
@@ -827,13 +901,27 @@ export default function InternshipLandingPage() {
                         try {
                           const arr = JSON.parse(job.work_location);
                           if (Array.isArray(arr)) {
-                            const firstTwo = arr.slice(0, 2).join(", ");
-                            return arr.length > 2 ? `${firstTwo}, ...` : firstTwo;
+                            // Filter out empty strings
+                            const validLocations = arr.filter(loc => loc && typeof loc === 'string' && loc.trim() !== "");
+
+                            // If no valid locations, show workplace_type
+                            if (validLocations.length === 0) {
+                              return job.workplace_type || "Not specified";
+                            }
+
+                            const firstTwo = validLocations.slice(0, 2).join(", ");
+                            return validLocations.length > 2 ? `${firstTwo}, ...` : firstTwo;
                           }
 
-                          return job.work_location;
+                          // If work_location is empty string, show workplace_type
+                          return typeof job.work_location === 'string' && job.work_location.trim() !== ""
+                            ? job.work_location
+                            : job.workplace_type || "Not specified";
                         } catch {
-                          return job.work_location;
+                          // If work_location is empty string, show workplace_type
+                          return typeof job.work_location === 'string' && job.work_location.trim() !== ""
+                            ? job.work_location
+                            : job.workplace_type || "Not specified";
                         }
                       })()}
                     </span>
@@ -846,14 +934,14 @@ export default function InternshipLandingPage() {
 
                 <div className="card-footer">
                   <span className="status-badges published">Published</span>
-                  <span className="applicants">{job.applicants || 0} applicants</span>
+                  <span className="applicants">{appliedCounts[job.id] || 0} applicants</span>
                 </div>
 
               </motion.div>
             ))}
         </div>
 
-        {backendJobs.length === 0 && (
+        {myOpportunities.length === 0 && (
           <div className="empty-state">
             <div className="empty-icon">📋</div>
             <p>No opportunities found</p>
@@ -892,7 +980,7 @@ export default function InternshipLandingPage() {
             xs={24}
             sm={24}
           >
-            <div className="need_content_img"><img src={need_content_img}></img></div>
+            <div className="need_content_img"><img src={need_content_img} alt="Need guidance illustration"></img></div>
           </Col>
           <Col
             style={{
@@ -1017,7 +1105,7 @@ export default function InternshipLandingPage() {
             xs={24}
             sm={24}
           >
-            <div><img src={need_guidence1}></img> </div>
+            <div><img src={need_guidence1} alt="Career guidance illustration"></img> </div>
           </Col>
         </Row>
       </div>
@@ -1054,7 +1142,7 @@ export default function InternshipLandingPage() {
               <p style={{ color: "#666" }}>Check back later for new blog updates.</p>
             </Col>
           ) : (
-            blogTips.slice(0, visibleBlogs).map((tip, index) => (
+            blogTips.slice(0, 6).map((tip, index) => (
               <Col
                 xs={24}
                 sm={12}
@@ -1098,25 +1186,23 @@ export default function InternshipLandingPage() {
             ))
           )}
         </Row>
-        {visibleBlogs < blogTips.length && (
-          <div style={{ textAlign: "center", marginTop: "20px" }}>
-            <button
-              onClick={loadMoreBlogs}
-              className="premium-load-more"
-              style={{
-                padding: "7px 15px",
-                background: "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
-                color: "#fff",
-                borderRadius: "6px",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "14px",
-              }}
-            >
-              Load More <Loader style={{ marginTop: -2 }} size={16} />
-            </button>
-          </div>
-        )}
+        <div style={{ textAlign: "center", marginTop: "20px" }}>
+          <button
+            onClick={() => navigate("/blogs")}
+            className="premium-load-more"
+            style={{
+              padding: "7px 15px",
+              background: "linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%)",
+              color: "#fff",
+              borderRadius: "6px",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "14px",
+            }}
+          >
+            View All Blogs <i className="fas fa-arrow-right" style={{ marginLeft: "5px" }}></i>
+          </button>
+        </div>
         <div className="section-footer">
           <p>Explore more career resources in our <a href="/job-portal">Careerfast</a></p>
         </div>

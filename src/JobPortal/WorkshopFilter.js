@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import {
   getAllWorkshops,
   getUserProfile,
@@ -211,6 +212,85 @@ export default function WorkshopFilter() {
 
   return (
     <>
+      <Helmet>
+        {/* Primary Meta Tags */}
+        <html lang="en" />
+        <title>CareerFast | Workshops - Professional Development & Skill Building</title>
+        <meta
+          name="description"
+          content="Discover and register for professional development workshops, skill-building sessions, and hands-on training programs. Learn from industry experts and enhance your career."
+        />
+        <meta
+          name="keywords"
+          content="workshops, professional workshops, skill development, training programs, career workshops, hands-on training, professional development, upskilling workshops, CareerFast workshops"
+        />
+        <meta name="author" content="CareerFast" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://careerfast.com/workshop-filter" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://careerfast.com/workshop-filter" />
+        <meta property="og:title" content="CareerFast | Workshops - Professional Development & Skill Building" />
+        <meta
+          property="og:description"
+          content="Discover and register for professional development workshops, skill-building sessions, and hands-on training programs."
+        />
+        <meta property="og:image" content="https://careerfast.com/og-image-workshops.jpg" />
+        <meta property="og:site_name" content="CareerFast" />
+        <meta property="og:locale" content="en_US" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://careerfast.com/workshop-filter" />
+        <meta name="twitter:title" content="CareerFast | Workshops - Professional Development & Skill Building" />
+        <meta
+          name="twitter:description"
+          content="Discover and register for professional development workshops, skill-building sessions, and hands-on training programs."
+        />
+        <meta name="twitter:image" content="https://careerfast.com/twitter-image-workshops.jpg" />
+
+        {/* Structured Data - JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "Professional Workshops - CareerFast",
+            "url": "https://careerfast.com/workshop-filter",
+            "description": "Discover and register for professional development workshops, skill-building sessions, and hands-on training programs.",
+            "provider": {
+              "@type": "Organization",
+              "name": "CareerFast",
+              "url": "https://careerfast.com"
+            }
+          })}
+        </script>
+        {filtered.length > 0 && (
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              "name": "Available Workshops",
+              "numberOfItems": filtered.length,
+              "itemListElement": filtered.map((workshop, index) => ({
+                "@type": "Event",
+                "position": index + 1,
+                "name": workshop.title,
+                "description": workshop.about,
+                "eventAttendanceMode": workshop.mode === "Online" ? "https://schema.org/OnlineEventAttendanceMode" : "https://schema.org/OfflineEventAttendanceMode",
+                "location": workshop.venue ? {
+                  "@type": "Place",
+                  "name": workshop.venue
+                } : undefined,
+                "organizer": workshop.organizer ? {
+                  "@type": "Organization",
+                  "name": workshop.organizer
+                } : undefined
+              }))
+            })}
+          </script>
+        )}
+      </Helmet>
       <Header />
 
       {loading ? (

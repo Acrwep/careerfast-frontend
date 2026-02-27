@@ -2,18 +2,14 @@ import React, { useState, useEffect } from "react";
 import {
   Tabs,
   Form,
-  Input,
   Button,
-  Checkbox,
   Typography,
   Card,
-  Divider,
   message,
   Col,
   Row,
 } from "antd";
 import {
-  LockOutlined,
   MailOutlined,
   UserOutlined,
   PhoneOutlined,
@@ -33,12 +29,11 @@ import {
   orgTypeValidation,
   officialEmailValidator,
 } from "../Common/Validation";
-import { CommonToaster } from "../Common/CommonToaster";
 import CommonInputField from "../Common/CommonInputField";
 import CommonPasswordField from "../Common/CommonPasswordField";
 import { getOrganizationType, register } from "../ApiService/action";
 import CommonSelectField from "../Common/CommonSelectField";
-import { Helmet } from "react-helmet-async";
+
 
 const { Title, Text, Link } = Typography;
 
@@ -185,14 +180,6 @@ const RegisterPage = () => {
 
   return (
     <div className="loginpage_container">
-      <Helmet>
-        <title>CareerFast | Register</title>
-        <meta
-          name="description"
-          content="Join CareerFast today! Create an account as a candidate to find jobs or as a recruiter to hire top talent."
-        />
-        <link rel="canonical" href="https://careerfast.in/register" />
-      </Helmet>
       <Row>
         <Col span={12}>
           {" "}

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams } from 'react-router-dom';
+import { Modal } from 'antd';
 import mentor1 from "../images/Ankit-Sharma.jpg";
 import mentor2 from "../images/priya.jpg";
 import mentor3 from "../images/rahul.jpg";
@@ -8,6 +10,7 @@ import mentor5 from "../images/vikram.jpg";
 import mentor6 from "../images/aditi.jpg";
 import mentor8 from "../images/nisha.jpg";
 import mentor9 from "../images/arjun.jpg";
+import Header from '../Header/Header';
 
 export const mentorsData = [
     {
@@ -180,16 +183,140 @@ const MentorDetails = () => {
     const { id } = useParams();
     const [mentor, setMentor] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        userName: '',
+        userEmail: '',
+        phoneNumber: '',
+        message: ''
+    });
 
     useEffect(() => {
         const foundMentor = mentorsData.find(m => m.id === parseInt(id));
         setMentor(foundMentor);
     }, [id]);
 
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const { sendMentorQuery } = await import('../ApiService/action');
+
+            const payload = {
+                userName: formData.userName,
+                userEmail: formData.userEmail,
+                phoneNumber: formData.phoneNumber,
+                message: formData.message,
+                mentorName: mentor.name,
+                mentorTitle: mentor.title,
+                mentorCompany: mentor.company
+            };
+
+            const response = await sendMentorQuery(payload);
+
+            if (response.status === 200) {
+                Modal.success({
+                    title: 'Query Sent Successfully!',
+                    content: 'Your query has been submitted successfully. We will contact you soon.',
+                    centered: true,
+                    onOk: () => {
+                        window.location.reload();
+                    }
+                });
+                setShowPopup(false);
+                setFormData({ userName: '', userEmail: '', phoneNumber: '', message: '' });
+            }
+        } catch (error) {
+            console.error('Query submission error:', error);
+            Modal.error({
+                title: 'Submission Failed',
+                content: error.response?.data?.error || 'Something went wrong. Please try again.',
+                centered: true,
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     if (!mentor) return <div className="mentor-loading">Loading...</div>;
 
     return (
         <div className="mentor-page">
+            <Header />
+            <Helmet>
+                {/* Primary Meta Tags */}
+                <html lang="en" />
+                <title>{mentor.name} - {mentor.title} at {mentor.company} | CareerFast Mentors</title>
+                <meta
+                    name="description"
+                    content={`Book a 1:1 mentorship session with ${mentor.name}, ${mentor.title} at ${mentor.company}. ${mentor.about.substring(0, 150)}...`}
+                />
+                <meta
+                    name="keywords"
+                    content={`${mentor.name}, ${mentor.title}, ${mentor.company}, mentorship, career guidance, ${mentor.skills.join(', ')}, CareerFast`}
+                />
+                <meta name="author" content="CareerFast" />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href={`https://careerfast.com/mentor/${mentor.id}`} />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="profile" />
+                <meta property="og:url" content={`https://careerfast.com/mentor/${mentor.id}`} />
+                <meta property="og:title" content={`${mentor.name} - ${mentor.title} at ${mentor.company}`} />
+                <meta
+                    property="og:description"
+                    content={`Book a 1:1 mentorship session with ${mentor.name}. Rating: ${mentor.rating}/5 (${mentor.reviews} reviews). ${mentor.skills.join(', ')}.`}
+                />
+                <meta property="og:image" content={mentor.image} />
+                <meta property="og:site_name" content="CareerFast" />
+
+                {/* Twitter */}
+                <meta name="twitter:card" content="summary" />
+                <meta name="twitter:url" content={`https://careerfast.com/mentor/${mentor.id}`} />
+                <meta name="twitter:title" content={`${mentor.name} - ${mentor.title} at ${mentor.company}`} />
+                <meta
+                    name="twitter:description"
+                    content={`Book a 1:1 mentorship session with ${mentor.name}. Rating: ${mentor.rating}/5 (${mentor.reviews} reviews).`}
+                />
+                <meta name="twitter:image" content={mentor.image} />
+
+                {/* Structured Data - JSON-LD */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Person",
+                        "name": mentor.name,
+                        "jobTitle": mentor.title,
+                        "worksFor": {
+                            "@type": "Organization",
+                            "name": mentor.company
+                        },
+                        "description": mentor.about,
+                        "image": mentor.image,
+                        "url": `https://careerfast.com/mentor/${mentor.id}`,
+                        "aggregateRating": {
+                            "@type": "AggregateRating",
+                            "ratingValue": mentor.rating,
+                            "reviewCount": mentor.reviews
+                        },
+                        "offers": {
+                            "@type": "Offer",
+                            "price": mentor.price.replace('₹', ''),
+                            "priceCurrency": "INR",
+                            "description": "1:1 Mentorship Session"
+                        }
+                    })}
+                </script>
+            </Helmet>
 
             {/* HERO SECTION */}
             <div className="mentor-hero">
@@ -260,13 +387,47 @@ const MentorDetails = () => {
 
                         <h2>Send Your Query</h2>
 
-                        <form className="popup-form">
-                            <input type="text" placeholder="Your Name" required />
-                            <input type="email" placeholder="Your Email" required />
-                            <textarea placeholder="Your Message" rows="4" required></textarea>
+                        <form className="popup-form" onSubmit={handleSubmit}>
+                            <input
+                                type="text"
+                                name="userName"
+                                placeholder="Your Name"
+                                value={formData.userName}
+                                onChange={handleInputChange}
+                                disabled={loading}
+                                required
+                            />
+                            <input
+                                type="email"
+                                name="userEmail"
+                                placeholder="Your Email"
+                                value={formData.userEmail}
+                                onChange={handleInputChange}
+                                disabled={loading}
+                                required
+                            />
+                            <input
+                                type="tel"
+                                name="phoneNumber"
+                                placeholder="Your Phone Number (Optional)"
+                                value={formData.phoneNumber}
+                                onChange={handleInputChange}
+                                disabled={loading}
+                                pattern="[0-9]{10,15}"
+                                title="Please enter a valid phone number (10-15 digits)"
+                            />
+                            <textarea
+                                name="message"
+                                placeholder="Your Message"
+                                rows="4"
+                                value={formData.message}
+                                onChange={handleInputChange}
+                                disabled={loading}
+                                required
+                            ></textarea>
 
-                            <button type="submit" className="popup-submit">
-                                Send Message
+                            <button type="submit" className="popup-submit" disabled={loading}>
+                                {loading ? 'Sending...' : 'Send Message'}
                             </button>
                         </form>
 

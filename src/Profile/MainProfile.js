@@ -112,6 +112,7 @@ import {
   insertProjects,
   updateAbout,
   updateBasicDetails,
+  updateBanner,
   updateEducation,
   updateExperience,
   updateProfileImage,
@@ -701,6 +702,14 @@ export default function MainProfile() {
       console.log("getUserProfilegetUserProfile", response);
       const image = response?.data?.data?.profile_image || "";
       setProfileImage(image || defaultAvatar);
+
+      // Set banner style from response
+      setBannerStyle({
+        backgroundColor: response?.data?.data?.banner_color || "#481eaf",
+        backgroundImage: response?.data?.data?.banner_image
+          ? `url(${response.data.data.banner_image})`
+          : "none",
+      });
       setIsResume(response?.data?.data?.resume || "");
       setIsSkills(response?.data?.data?.skills || []);
       setIsWorkExp(response?.data?.data?.experince_type || "");
@@ -4079,12 +4088,24 @@ export default function MainProfile() {
             </span>
           }
           open={isColorModalVisible}
-          onOk={() => {
-            setBannerStyle({
-              backgroundColor: tempColor,
-              backgroundImage: "none",
-            });
-            setColorModalVisible(false);
+          onOk={async () => {
+            const payload = {
+              user_id: loginUserId,
+              banner_color: tempColor,
+              banner_image: null,
+            };
+            try {
+              await updateBanner(payload);
+              setBannerStyle({
+                backgroundColor: tempColor,
+                backgroundImage: "none",
+              });
+              message.success("Banner updated successfully");
+              setColorModalVisible(false);
+            } catch (error) {
+              console.error("Banner update failed:", error);
+              message.error("Failed to update banner");
+            }
           }}
           onCancel={() => setColorModalVisible(false)}
           okButtonProps={{
@@ -4150,14 +4171,28 @@ export default function MainProfile() {
             </span>
           }
           open={isImageModalVisible}
-          onOk={() => {
+          onOk={async () => {
             if (tempImage) {
-              setBannerStyle({
-                backgroundImage: `url(${tempImage})`,
-                backgroundColor: "transparent",
-              });
+              const payload = {
+                user_id: loginUserId,
+                banner_color: null,
+                banner_image: tempImage,
+              };
+              try {
+                await updateBanner(payload);
+                setBannerStyle({
+                  backgroundImage: `url(${tempImage})`,
+                  backgroundColor: "transparent",
+                });
+                message.success("Banner updated successfully");
+                setImageModalVisible(false);
+              } catch (error) {
+                console.error("Banner update failed:", error);
+                message.error("Failed to update banner");
+              }
+            } else {
+              setImageModalVisible(false);
             }
-            setImageModalVisible(false);
           }}
           onCancel={() => {
             setTempImage(null);

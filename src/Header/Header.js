@@ -1231,12 +1231,17 @@ export default function Header() {
           /* Elite search input */
           .elite-search-input {
             border-radius: 12px;
-            width: 150px !important;
+            width: 230px !important;
             border: 1px solid #b6b1ff;
             padding: 12px 18px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
             background: white;
+          }
+          
+          /* Elite search input on admin-profile pages */
+          .profile-layout .elite-search-input {
+            width: 150px !important;
           }
           
           .elite-search-input:hover, .elite-search-input:focus {

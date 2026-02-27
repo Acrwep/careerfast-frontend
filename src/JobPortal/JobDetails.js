@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { useParams } from "react-router-dom";
+
 
 import {
   Row,
   Col,
   Collapse,
-  Form,
   Input,
-  Space,
   Drawer,
-  Button,
   message,
   Tooltip,
   Spin,
@@ -23,7 +21,6 @@ import {
   FaLink,
 } from "react-icons/fa";
 import {
-  StarFilled,
   MinusCircleFilled,
   PlusCircleFilled,
 } from "@ant-design/icons";
@@ -628,32 +625,44 @@ export default function JobDetails() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-          background: "#fff",
-        }}
-      >
-        <Spin size="large" tip="Loading details..." />
-      </div>
+      <>
+        <Helmet>
+          <title>Job Details | CareerFast</title>
+          <meta name="description" content="View job details on CareerFast." />
+        </Helmet>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+            background: "#fff",
+          }}
+        >
+          <Spin size="large" tip="Loading details..." />
+        </div>
+      </>
     );
   }
 
   return (
     <>
-      {postDetails.length > 0 && (
-        <Helmet>
-          <title>{`${postDetails[0].title} at ${postDetails[0].company} | CareerFast`}</title>
-          <meta
-            name="description"
-            content={`Apply for ${postDetails[0].title} at ${postDetails[0].company}. ${postDetails[0].job_description?.substring(0, 150)}...`}
-          />
-          <link rel="canonical" href={`https://careerfast.in/job-details/${slug}`} />
-        </Helmet>
-      )}
+      <Helmet>
+        <title>
+          {postDetails[0]
+            ? `${postDetails[0].title} | ${postDetails[0].company} | CareerFast`
+            : "Job Details | CareerFast"}
+        </title>
+        <meta
+          name="description"
+          content={
+            postDetails[0]
+              ? `Apply for ${postDetails[0].title} at ${postDetails[0].company} in ${postDetails[0].location}.`
+              : "View job opportunities on CareerFast"
+          }
+        />
+      </Helmet>
+
       <Header />
       <section className="premium-job-details job_filter details_page">
         <Row>

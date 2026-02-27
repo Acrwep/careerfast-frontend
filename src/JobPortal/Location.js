@@ -14,7 +14,6 @@ export default function Location() {
   const [workLocationOption, setWorkLocationOption] = useState([]);
 
   useEffect(() => {
-    document.title = "CareerFast | Find Jobs";
     const loadCities = () => {
       const states = State.getStatesOfCountry("IN");
       const cities = states.flatMap((state) =>

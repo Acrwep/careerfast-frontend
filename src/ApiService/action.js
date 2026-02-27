@@ -647,6 +647,17 @@ export const getJobAppliedCandidates = async (payload) => {
   }
 };
 
+// getAllAppliedCandidates
+
+export const getAllAppliedCandidates = async () => {
+  try {
+    const response = await api.get("/api/getAllAppliedCandidates");
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // checkIsJobApplied
 
 export const checkIsJobApplied = async (payload) => {
@@ -728,6 +739,17 @@ export const checkIsJobSaved = async (payload) => {
 export const updateProfileImage = async (payload) => {
   try {
     const response = await api.put("/api/updateProfileImage", payload);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// updateBanner
+
+export const updateBanner = async (payload) => {
+  try {
+    const response = await api.put("/api/updateBanner", payload);
     return response;
   } catch (error) {
     throw error;
@@ -1219,3 +1241,27 @@ export const deleteBlog = async (id) => {
     throw error;
   }
 };
+
+// Competition Registration
+export const sendCompetitionRegistration = async (payload) => {
+  try {
+    const response = await api.post("/api/competitionRegistration", payload);
+    return response;
+  } catch (error) {
+    console.error("❌ Error sending competition registration:", error);
+    throw error;
+  }
+};
+
+// Mentor Query
+export const sendMentorQuery = async (payload) => {
+  try {
+    const response = await api.post("/api/mentorQuery", payload);
+    return response;
+  } catch (error) {
+    console.error("❌ Error sending mentor query:", error);
+    throw error;
+  }
+};
+
+

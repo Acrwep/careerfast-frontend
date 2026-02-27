@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import './Mentors.css';
 import { useNavigate } from 'react-router-dom';
 import { FaLaptopCode, FaChartLine, FaPaintBrush, FaBullhorn, FaUserTie, FaRocket } from 'react-icons/fa';
@@ -31,7 +32,7 @@ import mentor5 from "../images/vikram.jpg";
 import mentor6 from "../images/aditi.jpg";
 import mentor8 from "../images/nisha.jpg";
 import mentor9 from "../images/arjun.jpg";
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 // Dummy Data
 const mentorsData = [
@@ -211,6 +212,80 @@ const MentorList = () => {
 
     return (
         <div className="mentors-page-container">
+            <Helmet>
+                {/* Primary Meta Tags */}
+                <html lang="en" />
+                <title>CareerFast | Find Jobs & Internships - Your Career Growth Partner</title>
+                <meta
+                    name="description"
+                    content="Book 1:1 mentorship sessions with industry leaders from top companies. Get expert guidance on interview prep, career growth, and skill building from 500+ verified mentors."
+                />
+                <meta
+                    name="keywords"
+                    content="mentorship, career mentors, industry experts, 1:1 sessions, career guidance, interview preparation, skill development, professional mentors, top companies, career growth, CareerFast"
+                />
+                <meta name="author" content="CareerFast" />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://careerfast.com/mentors" />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="https://careerfast.com/mentors" />
+                <meta property="og:title" content="CareerFast | Find Jobs & Internships - Your Career Growth Partner" />
+                <meta
+                    property="og:description"
+                    content="Book 1:1 mentorship sessions with industry leaders from top companies. Get expert guidance on interview prep, career growth, and skill building."
+                />
+                <meta property="og:image" content="https://careerfast.com/og-image-mentors.jpg" />
+                <meta property="og:site_name" content="CareerFast" />
+                <meta property="og:locale" content="en_US" />
+
+                {/* Twitter */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:url" content="https://careerfast.com/mentors" />
+                <meta name="twitter:title" content="CareerFast | Find Jobs & Internships - Your Career Growth Partner" />
+                <meta
+                    name="twitter:description"
+                    content="Book 1:1 mentorship sessions with industry leaders from top companies. Get expert guidance on interview prep, career growth, and skill building."
+                />
+                <meta name="twitter:image" content="https://careerfast.com/twitter-image-mentors.jpg" />
+
+                {/* Structured Data - JSON-LD */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "WebPage",
+                        "name": "Expert Mentorship - CareerFast",
+                        "url": "https://careerfast.com/mentors",
+                        "description": "Book 1:1 mentorship sessions with industry leaders from top companies. Get expert guidance on interview prep, career growth, and skill building.",
+                        "provider": {
+                            "@type": "Organization",
+                            "name": "CareerFast",
+                            "url": "https://careerfast.com"
+                        }
+                    })}
+                </script>
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "ItemList",
+                        "name": "Top Mentors",
+                        "description": "Industry experts from top companies available for 1:1 mentorship",
+                        "numberOfItems": mentorsData.length,
+                        "itemListElement": mentorsData.map((mentor, index) => ({
+                            "@type": "Person",
+                            "position": index + 1,
+                            "name": mentor.name,
+                            "jobTitle": mentor.title,
+                            "worksFor": {
+                                "@type": "Organization",
+                                "name": mentor.company
+                            },
+                            "url": `https://careerfast.com/mentor/${mentor.id}`
+                        }))
+                    })}
+                </script>
+            </Helmet>
             <Header />
             {/* 1. Hero Section */}
             <section className="mentor-hero-section">
@@ -380,8 +455,9 @@ const MentorList = () => {
                         xs={24}
                         sm={24}
                     >
-                        <div className="need_content_img"><img src={need_content_img}></img></div>
+                        <div className="need_content_img"><img src={need_content_img} alt="Need guidance illustration"></img></div>
                     </Col>
+
                     <Col
                         style={{
                             textAlign: "left",
@@ -470,7 +546,7 @@ const MentorList = () => {
                 <div className="cta-content">
                     <h2>Ready to supercharge your career?</h2>
                     <p>Join thousands of mentee's who have successfully transitioned into their dream roles.</p>
-                    <button className="btn-white">Get Started Today</button>
+                    <button onClick={() => navigate('/job-portal')} className="btn-white">Get Started Today</button>
                 </div>
             </section>
             <Footer />
