@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useParams } from "react-router-dom";
-
-
 import {
   Row,
   Col,
@@ -90,30 +88,17 @@ export default function JobDetails() {
   const [savedJobMap, setSavedJobMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // handled by Helmet
-    fetchJobs();
-  }, []);
-
   const { slug } = useParams();
   const jobId = slug?.split("-").pop();
 
   useEffect(() => {
-    console.log("Job ID from URL:", jobId);
+    if (jobId) {
+      console.log("JobDetails: Fetching job by ID:", jobId);
+      fetchJobs(jobId);
+    }
   }, [jobId]);
 
-  useEffect(() => {
-    if (backendJobs.length > 0 && jobId) {
-      const selectedJob = backendJobs.find(job => job.id.toString() === jobId);
-
-      if (selectedJob) {
-        setPostDetails([transformJob(selectedJob)]);
-        checkIsJobAppliedData(selectedJob.id);
-      } else {
-        console.warn("Job not found with id:", jobId);
-      }
-    }
-  }, [backendJobs, jobId]);
+  // Remove the backendJobs.find useEffect as we now handle it inside fetchJobs
 
   useEffect(() => {
     try {
@@ -143,27 +128,45 @@ export default function JobDetails() {
     }
   }, []);
 
-  const fetchJobs = async () => {
+  const fetchJobs = async (postId) => {
     setLoading(true);
-    const payload = {};
+    setPostDetails([]); // Clear previous to avoid showing wrong data
+    const payload = postId ? { id: postId } : {};
 
     try {
       const response = await getJobPosts(payload);
+      console.log("getJobPosts API Response:", response?.data);
 
       const jobs = response?.data?.data?.data;
-      console.log("getJobPosts response", jobs);
 
       if (Array.isArray(jobs)) {
         setBackendJobs(jobs);
+
+        if (postId) {
+          const selectedJob = jobs.find(job => job.id.toString() === postId);
+          if (selectedJob) {
+            console.log("Job found and transforming:", selectedJob.id);
+            try {
+              const transformed = transformJob(selectedJob);
+              setPostDetails([transformed]);
+            } catch (err) {
+              console.error("Error transforming job details:", err);
+              message.error("Failed to process job details");
+            }
+          } else {
+            console.warn("Requested Job ID not found in API response array:", postId);
+          }
+        }
       } else {
-        console.warn("Unexpected job data format", response);
+        console.warn("Unexpected job data format or no data returned", response);
       }
     } catch (error) {
-      console.error("getJobPosts error", error);
+      console.error("getJobPosts network/api error:", error);
+      message.error("Failed to fetch job details");
     } finally {
       setTimeout(() => {
-        checkIsJobAppliedData();
-        setLoading(false)
+        if (postId) checkIsJobAppliedData(postId);
+        setLoading(false);
       }, 300);
     }
   };
@@ -236,7 +239,7 @@ export default function JobDetails() {
       premium: true,
       urgent: false,
       skills: job.skills,
-      eligibility: job.experience_required?.join(", "),
+      eligibility: Array.isArray(job.experience_required) ? job.experience_required.join(", ") : (job.experience_required || ""),
       status: daysLeft >= 0 ? "Live" : "Expired",
       raw_location: job.work_location,
       raw_workplace_type: job.workplace_type,

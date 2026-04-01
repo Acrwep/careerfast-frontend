@@ -12,7 +12,7 @@ export default function Footer() {
             <div className="footer-logo">
               <img
                 style={{ cursor: "pointer" }}
-                onClick={() => navigate("/job-portal")}
+                onClick={() => navigate("/")}
                 src={logo}
                 alt="Logo"
                 className="main-logo"

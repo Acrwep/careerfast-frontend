@@ -270,7 +270,7 @@ export default function AdminDashboard() {
         setRoleName(loginDetails.role_name);
 
         if (loginDetails.role_id === 2) {
-          navigate("/job-portal");
+          navigate("/");
           return;
         }
       }

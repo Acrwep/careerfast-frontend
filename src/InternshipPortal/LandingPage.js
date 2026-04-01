@@ -205,20 +205,6 @@ export default function InternshipLandingPage() {
     ],
   };
 
-  // Variants for reusability
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 40 },
-    visible: (i = 1) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.2,
-        duration: 0.4,
-        ease: "easeOut",
-      },
-    }),
-  };
-
   const icons = [
     <FaLaptopCode />,
     <FaChartBar />,
@@ -416,7 +402,7 @@ export default function InternshipLandingPage() {
               "@type": "ListItem",
               "position": index + 1,
               "name": cat,
-              "url": `https://careerfast.com/internship-filter?category=${generateSlug(cat)}`
+              "url": `https://careerfast.com/internships/${generateSlug(cat)}`
             }))
           })}
         </script>
@@ -434,24 +420,15 @@ export default function InternshipLandingPage() {
         >
           <motion.div
             className="left-content"
-            initial={{ opacity: 0, x: -60 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
           >
             <div className="header-content">
               <motion.h1
-                initial={{ opacity: 0, y: -30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1 }}
               >
                 Elevate Your Career <br /> Journey
               </motion.h1>
 
               <motion.p
                 className="subtitle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
               >
                 Discover premium opportunities with top-tier companies <br />
                 and unlock your professional potential.
@@ -459,15 +436,10 @@ export default function InternshipLandingPage() {
 
               <motion.div
                 className="button-group"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
               >
                 <motion.button
-                  onClick={() => navigate("/internship-filter?filter=Internship")}
+                  onClick={() => navigate("/internship")}
                   className="primary-btn"
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
                 >
                   <span>Find Internships</span>
                   <svg
@@ -500,8 +472,6 @@ export default function InternshipLandingPage() {
                     }
                   }}
                   className="secondary-btn"
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
                 >
                   <span>Post Internships</span>
                   <svg
@@ -593,7 +563,7 @@ export default function InternshipLandingPage() {
             className="section-header"
             initial="hidden"
             animate="visible"
-            variants={fadeInUp}
+
           >
             <h4>Explore Categories</h4>
             <button onClick={() => navigate("/internship-filter")} className="view-all" style={{ background: "none", border: "none", cursor: "pointer" }}>
@@ -601,21 +571,6 @@ export default function InternshipLandingPage() {
             </button>
           </motion.div>
 
-          <Slider {...sliderSettings}>
-            {category.map((cat, index) => (
-              <motion.div
-                key={index}
-                className="category-card"
-                onClick={() => {
-                  const categorySlug = generateSlug(cat);
-                  navigate(`/job-filter?category=${categorySlug}`);
-                }}
-              >
-                <div className="card-icon">{icons[index % icons.length]}</div>
-                <h5>{cat}</h5>
-              </motion.div>
-            ))}
-          </Slider>
         </div>
       </Col>
 
@@ -681,7 +636,7 @@ export default function InternshipLandingPage() {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
-                  variants={fadeInUp}
+
                 >
                   <Card
                     className="elite-job-card"
@@ -877,7 +832,7 @@ export default function InternshipLandingPage() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                variants={fadeInUp}
+
                 whileHover={{ scale: 1.03 }}
               >
                 <div className="card-header">
@@ -956,7 +911,7 @@ export default function InternshipLandingPage() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
-        variants={fadeInUp}
+
       >
         <Row
           className="need_guidence_row"
@@ -1048,7 +1003,7 @@ export default function InternshipLandingPage() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              variants={fadeInUp}
+
             ><h2>100K+</h2><p>Listed Jobs & Internships</p><div className="company-logos1"><img src={company_logos1} alt="Jobs Counter" /></div></motion.div>
           </Col>
           <Col md={8}>
@@ -1057,7 +1012,7 @@ export default function InternshipLandingPage() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              variants={fadeInUp}
+
             ><h2>25K+</h2><p>Verified Recruiters</p><div className="company-logos2"><img src={company_logos2} alt="Jobs Counter" /></div></motion.div>
           </Col>
           <Col md={8}>
@@ -1066,7 +1021,7 @@ export default function InternshipLandingPage() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              variants={fadeInUp}
+
             ><h2>5.5M+</h2><p>Applications</p><div className="company-logos3"><img src={company_logos3} alt="Jobs Counter" /></div></motion.div>
           </Col>
         </Row>
@@ -1154,7 +1109,7 @@ export default function InternshipLandingPage() {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
-                  variants={fadeInUp}
+
                   custom={index}
                   whileHover={{ y: -2, scale: 1.01 }}
                 >
@@ -1204,7 +1159,7 @@ export default function InternshipLandingPage() {
           </button>
         </div>
         <div className="section-footer">
-          <p>Explore more career resources in our <a href="/job-portal">Careerfast</a></p>
+          <p>Explore more career resources in our <a href="/">Careerfast</a></p>
         </div>
       </div>
 

@@ -24,7 +24,7 @@ button {
   background-color: rgb(101 63 255 / 16%);
 }
 
-.navbar .ant-select-dropdown{
+.navbar .ant-select-dropdown {
   width: 100% !important;
 }
 
@@ -89,9 +89,11 @@ button {
   0% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-15px);
   }
+
   100% {
     transform: translateY(0px);
   }
@@ -171,12 +173,10 @@ button {
 }
 
 .sendOtp:hover {
-  background: linear-gradient(
-    135deg,
-    #7f5af0 0%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      #7f5af0 0%,
+      #5f2eea 50%,
+      #4b1ea0 100%) !important;
 }
 
 .ant-btn:not(:disabled):focus-visible {
@@ -217,12 +217,10 @@ button {
 }
 
 .loginpage_container .ant-btn-variant-solid:hover {
-  background: linear-gradient(
-    135deg,
-    #7f5af0 0%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      #7f5af0 0%,
+      #5f2eea 50%,
+      #4b1ea0 100%) !important;
 }
 
 .ant-form-item-explain-error,
@@ -253,11 +251,13 @@ button {
     left: -25px;
     transform: translateY(0px);
   }
+
   to {
     left: 0px;
     transform: translateY(0);
   }
 }
+
 .ant-btn-variant-solid:hover {
   color: #fff;
   transform: translateY(-2px);
@@ -333,6 +333,7 @@ label::after {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -420,6 +421,7 @@ label::after {
   color: #8d3ffb !important;
   background-color: rgba(141, 63, 251, 0.05);
 }
+
 .nav-link,
 .nav-item {
   border-radius: 8px;
@@ -584,6 +586,22 @@ label::after {
   .navbar-nav {
     gap: 6px !important;
   }
+
+  .footer {
+    padding: 2rem 0 !important;
+  }
+
+  .footer-brand {
+    grid-column: span 6 !important;
+  }
+
+  .footer-newsletter {
+    grid-column: span 6 !important;
+  }
+
+  .footer-grid {
+    gap: 1rem !important;
+  }
 }
 
 /* Footer */
@@ -628,7 +646,7 @@ label::after {
 }
 
 .footer-logo img {
-  height: 2.5rem;
+  height: 2.5rem !important;
   width: auto;
   transition: transform 0.3s ease;
 }
@@ -776,8 +794,15 @@ label::after {
   align-items: center;
 }
 
+@media (max-width: 768px) {
+  .footer-bottom {
+    margin-top: 2rem;
+  }
+}
+
 @media (min-width: 768px) {
   .footer-bottom {
+    margin-top: 2rem;
     flex-direction: row;
     justify-content: space-between;
   }
@@ -878,4 +903,196 @@ label::after {
   align-items: center;
   gap: 4px;
   margin-left: auto;
+}
+
+/* ==========================================================================
+   LOGIN PAGE MOBILE RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .loginpage_container {
+    padding: 40px 60px;
+  }
+}
+
+@media (max-width: 991px) {
+  .loginpage_container .ant-row {
+    display: flex;
+    /* flex-direction: column-reverse !important; */
+    /* Put image on top */
+  }
+.login_form>div:has(.social-button){margin: 16px 0px !important;}
+  .loginpage_container .ant-col-12 {
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+  }
+
+  .login-animation {
+    border-radius: 24px !important;
+    padding: 20px !important;
+    height: auto !important;
+    margin-top: 0px;
+    /* Slight overlap with image */
+    position: relative;
+    z-index: 2;
+  }
+
+  .login_image {
+    height: 300px !important;
+    border-radius: 24px 24px 0 0 !important;
+    margin-bottom: 0;
+    display: none;
+  }
+
+  .login_image img {
+    max-height: 220px;
+  }
+
+  .login_card {
+    padding: 10px !important;
+  }
+
+  .loginpage_container .floating_circle1,
+  .loginpage_container .floating_circle2 {
+    display: none !important;
+  }
+
+  .login-animation .ant-typography {
+    text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .loginpage_container {
+    padding: 30px 15px !important;
+  }
+
+  .login_card h2 {
+    font-size: 22px !important;
+  }
+
+  .tab-label {
+    padding: 0 10px !important;
+    font-size: 14px;
+  }
+
+  .login-animation .ant-card-body {
+    padding: 0px;
+  }
+}
+
+@media (max-width: 575px) {
+  .loginpage_container {
+    padding: 10px 10px !important;
+  }
+
+  .login_image {
+    height: 220px !important;
+  }
+
+  .login-animation {
+    padding: 15px 5px !important;
+  }
+
+  .social-button {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .premium-button {
+    font-size: 14px !important;
+    margin-top: 0px !important;
+  }
+
+  .ant-tabs-nav-list {
+    width: 100%;
+  }
+
+  .ant-tabs-tab {
+    margin: 0 !important;
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* ==========================================================================
+   DESIGN CORRECTIONS & POLISH
+   ========================================================================== */
+
+/* Fix Social Login Buttons Layout */
+.login_form>div:has(.social-button) {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 24px 0 16px 0 !important;
+  width: 100% !important;
+}
+
+/* Hide redundant custom Google button (first circular button) since official GoogleLogin is present */
+.login_form .social-button:nth-of-type(1) {
+  display: none !important;
+}
+
+/* Style for Facebook and Instagram buttons */
+.social-button {
+  width: 44px !important;
+  height: 44px !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.2s ease !important;
+}
+
+.social-button:hover {
+  background-color: #f9fafb !important;
+  border-color: #d1d5db !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Support for standard Google button width */
+.login_form>div>div:first-child:has(iframe) {
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .login_form>div:has(.social-button) {
+    gap: 10px !important;
+  }
+
+  /* Ensure the wide Google button and other icons wrap nicely */
+  .login_form>div:has(.social-button)>div:first-child {
+    margin-bottom: 5px;
+    width: 50%;
+  }
+
+  .loginpage_container .ant-btn-variant-solid {
+    height: 40px !important;
+  }
+}
+
+/* Polish Sign Up Text */
+.login_form div[style*="text-align: center"] {
+  margin-top: 10px;
+}
+
+.login_form .ant-typography-secondary {
+  display: block;
+  margin-top: 8px;
+}
+
+/* Polish Tabs */
+.ant-tabs-nav::before {
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+
+/* Premium Form Feel */
+.login_card h2 {
+  letter-spacing: -0.5px;
 }

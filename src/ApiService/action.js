@@ -932,7 +932,7 @@ export const sendNotification = async () => {
       {
         title: "New Job Post Created 🚀",
         body: "Check out the job post details and apply now!",
-        link: "https://careerfast.com/job-portal",
+        link: "https://careerfast.com/",
         icon: "/favicon.png",
       }
     );

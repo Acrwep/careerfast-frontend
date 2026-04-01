@@ -2,6 +2,7 @@
 body {
   font-family: "Inter", sans-serif !important;
 }
+
 .profile-details-container {
   max-width: 1100px;
   margin: 0 auto;
@@ -19,6 +20,7 @@ body {
 .from-group {
   width: 100%;
 }
+
 .ant-select-multiple .ant-select-selection-wrap {
   align-self: baseline;
 }
@@ -70,14 +72,11 @@ body {
   place-content: center;
 }
 
-.ant-steps
-  .ant-steps-item-finish.ant-steps-item-custom
-  .ant-steps-item-icon
-  > .ant-steps-icon {
+.ant-steps .ant-steps-item-finish.ant-steps-item-custom .ant-steps-item-icon>.ant-steps-icon {
   color: #8d3ffb;
 }
 
-.ant-select-selection-item-remove > .anticon {
+.ant-select-selection-item-remove>.anticon {
   color: #4300ff !important;
 }
 
@@ -227,25 +226,15 @@ body {
   box-shadow: 0 0 0 2px rgba(141, 63, 251, 0.1) !important;
 }
 
-.ant-picker-dropdown
-  .ant-picker-cell-in-view.ant-picker-cell-range-start:not(
-    .ant-picker-cell-disabled
-  )
-  .ant-picker-cell-inner {
-  background-color: #8d3ffb !important;
-}
-.ant-picker-dropdown
-  .ant-picker-cell-in-view.ant-picker-cell-range-end:not(
-    .ant-picker-cell-disabled
-  )
-  .ant-picker-cell-inner {
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-range-start:not(.ant-picker-cell-disabled) .ant-picker-cell-inner {
   background-color: #8d3ffb !important;
 }
 
-.ant-picker-dropdown
-  .ant-picker-cell-in-view.ant-picker-cell-in-range:not(
-    .ant-picker-cell-disabled
-  ):before {
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-range-end:not(.ant-picker-cell-disabled) .ant-picker-cell-inner {
+  background-color: #8d3ffb !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-in-range:not(.ant-picker-cell-disabled):before {
   background-color: #ede6ff !important;
 }
 
@@ -300,20 +289,15 @@ body {
   box-shadow: 0 0 0 2px rgb(251 63 63 / 20%) !important;
 }
 
-.ant-picker-dropdown
-  .ant-picker-cell-in-view.ant-picker-cell-selected:not(
-    .ant-picker-cell-disabled
-  )
-  .ant-picker-cell-inner {
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-selected:not(.ant-picker-cell-disabled) .ant-picker-cell-inner {
   background-color: #5f2eea !important;
 }
+
 .ant-form-item {
   margin-bottom: 0px;
 }
 
-.ant-picker-dropdown
-  .ant-picker-cell-in-view.ant-picker-cell-today
-  .ant-picker-cell-inner::before {
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
   border: 1px solid #5f2eea !important;
 }
 
@@ -417,12 +401,10 @@ body {
 }
 
 .add-btn:hover {
-  background: linear-gradient(
-    135deg,
-    #7f5af0 10%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      #7f5af0 10%,
+      #5f2eea 50%,
+      #4b1ea0 100%) !important;
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(93, 72, 192, 0.4), 0 4px 6px rgba(0, 0, 0, 0.1);
   color: #fff !important;
@@ -437,10 +419,7 @@ body {
   color: #8d3ffb !important;
 }
 
-.ant-steps-item-finish
-  > .ant-steps-item-container
-  > .ant-steps-item-content
-  > .ant-steps-item-title::after {
+.ant-steps-item-finish>.ant-steps-item-container>.ant-steps-item-content>.ant-steps-item-title::after {
   background-color: #8d3ffb !important;
 }
 
@@ -457,7 +436,7 @@ body {
   cursor: pointer;
 }
 
-.ant-avatar > img {
+.ant-avatar>img {
   width: inherit;
   height: auto;
   object-fit: cover;
@@ -465,12 +444,10 @@ body {
 }
 
 #upload-input:hover .edit-btn {
-  background: linear-gradient(
-    135deg,
-    #7f5af0 10%,
-    #5f2eea 50%,
-    #4b1ea0 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      #7f5af0 10%,
+      #5f2eea 50%,
+      #4b1ea0 100%) !important;
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(93, 72, 192, 0.4), 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -549,7 +526,7 @@ body {
 }
 
 /* Form Labels */
-.post_jobs_section .ant-form-item-label > label {
+.post_jobs_section .ant-form-item-label>label {
   font-size: 15px !important;
   font-weight: 600 !important;
   color: #333 !important;
@@ -571,9 +548,9 @@ body {
   content: "";
   position: absolute;
   left: 0;
-  top: 35%;
+  top: 40%;
   transform: translateY(-50%);
-  height: 60%;
+  height: 100%;
   width: 4px;
   background: linear-gradient(to bottom, #6a00ff, #a100ff);
   border-radius: 4px;
@@ -648,11 +625,9 @@ body {
   border-radius: 30px;
   padding: 12px 24px;
   font-size: 15px;
-  background: linear-gradient(
-    135deg,
-    rgba(106, 0, 255, 0.08),
-    rgba(161, 0, 255, 0.05)
-  );
+  background: linear-gradient(135deg,
+      rgba(106, 0, 255, 0.08),
+      rgba(161, 0, 255, 0.05));
   color: #6a00ff;
   font-weight: 600;
   box-shadow: 0 4px 16px rgba(106, 0, 255, 0.1);
@@ -938,13 +913,13 @@ body {
   padding: 16px;
 }
 
-.other_benifits .ant-card-body > div {
+.other_benifits .ant-card-body>div {
   font-size: 28px;
   margin-bottom: 12px;
   color: #6a00ff;
 }
 
-.other_benifits .ant-card-body > .ant-typography {
+.other_benifits .ant-card-body>.ant-typography {
   font-size: 14px;
   font-weight: 500;
   color: #444;
@@ -1270,11 +1245,9 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0.2),
-    rgba(255, 255, 255, 0)
-  );
+  background: linear-gradient(to right,
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0));
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -1316,13 +1289,16 @@ body {
 }
 
 @keyframes loadingDots {
+
   0%,
   20% {
     content: ".";
   }
+
   40% {
     content: "..";
   }
+
   60%,
   100% {
     content: "...";
@@ -1334,6 +1310,7 @@ body {
     transform: translateY(20px);
     opacity: 0;
   }
+
   100% {
     transform: translateY(0);
     opacity: 1;
@@ -1365,6 +1342,7 @@ body {
   font-weight: 500;
   margin-bottom: 14px;
 }
+
 /* Responsive Adjustments */
 @media (max-width: 1200px) {
   .post_jobs_section {
@@ -1382,7 +1360,7 @@ body {
   }
 
   .guideline_right {
-    padding: 32px 24px;
+    padding: 32px 0px 0px;
   }
 
   .job_nature_button,
@@ -1402,7 +1380,9 @@ body {
 @media (max-width: 768px) {
   .post_jobs_section {
     padding: 24px;
-    margin: 20px;
+    margin: 0px !important;
+    margin-top: 40px !important;
+    margin-bottom: 40px !important;
   }
 
   .section-header {
@@ -1416,6 +1396,38 @@ body {
   .profile-avatar {
     width: 100px;
     height: 100px;
+  }
+
+  .job_nature {
+    gap: 7px !important;
+    flex-wrap: wrap !important;
+    flex-direction: column !important;
+  }
+
+  .job_nature strong {
+    font-size: 20px;
+  }
+
+  .alert_message {
+    padding: 4px 8px;
+    width: 100%;
+  }
+
+  .other_benifits .ant-card {
+    width: 100% !important;
+  }
+
+  .job_posting_submit .button-group {
+    justify-content: center !important;
+    margin: 30px 0px 0px;
+  }
+
+  .post_events_form {
+    padding: 0px !important;
+  }
+
+  .post_events_form h3 {
+    font-size: 22px !important;
   }
 }
 

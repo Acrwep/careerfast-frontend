@@ -649,7 +649,7 @@ export default function PostJobs() {
       console.log("📤 Sending job post payload:", payload);
       const response = await createJobPost(payload);
       message.success("Posted Successfully.");
-      navigate("/job-portal");
+      navigate("/");
     } catch (error) {
       console.error("❌ Error posting job:", error);
 
@@ -1159,7 +1159,7 @@ export default function PostJobs() {
               <div style={{ marginTop: 18, marginBottom: 7 }} className="form-group">
                 <p style={{ fontSize: 15, fontWeight: 500, color: "#333", marginBottom: 5 }}><span style={{ color: "red" }}>*</span> Select Category</p>
                 <Select
-                  mode="multiple"
+                  mode="tags"
                   className="ant-select ant-select-in-form-item premium-input main_select"
                   showSearch
                   placeholder="Select or add multiple categories"
@@ -1168,7 +1168,7 @@ export default function PostJobs() {
                   options={jobCategoryOptions}
                   onChange={(value) => {
                     setJobCategory(value);
-                    // Add new custom categories to options
+                    // Add new custom categories to options visually
                     const newCategories = value.filter(
                       (v) => !jobCategoryOptions.some((opt) => opt.value === v)
                     );
@@ -1179,14 +1179,6 @@ export default function PostJobs() {
                       }));
                       setJobCategoryOptions((prev) => [...prev, ...newOptions]);
                     }
-                    // Save custom categories to localStorage
-                    let customCats = JSON.parse(localStorage.getItem("customCategories") || "[]");
-                    newCategories.forEach((cat) => {
-                      if (!customCats.includes(cat)) {
-                        customCats.push(cat);
-                      }
-                    });
-                    localStorage.setItem("customCategories", JSON.stringify(customCats));
 
                     if (setJobCategoryError) {
                       setJobCategoryError(value.length > 0 ? "" : "Please select category");

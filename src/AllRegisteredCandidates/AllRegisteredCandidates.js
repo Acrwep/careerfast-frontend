@@ -50,6 +50,7 @@ import { getUsers, getUserProfile } from "../ApiService/action";
 import { FaBehance, FaDribbble, FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa6";
 import Footer from "../Footer/Footer";
 import Header from "../Header/Header";
+import "../css/AllRegisteredCandidates.css";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -341,20 +342,8 @@ export default function AllRegisteredCandidates() {
         <>
             <Header />
             <Layout style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)" }}>
-                <Layout style={{ padding: 24 }}>
-                    <div
-                        style={{
-                            borderRadius: 16,
-                            background: "linear-gradient(135deg, #fff 0%, #fafafa 100%)",
-                            padding: "15px 32px",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                            border: "1px solid rgba(0,0,0,0.03)",
-                            marginBottom: 24,
-                        }}
-                    >
+                <Layout className="candidates-main-layout">
+                    <div className="candidates-header-container">
                         <div style={{ display: "grid" }}>
                             <Title level={3} style={{ margin: 0, color: "#1a1a1a", fontWeight: 700 }}>
                                 Candidate Management
@@ -379,7 +368,7 @@ export default function AllRegisteredCandidates() {
                     </div>
 
                     {/* Statistics */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+                    <div className="candidates-stats-grid">
                         <Card>
                             <Statistic title="Total Candidates" value={statsData.total} valueStyle={{ color: "#1890ff" }} prefix={<UserOutlined />} />
                         </Card>
@@ -408,23 +397,12 @@ export default function AllRegisteredCandidates() {
                             <Space
                                 wrap
                                 align="center"
-                                style={{
-                                    width: "100%",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    flexWrap: "wrap",
-                                    rowGap: 20,
-                                    padding: "24px",
-                                    background: "linear-gradient(135deg, rgb(236 230 255) 0%, rgb(225 221 255) 100%)",
-                                    borderRadius: 20,
-                                    border: "1px solid #e8edff",
-                                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.06)",
-                                    marginBottom: 24,
-                                }}
+                                className="candidates-filter-premium"
                             >
                                 {/* 🔍 Premium Search */}
-                                <div style={{ position: "relative" }}>
+                                <div className="candidates-search-container">
                                     <Input
+                                        className="candidates-search-input"
                                         prefix={
                                             <SearchOutlined
                                                 style={{
@@ -437,37 +415,13 @@ export default function AllRegisteredCandidates() {
                                         allowClear
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        style={{
-                                            width: 380,
-                                            height: 48,
-                                            borderRadius: 16,
-                                            paddingLeft: 16,
-                                            background: "#ffffff",
-                                            fontSize: 14,
-                                            fontWeight: 400,
-                                            boxShadow: "0 2px 12px rgba(102, 126, 234, 0.08)",
-                                            transition: "all 0.3s ease",
-                                        }}
                                     />
-                                    <div style={{
-                                        position: "absolute",
-                                        top: -8,
-                                        left: 12,
-                                        background: "#667eea",
-                                        color: "white",
-                                        fontSize: 10,
-                                        fontWeight: 600,
-                                        padding: "2px 8px",
-                                        borderRadius: 10,
-                                        letterSpacing: 0.5,
-                                    }}>
-                                        QUICK SEARCH
-                                    </div>
                                 </div>
 
                                 <Space wrap size={30}>
                                     {/* Experience Range Filter */}
                                     <div
+                                        className="candidates-experience-filter"
                                         style={{
                                             background: "white",
                                             padding: "12px 20px",
@@ -532,7 +486,7 @@ export default function AllRegisteredCandidates() {
                                     </div>
 
                                     {/* User Type Filter */}
-                                    <div style={{ position: "relative" }}>
+                                    <div className="candidates-type-filter" style={{ position: "relative" }}>
                                         <Select
                                             value={userTypeFilter}
                                             onChange={setUserTypeFilter}
@@ -562,6 +516,7 @@ export default function AllRegisteredCandidates() {
 
                                     {/* Reset Button - Premium Style */}
                                     <Button
+                                        className="candidates-reset-btn"
                                         onClick={() => {
                                             setSearchTerm("");
                                             setStatusFilter("all");
@@ -602,6 +557,7 @@ export default function AllRegisteredCandidates() {
                                 <Table
                                     columns={columns}
                                     dataSource={filteredUsers}
+                                    scroll={{ x: 'max-content' }}
                                     pagination={{
                                         position: ["bottomRight"],
                                         showSizeChanger: true,
@@ -620,7 +576,7 @@ export default function AllRegisteredCandidates() {
                         <Drawer
                             className="userDetails_drawer"
                             closable
-                            width={900}
+                            width={window.innerWidth < 768 ? "100%" : 900}
                             title={
                                 <div className="drawer-title">
                                     <Avatar

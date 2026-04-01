@@ -204,7 +204,7 @@ export default function Blogs() {
                     )}
                 </Row>
                 <div className="section-footer">
-                    <p>Explore more career resources in our <a href="/job-portal">Careerfast</a></p>
+                    <p>Explore more career resources in our <a href="/">Careerfast</a></p>
                 </div>
             </div>
         </div>

@@ -206,7 +206,7 @@ const LoginPage = () => {
       const response = await isProfileUpdated(payload);
       console.log("Redirecting", response);
       if (response?.data?.data === true) {
-        navigate("/job-portal");
+        navigate("/");
       } else {
         navigate("/profiledetails");
       }
@@ -347,7 +347,7 @@ const LoginPage = () => {
       // check profile status
       const profileResponse = await isProfileUpdated({ email: userData.email });
       if (profileResponse?.data?.data === true) {
-        navigate("/job-portal");
+        navigate("/");
       } else {
         navigate("/profiledetails");
       }

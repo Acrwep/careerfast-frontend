@@ -18,9 +18,10 @@ import {
   CrownFilled,
   ThunderboltFilled,
 } from "@ant-design/icons";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import Header from "../Header/Header";
+import Footer from "../Footer/Footer";
 import CommonSelectField from "../Common/CommonSelectField";
 
 import { getAllCourses, getJobCategoryData, getJobPosts } from "../ApiService/action";
@@ -58,8 +59,10 @@ const jobNature = ["Job", "Internship", "Scholarship"];
 export default function JobFilter() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { filterSlug } = useParams();
   const [courses, setCourses] = useState([]);
   const [categorySearch, setCategorySearch] = useState("");
+  const lastSlugRef = React.useRef(""); // Track the last filterSlug for reset logic
   /** -------------------- STATE -------------------- **/
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -68,6 +71,8 @@ export default function JobFilter() {
   // Data
   const [jobs, setJobs] = useState([]);
   const [activeJob, setActiveJob] = useState(null);
+  const fetchRequestId = React.useRef(0);
+  const skipUrlSyncRef = React.useRef(false);
   const [jobCategoryOptions, setJobCategoryOptions] = useState([]);
 
   // Pagination
@@ -131,49 +136,154 @@ export default function JobFilter() {
             value: item?.category_name || "",
           })) || [];
 
-        const custom = JSON.parse(localStorage.getItem("customCategories") || "[]")
-          .filter(Boolean)
-          .map((c) => ({ label: c, value: c }));
-
-        const merged = [
-          ...backend,
-          ...custom.filter((c) => !backend.some((b) => b.value === c.value)),
-        ].filter((i) => i.label?.trim());
-
-        merged.sort((a, b) =>
+        backend.sort((a, b) =>
           String(a.label).localeCompare(String(b.label), "en", { sensitivity: "base" })
         );
 
-        setJobCategoryOptions(merged);
+        setJobCategoryOptions(backend);
       } catch {
         // silent
       }
     })();
   }, []);
 
-  // URL preselects
+  // 1. URL --> State (Standardized parsing)
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const filterType = params.get("filter");
-    const categorySlug = params.get("category");
-
-    if (filterType && jobNature.includes(filterType)) {
-      setJobNatureSelected(filterType);
+    if (skipUrlSyncRef.current) {
+      skipUrlSyncRef.current = false;
+      return;
     }
+    let nature = "Job";
+    let locations = [];
+    let categories = [];
+    let types = [];
+    let userType = "";
 
-    if (categorySlug && jobCategoryOptions.length) {
-      const matched = jobCategoryOptions.find(
-        (c) => generateSlug(c.value) === categorySlug
-      );
-      if (matched) {
-        setSelectedCategories([matched.value]);
+    // Parse Nature
+    if (location.pathname.includes("/internship")) nature = "Internship";
+    else if (location.pathname.includes("/scholarship")) nature = "Scholarship";
+
+    // Parse Slug
+    if (filterSlug) {
+      const cityMap = {
+        "bangalore": "Bangalore", "delhi": "Delhi", "hyderabad": "Hyderabad",
+        "gurgaon": "Gurgaon", "kolkata": "Kolkata", "mumbai": "Mumbai", "chennai": "Chennai"
+      };
+
+      if (filterSlug === "work-from-home") {
+        types = ["Work From Home"];
+      } else if (cityMap[filterSlug.toLowerCase()]) {
+        // Direct city slug: /jobs/bangalore → Bangalore
+        const cityVal = allCities.find(c => c.value.toLowerCase() === filterSlug.toLowerCase())?.value || cityMap[filterSlug.toLowerCase()];
+        if (cityVal) locations = [cityVal];
+      } else if (filterSlug.includes("-in-")) {
+        // Legacy slug: /jobs/jobs-in-bangalore → Bangalore
+        const parts = filterSlug.split("-in-");
+        const cityKey = parts[parts.length - 1];
+        const cityVal = allCities.find(c => c.value.toLowerCase() === cityKey)?.value || cityMap[cityKey];
+        if (cityVal) locations = [cityVal];
+      } else if (filterSlug.includes("fresher")) {
+        userType = "Fresher";
+        if (filterSlug.includes("-in-")) {
+          const cityKey = filterSlug.split("-in-")[1];
+          const cityVal = allCities.find(c => c.value.toLowerCase() === cityKey)?.value || cityMap[cityKey];
+          if (cityVal) locations = [cityVal];
+        } else if (filterSlug.includes("work-from-home")) {
+          types = ["Work From Home"];
+        }
+      } else if (filterSlug.endsWith("-jobs")) {
+        const catKey = filterSlug.replace("-jobs", "");
+        if (catKey === "it") categories = ["IT & Software"];
+        else if (catKey === "fresher") userType = "Fresher";
+        else if (catKey === "full-stack-development") categories = ["Full Stack", "Full Stack Development"];
+        else if (catKey === "devops-cloud-computing") categories = ["DevOps", "DevOps & Cloud Computing"];
+        else if (catKey === "data-science-analytics") categories = ["Data Science", "Data Science & Analytics"];
+        else if (catKey === "frontend-development") categories = ["Frontend", "Frontend Development"];
+        else if (catKey === "hr-analytics") categories = ["HR Analytics"];
+        else if (catKey === "software-development") categories = ["Software Development"];
+        else if (catKey === "ui-ux-design") categories = ["UI / UX", "UI/UX Design"];
+        else {
+          const matched = jobCategoryOptions.find(c => generateSlug(c.value) === catKey);
+          if (matched) categories = [matched.value];
+        }
+      } else {
+        // Try matching as a city from the full cities list
+        const cityVal = allCities.find(c => c.value.toLowerCase() === filterSlug.toLowerCase())?.value;
+        if (cityVal) locations = [cityVal];
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.search, jobNatureOptionsToKey(jobCategoryOptions)]);
+
+    // Apply only if changed or on initial load
+    const isFirstTime = lastSlugRef.current === "";
+    const urlChanged = lastSlugRef.current !== (filterSlug || location.pathname);
+
+    if (isFirstTime || urlChanged) {
+      setJobNatureSelected(nature);
+      setSelectedLocations(locations);
+      setSelectedCategories(categories);
+      setSelectedTypes(types);
+      if (userType) setSelectedUserType(userType);
+      
+      // Reset deep filters on first load or nature change
+      if (isFirstTime || lastSlugRef.current.split("/")[1] !== location.pathname.split("/")[1]) {
+        setSelectedStatus("");
+        setSelectedWorkingDays("");
+        setSelectedSort(null);
+      }
+      lastSlugRef.current = filterSlug || location.pathname;
+    }
+  }, [filterSlug, location.pathname, allCities, jobCategoryOptions]);
+
+  // 2. State --> URL Sync
+  const syncFilterUrl = (overrides = {}) => {
+    const nature = overrides.hasOwnProperty('nature') ? overrides.nature : jobNatureSelected;
+    const locations = overrides.hasOwnProperty('locations') ? overrides.locations : selectedLocations;
+    const categories = overrides.hasOwnProperty('categories') ? overrides.categories : selectedCategories;
+    const types = overrides.hasOwnProperty('types') ? overrides.types : selectedTypes;
+    const userType = overrides.hasOwnProperty('userType') ? overrides.userType : selectedUserType;
+
+    // Default to "Job" if nature is empty (so URL still works)
+    const effectiveNature = nature || "Job";
+    const baseMap = { "Job": "jobs", "Internship": "internship", "Scholarship": "scholarship" };
+    const base = baseMap[effectiveNature] || "jobs";
+    
+    let slug = "";
+    const topCities = ["Bangalore", "Delhi", "Hyderabad", "Gurgaon", "Kolkata", "Mumbai", "Chennai"];
+
+    if (userType === "Fresher") {
+      if (locations.length === 1 && topCities.includes(locations[0])) {
+        slug = `fresher-jobs-in-${generateSlug(locations[0])}`;
+      } else {
+        slug = "fresher-jobs";
+      }
+    } else if (userType === "Experienced") {
+      slug = "experienced-jobs";
+    } else if (userType === "College Students") {
+      slug = "college-students-jobs";
+    } else if (types.includes("Work From Home")) {
+      slug = "work-from-home";
+    } else if (locations.length === 1 && topCities.includes(locations[0])) {
+      slug = generateSlug(locations[0]);
+    } else if (categories.length === 1) {
+      slug = `${generateSlug(categories[0])}-jobs`;
+    }
+    
+    if (slug) {
+      if (location.pathname !== `/${base}/${slug}`) {
+        skipUrlSyncRef.current = true;
+        navigate(`/${base}/${slug}`, { replace: true });
+      }
+    } else {
+      if (location.pathname !== `/${base}`) {
+        skipUrlSyncRef.current = true;
+        navigate(`/${base}`, { replace: true });
+      }
+    }
+  };
 
   // Fetch jobs when filters change (reset to page 1)
   useEffect(() => {
+    if (!jobNatureSelected) return;
     setPage(1);
     setJobs([]);
     fetchJobs(1, true);
@@ -188,6 +298,7 @@ export default function JobFilter() {
     jobNatureSelected,
     selectedUserType,
   ]);
+
 
   // Infinite scroll listener
   useEffect(() => {
@@ -215,20 +326,18 @@ export default function JobFilter() {
   }
 
   const payload = useMemo(
-    () => ({
-      job_categories: selectedCategories,
-      workplace_type: selectedTypes,
-      work_location: selectedLocations,
-      working_days: selectedWorkingDays,
-      status: selectedStatus,
-      job_nature: jobNatureSelected,
-      salary_sort:
-        selectedSort === "highToLow"
-          ? "high_to_low"
-          : selectedSort === "lowToHigh"
-            ? "low_to_high"
-            : "",
-    }),
+    () => {
+      const p = {};
+      if (selectedCategories.length > 0) p.job_categories = selectedCategories;
+      if (selectedTypes.length > 0) p.workplace_type = selectedTypes;
+      // NOTE: work_location is filtered client-side to avoid production backend JSON_CONTAINS crash
+      if (selectedWorkingDays) p.working_days = selectedWorkingDays;
+      if (selectedStatus) p.status = selectedStatus;
+      if (jobNatureSelected) p.job_nature = jobNatureSelected;
+      if (selectedSort === "highToLow") p.salary_sort = "high_to_low";
+      else if (selectedSort === "lowToHigh") p.salary_sort = "low_to_high";
+      return p;
+    },
     [
       selectedCategories,
       selectedTypes,
@@ -268,17 +377,11 @@ export default function JobFilter() {
       level: job.experience_type,
       salary:
         job.salary_type === "Fixed"
-          ? `${getCurrencySymbol(job.currency)} ${job.min_salary || "N/A"}`
+          ? `${getCurrencySymbol(job.currency)}${job.min_salary || "N/A"} LPA`
           : job.salary_type === "Range"
-            ? `${getCurrencySymbol(job.currency)} ${job.min_salary || "N/A"} - ${getCurrencySymbol(job.currency)} ${job.max_salary || "N/A"}`
+            ? `${getCurrencySymbol(job.currency)}${job.min_salary || "N/A"} - ${job.max_salary || "N/A"} LPA`
             : "Negotiable",
-      location: (() => {
-        const locations = Array.isArray(job.work_location)
-          ? job.work_location.join(", ")
-          : "";
-
-        return `${job.workplace_type}${locations ? ` • ${locations}` : ""}`;
-      })(),
+      location: Array.isArray(job.work_location) ? job.work_location.join(", ") : job.work_location,
       diversity_hiring: job.diversity_hiring || [],
       job_category: job.job_category,
       type: job.job_nature,
@@ -300,47 +403,107 @@ export default function JobFilter() {
     };
   };
 
-  const fetchJobs = async (pageNum = 1, isReset = false) => {
+  const fetchJobs = async (passedPage = 1, isReset = false) => {
     if (isReset) {
       setLoading(true);
+      setJobs([]);
+      setPage(1);
     } else {
       setLoadingMore(true);
     }
 
+    const requestId = ++fetchRequestId.current;
+    
     try {
-      const paginatedPayload = {
-        ...payload,
-        page: pageNum,
-        limit: 20,
-      };
+      let aggregatedList = [];
+      let currentPage = passedPage;
+      let hasMoreOnBackend = true;
+      let meta = {};
+      let attempts = 0;
+      // Only these filters are NOT handled by the backend correctly (location filter is broken on production backend)
+      const isFrontendFilteringRequired = selectedLocations.length > 0 || !!selectedUserType;
 
-      const res = await getJobPosts(paginatedPayload);
-      let raw = res?.data?.data?.data || [];
-      const meta = res?.data?.data?.meta || {};
+      // Aggregation Loop for Initial Filter Results or Loading More
+      // When filtering client-side, we scan multiple pages to provide a "Single Load" experience with a better count.
+      while (true) {
+        const paginatedPayload = {
+          ...payload,
+          page: currentPage,
+          limit: 20,
+        };
 
-      if (selectedUserType) {
-        const filterKey = selectedUserType.toLowerCase();
-        raw = raw.filter((j) =>
-          (j.experience_type || "").toLowerCase().includes(filterKey)
-        );
+        const res = await getJobPosts(paginatedPayload);
+        if (requestId !== fetchRequestId.current) return;
+
+        let raw = res?.data?.data?.data || [];
+        meta = res?.data?.data?.meta || {};
+        hasMoreOnBackend = meta.hasMore || false;
+
+        // NOTE: We trust the backend for job_nature, categories, workplace_type, status, etc.
+        // We only apply client-side filters for things the backend doesn't handle (locations, experience_type).
+
+        if (selectedLocations.length > 0) {
+          raw = raw.filter((j) => {
+            const jobLocs = Array.isArray(j.work_location)
+              ? j.work_location
+              : typeof j.work_location === "string"
+                ? (() => { try { return JSON.parse(j.work_location); } catch { return [j.work_location]; } })()
+                : [];
+            return selectedLocations.some((sel) =>
+              jobLocs.some((loc) => {
+                const l = String(loc).toLowerCase();
+                const s = String(sel).toLowerCase();
+                return l === s || l.includes(`${s},`) || l.includes(`, ${s}`) || l.startsWith(`${s}-`) || l.includes(`- ${s}`);
+              })
+            );
+          });
+        }
+
+        if (selectedUserType) {
+          const filterKey = selectedUserType.toLowerCase();
+          raw = raw.filter((j) => (j.experience_type || "").toLowerCase().includes(filterKey));
+        }
+
+        // Backend payload handles workplace_type and categories, so we skip redundant client-filtering here.
+
+        const currentBatchList = raw.map(transformJob);
+        aggregatedList = [...aggregatedList, ...currentBatchList];
+
+        // Break logic:
+        // 1. If not client filtering, just take 1 page.
+        // 2. If we found at least 15 jobs, that's a good "Single Load" batch.
+        // 3. If we've scanned 5 pages and haven't hit 15, stop anyway to avoid long wait.
+        // 4. If there's no more data on backend, stop.
+        attempts++;
+        if (!isFrontendFilteringRequired || aggregatedList.length >= 15 || attempts >= 5 || !hasMoreOnBackend) {
+          break;
+        }
+        currentPage++;
       }
 
-      const list = raw.map(transformJob);
+      setPage(currentPage);
+      setHasMore(hasMoreOnBackend);
 
       if (isReset) {
-        setJobs(list);
-        setActiveJob(list[0] || null);
+        setJobs(aggregatedList);
+        setActiveJob(aggregatedList[0] || null);
+        // Use backend total if we didn't filter the list client-side, otherwise use the aggregated count
+        setTotalJobs(isFrontendFilteringRequired ? aggregatedList.length : (meta.total || aggregatedList.length));
       } else {
-        setJobs((prevJobs) => [...prevJobs, ...list]);
+        setJobs((prevJobs) => {
+          const combined = [...prevJobs, ...aggregatedList];
+          if (isFrontendFilteringRequired) setTotalJobs(combined.length);
+          return combined;
+        });
       }
 
-      setHasMore(meta.hasMore || false);
-      setTotalJobs(meta.total || 0);
+      if (!isFrontendFilteringRequired) {
+        setTotalJobs(meta.total || aggregatedList.length);
+      }
+
     } catch (err) {
       console.error("Fetch jobs error:", err);
-      if (isReset) {
-        setJobs([]);
-      }
+      if (isReset) setJobs([]);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -353,6 +516,39 @@ export default function JobFilter() {
       setPage(nextPage);
       fetchJobs(nextPage, false);
     }
+  };
+
+  const getFilterTitle = () => {
+    const natureSuffix = jobNatureSelected === "Job" ? "Jobs" : jobNatureSelected === "Internship" ? "Internships" : jobNatureSelected === "Scholarship" ? "Scholarships" : "Opportunities";
+    
+    // Slug based titles
+    if (filterSlug) {
+      if (filterSlug === "work-from-home") return `Work From Home ${natureSuffix}`;
+      if (filterSlug.includes("bangalore")) return `${natureSuffix} in Bangalore`;
+      if (filterSlug.includes("delhi")) return `${natureSuffix} in Delhi`;
+      if (filterSlug.includes("hyderabad")) return `${natureSuffix} in Hyderabad`;
+      if (filterSlug.includes("gurgaon")) return `${natureSuffix} in Gurgaon`;
+      if (filterSlug.includes("kolkata")) return `${natureSuffix} in Kolkata`;
+      if (filterSlug.includes("mumbai")) return `${natureSuffix} in Mumbai`;
+      if (filterSlug.includes("chennai")) return `${natureSuffix} in Chennai`;
+      if (filterSlug === "it-jobs") return `IT & Software ${natureSuffix}`;
+      if (filterSlug === "marketing-jobs") return `Marketing ${natureSuffix}`;
+      if (filterSlug === "fresher-jobs") return `Fresher ${natureSuffix}`;
+    }
+    
+    // State based fallbacks
+    if (selectedLocations.length === 1) return `${natureSuffix} in ${selectedLocations[0]}`;
+    if (selectedCategories.length === 1) return `${selectedCategories[0]} ${natureSuffix}`;
+    if (jobNatureSelected) {
+      const plural = jobNatureSelected === "Job" ? "Jobs" : jobNatureSelected === "Internship" ? "Internships" : "Scholarships";
+      let title = `${jobNatureSelected} Opportunities`;
+      if (selectedLocations.length === 1) {
+        title += ` in ${selectedLocations[0]}`;
+      }
+      return title;
+    }
+    
+    return `Latest ${natureSuffix}`;
   };
 
   /** -------------------- SIDEBAR FILTER UI (UNCHANGED) -------------------- **/
@@ -391,14 +587,10 @@ export default function JobFilter() {
           setSelectedStatus("");
           setSelectedSort(null);
           setSelectedUserType("");
-          setJobNatureSelected("");
-          const params = new URLSearchParams(location.search);
-          params.delete("filter");
-          params.delete("category");
-          navigate(
-            { pathname: location.pathname, search: params.toString() ? `?${params}` : "" },
-            { replace: true }
-          );
+          // setJobNatureSelected("Job"); // REMOVED - maintain current nature
+          const baseMap = { "Job": "jobs", "Internship": "internship", "Scholarship": "scholarship" };
+          const base = baseMap[jobNatureSelected] || "jobs";
+          navigate(`/${base}`, { replace: true });
         }}
         icon={<RefreshCcwIcon size={17} />}
       >
@@ -416,16 +608,8 @@ export default function JobFilter() {
             <span
               className="clear-filter"
               onClick={() => {
-                setJobNatureSelected("");
-                const params = new URLSearchParams(location.search);
-                params.delete("filter");
-                navigate(
-                  {
-                    pathname: location.pathname,
-                    search: params.toString() ? `?${params}` : "",
-                  },
-                  { replace: true }
-                );
+                setJobNatureSelected("Job");
+                syncFilterUrl({ nature: "Job", locations: [], categories: [], types: [], userType: "" });
               }}
             >
               Clear
@@ -435,18 +619,8 @@ export default function JobFilter() {
         <Radio.Group
           value={jobNatureSelected}
           onChange={(e) => {
-            const v = e.target.value;
-            setJobNatureSelected(v);
-            const params = new URLSearchParams(location.search);
-            if (v) params.set("filter", v);
-            else params.delete("filter");
-            navigate(
-              {
-                pathname: location.pathname,
-                search: params.toString() ? `?${params}` : "",
-              },
-              { replace: true }
-            );
+            setJobNatureSelected(e.target.value);
+            syncFilterUrl({ nature: e.target.value });
           }}
           className="filter_radio premium-radio-group"
         >
@@ -466,7 +640,7 @@ export default function JobFilter() {
             Salary
           </h4>
           {selectedSort && (
-            <span className="clear-filter" onClick={() => setSelectedSort(null)}>
+            <span className="clear-filter" onClick={() => { setSelectedSort(null); }}>
               Clear
             </span>
           )}
@@ -474,7 +648,7 @@ export default function JobFilter() {
         <CommonSelectField
           placeholder="Select Salary Range"
           value={selectedSort}
-          onChange={setSelectedSort}
+          onChange={(v) => { setSelectedSort(v); syncFilterUrl(); }}
           options={[
             { label: "💰 High to Low", value: "highToLow" },
             { label: "💸 Low to High", value: "lowToHigh" },
@@ -491,14 +665,14 @@ export default function JobFilter() {
             Status
           </h4>
           {selectedStatus && (
-            <span className="clear-filter" onClick={() => setSelectedStatus("")}>
+            <span className="clear-filter" onClick={() => { setSelectedStatus(""); }}>
               Clear
             </span>
           )}
         </div>
         <Radio.Group
           value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
+          onChange={(e) => { setSelectedStatus(e.target.value); syncFilterUrl(); }}
           className="filter_radio premium-radio-group"
         >
           <Radio value="Live" className="premium-radio">
@@ -519,14 +693,14 @@ export default function JobFilter() {
               Working Days
             </h4>
             {selectedWorkingDays && (
-              <span className="clear-filter" onClick={() => setSelectedWorkingDays("")}>
+              <span className="clear-filter" onClick={() => { setSelectedWorkingDays(""); }}>
                 Clear
               </span>
             )}
           </div>
           <Radio.Group
             value={selectedWorkingDays}
-            onChange={(e) => setSelectedWorkingDays(e.target.value)}
+            onChange={(e) => { setSelectedWorkingDays(e.target.value); syncFilterUrl(); }}
             className="filter_radio premium-radio-group"
           >
             <Radio value="5 Working days" className="premium-radio">
@@ -548,7 +722,7 @@ export default function JobFilter() {
               Location
             </h4>
             {selectedLocations.length > 0 && (
-              <span className="clear-filter" onClick={() => setSelectedLocations([])}>
+              <span className="clear-filter" onClick={() => { setSelectedLocations([]); syncFilterUrl({ locations: [] }); }}>
                 Clear
               </span>
             )}
@@ -559,7 +733,7 @@ export default function JobFilter() {
             showSearch
             placeholder="🌍 Search locations..."
             value={selectedLocations}
-            onChange={setSelectedLocations}
+            onChange={(v) => { setSelectedLocations(v); syncFilterUrl({ locations: v }); }}
             options={allCities}
             optionLabelProp="label"
             optionFilterProp="label"
@@ -577,14 +751,14 @@ export default function JobFilter() {
               Work Type
             </h4>
             {selectedTypes.length > 0 && (
-              <span className="clear-filter" onClick={() => setSelectedTypes([])}>
+              <span className="clear-filter" onClick={() => { setSelectedTypes([]); syncFilterUrl({ types: [] }); }}>
                 Clear
               </span>
             )}
           </div>
           <Checkbox.Group
             value={selectedTypes}
-            onChange={setSelectedTypes}
+            onChange={(v) => { setSelectedTypes(v); syncFilterUrl({ types: v }); }}
             className="filter_checkbox premium-checkbox-group"
           >
             {workTypes.map((t) => (
@@ -609,14 +783,14 @@ export default function JobFilter() {
             User Type
           </h4>
           {selectedUserType && (
-            <span className="clear-filter" onClick={() => setSelectedUserType("")}>
+            <span className="clear-filter" onClick={() => { setSelectedUserType(""); syncFilterUrl({ userType: "" }); }}>
               Clear
             </span>
           )}
         </div>
         <Radio.Group
           value={selectedUserType}
-          onChange={(e) => setSelectedUserType(e.target.value)}
+          onChange={(e) => { setSelectedUserType(e.target.value); syncFilterUrl({ userType: e.target.value }); }}
           className="filter_radio premium-radio-group"
         >
           <Radio value="Fresher" className="premium-radio">
@@ -640,7 +814,7 @@ export default function JobFilter() {
             Category
           </h4>
           {selectedCategories.length > 0 && (
-            <span className="clear-filter" onClick={() => setSelectedCategories([])}>
+            <span className="clear-filter" onClick={() => { setSelectedCategories([]); syncFilterUrl({ categories: [] }); }}>
               Clear
             </span>
           )}
@@ -671,7 +845,7 @@ export default function JobFilter() {
         {/* ✅ Checkbox list (filtered) */}
         <Checkbox.Group
           value={selectedCategories}
-          onChange={setSelectedCategories}
+          onChange={(v) => { setSelectedCategories(v); syncFilterUrl({ categories: v }); }}
           className="filter_checkbox premium-checkbox-group category-group"
           options={filteredCategoryOptions}
         />
@@ -806,7 +980,6 @@ export default function JobFilter() {
           Open Filters
         </Button>
       </div>
-
       <section
         className="job_filter"
         style={{
@@ -814,14 +987,14 @@ export default function JobFilter() {
           background: "linear-gradient(135deg, rgb(247 247 247) 0%, rgb(244 238 255) 100%)",
         }}
       >
-        <Row gutter={24}>
+        <Row gutter={24} justify="center">
           {/* Left Sidebar */}
           <Col xs={0} md={7} lg={6} className="filter_sidebar">
             {FilterSidebar}
           </Col>
 
-          {/* Right Content - Job list only (details removed) */}
-          <Col xs={24} md={17} lg={18}>
+          {/* Right Content */}
+          <Col xs={24} md={17} lg={14}>
             {loading ? (
               <Space direction="vertical" size={24} style={{ width: "100%" }}>
                 {[...Array(5)].map((_, i) => (
@@ -847,10 +1020,10 @@ export default function JobFilter() {
                       setSelectedStatus("");
                       setSelectedSort(null);
                       setSelectedUserType("");
-                      setJobNatureSelected("");
-                      setPage(1);
-                      setJobs([]);
-                      fetchJobs(1, true);
+                      // setJobNatureSelected("Job"); // REMOVED - maintain current nature
+                      const baseMap = { "Job": "jobs", "Internship": "internship", "Scholarship": "scholarship" };
+                      const base = baseMap[jobNatureSelected] || "jobs";
+                      navigate(`/${base}`, { replace: true });
                     }}
                   >
                     Explore All Opportunities
@@ -858,70 +1031,35 @@ export default function JobFilter() {
                 </Empty>
               </Card>
             ) : (
-              <Row gutter={24}>
-                {/* ✅ Row 2 — Your Job Cards */}
-                <Col xs={0} md={7} lg={16}>
-                  <div className="cf4-job-list-wrapper">
-                    {jobs.map((job) => (
-                      <JobCard key={job.id} job={job} />
-                    ))}
+              <div className="filter-results-container">
+                <div className="filter-results-header premium-results-header">
+                  <h2 className="results-title">{totalJobs} {getFilterTitle()}</h2>
+                  <p className="results-subtitle">
+                    {selectedLocations.length === 1 
+                      ? `Search for ${selectedLocations[0]} Jobs and Apply to Latest Vacancies in ${selectedLocations[0]}` 
+                      : "Browse all latest jobs and internships across leading companies in India"}
+                  </p>
+                </div>
+                <div className="cf4-job-list-wrapper">
+                  {jobs.map((job) => (
+                    <JobCard key={job.id} job={job} />
+                  ))}
 
-                    {/* Loading more indicator */}
-                    {loadingMore && (
-                      <div style={{ textAlign: 'center', padding: '20px' }}>
-                        <Skeleton active />
-                      </div>
-                    )}
-
-                    {/* End of results message */}
-                    {!hasMore && jobs.length > 0 && (
-                      <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
-                        <p>You've reached the end of the results ({totalJobs} total jobs)</p>
-                      </div>
-                    )}
-                  </div>
-                </Col>
-                <Col xs={0} md={7} lg={8}>
-                  {/* ✅ Row 3 — Courses */}
-                  <div className="cf4-course-box">
-                    <h3 className="cf4-section-title">Recommended Courses</h3>
-
-                    {courses.length === 0 ? (
+                  {/* Loading more indicator */}
+                  {loadingMore && (
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
                       <Skeleton active />
-                    ) : (
-                      <div className="cf4-course-list">
-                        {courses.slice(0, 5).map((course) => (
-                          <div
-                            key={course.id}
-                            className="cf4-course-item"
-                            onClick={() => {
-                              if (course.link?.startsWith("http")) {
-                                window.open(course.link, "_blank");
-                              } else {
-                                navigate(`/course/${course.id}`);
-                              }
-                            }}
-                            style={{ cursor: "pointer" }}
-                          >
-                            <img
-                              src={course.image}
-                              alt={course.title}
-                              className="cf4-course-thumb"
-                            />
-                            <div className="cf4-course-info">
-                              <h4 className="cf4-course-title">{course.title}</h4>
-                              <p className="cf4-course-desc">
-                                {course.description?.slice(0, 70)}...
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </Col>
-              </Row>
+                    </div>
+                  )}
 
+                  {/* End of results message */}
+                  {!hasMore && jobs.length > 0 && (
+                    <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                      <p>You've reached the end of the results ({totalJobs} total jobs)</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </Col>
         </Row>
@@ -937,6 +1075,8 @@ export default function JobFilter() {
       >
         {FilterSidebar}
       </Drawer>
+
+      <Footer />
     </>
   );
 }

@@ -32,7 +32,22 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .post_workshop_form {
+    padding: 0px !important;
+  }
+
+  .post_workshop_form_btn {
+    justify-content: center !important;
+  }
+
+  .post_workshop_form h3 {
+    font-size: 22px !important;
   }
 }

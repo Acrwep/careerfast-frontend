@@ -89,8 +89,8 @@ const Layout = () => {
     if (AccessToken) {
       dispatch(storeLoginStatus(true));
 
+      // No redirect for root path
       if (pathName === "" || pathName === "/") {
-        navigate("/job-portal", { replace: true });
         return;
       }
 
@@ -109,8 +109,16 @@ const Layout = () => {
         return;
       }
 
-      // ✅ Allow job-filter with params (DO NOT REDIRECT)
-      if (pathName.startsWith("job-filter")) return;
+      // ✅ Allow portal routes with sub-slugs for filtering
+      if (
+        pathName === "jobs" ||
+        pathName === "internship" ||
+        pathName === "scholarship" ||
+        pathName === "internship-filter" ||
+        pathName === "job-filter"
+      ) {
+        return;
+      }
 
       // ✅ Safe redirect for others
       navigate(`/${pathName}`, { replace: true });
@@ -122,22 +130,8 @@ const Layout = () => {
         navigate("/register", { replace: true });
       } else if (pathName === "login") {
         navigate("/login", { replace: true });
-      } else if (pathName === "internship") {
-        navigate("/internship", { replace: true });
-      } else if (pathName === "job-filter") {
+      } else if (pathName === "internship" || pathName === "internship-filter" || pathName === "job-filter" || pathName === "scholarship" || pathName === "course" || pathName === "event-filter" || pathName === "workshop-filter" || pathName === "blogs") {
         return;
-      }
-      else if (pathName === "course") {
-        navigate("/course", { replace: true });
-      }
-      else if (pathName === "event-filter") {
-        navigate("/event-filter", { replace: true });
-      }
-      else if (pathName === "workshop-filter") {
-        navigate("/workshop-filter", { replace: true });
-      }
-      else if (pathName === "blogs") {
-        return;  // allow blogs list
       }
       else if (location.pathname.startsWith("/blog/")) {
         return;  // allow blog single page
@@ -148,7 +142,8 @@ const Layout = () => {
       else if (location.pathname.includes("/job-details/")) {
         return;
       } else {
-        navigate("/job-portal", { replace: true });
+        // No default redirect to /jobs
+        return;
       }
     }
   }, [location.pathname]);
@@ -162,8 +157,14 @@ const Layout = () => {
         <Route path="/about" element={<About />} />
         <Route path="/profiledetails" element={<ProfileDetails />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/job-portal" element={<JobPortalLandingPage />} />
-        <Route path="/internship" element={<InternshipLandingPage />} />
+        <Route path="/" element={<JobPortalLandingPage />} />
+        <Route path="/jobs" element={<JobFilter />} />
+        <Route path="/jobs/:filterSlug" element={<JobFilter />} />
+        <Route path="/internship" element={<JobFilter />} />
+        <Route path="/internship/:filterSlug" element={<JobFilter />} />
+        <Route path="/scholarship" element={<JobFilter />} />
+        <Route path="/scholarship/:filterSlug" element={<JobFilter />} />
+        <Route path="/internships" element={<InternshipLandingPage />} />
         <Route path="/header" element={<Header />} />
         <Route path="/footer" element={<Footer />} />
         <Route path="/post-jobs" element={<PostJobs />} />

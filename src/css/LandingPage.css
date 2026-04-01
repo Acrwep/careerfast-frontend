@@ -87,8 +87,9 @@
 }
 
 .primary-btn:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
+
 
 .primary-btn svg {
   transition: var(--transition);
@@ -115,7 +116,7 @@
 
 .secondary-btn:hover {
   background-color: #aa8bff0c;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .secondary-btn svg {
@@ -143,6 +144,7 @@
   font-size: 18px;
   font-weight: 600;
   color: var(--dark);
+  margin: 0px;
 }
 
 .view-all {
@@ -973,11 +975,11 @@
   }
 
   .header-content h1 {
-    font-size: 36px;
+    font-size: 46px !important;
   }
 
   .button-group {
-    flex-direction: column;
+    flex-direction: row;
     gap: 12px;
   }
 
@@ -1373,7 +1375,23 @@
 @media (max-width: 600px) {
   .job-categories {
     margin-top: 40px;
-    padding: 0px 10px 50px 10px;
+    padding: 0px 10px 20px 10px;
+  }
+
+  .category-card {
+    width: 90% !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .job-categories .slick-next {
+    right: -4px;
+  }
+
+  .job-categories .slick-prev {
+    left: -4px;
   }
 
   .category-card {
@@ -1389,15 +1407,15 @@
   }
 
   .custom-next {
-    left: 51%;
+    left: 51% !important;
   }
 
   .custom-prev {
-    left: 35%;
+    left: 35% !important;
   }
 
   .elite-carousel-container {
-    height: 790px;
+    height: 730px;
   }
 
   .elite-carousel-rightRole-container {
@@ -1410,7 +1428,7 @@
   }
 
   .need_guidence {
-    padding: 40px 10px;
+    padding: 0px 10px 40px 10px;
   }
 
   .need_guidence_row {
@@ -1426,7 +1444,7 @@
 
   .top_companies {
     padding: 0px 10px;
-    height: 410px;
+    min-height: 230px;
   }
 
   .counter {
@@ -1473,14 +1491,20 @@
 
   .primary-btn {
     justify-content: center;
-    width: 70%;
-    padding: 10px 16px;
+    width: 50%;
+    padding: 8px 16px;
+    font-size: 14px !important;
   }
 
   .secondary-btn {
-    width: 70%;
-    padding: 10px 15px;
+    width: 50%;
+    padding: 8px 16px;
     justify-content: center;
+    font-size: 14px !important;
+  }
+
+  .left-content {
+    margin-bottom: 80px;
   }
 
   .floating-tag {
@@ -1489,9 +1513,17 @@
   }
 
   .stats-card {
-    bottom: 232px;
+    bottom: 360px;
     width: 50%;
-    left: -7%;
+    left: -4%;
+  }
+
+  .main-image {
+    height: 300px !important;
+  }
+
+  canvas.particles-bg-canvas-self {
+    opacity: 0.2 !important;
   }
 
   .header-content .subtitle {
@@ -1500,6 +1532,23 @@
     margin-top: 5px;
     line-height: 1.5;
   }
+
+  .career-tips .card-contents h3 {
+    font-size: 1.1rem !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .career-tips .card-contents p {
+    font-size: 14px !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+  }
+
 }
 
 
@@ -1750,8 +1799,8 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .career-tips {
-    padding: 40px 20px;
-    margin: 20px auto;
+    padding: 20px 20px;
+    margin: 0px auto;
   }
 
   .career-tips .section-header h4 {
@@ -1969,8 +2018,13 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .top_companies .slick-slide {
+    width: 150px !important;
+  }
+
   .my-opportunities {
     padding: 0 20px;
+    margin: 30px auto;
   }
 
   .my-opportunities .opportunities-header {
@@ -2060,7 +2114,7 @@
 
 .pjPrimaryBtn {
   margin-top: 20px;
-  width: 30%;
+  width: 33%;
   display: inline-flex;
   align-items: center;
   gap: 10px;

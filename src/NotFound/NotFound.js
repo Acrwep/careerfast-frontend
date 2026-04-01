@@ -167,7 +167,7 @@ const NotFound = () => {
 
         {/* Animated button */}
         <motion.div variants={itemVariants}>
-          <a onClick={() => navigate("/job-portal")}>
+          <a onClick={() => navigate("/")}>
             {" "}
             <motion.button
               className="home-button"

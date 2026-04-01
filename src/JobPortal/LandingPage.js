@@ -238,20 +238,6 @@ export default function JobPortalLandingPage() {
     ],
   };
 
-  // Variants for reusability
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 40 },
-    visible: (i = 1) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.2,
-        duration: 0.4,
-        ease: "easeOut",
-      },
-    }),
-  };
-
   const icons = [
     <FaLaptopCode />,
     <FaChartBar />,
@@ -380,29 +366,29 @@ export default function JobPortalLandingPage() {
         <meta name="author" content="CareerFast" />
         <meta name="robots" content="index, follow" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="canonical" href="https://careerfast.com/job-portal" />
+        <link rel="canonical" href="https://careerfast.com/" />
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://careerfast.com/job-portal" />
+        <meta property="og:url" content="https://careerfast.com/" />
         <meta property="og:title" content="CareerFast | Find Jobs & Internships - Your Career Growth Partner" />
         <meta
           property="og:description"
           content="Discover premium job opportunities and internships with top-tier companies. Connect with 25K+ verified recruiters and explore 100K+ listings."
         />
-        <meta property="og:image" content="https://careerfast.com/og-image-job-portal.jpg" />
+        <meta property="og:image" content="https://careerfast.com/og-image-jobs.jpg" />
         <meta property="og:site_name" content="CareerFast" />
         <meta property="og:locale" content="en_US" />
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://careerfast.com/job-portal" />
+        <meta name="twitter:url" content="https://careerfast.com/" />
         <meta name="twitter:title" content="CareerFast | Find Jobs & Internships - Your Career Growth Partner" />
         <meta
           name="twitter:description"
           content="Discover premium job opportunities and internships with top-tier companies. Connect with 25K+ verified recruiters and explore 100K+ listings."
         />
-        <meta name="twitter:image" content="https://careerfast.com/twitter-image-job-portal.jpg" />
+        <meta name="twitter:image" content="https://careerfast.com/twitter-image-jobs.jpg" />
 
         {/* Additional SEO */}
         <meta name="theme-color" content="#7f5af0" />
@@ -431,7 +417,7 @@ export default function JobPortalLandingPage() {
             "name": "CareerFast",
             "url": "https://careerfast.com",
             "logo": "https://careerfast.com/logo.png",
-            "description": "CareerFast is a premier job portal connecting job seekers with top companies for jobs, internships, and career opportunities.",
+            "description": "CareerFast is a premier jobs platform connecting job seekers with top companies for jobs, internships, and career opportunities.",
             "sameAs": [
               "https://www.facebook.com/careerfast",
               "https://www.twitter.com/careerfast",
@@ -455,7 +441,7 @@ export default function JobPortalLandingPage() {
               "@type": "ListItem",
               "position": index + 1,
               "name": cat,
-              "url": `https://careerfast.com/job-filter?category=${generateSlug(cat)}`
+              "url": `https://careerfast.com/jobs/${generateSlug(cat)}`
             }))
           })}
         </script>
@@ -484,15 +470,9 @@ export default function JobPortalLandingPage() {
             <Col lg={12} sm={24} md={24} xs={24}>
               <motion.div
                 className="left-content"
-                initial={{ opacity: 0, x: -60 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
               >
                 <div className="header-content">
                   <motion.h1
-                    initial={{ opacity: 0, y: -30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1 }}
                     style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}
                   >
                     Elevate Your Career <br /> Journey
@@ -500,9 +480,6 @@ export default function JobPortalLandingPage() {
 
                   <motion.p
                     className="subtitle"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3, duration: 0.8 }}
                   >
                     Discover premium opportunities with top-tier companies <br />
                     and unlock your professional potential.
@@ -510,16 +487,11 @@ export default function JobPortalLandingPage() {
 
                   <motion.div
                     className="button-group"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 0.8 }}
                   >
                     {/* Find Jobs */}
                     <motion.button
-                      onClick={() => navigate("/job-filter?filter=Job")}
+                      onClick={() => navigate("/jobs")}
                       className="primary-btn"
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.95 }}
                     >
                       <span>Find Jobs</span>
                       <svg
@@ -554,8 +526,6 @@ export default function JobPortalLandingPage() {
                         }
                       }}
                       className="secondary-btn"
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.95 }}
                     >
                       <span>Post Jobs</span>
                       <svg
@@ -593,9 +563,6 @@ export default function JobPortalLandingPage() {
                     src={bannerImg}
                     alt="Professional woman"
                     className="main-image"
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
                   />
 
                   {/* Floating tags */}
@@ -661,9 +628,9 @@ export default function JobPortalLandingPage() {
                 className="section-header"
                 initial="hidden"
                 animate="visible"
-                variants={fadeInUp}
+
               >
-                <h2 style={{ fontSize: '2rem', fontWeight: '600', margin: 0 }}>Explore Job Categories</h2>
+                <h4>Explore Job Categories</h4>
                 <button onClick={() => navigate("/internship-filter")} className="view-all" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                   View all
                 </button>
@@ -675,8 +642,15 @@ export default function JobPortalLandingPage() {
                     key={index}
                     className="category-card"
                     onClick={() => {
-                      const categorySlug = generateSlug(cat);
-                      navigate(`/job-filter?category=${categorySlug}`);
+                      const s = generateSlug(cat);
+                      let slug = "";
+                      if (["it", "information-technology", "software"].includes(s)) slug = "it-jobs";
+                      else if (s.includes("marketing")) slug = "marketing-jobs";
+                      else if (s.includes("sales")) slug = "sales-jobs";
+                      else if (s.includes("finance")) slug = "finance-jobs";
+                      else if (s.includes("engineering")) slug = "engineering-jobs";
+                      else slug = `${s}-jobs`;
+                      navigate(`/jobs/${slug}`);
                     }}
                   >
                     <div className="card-icon">{icons[index % icons.length]}</div>
@@ -750,7 +724,7 @@ export default function JobPortalLandingPage() {
                       initial="hidden"
                       whileInView="visible"
                       viewport={{ once: true }}
-                      variants={fadeInUp}
+
                     >
                       <Card
                         className="elite-job-card"
@@ -940,7 +914,7 @@ export default function JobPortalLandingPage() {
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true }}
-                    variants={fadeInUp}
+
                     whileHover={{ scale: 1.03 }}
                   >
                     <div className="card-header">
@@ -1018,7 +992,7 @@ export default function JobPortalLandingPage() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            variants={fadeInUp}
+
           >
             <Row
               onClick={() => navigate("/mentors")}
@@ -1110,7 +1084,7 @@ export default function JobPortalLandingPage() {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
-                  variants={fadeInUp}
+
                 ><h2 style={{ fontSize: '2.5rem', fontWeight: '700' }}>100K+</h2><p>Listed Jobs & Internships</p><div className="company-logos1"><img src={company_logos1} alt="Jobs and Internships Counter" /></div></motion.div>
               </Col>
               <Col md={8}>
@@ -1119,7 +1093,7 @@ export default function JobPortalLandingPage() {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
-                  variants={fadeInUp}
+
                 ><h2 style={{ fontSize: '2.5rem', fontWeight: '700' }}>25K+</h2><p>Verified Recruiters</p><div className="company-logos2"><img src={company_logos2} alt="Verified Recruiters Counter" /></div></motion.div>
               </Col>
               <Col md={8}>
@@ -1128,7 +1102,7 @@ export default function JobPortalLandingPage() {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
-                  variants={fadeInUp}
+
                 ><h2 style={{ fontSize: '2.5rem', fontWeight: '700' }}>5.5M+</h2><p>Applications</p><div className="company-logos3"><img src={company_logos3} alt="Job Applications Counter" /></div></motion.div>
               </Col>
             </Row>
@@ -1216,7 +1190,6 @@ export default function JobPortalLandingPage() {
                       initial="hidden"
                       whileInView="visible"
                       viewport={{ once: true }}
-                      variants={fadeInUp}
                       custom={index}
                       whileHover={{ y: -2, scale: 1.01 }}
                     >
@@ -1266,7 +1239,7 @@ export default function JobPortalLandingPage() {
               </button>
             </div>
             <div className="section-footer">
-              <p>Explore more career resources in our <a href="/job-portal">Careerfast</a></p>
+              <p>Explore more career resources in our <a href="/">Careerfast</a></p>
             </div>
           </div>
 

@@ -21,7 +21,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
     useEffect(() => {
         if (roleId !== null && !allowedRoles.includes(roleId)) {
-            navigate("/job-portal", { replace: true });
+            navigate("/", { replace: true });
             message.error("Unauthorized access. This section is reserved for recruiter accounts only.");
         }
     }, [roleId, navigate, allowedRoles]);

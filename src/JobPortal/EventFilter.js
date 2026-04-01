@@ -25,7 +25,10 @@ import {
   UserOutlined,
   LoadingOutlined,
   DownOutlined,
+  FilterFilled
 } from "@ant-design/icons";
+import { Drawer } from "antd";
+import "../css/EventFilter.css";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 import { MdWorkOutline } from "react-icons/md";
@@ -33,6 +36,186 @@ import { FcCancel } from "react-icons/fc";
 
 const { Option } = Select;
 const { Title, Text, Paragraph } = Typography;
+
+// 🔹 Filter Fields Component (Reusable for Desktop & Mobile)
+const FilterFields = ({
+  allEvents,
+  categoryFilter,
+  setCategoryFilter,
+  modeFilter,
+  setModeFilter,
+  teamSizeFilter,
+  setTeamSizeFilter,
+  sortBy,
+  setSortBy,
+  minPrize,
+  setMinPrize,
+  maxPrize,
+  setMaxPrize,
+  isMobile = false,
+}) => {
+  const filterContent = (
+    <>
+      <div className={isMobile ? "filter-field-item" : ""}>
+        {isMobile && <label>Category</label>}
+        <Select
+          mode="multiple"
+          placeholder="Select Category"
+          value={categoryFilter}
+          onChange={(values) => setCategoryFilter(values)}
+          size="large"
+          suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+          style={{
+            minWidth: isMobile ? "100%" : 180,
+            borderRadius: 30,
+            background: "#f9fafc",
+            border: "1px solid #d9d9d9",
+          }}
+        >
+          {[
+            ...new Set(
+              allEvents.flatMap((e) =>
+                e.category ? e.category.split(",").map((c) => c.trim()) : []
+              )
+            ),
+          ]
+            .filter(Boolean)
+            .map((cat, i) => (
+              <Option key={i} value={cat}>
+                {cat}
+              </Option>
+            ))}
+        </Select>
+      </div>
+
+      <div className={isMobile ? "filter-field-item" : ""}>
+        {isMobile && <label>Mode</label>}
+        <Select
+          placeholder="Mode"
+          value={modeFilter || undefined}
+          allowClear
+          onChange={(value) => setModeFilter(value)}
+          size="large"
+          suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+          style={{
+            minWidth: isMobile ? "100%" : 140,
+            borderRadius: 30,
+            background: "#f9fafc",
+            border: "1px solid #d9d9d9",
+          }}
+        >
+          <Option value="Online">Online</Option>
+          <Option value="Offline">Offline</Option>
+          <Option value="Hybrid">Hybrid</Option>
+        </Select>
+      </div>
+
+      <div className={isMobile ? "filter-field-item" : ""}>
+        {isMobile && <label>Team Size</label>}
+        <Select
+          placeholder="Team Size"
+          value={teamSizeFilter || undefined}
+          allowClear
+          onChange={(value) => setTeamSizeFilter(value)}
+          size="large"
+          suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+          style={{
+            minWidth: isMobile ? "100%" : 150,
+            borderRadius: 30,
+            background: "#f9fafc",
+            border: "1px solid #d9d9d9",
+          }}
+        >
+          <Option value="1">Individual (1)</Option>
+          <Option value="2">Team (2)</Option>
+          <Option value="2+">Team (2+)</Option>
+        </Select>
+      </div>
+
+      <div className={isMobile ? "filter-field-item" : ""}>
+        {isMobile && <label>Sort By</label>}
+        <Select
+          placeholder="Sort By"
+          value={sortBy || undefined}
+          allowClear
+          onChange={(value) => setSortBy(value)}
+          size="large"
+          suffixIcon={<DownOutlined style={{ color: "#000" }} />}
+          style={{
+            minWidth: isMobile ? "100%" : 200,
+            borderRadius: 30,
+            background: "#f9fafc",
+            border: "1px solid #d9d9d9",
+          }}
+        >
+          <Option value="daysAsc">Days Left (Low → High)</Option>
+          <Option value="daysDesc">Days Left (High → Low)</Option>
+        </Select>
+      </div>
+
+      <div className={isMobile ? "filter-field-item" : ""}>
+        {isMobile && <label>Min Prize</label>}
+        <InputNumber
+          placeholder="Min Prize"
+          value={minPrize}
+          onChange={(val) => setMinPrize(val)}
+          prefix={<DollarOutlined style={{ color: "#5f2eea" }} />}
+          size="large"
+          style={{
+            borderRadius: 30,
+            background: "#f9fafc",
+            border: "1px solid #d9d9d9",
+            width: isMobile ? "100%" : 140,
+          }}
+        />
+      </div>
+
+      <div className={isMobile ? "filter-field-item" : ""}>
+        {isMobile && <label>Max Prize</label>}
+        <InputNumber
+          placeholder="Max Prize"
+          value={maxPrize}
+          onChange={(val) => setMaxPrize(val)}
+          prefix={<DollarOutlined style={{ color: "#5f2eea" }} />}
+          size="large"
+          style={{
+            borderRadius: 30,
+            background: "#f9fafc",
+            border: "1px solid #d9d9d9",
+            width: isMobile ? "100%" : 140,
+          }}
+        />
+      </div>
+
+      <Button
+        size="large"
+        onClick={() => {
+          setCategoryFilter([]);
+          setModeFilter("");
+          setTeamSizeFilter("");
+          setSortBy("");
+          setMinPrize(null);
+          setMaxPrize(null);
+        }}
+        icon={<FcCancel />}
+        style={{
+          borderRadius: 30,
+          height: 40,
+          padding: "0 20px",
+          border: "1px solid #ff2e2eff",
+          background: "#fdedecff",
+          color: "#ff2e2eff",
+          fontWeight: 600,
+          width: isMobile ? "100%" : "auto",
+        }}
+      >
+        Clear
+      </Button>
+    </>
+  );
+
+  return isMobile ? <div className="mobile-filter-fields">{filterContent}</div> : filterContent;
+};
 
 export default function EventFilter() {
   const [allEvents, setAllEvents] = useState([]);
@@ -47,6 +230,7 @@ export default function EventFilter() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [sortBy, setSortBy] = useState("");
   const [teamSizeFilter, setTeamSizeFilter] = useState("");
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   useEffect(() => {
     getAllEventsData();
@@ -384,6 +568,7 @@ export default function EventFilter() {
         </>
       ) : (
         <div
+          className="event-filter-page-container"
           style={{
             padding: "0px 24px 40px 24px",
             background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
@@ -393,178 +578,90 @@ export default function EventFilter() {
 
           {/* Main Content Container */}
           <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-            {/* 🔹 Modern Pill Filter Bar */}
-            <div
-              className="workshop_filter"
-              style={{
-                background: "#fff",
-                borderRadius: 50,
-                padding: "14px 20px",
-                display: "flex",
-                position: "sticky",
-                top: 78,
-                zIndex: 20,
-                alignItems: "center",
-                justifyContent: "space-around",
-                gap: "10px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                marginBottom: 20,
-              }}
-            >
-              {/* Category Filter (Multi-select array) */}
-              <Select
-                mode="multiple"
-                placeholder="Select Category"
-                value={categoryFilter}
-                onChange={(values) => setCategoryFilter(values)}
-                size="large"
-                suffixIcon={<DownOutlined style={{ color: "#000" }} />}
-                style={{
-                  minWidth: 180,
-                  borderRadius: 30,
-                  background: "#f9fafc",
-                  border: "1px solid #d9d9d9",
-                }}
-              >
-                {[...new Set(allEvents.flatMap((e) =>
-                  e.category
-                    ? e.category.split(",").map((c) => c.trim())
-                    : []
-                ))]
-                  .filter(Boolean)
-                  .map((cat, i) => (
-                    <Option key={i} value={cat}>
-                      {cat}
-                    </Option>
-                  ))}
-              </Select>
+            {/* 🔹 Modern Filter Bar */}
+            <div className="workshop-filter-container">
+              {/* Desktop View */}
+              <div className="desktop-filter-bar">
+                <FilterFields
+                  allEvents={allEvents}
+                  categoryFilter={categoryFilter}
+                  setCategoryFilter={setCategoryFilter}
+                  modeFilter={modeFilter}
+                  setModeFilter={setModeFilter}
+                  teamSizeFilter={teamSizeFilter}
+                  setTeamSizeFilter={setTeamSizeFilter}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  minPrize={minPrize}
+                  setMinPrize={setMinPrize}
+                  maxPrize={maxPrize}
+                  setMaxPrize={setMaxPrize}
+                />
+              </div>
 
-              {/* Mode Filter */}
-              <Select
-                placeholder="Mode"
-                value={modeFilter || undefined}
-                allowClear
-                onChange={(value) => setModeFilter(value)}
-                size="large"
-                suffixIcon={<DownOutlined style={{ color: "#000" }} />}
-                style={{
-                  minWidth: 140,
-                  borderRadius: 30,
-                  background: "#f9fafc",
-                  border: "1px solid #d9d9d9",
-                }}
-              >
-                <Option value="Online">Online</Option>
-                <Option value="Offline">Offline</Option>
-                <Option value="Hybrid">Hybrid</Option>
-              </Select>
-
-              {/* Team Size Filter */}
-              <Select
-                placeholder="Team Size"
-                value={teamSizeFilter || undefined}
-                allowClear
-                onChange={(value) => setTeamSizeFilter(value)}
-                size="large"
-                suffixIcon={<DownOutlined style={{ color: "#000" }} />}
-                style={{
-                  minWidth: 150,
-                  borderRadius: 30,
-                  background: "#f9fafc",
-                  border: "1px solid #d9d9d9",
-                }}
-              >
-                <Option value="1">Individual (1)</Option>
-                <Option value="2">Team (2)</Option>
-                <Option value="2+">Team (2+)</Option>
-              </Select>
-
-              {/* Days Left Sort Filter */}
-              <Select
-                placeholder="Sort By"
-                value={sortBy || undefined}
-                allowClear
-                onChange={(value) => setSortBy(value)}
-                size="large"
-                suffixIcon={<DownOutlined style={{ color: "#000" }} />}
-                style={{
-                  minWidth: 200,
-                  borderRadius: 30,
-                  background: "#f9fafc",
-                  border: "1px solid #d9d9d9",
-                }}
-              >
-                <Option value="daysAsc">Days Left (Low → High)</Option>
-                <Option value="daysDesc">Days Left (High → Low)</Option>
-              </Select>
-
-              {/* Prize Range */}
-              <InputNumber
-                placeholder="Min Prize"
-                value={minPrize}
-                onChange={(val) => setMinPrize(val)}
-                prefix={<DollarOutlined style={{ color: "#5f2eea" }} />}
-                size="large"
-                style={{
-                  borderRadius: 30,
-                  background: "#f9fafc",
-                  border: "1px solid #d9d9d9",
-                  width: 150,
-                }}
-              />
-
-              <InputNumber
-                placeholder="Max Prize"
-                value={maxPrize}
-                onChange={(val) => setMaxPrize(val)}
-                prefix={<DollarOutlined style={{ color: "#5f2eea" }} />}
-                size="large"
-                style={{
-                  borderRadius: 30,
-                  background: "#f9fafc",
-                  border: "1px solid #d9d9d9",
-                  width: 150,
-                }}
-              />
-
-              {/* Clear Filters Button */}
-              <Button
-                size="large"
-                onClick={() => {
-                  setCategoryFilter([]);
-                  setModeFilter("");
-                  setTeamSizeFilter("");
-                  setSortBy("");
-                  setMinPrize(null);
-                  setMaxPrize(null);
-                }}
-                icon={<FcCancel />}
-                style={{
-                  borderRadius: 30,
-                  height: 36,
-                  padding: "0 20px",
-                  border: "1px solid #ff2e2eff",
-                  background: "#fdedecff",
-                  color: "#ff2e2eff",
-                  fontWeight: 600,
-                }}
-              >
-                Clear
-              </Button>
+              {/* Mobile View Toggle */}
+              <div className="mobile-filter-trigger">
+                <Button
+                  type="primary"
+                  icon={<FilterFilled />}
+                  onClick={() => setMobileFilterOpen(true)}
+                  block
+                  size="large"
+                  style={{
+                    background: "linear-gradient(135deg, #5f2eea 0%, #7c3aed 100%)",
+                    borderRadius: "12px",
+                    height: "50px",
+                    fontWeight: "600"
+                  }}
+                >
+                  Filter Events ({categoryFilter.length + (modeFilter ? 1 : 0) + (teamSizeFilter ? 1 : 0) + (minPrize ? 1 : 0) + (maxPrize ? 1 : 0)})
+                </Button>
+              </div>
             </div>
+
+            {/* Mobile Filter Drawer */}
+            <Drawer
+              title="Filters"
+              placement="right"
+              onClose={() => setMobileFilterOpen(false)}
+              open={mobileFilterOpen}
+              width={320}
+              className="filter-drawer"
+            >
+              <div className="mobile-filter-content">
+                <FilterFields
+                  isMobile={true}
+                  allEvents={allEvents}
+                  categoryFilter={categoryFilter}
+                  setCategoryFilter={setCategoryFilter}
+                  modeFilter={modeFilter}
+                  setModeFilter={setModeFilter}
+                  teamSizeFilter={teamSizeFilter}
+                  setTeamSizeFilter={setTeamSizeFilter}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  minPrize={minPrize}
+                  setMinPrize={setMinPrize}
+                  maxPrize={maxPrize}
+                  setMaxPrize={setMaxPrize}
+                />
+              </div>
+            </Drawer>
 
 
 
             {/* Results Section */}
             <Row style={{ marginTop: 0 }} gutter={[32, 32]}>
               {/* Events List Column */}
-              <Col style={{
-                position: "sticky",
-                top: 170,
-                alignSelf: "flex-start",
-                height: "fit-content",
-                zIndex: 5,
-              }} xs={24} lg={8}>
+              <Col
+                className="event-list-col"
+                style={{
+                  position: "sticky",
+                  top: 170,
+                  alignSelf: "flex-start",
+                  height: "fit-content",
+                  zIndex: 5,
+                }} xs={24} lg={8}>
                 <Card
                   style={{
                     borderRadius: 16,
@@ -666,7 +763,7 @@ export default function EventFilter() {
                           }}
                         >
 
-                          <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                          <div className="event-filter-mob-card" style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
                             <img
                               src={event.logo}
                               alt={event.title}
@@ -692,7 +789,7 @@ export default function EventFilter() {
                                 {event.title}
                               </Title>
 
-                              <Tag
+                              <Tag className="event-filter-mob-card-tag"
                                 color="geekblue"
                                 style={{
                                   borderRadius: 6,
@@ -733,7 +830,7 @@ export default function EventFilter() {
 
                               <div style={{ marginTop: 12 }}>
                                 {event.skills?.slice(0, 2).map((s, i) => (
-                                  <Tag
+                                  <Tag className="event-skill"
                                     key={i}
                                     style={{
                                       background: "#f3f4f6",
@@ -782,7 +879,9 @@ export default function EventFilter() {
 
 
               {/* Event Details Column */}
-              <Col xs={24} lg={16}>
+              <Col
+                className="event-details-col"
+                xs={24} lg={16}>
                 <Card
                   className="workshop_details"
                   style={{
@@ -797,9 +896,9 @@ export default function EventFilter() {
                   bodyStyle={{ padding: 0 }}
                 >
                   {selectedEvent ? (
-                    <div style={{ padding: 30 }}>
+                    <div className="event-details-card-main" style={{ padding: 30 }}>
                       {/* Header Section */}
-                      <div
+                      <div className="event-details-card"
                         style={{
                           display: "flex",
                           alignItems: "flex-start",
@@ -832,7 +931,7 @@ export default function EventFilter() {
                         </div>
 
                         <div style={{ flex: 1 }}>
-                          <div
+                          <div className="event-details-card-text" 
                             style={{
                               display: "flex",
                               alignItems: "center",

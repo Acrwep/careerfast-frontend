@@ -495,3 +495,60 @@
 .premium-modal .ant-btn-primary:hover {
     background: linear-gradient(135deg, #7f5af0, #5f2eea) !important;
 }
+
+.compet-btn-space {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+}
+
+@media (max-width: 768px) {
+    section.comp-hero-section {
+        height: 600px;
+    }
+
+    .hero-content {
+        min-width: 100%;
+    }
+
+    .hero-title1 {
+        font-size: 2.5rem !important;
+    }
+
+    .compet-btn-space {
+        gap: 15px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .comp-cta-section {
+        padding: 0px 0px 60px;
+    }
+
+    .cta-box {
+        padding: 30px;
+    }
+
+    .category-tabs {
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .category-tabs::-webkit-scrollbar {
+        display: block;
+    }
+
+    .category-tabs::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .category-tabs::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+
+    .category-tabs::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+}

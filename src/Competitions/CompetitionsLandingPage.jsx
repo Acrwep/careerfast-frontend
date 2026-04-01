@@ -236,7 +236,7 @@ const CompetitionsLandingPage = () => {
                         <Paragraph className="hero-subtitle1">
                             Compete with the best minds globally. Showcase your skills, solve real-world problems, and win exciting rewards.
                         </Paragraph>
-                        <Space size="large">
+                        <Space size="large" class="compet-btn-space">
                             <Button type="primary" size="large" className="explore-btn" onClick={() => document.getElementById('competitions-list').scrollIntoView({ behavior: 'smooth' })}>
                                 Explore Competitions
                             </Button>
@@ -395,7 +395,7 @@ const CompetitionsLandingPage = () => {
                                 <Paragraph style={{ color: 'rgba(255,255,255,0.8)', fontSize: '16px' }}>
                                     Check out our practice arena where you can solve problems at your own pace, learn new skills, and prepare for the big leagues.
                                 </Paragraph>
-                                <Button size="large" className="practice-btn" onClick={() => navigate("/job-portal")}>
+                                <Button size="large" className="practice-btn" onClick={() => navigate("/")}>
                                     Explore More
                                 </Button>
                             </Col>

@@ -267,7 +267,7 @@ export default function PostEvents() {
                         overflow: "hidden"
                     }}
                 >
-                    <Form
+                    <Form className="post_events_form"
                         form={form}
                         layout="vertical"
                         onFinish={onFinish}

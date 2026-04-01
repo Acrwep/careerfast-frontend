@@ -78,6 +78,7 @@ export default function Header() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [headerProgress, setHeaderProgress] = useState(0);
+  const [megaTab, setMegaTab] = useState("locations");
 
   useEffect(() => {
     const saved = localStorage.getItem("profileProgress");
@@ -279,13 +280,118 @@ export default function Header() {
     navigate(finalUrl);
   };
 
+  const jobsMenuContent = (
+    <div className="jobs-mega-menu">
+      <div className="mega-sidebar">
+        <div
+          className={`sidebar-item ${megaTab === "locations" ? "active" : ""}`}
+          onMouseEnter={() => setMegaTab("locations")}
+        >
+          Top Locations
+        </div>
+        <div
+          className={`sidebar-item ${megaTab === "categories" ? "active" : ""}`}
+          onMouseEnter={() => setMegaTab("categories")}
+        >
+          Top Categories
+        </div>
+        <div
+          className={`sidebar-item ${megaTab === "fresher" ? "active" : ""}`}
+          onMouseEnter={() => setMegaTab("fresher")}
+        >
+          Fresher Jobs
+        </div>
+      </div>
+      <div className="mega-content">
+        {megaTab === "locations" && (
+          <ul className="mega-list">
+            <li onClick={() => { navigate("/jobs/work-from-home"); setOpen(false); }}>Work from home</li>
+            <li onClick={() => { navigate("/jobs/bangalore"); setOpen(false); }}>Jobs in Bangalore</li>
+            <li onClick={() => { navigate("/jobs/chennai"); setOpen(false); }}>Jobs in Chennai</li>
+          </ul>
+        )}
+        {megaTab === "categories" && (
+          <ul className="mega-list">
+            <li onClick={() => { navigate("/jobs/full-stack-development-jobs"); setOpen(false); }}>Full Stack Development</li>
+            <li onClick={() => { navigate("/jobs/devops-cloud-computing-jobs"); setOpen(false); }}>DevOps & Cloud Computing</li>
+            <li onClick={() => { navigate("/jobs/data-science-analytics-jobs"); setOpen(false); }}>Data Science & Analytics</li>
+            <li onClick={() => { navigate("/jobs/frontend-development-jobs"); setOpen(false); }}>Frontend Development</li>
+            <li onClick={() => { navigate("/jobs/hr-analytics-jobs"); setOpen(false); }}>HR Analytics</li>
+            <li onClick={() => { navigate("/jobs/software-development-jobs"); setOpen(false); }}>Software Development</li>
+            <li onClick={() => { navigate("/jobs/ui-ux-design-jobs"); setOpen(false); }}>UI/UX Design</li>
+          </ul>
+        )}
+        {megaTab === "fresher" && (
+          <ul className="mega-list">
+            <li onClick={() => { navigate("/jobs/fresher-work-from-home-jobs"); setOpen(false); }}>Work from home</li>
+            <li onClick={() => { navigate("/jobs/fresher-jobs-in-chennai"); setOpen(false); }}>Freshers job in Chennai</li>
+            <li onClick={() => { navigate("/jobs/fresher-jobs-in-bangalore"); setOpen(false); }}>Freshers job in Bangalore</li>
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+
+  const internshipsMenuContent = (
+    <div className="jobs-mega-menu">
+      <div className="mega-sidebar">
+        <div
+          className={`sidebar-item ${megaTab === "locations" ? "active" : ""}`}
+          onMouseEnter={() => setMegaTab("locations")}
+        >
+          Top Locations
+        </div>
+        <div
+          className={`sidebar-item ${megaTab === "categories" ? "active" : ""}`}
+          onMouseEnter={() => setMegaTab("categories")}
+        >
+          Top Categories
+        </div>
+        <div
+          className={`sidebar-item ${megaTab === "fresher" ? "active" : ""}`}
+          onMouseEnter={() => setMegaTab("fresher")}
+        >
+          Fresher Internships
+        </div>
+      </div>
+      <div className="mega-content">
+        {megaTab === "locations" && (
+          <ul className="mega-list">
+            <li onClick={() => { navigate("/internship/work-from-home"); setOpen(false); }}>Work from home</li>
+            <li onClick={() => { navigate("/internship/bangalore"); setOpen(false); }}>Internships in Bangalore</li>
+            <li onClick={() => { navigate("/internship/chennai"); setOpen(false); }}>Internships in Chennai</li>
+          </ul>
+        )}
+        {megaTab === "categories" && (
+          <ul className="mega-list">
+            <li onClick={() => { navigate("/internship/full-stack-development-jobs"); setOpen(false); }}>Full Stack Development</li>
+            <li onClick={() => { navigate("/internship/devops-cloud-computing-jobs"); setOpen(false); }}>DevOps & Cloud Computing</li>
+            <li onClick={() => { navigate("/internship/data-science-analytics-jobs"); setOpen(false); }}>Data Science & Analytics</li>
+            <li onClick={() => { navigate("/internship/frontend-development-jobs"); setOpen(false); }}>Frontend Development</li>
+            <li onClick={() => { navigate("/internship/hr-analytics-jobs"); setOpen(false); }}>HR Analytics</li>
+            <li onClick={() => { navigate("/internship/software-development-jobs"); setOpen(false); }}>Software Development</li>
+            <li onClick={() => { navigate("/internship/ui-ux-design-jobs"); setOpen(false); }}>UI/UX Design</li>
+          </ul>
+        )}
+        {megaTab === "fresher" && (
+          <ul className="mega-list">
+            <li onClick={() => { navigate("/internship/fresher-work-from-home-jobs"); setOpen(false); }}>Work from home</li>
+            <li onClick={() => { navigate("/internship/fresher-jobs-in-chennai"); setOpen(false); }}>Freshers internship in Chennai</li>
+            <li onClick={() => { navigate("/internship/fresher-jobs-in-bangalore"); setOpen(false); }}>Freshers internship in Bangalore</li>
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+
   const menuItems = [
-    { key: "jobs", label: "Jobs", icon: <UserOutlined />, path: "/job-portal" },
+    { key: "jobs", label: "Jobs", icon: <UserOutlined />, path: "/", isDropdown: true },
     {
       key: "internships",
       label: "Internships",
       icon: <BookOutlined />,
-      path: "/internship",
+      path: "/internships",
+      isDropdown: true
     },
     { key: "mentorships", label: "Mentorships", icon: <CodeOutlined />, path: "/mentors" },
     { key: "competitions", label: "Competitions", icon: <TrophyOutlined />, path: "/competitions" },
@@ -300,7 +406,7 @@ export default function Header() {
           <span>Scholarships</span>
         </div>
       ),
-      onClick: () => navigate("/job-filter?filter=Scholarship"),
+      onClick: () => navigate("/scholarship"),
     },
     {
       key: "events",
@@ -359,7 +465,7 @@ export default function Header() {
           <div className="d-flex gap-1 global_search">
             <Navbar.Brand>
               <img
-                onClick={() => navigate("/job-portal")}
+                onClick={() => navigate("/")}
                 src={logo}
                 style={{ cursor: "pointer" }}
                 alt="Logo"
@@ -428,18 +534,34 @@ export default function Header() {
               {/* Center: Navigation */}
               <Nav className="justify-content-center flex-grow-1 align-items-start gap-2">
                 {menuItems.map((item) => (
-                  <Nav.Link
-                    disabled={item.key === "practice" ? true : false}
-                    key={item.key}
-                    onClick={() => {
-                      onClose();
-                      navigate(item.path);
-                    }}
-                    to={item.path}
-                    active={currentPath === item.path}
-                  >
-                    {item.label}
-                  </Nav.Link>
+                  item.isDropdown ? (
+                    <Dropdown
+                      key={item.key}
+                      dropdownRender={() => item.key === "jobs" ? jobsMenuContent : internshipsMenuContent}
+                      trigger={["hover"]}
+                      placement="bottomLeft"
+                    >
+                      <Nav.Link
+                        className={currentPath === item.path ? "active" : ""}
+                        onClick={() => navigate(item.path)}
+                      >
+                        {item.label} <IoChevronDownOutline style={{ fontSize: "12px", marginLeft: "4px" }} />
+                      </Nav.Link>
+                    </Dropdown>
+                  ) : (
+                    <Nav.Link
+                      disabled={item.key === "practice" ? true : false}
+                      key={item.key}
+                      onClick={() => {
+                        onClose();
+                        navigate(item.path);
+                      }}
+                      to={item.path}
+                      active={currentPath === item.path}
+                    >
+                      {item.label}
+                    </Nav.Link>
+                  )
                 ))}
                 <Dropdown
                   menu={{
@@ -500,139 +622,143 @@ export default function Header() {
                   ""
                 )}
 
-                {roleId === 2 ? (
+                {!currentPath.includes("/admin-profile") && (
                   <>
-                    <Tooltip title="You don't have permission to post jobs">
-                      <span>
-                        <Button className="host-button">
-                          <PlusOutlined /> Host
-                        </Button>
-                      </span>
-                    </Tooltip>
-                    {isLoggedIn === false ? (
-                      <Button
-                        onClick={() => navigate("/login")}
-                        className="host-button"
-                      >
-                        Login
-                      </Button>
+                    {roleId === 2 ? (
+                      <>
+                        <Tooltip title="You don't have permission to post jobs">
+                          <span>
+                            <Button className="host-button">
+                              <PlusOutlined /> Host
+                            </Button>
+                          </span>
+                        </Tooltip>
+                        {isLoggedIn === false ? (
+                          <Button
+                            onClick={() => navigate("/login")}
+                            className="host-button"
+                          >
+                            Login
+                          </Button>
+                        ) : (
+                          ""
+                        )}
+                      </>
                     ) : (
-                      ""
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {isLoggedIn ? (
-                      <Popover
-                        placement="bottomRight"
-                        trigger="click"
-                        content={
-                          <div style={{ width: 260 }}>
-                            <div
-                              onClick={() => navigate("/post-jobs")}
-                              className="host-popup-item"
-                            >
-                              <ShoppingOutlined style={{ color: "#ef4444", fontSize: 18, marginTop: 2 }} />
-                              <div className="host-popup-text">
-                                <div className="host-popup-title">Jobs, Internships</div>
-                                <div className="host-popup-sub">Hire the Right Talent</div>
-                              </div>
-                            </div>
+                      <>
+                        {isLoggedIn ? (
+                          <Popover
+                            placement="bottomRight"
+                            trigger="click"
+                            content={
+                              <div style={{ width: 260 }}>
+                                <div
+                                  onClick={() => navigate("/post-jobs")}
+                                  className="host-popup-item"
+                                >
+                                  <ShoppingOutlined style={{ color: "#ef4444", fontSize: 18, marginTop: 2 }} />
+                                  <div className="host-popup-text">
+                                    <div className="host-popup-title">Jobs, Internships</div>
+                                    <div className="host-popup-sub">Hire the Right Talent</div>
+                                  </div>
+                                </div>
 
-                            <div
-                              onClick={() => navigate("/post-events")}
-                              className="host-popup-item"
-                            >
-                              <TrophyOutlined style={{ color: "#f59e0b", fontSize: 18, marginTop: 2 }} />
-                              <div className="host-popup-text">
-                                <div className="host-popup-title">Cultural Events</div>
-                                <div className="host-popup-sub">Engage your target audience</div>
-                              </div>
-                            </div>
-                            <div
-                              onClick={() => navigate("/post-course")}
-                              className="host-popup-item"
-                            >
-                              <ReadOutlined style={{ color: "#c60bf5ff", fontSize: 18, marginTop: 2 }} />
-                              <div className="host-popup-text">
-                                <div className="host-popup-title">Post a New Course</div>
-                                <div className="host-popup-sub">
-                                  Share your knowledge and attract eager learners
+                                <div
+                                  onClick={() => navigate("/post-events")}
+                                  className="host-popup-item"
+                                >
+                                  <TrophyOutlined style={{ color: "#f59e0b", fontSize: 18, marginTop: 2 }} />
+                                  <div className="host-popup-text">
+                                    <div className="host-popup-title">Cultural Events</div>
+                                    <div className="host-popup-sub">Engage your target audience</div>
+                                  </div>
+                                </div>
+                                <div
+                                  onClick={() => navigate("/post-course")}
+                                  className="host-popup-item"
+                                >
+                                  <ReadOutlined style={{ color: "#c60bf5ff", fontSize: 18, marginTop: 2 }} />
+                                  <div className="host-popup-text">
+                                    <div className="host-popup-title">Post a New Course</div>
+                                    <div className="host-popup-sub">
+                                      Share your knowledge and attract eager learners
+                                    </div>
+                                  </div>
+                                </div>
+                                <div
+                                  onClick={() => navigate("/post-workshop")}
+                                  className="host-popup-item"
+                                >
+                                  <GrWorkshop style={{ color: "#0b0ff5ff", fontSize: 18, marginTop: 2 }} />
+                                  <div className="host-popup-text">
+                                    <div className="host-popup-title">Host a Workshop</div>
+                                    <div className="host-popup-sub">
+                                      Share your expertise and connect with participants through hands-on learning sessions.
+                                    </div>
+                                  </div>
+                                </div>
+                                <div
+                                  onClick={() => navigate("/add-blog")}
+                                  className="host-popup-item"
+                                >
+                                  <BookAlert size={20} style={{ color: "#005603", marginTop: 2 }} />
+                                  <div className="host-popup-text">
+                                    <div className="host-popup-title">Post a Blog</div>
+                                    <div className="host-popup-sub">
+                                      Share insights, stories, and updates to engage your audience and grow your community.
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="host-popup-item" style={{ opacity: 0.6 }}>
+                                  <ProfileOutlined style={{ color: "#6366f1", fontSize: 18, marginTop: 2 }} />
+                                  <div className="host-popup-text">
+                                    <div className="host-popup-title">Assessments</div>
+                                    <div className="host-popup-sub">Evaluate candidates</div>
+                                  </div>
+                                  <div className="host-popup-upgrade">
+                                    <LockOutlined /> Upgrade
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div
-                              onClick={() => navigate("/post-workshop")}
-                              className="host-popup-item"
-                            >
-                              <GrWorkshop style={{ color: "#0b0ff5ff", fontSize: 18, marginTop: 2 }} />
-                              <div className="host-popup-text">
-                                <div className="host-popup-title">Host a Workshop</div>
-                                <div className="host-popup-sub">
-                                  Share your expertise and connect with participants through hands-on learning sessions.
-                                </div>
-                              </div>
-                            </div>
-                            <div
-                              onClick={() => navigate("/add-blog")}
-                              className="host-popup-item"
-                            >
-                              <BookAlert size={20} style={{ color: "#005603", marginTop: 2 }} />
-                              <div className="host-popup-text">
-                                <div className="host-popup-title">Post a Blog</div>
-                                <div className="host-popup-sub">
-                                  Share insights, stories, and updates to engage your audience and grow your community.
-                                </div>
-                              </div>
-                            </div>
-                            <div className="host-popup-item" style={{ opacity: 0.6 }}>
-                              <ProfileOutlined style={{ color: "#6366f1", fontSize: 18, marginTop: 2 }} />
-                              <div className="host-popup-text">
-                                <div className="host-popup-title">Assessments</div>
-                                <div className="host-popup-sub">Evaluate candidates</div>
-                              </div>
-                              <div className="host-popup-upgrade">
-                                <LockOutlined /> Upgrade
-                              </div>
-                            </div>
-                          </div>
-                        }
-                      >
-                        <Button className="host-button">
-                          <PlusOutlined /> Host
-                        </Button>
-                      </Popover>
-                    ) : (
-                      <Button
-                        style={{ opacity: 0.6 }}
-                        onClick={() => message.error("Please Login")}
-                        className="host-button"
-                      >
-                        <PlusOutlined /> Host
-                      </Button>
+                            }
+                          >
+                            <Button className="host-button">
+                              <PlusOutlined /> Host
+                            </Button>
+                          </Popover>
+                        ) : (
+                          <Button
+                            style={{ opacity: 0.6 }}
+                            onClick={() => message.error("Please Login")}
+                            className="host-button"
+                          >
+                            <PlusOutlined /> Host
+                          </Button>
+                        )}
+
+                        {isLoggedIn === false ? (
+                          <Button
+                            onClick={() => navigate("/login")}
+                            className="host-button"
+                          >
+                            Login
+                          </Button>
+                        ) : (
+                          ""
+                        )}{" "}
+                      </>
                     )}
 
-                    {isLoggedIn === false ? (
+                    {roleId === 3 ? (
                       <Button
-                        onClick={() => navigate("/login")}
+                        onClick={() => navigate("/all-candidates")}
                         className="host-button"
                       >
-                        Login
+                        <SearchOutlined /> Find Candidates
                       </Button>
-                    ) : (
-                      ""
-                    )}{" "}
+                    ) : null}
                   </>
                 )}
-
-                {roleId === 3 ? (
-                  <Button
-                    onClick={() => navigate("/all-candidates")}
-                    className="host-button"
-                  >
-                    <SearchOutlined /> Find Candidates
-                  </Button>
-                ) : null}
               </div>
             </Offcanvas.Body>
           </Navbar.Offcanvas>
@@ -932,6 +1058,7 @@ export default function Header() {
               background:
                 "linear-gradient(180deg, #fa1414e8 0%, #ff1c1cb0 100%)",
               border: "none",
+              padding: "10px 20px",
             }}
           >
             <LogoutOutlined /> Log Out
@@ -1253,8 +1380,205 @@ export default function Header() {
             color: #8b5cf6;
           }
           
-          .elite-header {
+            .elite-header {
             border-bottom: 1px solid rgba(79, 70, 229, 0.1);
+          }
+
+          /* --- Mobile Responsive Header Styles --- */
+          @media (max-width: 991px) {
+            .elite-search-input {
+              width: 180px !important;
+            }
+          }
+
+          @media (max-width: 768px) {
+            .elite-header .container-fluid {
+              display: flex !important;
+              flex-wrap: wrap !important;
+              align-items: center !important;
+              justify-content: space-between !important;
+              padding-left: 15px !important;
+              padding-right: 15px !important;
+            }
+
+            .global_search {
+              display: contents !important;
+            }
+
+            .navbar-brand {
+              order: 1 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+
+            .navbar-toggler {
+              order: 2 !important;
+              margin-left: auto !important;
+              padding: 4px 8px !important;
+              font-size: 1.1rem !important;
+            }
+
+            /* Targeting the AutoComplete wrapper */
+            .elite-header .ant-select { 
+              order: 3 !important;
+              width: 100% !important;
+              margin-top: 15px !important;
+              margin-bottom: 5px !important;
+            }
+
+            .elite-search-input {
+              width: 100% !important;
+              height: 42px !important;
+              padding: 10px 15px !important;
+              font-size: 14px !important;
+            }
+
+            .main-logo {
+              height: 30px !important;
+              width: auto;
+            }
+
+            .elite-search-dropdown {
+              width: calc(100vw - 30px) !important;
+              left: 15px !important;
+              max-width: none !important;
+            }
+
+            .mobile_sidebar {
+              width: 100%;
+              display: flex !important;
+              flex-direction: column;
+              align-items: stretch !important;
+              gap: 15px !important;
+              margin-top: 20px !important;
+            }
+
+            .host-button {
+              width: 100%;
+              justify-content: center;
+              height: 45px !important;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .elite-search-input {
+              min-width: 100px;
+            }
+            
+            .main-logo {
+              height: 28px !important;
+            }
+            
+            .elite-search-input::placeholder {
+              font-size: 11px;
+            }
+          }
+
+          /* Jobs Mega Menu Styles */
+          .jobs-mega-menu {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            width: 480px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            animation: megaMenuFade 0.3s ease-out;
+            z-index: 1050;
+          }
+
+          @keyframes megaMenuFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+
+          .mega-sidebar {
+            width: 190px;
+            background: rgba(141, 63, 251, 0.05);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 12px 0;
+          }
+
+          .sidebar-item {
+            padding: 14px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #555;
+            transition: all 0.25s ease;
+            position: relative;
+            font-weight: 500;
+          }
+
+          .sidebar-item.active {
+            background: rgba(141, 63, 251, 0.05);
+            color: #8d3ffb;
+            font-weight: 600;
+          }
+
+          .sidebar-item.active::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 100%;
+            background: #8d3ffb;
+          }
+
+          .mega-content {
+            flex: 1;
+            padding: 15px 25px;
+            background: white;
+            min-height: 300px;
+          }
+
+          .mega-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+          }
+
+          .mega-list li {
+            padding: 10px 0;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+          }
+
+          .mega-list li:hover {
+            color: #8d3ffb;
+            padding-left: 5px;
+          }
+
+          .mega-list li::before {
+            content: '';
+            width: 0;
+            height: 1px;
+            background: #8d3ffb;
+            margin-right: 0;
+            transition: all 0.2s ease;
+          }
+
+          .mega-list li:hover::before {
+            width: 10px;
+            margin-right: 8px;
+          }
+
+          .mega-new-badge {
+            background: #ff6f00;
+            color: white;
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-size: 9px;
+            margin-left: 5px;
+            font-weight: 700;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: normal;
           }
         `}
       </style>

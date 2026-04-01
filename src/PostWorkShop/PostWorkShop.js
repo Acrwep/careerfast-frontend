@@ -280,7 +280,7 @@ export default function PostWorkShop() {
                         overflow: "hidden"
                     }}
                 >
-                    <Form
+                    <Form className="post_workshop_form"
                         form={form}
                         layout="vertical"
                         onFinish={onFinish}
@@ -686,7 +686,7 @@ export default function PostWorkShop() {
 
                         {/* Navigation Buttons */}
                         <Divider />
-                        <Row justify="space-between" style={{ marginTop: 32 }}>
+                        <Row className="post_workshop_form_btn" justify="space-between" style={{ marginTop: 32 }}>
                             <Col>
                                 {currentStep > 0 && (
                                     <Button

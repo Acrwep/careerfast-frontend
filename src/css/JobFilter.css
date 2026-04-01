@@ -511,6 +511,10 @@ a {
   .job_filter .info-card-image {
     margin: 16px 0 0 0;
   }
+
+  .job_filter .section-card {
+    margin-top: 24px;
+  }
 }
 
 .ant-btn-variant-outlined:not(:disabled):not(.ant-btn-disabled):hover,
@@ -2702,7 +2706,6 @@ a {
   margin-bottom: 15px;
   transition: all 0.35s ease;
   border: 1px solid rgba(120, 51, 255, 0.15);
-  box-shadow: 0 10px 25px rgba(95, 46, 234, 0.10);
   position: relative;
   overflow: hidden;
 }
@@ -2714,7 +2717,6 @@ a {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(95, 46, 234, 0.30), rgba(157, 78, 221, 0.25));
   -webkit-mask: linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -2761,11 +2763,8 @@ a {
   object-fit: contain;
   border-radius: 16px;
   margin-left: 25px;
-
   background: linear-gradient(135deg, #fafaff, #ece6ff);
-  box-shadow:
-    0px 6px 16px rgba(120, 51, 255, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid #00000096;
   padding: 12px;
   transition: 0.35s ease;
 }
@@ -2913,4 +2912,187 @@ a {
   color: #8b85a7;
   margin-bottom: 8px;
   display: inline-block;
+}
+
+/* ==========================================================================
+   JOB FILTER MOBILE RESPONSIVE
+   ========================================================================== */
+
+/* Universal Responsive Container */
+@media (max-width: 991px) {
+  .job_filter {
+    padding: 10px 10px 40px !important;
+  }
+
+  .details_page {
+    padding: 10px 10px 0 !important;
+  }
+
+  /* Show the main content blocks that were hidden by xs={0} */
+  .job_filter .ant-col:has(.cf4-job-list-wrapper),
+  .job_filter .ant-col:has(.cf4-course-box) {
+    display: block !important;
+  }
+
+  /* Hide the static desktop sidebar on mobile */
+  .job_filter .ant-col.filter_sidebar {
+    display: none !important;
+  }
+
+  /* Reveal the "Open Filters" button */
+  .apply_filter {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 15px;
+    height: 48px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #7f5af0 0%, #5f2eea 100%) !important;
+    box-shadow: 0 4px 15px rgba(95, 46, 234, 0.3) !important;
+  }
+
+  .job-filter-top-actions {
+    display: block !important;
+  }
+
+  /* Stack sections vertically */
+  .job_filter .ant-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+  }
+
+  /* Job Card Responsive Tweaks */
+  .cf4-card-wrapper {
+    padding: 5px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .cf4-title {
+    font-size: 17px !important;
+    padding-right: 0px !important;
+    /* Move badge if needed or ensure it fits */
+  }
+
+  .cf4-logo-box {
+    width: 55px !important;
+    height: 55px !important;
+  }
+
+  .cf4-logo {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .cf4-status-badge {
+    padding: 4px 10px !important;
+    font-size: 10px !important;
+    top: -20px !important;
+    right: 0px !important;
+  }
+
+  .cf4-footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .cf4-type-badge {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Course Box Responsive */
+  .cf4-course-box {
+    margin-top: 24px;
+    padding: 15px !important;
+  }
+
+  .cf4-course-item {
+    gap: 10px !important;
+    padding: 8px !important;
+  }
+
+  .cf4-course-thumb {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  /* Info Cards stack on mobile */
+  .job_filter .info-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px !important;
+  }
+
+  .job_filter .info-card-image {
+    margin: 15px 0 0 0 !important;
+  }
+
+  .premium-job-details .premium-job-card {
+    padding: 30px 20px !important;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .side_job_details {
+    width: 100% !important;
+  }
+
+  .job-details-container {
+    margin-top: 30px;
+  }
+}
+
+@media (max-width: 575px) {
+  .job_filter .job-header {
+    padding: 20px !important;
+  }
+
+  .job_filter .job-title {
+    font-size: 24px !important;
+  }
+
+  .cf4-meta-item {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+  }
+
+  .cf4-skill-chip {
+    font-size: 10px !important;
+    padding: 5px 10px !important;
+  }
+}
+
+/* Fix for Ant Design Drawer responsiveness */
+.header-drawer .ant-drawer-content-wrapper {
+  max-width: 85vw !important;
+}
+
+.header-drawer .premium-filter-sidebar {
+  padding: 15px !important;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.filter-results-header {
+  margin-bottom: 24px;
+  text-align: left;
+  padding: 10px 0;
+}
+
+.results-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+  font-family: "Inter", sans-serif;
+}
+
+.results-subtitle {
+  font-size: 15px;
+  color: #666;
+  margin-bottom: 0px;
 }

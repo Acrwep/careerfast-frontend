@@ -546,7 +546,7 @@ const MentorList = () => {
                 <div className="cta-content">
                     <h2>Ready to supercharge your career?</h2>
                     <p>Join thousands of mentee's who have successfully transitioned into their dream roles.</p>
-                    <button onClick={() => navigate('/job-portal')} className="btn-white">Get Started Today</button>
+                    <button onClick={() => navigate('/')} className="btn-white">Get Started Today</button>
                 </div>
             </section>
             <Footer />
